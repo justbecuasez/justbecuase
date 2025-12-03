@@ -1,0 +1,271 @@
+import Link from "next/link"
+import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { testimonials } from "@/lib/data"
+import { Briefcase, Award, TrendingUp, Heart, Clock, Globe, ArrowRight, CheckCircle } from "lucide-react"
+
+const benefits = [
+  {
+    icon: Briefcase,
+    title: "Build Your Portfolio",
+    description: "Add real-world projects to your resume and showcase your impact to future employers.",
+  },
+  {
+    icon: TrendingUp,
+    title: "Develop New Skills",
+    description: "Take on challenging projects that push your boundaries and help you grow professionally.",
+  },
+  {
+    icon: Heart,
+    title: "Make a Difference",
+    description: "Use your expertise to create lasting positive change in communities across Asia.",
+  },
+  {
+    icon: Globe,
+    title: "Flexible Volunteering",
+    description: "Choose from virtual opportunities or local projects that fit your schedule and lifestyle.",
+  },
+  {
+    icon: Award,
+    title: "Get Recognized",
+    description: "Earn badges, testimonials, and track your impact with our comprehensive volunteer profiles.",
+  },
+  {
+    icon: Clock,
+    title: "Choose Your Commitment",
+    description: "From 1-hour consultations to long-term projects, find opportunities that match your availability.",
+  },
+]
+
+const steps = [
+  {
+    number: "01",
+    title: "Create Your Profile",
+    description: "Sign up and showcase your skills, experience, and the causes you care about.",
+  },
+  {
+    number: "02",
+    title: "Browse Projects",
+    description: "Explore opportunities matched to your skills and interests from vetted NGOs.",
+  },
+  {
+    number: "03",
+    title: "Apply & Connect",
+    description: "Submit your application and connect directly with the organization.",
+  },
+  {
+    number: "04",
+    title: "Make an Impact",
+    description: "Complete the project, receive feedback, and add it to your portfolio.",
+  },
+]
+
+const faqs = [
+  {
+    question: "How much time do I need to commit?",
+    answer:
+      "We have opportunities for every schedule! From 1-hour consultation calls to multi-week projects. You can filter opportunities by time commitment and choose what works best for you.",
+  },
+  {
+    question: "Do I need professional experience?",
+    answer:
+      "While we welcome professionals with all levels of experience, most projects require some level of expertise in your chosen skill area. Students and early-career professionals can find mentorship opportunities and shorter projects.",
+  },
+  {
+    question: "Are the projects remote or in-person?",
+    answer:
+      "Most projects are remote/virtual, allowing you to volunteer from anywhere. Some NGOs offer in-person opportunities for volunteers in specific locations. You can filter by location when browsing projects.",
+  },
+  {
+    question: "How are NGOs vetted?",
+    answer:
+      "We verify all organizations on our platform to ensure they are legitimate nonprofits. We review their registration documents, mission, and track record before approving them.",
+  },
+  {
+    question: "Is there a cost to join?",
+    answer:
+      "JustBecause.asia is completely free for volunteers. We believe in removing all barriers to volunteering and making it easy for anyone to contribute their skills.",
+  },
+  {
+    question: "How do I track my impact?",
+    answer:
+      "Your volunteer dashboard shows your hours contributed, projects completed, skills used, and estimated value of your contributions. You can also collect testimonials from NGOs you've worked with.",
+  },
+]
+
+export default function ForVolunteersPage() {
+  return (
+    <div className="min-h-screen flex flex-col bg-background">
+      <Navbar />
+
+      <main className="flex-1">
+        {/* Hero */}
+        <section className="py-20 bg-gradient-to-b from-primary/10 to-background">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              <div>
+                <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Turn Your Skills Into Impact</h1>
+                <p className="text-xl text-muted-foreground mb-8">
+                  Join thousands of professionals using their expertise to help NGOs and nonprofits across Asia. Make a
+                  real difference while building your portfolio.
+                </p>
+                <div className="flex flex-wrap gap-4">
+                  <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
+                    <Link href="/auth/signup">
+                      Start Volunteering
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="bg-transparent">
+                    <Link href="/projects">Browse Projects</Link>
+                  </Button>
+                </div>
+              </div>
+              <div className="relative">
+                <img
+                  src="/diverse-professionals-volunteering-laptop-teamwork.jpg"
+                  alt="Volunteers collaborating"
+                  className="rounded-2xl shadow-2xl"
+                />
+                <div className="absolute -bottom-6 -left-6 bg-card p-4 rounded-xl shadow-lg border border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-success-light flex items-center justify-center">
+                      <CheckCircle className="h-6 w-6 text-success" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">2,847 Volunteers</p>
+                      <p className="text-sm text-muted-foreground">Making an impact</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Benefits */}
+        <section className="py-16">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-foreground mb-4">Why Volunteer With Us?</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Skills-based volunteering offers unique benefits that traditional volunteering can't match
+              </p>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {benefits.map((benefit) => (
+                <Card key={benefit.title}>
+                  <CardContent className="pt-6">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                      <benefit.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-foreground mb-2">{benefit.title}</h3>
+                    <p className="text-sm text-muted-foreground">{benefit.description}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works */}
+        <section className="py-16 bg-muted/30">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-foreground mb-4">How It Works</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Getting started is easy. Here's how you can begin making an impact today.
+              </p>
+            </div>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+              {steps.map((step, index) => (
+                <div key={step.number} className="relative">
+                  <div className="text-6xl font-bold text-primary/10 mb-4">{step.number}</div>
+                  <h3 className="font-semibold text-foreground mb-2">{step.title}</h3>
+                  <p className="text-sm text-muted-foreground">{step.description}</p>
+                  {index < steps.length - 1 && (
+                    <ArrowRight className="hidden lg:block absolute top-8 -right-4 h-6 w-6 text-border" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Testimonials */}
+        <section className="py-16">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-foreground mb-4">Volunteer Stories</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto">
+                Hear from volunteers who have made a difference through our platform
+              </p>
+            </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              {testimonials
+                .filter((t) => t.type === "volunteer")
+                .concat(testimonials.filter((t) => t.type === "ngo").slice(0, 2))
+                .map((testimonial) => (
+                  <Card key={testimonial.id}>
+                    <CardContent className="pt-6">
+                      <p className="text-foreground mb-6 italic">"{testimonial.quote}"</p>
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={testimonial.avatar || "/placeholder.svg"}
+                          alt={testimonial.author}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div>
+                          <p className="font-semibold text-foreground">{testimonial.author}</p>
+                          <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          </div>
+        </section>
+
+        {/* FAQs */}
+        <section className="py-16 bg-muted/30">
+          <div className="container mx-auto px-4 md:px-6 max-w-3xl">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-foreground mb-4">Frequently Asked Questions</h2>
+              <p className="text-muted-foreground">Everything you need to know about volunteering with us</p>
+            </div>
+            <Accordion type="single" collapsible className="w-full">
+              {faqs.map((faq, index) => (
+                <AccordionItem key={index} value={`item-${index}`}>
+                  <AccordionTrigger className="text-left text-foreground">{faq.question}</AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </div>
+        </section>
+
+        {/* CTA */}
+        <section className="py-16 bg-primary text-primary-foreground">
+          <div className="container mx-auto px-4 md:px-6 text-center">
+            <h2 className="text-3xl font-bold mb-4">Ready to Start Making an Impact?</h2>
+            <p className="text-lg opacity-90 max-w-2xl mx-auto mb-8">
+              Join our community of skilled volunteers and start contributing to causes you care about today.
+            </p>
+            <Button asChild size="lg" variant="secondary">
+              <Link href="/auth/signup">
+                Create Your Free Account
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </section>
+      </main>
+
+      <Footer />
+    </div>
+  )
+}
