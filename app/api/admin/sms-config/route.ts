@@ -30,6 +30,7 @@ export async function GET() {
     // Check what providers are configured via environment variables
     const envConfig = {
       twilioConfigured: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER),
+      vonageConfigured: !!(process.env.VONAGE_API_KEY && process.env.VONAGE_API_SECRET),
       msg91Configured: !!(process.env.MSG91_AUTH_KEY && process.env.MSG91_SENDER_ID),
       textlocalConfigured: !!(process.env.TEXTLOCAL_API_KEY),
       currentProvider: process.env.SMS_PROVIDER || "none",
@@ -41,11 +42,14 @@ export async function GET() {
     return NextResponse.json({
       provider: dbConfig.provider || envConfig.currentProvider,
       twilioConfigured: dbConfig.twilioConfigured || envConfig.twilioConfigured,
+      vonageConfigured: dbConfig.vonageConfigured || envConfig.vonageConfigured,
       msg91Configured: dbConfig.msg91Configured || envConfig.msg91Configured,
       textlocalConfigured: dbConfig.textlocalConfigured || envConfig.textlocalConfigured,
       // Return masked versions if configured in DB
       twilioAccountSid: dbConfig.twilioAccountSid ? maskSecret(dbConfig.twilioAccountSid) : null,
       twilioPhoneNumber: dbConfig.twilioPhoneNumber || null,
+      vonageApiKey: dbConfig.vonageApiKey ? maskSecret(dbConfig.vonageApiKey) : null,
+      vonageFromNumber: dbConfig.vonageFromNumber || null,
       msg91SenderId: dbConfig.msg91SenderId || null,
       textlocalSender: dbConfig.textlocalSender || null,
     })
@@ -64,12 +68,18 @@ export async function POST(request: NextRequest) {
     await requireAdmin()
     
     const body = await request.json()
+    console.log("[SMS Config API] Received body:", JSON.stringify(body, null, 2))
+    
     const { 
       provider,
       // Twilio
       twilioAccountSid,
       twilioAuthToken,
       twilioPhoneNumber,
+      // Vonage
+      vonageApiKey,
+      vonageApiSecret,
+      vonageFromNumber,
       // MSG91
       msg91AuthKey,
       msg91SenderId,
@@ -82,47 +92,101 @@ export async function POST(request: NextRequest) {
     const db = await getDb()
     const configCollection = db.collection("system_config")
     
-    // Build the config object
+    // Get existing config to preserve non-updated fields
+    const existingConfig = await configCollection.findOne({ type: "sms" })
+    const existingData = existingConfig?.data || {}
+    
+    // Build the config object - only update fields that are actually provided and not masked
     const configData: any = {
       provider: provider || "none",
       updatedAt: new Date(),
     }
     
-    // Only save non-empty values, and encrypt/hash sensitive data in production
+    // Only save non-empty values that are not masked (don't include ***)
     if (provider === "twilio") {
+      // Keep existing values if new ones are masked or empty
       if (twilioAccountSid && !twilioAccountSid.includes("***")) {
         configData.twilioAccountSid = twilioAccountSid
+      } else if (existingData.twilioAccountSid) {
+        configData.twilioAccountSid = existingData.twilioAccountSid
       }
+      
       if (twilioAuthToken && !twilioAuthToken.includes("***")) {
         configData.twilioAuthToken = twilioAuthToken
+      } else if (existingData.twilioAuthToken) {
+        configData.twilioAuthToken = existingData.twilioAuthToken
       }
+      
       if (twilioPhoneNumber) {
         configData.twilioPhoneNumber = twilioPhoneNumber
+      } else if (existingData.twilioPhoneNumber) {
+        configData.twilioPhoneNumber = existingData.twilioPhoneNumber
       }
-      configData.twilioConfigured = !!(twilioAccountSid || twilioAuthToken)
+      
+      configData.twilioConfigured = !!(configData.twilioAccountSid && configData.twilioAuthToken)
+    } else if (provider === "vonage") {
+      // Keep existing values if new ones are masked or empty
+      if (vonageApiKey && !vonageApiKey.includes("***")) {
+        configData.vonageApiKey = vonageApiKey
+      } else if (existingData.vonageApiKey) {
+        configData.vonageApiKey = existingData.vonageApiKey
+      }
+      
+      if (vonageApiSecret && !vonageApiSecret.includes("***")) {
+        configData.vonageApiSecret = vonageApiSecret
+      } else if (existingData.vonageApiSecret) {
+        configData.vonageApiSecret = existingData.vonageApiSecret
+      }
+      
+      if (vonageFromNumber) {
+        configData.vonageFromNumber = vonageFromNumber
+      } else if (existingData.vonageFromNumber) {
+        configData.vonageFromNumber = existingData.vonageFromNumber
+      }
+      
+      configData.vonageConfigured = !!(configData.vonageApiKey && configData.vonageApiSecret)
     } else if (provider === "msg91") {
+      // Keep existing values if new ones are masked or empty
       if (msg91AuthKey && !msg91AuthKey.includes("***")) {
         configData.msg91AuthKey = msg91AuthKey
+      } else if (existingData.msg91AuthKey) {
+        configData.msg91AuthKey = existingData.msg91AuthKey
       }
+      
       if (msg91SenderId) {
         configData.msg91SenderId = msg91SenderId
+      } else if (existingData.msg91SenderId) {
+        configData.msg91SenderId = existingData.msg91SenderId
       }
+      
       if (msg91TemplateId) {
         configData.msg91TemplateId = msg91TemplateId
+      } else if (existingData.msg91TemplateId) {
+        configData.msg91TemplateId = existingData.msg91TemplateId
       }
-      configData.msg91Configured = !!(msg91AuthKey)
+      
+      configData.msg91Configured = !!(configData.msg91AuthKey)
     } else if (provider === "textlocal") {
+      // Keep existing values if new ones are masked or empty
       if (textlocalApiKey && !textlocalApiKey.includes("***")) {
         configData.textlocalApiKey = textlocalApiKey
+      } else if (existingData.textlocalApiKey) {
+        configData.textlocalApiKey = existingData.textlocalApiKey
       }
+      
       if (textlocalSender) {
         configData.textlocalSender = textlocalSender
+      } else if (existingData.textlocalSender) {
+        configData.textlocalSender = existingData.textlocalSender
       }
-      configData.textlocalConfigured = !!(textlocalApiKey)
+      
+      configData.textlocalConfigured = !!(configData.textlocalApiKey)
     }
     
+    console.log("[SMS Config API] Saving config data:", JSON.stringify(configData, null, 2))
+    
     // Upsert the configuration
-    await configCollection.updateOne(
+    const result = await configCollection.updateOne(
       { type: "sms" },
       { 
         $set: { 
@@ -133,11 +197,14 @@ export async function POST(request: NextRequest) {
       { upsert: true }
     )
     
+    console.log("[SMS Config API] Database update result:", result)
+    
     revalidatePath("/admin/settings")
     
     return NextResponse.json({ 
       success: true, 
-      message: "SMS configuration saved successfully" 
+      message: "SMS configuration saved successfully",
+      saved: configData 
     })
   } catch (error: any) {
     console.error("Save SMS config error:", error)

@@ -92,13 +92,97 @@ export async function POST(request: NextRequest) {
         const twilio = require("twilio")
         const client = twilio(accountSid, authToken)
         
-        await client.messages.create({
-          body: `Your JustBecause.asia verification code is: ${otp}. Valid for 10 minutes.`,
-          from: fromNumber,
-          to: formattedPhone
-        })
+        try {
+          await client.messages.create({
+            body: `Your JustBecause.asia verification code is: ${otp}. Valid for 10 minutes.`,
+            from: fromNumber,
+            to: formattedPhone
+          })
+        } catch (twilioError: any) {
+          console.error("Twilio SMS error:", twilioError)
+          
+          // Handle Twilio trial account restrictions (Error 21408)
+          if (twilioError.code === 21408) {
+            // Trial account - phone number not verified
+            console.log(`[TWILIO TRIAL] OTP for ${formattedPhone}: ${otp}`)
+            
+            // In development, return helpful error and OTP
+            if (process.env.NODE_ENV === "development") {
+              return NextResponse.json({ 
+                success: true, 
+                message: "OTP generated (Twilio trial account - verify phone number in Twilio Console)",
+                expiresAt: expiresAt.toISOString(),
+                devOtp: otp,
+                warning: "Trial account: Add your phone number at https://console.twilio.com/us1/develop/phone-numbers/manage/verified"
+              })
+            }
+            
+            throw new Error("Phone number not verified in Twilio. Please verify your number in Twilio Console or contact support.")
+          }
+          
+          // Other Twilio errors
+          throw twilioError
+        }
       } else {
         console.warn("Twilio selected but not fully configured")
+      }
+    } else if (smsProvider === "vonage") {
+      const apiKey = dbConfig.vonageApiKey || process.env.VONAGE_API_KEY
+      const apiSecret = dbConfig.vonageApiSecret || process.env.VONAGE_API_SECRET
+      const fromNumber = dbConfig.vonageFromNumber || process.env.VONAGE_FROM_NUMBER || "JustBecause"
+      
+      if (apiKey && apiSecret) {
+        // Send via Vonage (Nexmo) SMS API
+        // According to Vonage docs: POST with form-urlencoded body
+        const vonageParams = new URLSearchParams({
+          api_key: apiKey,
+          api_secret: apiSecret,
+          to: formattedPhone.replace("+", ""), // Remove + prefix as per Vonage docs
+          from: fromNumber,
+          text: `Your JustBecause.asia verification code is: ${otp}. Valid for 10 minutes.`
+        })
+        
+        const response = await fetch("https://rest.nexmo.com/sms/json", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: vonageParams.toString()
+        })
+        
+        const data = await response.json()
+        
+        // Vonage returns status "0" for success
+        if (data.messages?.[0]?.status !== "0") {
+          console.error("Vonage SMS error:", data)
+          const errorMessage = data.messages?.[0]?.["error-text"] || "Failed to send SMS"
+          const errorStatus = data.messages?.[0]?.status || "unknown"
+          
+          // Log detailed error for debugging
+          console.error(`Vonage Error Status: ${errorStatus}`)
+          console.error(`Error Message: ${errorMessage}`)
+          console.error(`Phone: ${formattedPhone}, From: ${fromNumber}`)
+          
+          // Return helpful error in development mode
+          if (process.env.NODE_ENV === "development") {
+            return NextResponse.json({ 
+              success: true, 
+              message: `Vonage error (Status ${errorStatus}): ${errorMessage}. OTP generated for testing.`,
+              expiresAt: expiresAt.toISOString(),
+              devOtp: otp,
+              warning: `Vonage error - Status: ${errorStatus}, Message: ${errorMessage}`
+            })
+          }
+          
+          throw new Error(`Vonage SMS error (${errorStatus}): ${errorMessage}`)
+        }
+        
+        console.log("✅ Vonage SMS sent successfully!")
+        console.log(`   Message ID: ${data.messages?.[0]?.["message-id"]}`)
+        console.log(`   Remaining Balance: ${data.messages?.[0]?.["remaining-balance"]}`)
+        console.log(`   Message Price: ${data.messages?.[0]?.["message-price"]}`)
+      } else {
+        console.warn("Vonage selected but not fully configured")
       }
     } else if (smsProvider === "msg91") {
       const authKey = dbConfig.msg91AuthKey || process.env.MSG91_AUTH_KEY
@@ -149,19 +233,25 @@ export async function POST(request: NextRequest) {
         console.warn("TextLocal selected but not fully configured")
       }
     } else {
-      // No SMS provider configured - for development, log the OTP
-      console.log(`[DEV MODE] SMS OTP for ${formattedPhone}: ${otp}`)
+      // No SMS provider configured
+      console.error(`[SMS ERROR] No SMS provider configured! Provider value: "${smsProvider}"`)
       
-      // In development, return the OTP in response (REMOVE IN PRODUCTION)
+      // In development, return the OTP in response for testing
       if (process.env.NODE_ENV === "development") {
+        console.log(`[DEV MODE] SMS OTP for ${formattedPhone}: ${otp}`)
         return NextResponse.json({ 
           success: true, 
-          message: "OTP sent successfully (dev mode)",
+          message: "OTP sent successfully (dev mode - no SMS provider configured)",
           expiresAt: expiresAt.toISOString(),
-          // REMOVE THIS IN PRODUCTION - only for testing
-          devOtp: otp
+          devOtp: otp,
+          warning: "No SMS provider configured. Configure one in Admin Settings."
         })
       }
+      
+      // In production, fail if no provider is configured
+      return NextResponse.json({ 
+        error: "SMS service not configured. Please contact support." 
+      }, { status: 503 })
     }
 
     return NextResponse.json({ 
