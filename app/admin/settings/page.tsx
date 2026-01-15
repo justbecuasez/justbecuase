@@ -59,10 +59,13 @@ export default function AdminSettingsPage() {
   const [smsConfig, setSmsConfig] = useState<{
     provider: string
     twilioConfigured: boolean
+    vonageConfigured: boolean
     msg91Configured: boolean
     textlocalConfigured: boolean
     twilioAccountSid: string
     twilioPhoneNumber: string
+    vonageApiKey: string
+    vonageFromNumber: string
     msg91SenderId: string
     textlocalSender: string
   } | null>(null)
@@ -71,6 +74,9 @@ export default function AdminSettingsPage() {
     twilioAccountSid: "",
     twilioAuthToken: "",
     twilioPhoneNumber: "",
+    vonageApiKey: "",
+    vonageApiSecret: "",
+    vonageFromNumber: "",
     msg91AuthKey: "",
     msg91SenderId: "",
     msg91TemplateId: "",
@@ -103,6 +109,8 @@ export default function AdminSettingsPage() {
           ...prev,
           provider: data.provider || "none",
           twilioPhoneNumber: data.twilioPhoneNumber || "",
+          vonageApiKey: data.vonageApiKey || "",
+          vonageFromNumber: data.vonageFromNumber || "",
           msg91SenderId: data.msg91SenderId || "",
           textlocalSender: data.textlocalSender || "",
         }))
@@ -114,6 +122,7 @@ export default function AdminSettingsPage() {
 
   const saveSmsConfig = async () => {
     setSmsSaving(true)
+    console.log("[Admin] Saving SMS config:", smsForm)
     try {
       const response = await fetch("/api/admin/sms-config", {
         method: "POST",
@@ -121,13 +130,16 @@ export default function AdminSettingsPage() {
         body: JSON.stringify(smsForm)
       })
       const data = await response.json()
+      console.log("[Admin] Save response:", data)
       if (response.ok) {
         toast.success("SMS configuration saved successfully")
         loadSmsConfig()
       } else {
+        console.error("[Admin] Save failed:", data.error)
         toast.error(data.error || "Failed to save SMS configuration")
       }
     } catch (error) {
+      console.error("[Admin] Save error:", error)
       toast.error("Failed to save SMS configuration")
     } finally {
       setSmsSaving(false)
@@ -967,6 +979,7 @@ export default function AdminSettingsPage() {
                   <SelectContent>
                     <SelectItem value="none">None (Development Mode)</SelectItem>
                     <SelectItem value="twilio">Twilio</SelectItem>
+                    <SelectItem value="vonage">Vonage (Nexmo)</SelectItem>
                     <SelectItem value="msg91">MSG91 (India)</SelectItem>
                     <SelectItem value="textlocal">TextLocal</SelectItem>
                   </SelectContent>
@@ -1017,6 +1030,58 @@ export default function AdminSettingsPage() {
                     <p className="text-xs text-muted-foreground">
                       The phone number SMS messages will be sent from
                     </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Vonage Configuration */}
+              {smsForm.provider === "vonage" && (
+                <div className="space-y-4">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Vonage (Nexmo) Configuration
+                  </h4>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="vonageApiKey">API Key</Label>
+                      <Input
+                        id="vonageApiKey"
+                        value={smsForm.vonageApiKey}
+                        onChange={(e) => setSmsForm({ ...smsForm, vonageApiKey: e.target.value })}
+                        placeholder="Enter Vonage API Key"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="vonageApiSecret">API Secret</Label>
+                      <Input
+                        id="vonageApiSecret"
+                        type="password"
+                        value={smsForm.vonageApiSecret}
+                        onChange={(e) => setSmsForm({ ...smsForm, vonageApiSecret: e.target.value })}
+                        placeholder="Enter API Secret"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="vonageFromNumber">From Number / Brand Name</Label>
+                    <Input
+                      id="vonageFromNumber"
+                      value={smsForm.vonageFromNumber}
+                      onChange={(e) => setSmsForm({ ...smsForm, vonageFromNumber: e.target.value })}
+                      placeholder="JustBecause or +1234567890"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Can be a brand name (alphanumeric) or phone number. Brand names work in most countries.
+                    </p>
+                  </div>
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-sm">
+                    <p className="font-medium mb-2">Get Vonage Credentials:</p>
+                    <ol className="list-decimal ml-4 space-y-1 text-xs text-muted-foreground">
+                      <li>Login: <a href="https://dashboard.nexmo.com" target="_blank" className="text-blue-600 hover:underline">dashboard.nexmo.com</a></li>
+                      <li>Go to Settings → API Settings</li>
+                      <li>Copy your API Key and API Secret</li>
+                      <li>Current Balance: $9.00</li>
+                    </ol>
                   </div>
                 </div>
               )}

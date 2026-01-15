@@ -481,9 +481,10 @@ export interface AdminSettings {
   requirePhoneVerification: boolean
   
   // SMS Provider Settings (stored masked for security)
-  smsProvider?: "twilio" | "msg91" | "textlocal" | "none"
+  smsProvider?: "twilio" | "vonage" | "msg91" | "textlocal" | "none"
   smsConfigured?: boolean
   twilioConfigured?: boolean
+  vonageConfigured?: boolean
   msg91Configured?: boolean
   textlocalConfigured?: boolean
   
