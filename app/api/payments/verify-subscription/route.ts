@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
-import crypto from "crypto"
 import { auth } from "@/lib/auth"
 import { ngoProfilesDb, volunteerProfilesDb, transactionsDb } from "@/lib/database"
+import { verifyPayment } from "@/lib/payment-gateway"
+import type { PaymentGatewayType } from "@/lib/types"
 
 // Calculate subscription expiry (1 month from now)
 function getSubscriptionExpiry(): Date {
@@ -18,7 +19,7 @@ function getNextResetDate(): Date {
   return nextMonth
 }
 
-// Verify Razorpay payment and activate subscription
+// Verify payment and activate subscription (supports Stripe & Razorpay)
 export async function POST(request: NextRequest) {
   try {
     const session = await auth.api.getSession({
@@ -30,25 +31,50 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, planId } = body
+    const { 
+      gateway,
+      planId,
+      // Stripe
+      paymentIntentId,
+      // Razorpay
+      razorpay_order_id, 
+      razorpay_payment_id, 
+      razorpay_signature,
+    } = body
 
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !planId) {
-      return NextResponse.json({ error: "Missing payment details" }, { status: 400 })
+    if (!planId) {
+      return NextResponse.json({ error: "Plan ID required" }, { status: 400 })
     }
 
-    // Verify signature
-    const secret = process.env.RAZORPAY_KEY_SECRET
-    if (!secret) {
-      return NextResponse.json({ error: "Payment gateway not configured" }, { status: 500 })
+    // Determine gateway type
+    const paymentGateway: PaymentGatewayType = gateway || (razorpay_order_id ? "razorpay" : "stripe")
+    let paymentVerification: { success: boolean; paymentId: string }
+
+    // Verify payment based on gateway
+    if (paymentGateway === "stripe") {
+      if (!paymentIntentId) {
+        return NextResponse.json({ error: "Payment intent ID required for Stripe" }, { status: 400 })
+      }
+      paymentVerification = await verifyPayment({
+        gateway: "stripe",
+        paymentIntentId,
+      })
+    } else if (paymentGateway === "razorpay") {
+      if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+        return NextResponse.json({ error: "Missing Razorpay payment details" }, { status: 400 })
+      }
+      paymentVerification = await verifyPayment({
+        gateway: "razorpay",
+        orderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        signature: razorpay_signature,
+      })
+    } else {
+      return NextResponse.json({ error: "Invalid payment gateway" }, { status: 400 })
     }
 
-    const generatedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest("hex")
-
-    if (generatedSignature !== razorpay_signature) {
-      return NextResponse.json({ error: "Invalid payment signature" }, { status: 400 })
+    if (!paymentVerification.success) {
+      return NextResponse.json({ error: "Payment verification failed" }, { status: 400 })
     }
 
     const userId = session.user.id
@@ -100,8 +126,8 @@ export async function POST(request: NextRequest) {
       referenceType: "subscription",
       amount,
       currency: "INR",
-      paymentGateway: "razorpay",
-      paymentId: razorpay_payment_id,
+      paymentGateway: paymentGateway,
+      paymentId: paymentVerification.paymentId,
       status: "completed",
       paymentStatus: "completed",
       description: `${isPro ? "Pro" : "Free"} Plan Subscription`,

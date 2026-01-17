@@ -164,7 +164,6 @@ interface PlatformSettingsState {
     
     // Payment
     currency: "INR" | "USD" | "EUR" | "GBP" | "SGD" | "AED" | "MYR"
-    singleProfileUnlockPrice: number
     
     // Volunteer Plans
     volunteerFreeApplicationsPerMonth: number

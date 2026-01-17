@@ -442,6 +442,25 @@ export interface SubscriptionPlanConfig {
   ngoProFeatures: string[]
 }
 
+// Payment Gateway Types
+export type PaymentGatewayType = "stripe" | "razorpay" | "none"
+
+export interface PaymentGatewayConfig {
+  gateway: PaymentGatewayType
+  isLive: boolean
+  // Stripe
+  stripePublishableKey?: string
+  stripeSecretKey?: string
+  // Razorpay
+  razorpayKeyId?: string
+  razorpayKeySecret?: string
+  // Metadata
+  configuredAt?: Date
+  configuredBy?: string
+  lastTestedAt?: Date
+  testSuccessful?: boolean
+}
+
 export interface AdminSettings {
   _id?: ObjectId
   
@@ -453,9 +472,11 @@ export interface AdminSettings {
   platformFavicon?: string
   
   // Payment Settings
-  singleProfileUnlockPrice: number
   currency: SupportedCurrency
-  razorpayKeyId?: string // Public key (safe to expose)
+  razorpayKeyId?: string // Public key (safe to expose) - DEPRECATED, use paymentGateway
+  
+  // Payment Gateway Configuration
+  paymentGateway?: PaymentGatewayConfig
   
   // Subscription Plan Settings - Volunteer
   volunteerFreeApplicationsPerMonth: number

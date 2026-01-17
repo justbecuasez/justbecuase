@@ -1104,25 +1104,24 @@ export async function unlockVolunteerProfile(
     }
 
     // Check if limit reached (only for free plan)
-    if (subscriptionPlan === "free" && !paymentId) {
+    if (subscriptionPlan === "free") {
       return { 
         success: false, 
-        error: `Free plan cannot unlock profiles. Upgrade to Pro for unlimited unlocks or pay ₹499 per unlock.`,
+        error: `Free plan cannot unlock profiles. Upgrade to Pro for unlimited unlocks.`,
         data: "LIMIT_REACHED" as any
       }
     }
 
-    // Get unlock price from settings
+    // Get settings for currency
     const settings = await adminSettingsDb.get()
-    const unlockPrice = settings?.singleProfileUnlockPrice || 499
 
-    // Atomically try to create unlock record - prevents double charging
+    // Atomically try to create unlock record - Pro users get free unlocks
     const unlockResult = await profileUnlocksDb.createIfNotExists({
       ngoId: user.id,
       volunteerId,
-      amountPaid: paymentId ? unlockPrice : 0, // Free if using subscription
+      amountPaid: 0, // Always free with Pro subscription
       currency: settings?.currency || "INR",
-      paymentId,
+      paymentId: undefined, // No payment needed
       unlockedAt: new Date(),
     })
 
@@ -1303,12 +1302,11 @@ export async function getPublicSettings(): Promise<Partial<AdminSettings> | null
       platformDescription: "Connecting NGOs with skilled volunteers",
       supportEmail: "support@justbecause.asia",
       currency: "INR",
-      singleProfileUnlockPrice: 499,
       volunteerFreeApplicationsPerMonth: 3,
-      volunteerProPrice: 999,
+      volunteerProPrice: 1, // TEST PRICE (use 999 for production)
       ngoFreeProjectsPerMonth: 3,
       ngoFreeProfileUnlocksPerMonth: 0,
-      ngoProPrice: 2999,
+      ngoProPrice: 1, // TEST PRICE (use 2999 for production)
       enablePayments: true,
       enableMessaging: true,
     }
@@ -1321,7 +1319,6 @@ export async function getPublicSettings(): Promise<Partial<AdminSettings> | null
     supportEmail: settings.supportEmail,
     platformLogo: settings.platformLogo,
     currency: settings.currency,
-    singleProfileUnlockPrice: settings.singleProfileUnlockPrice,
     volunteerFreeApplicationsPerMonth: settings.volunteerFreeApplicationsPerMonth,
     volunteerProPrice: settings.volunteerProPrice,
     volunteerProFeatures: settings.volunteerProFeatures,

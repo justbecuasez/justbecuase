@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { adminSettingsDb } from "@/lib/database"
+import { createPaymentOrder, getPaymentCredentials } from "@/lib/payment-gateway"
 
-// Create a Razorpay order for subscription
+// Create a payment order for subscription (supports Stripe & Razorpay)
 export async function POST(request: NextRequest) {
   try {
     const session = await auth.api.getSession({
@@ -25,6 +26,12 @@ export async function POST(request: NextRequest) {
     const settings = await adminSettingsDb.get()
     const currency = settings?.currency || "INR"
     
+    console.log("💰 Settings loaded:", {
+      ngoProPrice: settings?.ngoProPrice,
+      volunteerProPrice: settings?.volunteerProPrice,
+      currency: settings?.currency
+    })
+    
     // Build plan prices from admin settings
     const PLAN_PRICES: Record<string, number> = {
       "ngo-free": 0,
@@ -32,6 +39,9 @@ export async function POST(request: NextRequest) {
       "volunteer-free": 0,
       "volunteer-pro": settings?.volunteerProPrice || 999,
     }
+    
+    console.log("📋 Plan prices:", PLAN_PRICES)
+    console.log("💳 Selected plan:", planId, "Price:", PLAN_PRICES[planId])
 
     // Validate plan exists
     const planPrice = PLAN_PRICES[planId]
@@ -47,10 +57,11 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Check if Razorpay is configured
-    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+    // Check if any payment gateway is configured
+    const creds = await getPaymentCredentials()
+    if (creds.gateway === "none") {
       return NextResponse.json({ 
-        error: "Payment gateway not configured" 
+        error: "Payment gateway not configured. Please configure Stripe or Razorpay in admin settings." 
       }, { status: 500 })
     }
 
@@ -63,17 +74,12 @@ export async function POST(request: NextRequest) {
       }, { status: 403 })
     }
 
-    // Create Razorpay order
-    const Razorpay = require("razorpay")
-    const razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
-    })
-
-    const order = await razorpay.orders.create({
+    // Create payment order using unified interface
+    const order = await createPaymentOrder({
       amount: planPrice * 100, // Amount in smallest currency unit
-      currency: currency,
-      receipt: `sub_${Date.now()}`.slice(0, 40), // Max 40 chars
+      currency,
+      receipt: `sub_${Date.now()}`.slice(0, 40),
+      description: `${planId} subscription`,
       notes: {
         userId: session.user.id,
         planId,
@@ -82,10 +88,15 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({
-      orderId: order.id,
+      gateway: order.gateway,
+      orderId: order.orderId,
       amount: planPrice,
-      currency: currency,
-      keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      currency,
+      // Stripe specific
+      clientSecret: order.clientSecret,
+      publishableKey: order.publishableKey,
+      // Razorpay specific
+      keyId: order.keyId,
     })
   } catch (error: any) {
     console.error("Error creating subscription order:", error)

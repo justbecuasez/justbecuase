@@ -803,15 +803,14 @@ export const adminSettingsDb = {
         supportEmail: "support@justbecause.asia",
         
         // Payment Settings
-        singleProfileUnlockPrice: 499,
         currency: "INR",
         
         // Volunteer Free Plan
         volunteerFreeApplicationsPerMonth: 3,
         volunteerFreeProfileVisibility: true,
         
-        // Volunteer Pro Plan
-        volunteerProPrice: 999,
+        // Volunteer Pro Plan - TEST PRICE (use 999 for production)
+        volunteerProPrice: 1,
         volunteerProApplicationsUnlimited: true,
         volunteerProFeatures: [
           "Unlimited job applications",
@@ -827,8 +826,8 @@ export const adminSettingsDb = {
         ngoFreeProjectsPerMonth: 3,
         ngoFreeProfileUnlocksPerMonth: 0,
         
-        // NGO Pro Plan
-        ngoProPrice: 2999,
+        // NGO Pro Plan - TEST PRICE (use 2999 for production)
+        ngoProPrice: 1,
         ngoProProjectsUnlimited: true,
         ngoProUnlocksUnlimited: true,
         ngoProFeatures: [

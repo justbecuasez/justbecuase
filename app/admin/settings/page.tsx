@@ -33,10 +33,14 @@ import {
   Send,
   Check,
   AlertCircle,
+  Eye,
+  EyeOff,
+  TestTube,
+  Zap,
 } from "lucide-react"
 import { getAdminSettings, updateAdminSettings } from "@/lib/actions"
 import { toast } from "sonner"
-import type { AdminSettings, SupportedCurrency } from "@/lib/types"
+import type { AdminSettings, SupportedCurrency, PaymentGatewayType } from "@/lib/types"
 
 const CURRENCIES: { value: SupportedCurrency; label: string; symbol: string }[] = [
   { value: "INR", label: "Indian Rupee (INR)", symbol: "₹" },
@@ -87,9 +91,38 @@ export default function AdminSettingsPage() {
   const [smsTestPhone, setSmsTestPhone] = useState("")
   const [smsTesting, setSmsTesting] = useState(false)
 
+  // Payment Gateway Configuration State
+  const [paymentConfig, setPaymentConfig] = useState<{
+    gateway: PaymentGatewayType
+    isLive: boolean
+    stripeConfigured: boolean
+    stripePublishableKey: string
+    stripeSecretKeyMasked: string
+    razorpayConfigured: boolean
+    razorpayKeyId: string
+    razorpayKeySecretMasked: string
+    configuredAt?: string
+    lastTestedAt?: string
+    testSuccessful?: boolean
+  } | null>(null)
+  const [paymentForm, setPaymentForm] = useState({
+    gateway: "none" as PaymentGatewayType,
+    isLive: false,
+    stripePublishableKey: "",
+    stripeSecretKey: "",
+    razorpayKeyId: "",
+    razorpayKeySecret: "",
+  })
+  const [paymentSaving, setPaymentSaving] = useState(false)
+  const [paymentTesting, setPaymentTesting] = useState(false)
+  const [showStripeSecret, setShowStripeSecret] = useState(false)
+  const [showRazorpaySecret, setShowRazorpaySecret] = useState(false)
+  const [testAmount, setTestAmount] = useState("1")
+
   useEffect(() => {
     loadSettings()
     loadSmsConfig()
+    loadPaymentConfig()
   }, [])
 
   const loadSettings = async () => {
@@ -117,6 +150,69 @@ export default function AdminSettingsPage() {
       }
     } catch (error) {
       console.error("Failed to load SMS config:", error)
+    }
+  }
+
+  const loadPaymentConfig = async () => {
+    try {
+      const response = await fetch("/api/admin/payment-config")
+      if (response.ok) {
+        const data = await response.json()
+        setPaymentConfig(data)
+        setPaymentForm(prev => ({
+          ...prev,
+          gateway: data.gateway || "none",
+          isLive: data.isLive || false,
+          stripePublishableKey: data.stripePublishableKey || "",
+          razorpayKeyId: data.razorpayKeyId || "",
+        }))
+      }
+    } catch (error) {
+      console.error("Failed to load payment config:", error)
+    }
+  }
+
+  const savePaymentConfig = async () => {
+    setPaymentSaving(true)
+    try {
+      const response = await fetch("/api/admin/payment-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(paymentForm)
+      })
+      const data = await response.json()
+      if (response.ok) {
+        toast.success("Payment gateway configuration saved successfully")
+        loadPaymentConfig()
+      } else {
+        toast.error(data.error || "Failed to save payment configuration")
+      }
+    } catch (error) {
+      toast.error("Failed to save payment configuration")
+    } finally {
+      setPaymentSaving(false)
+    }
+  }
+
+  const testPaymentConfig = async () => {
+    setPaymentTesting(true)
+    try {
+      const response = await fetch("/api/admin/payment-config", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ gateway: paymentForm.gateway })
+      })
+      const data = await response.json()
+      if (data.success) {
+        toast.success(data.message)
+        loadPaymentConfig()
+      } else {
+        toast.error(data.error || data.message || "Failed to test payment gateway")
+      }
+    } catch (error) {
+      toast.error("Failed to test payment gateway")
+    } finally {
+      setPaymentTesting(false)
     }
   }
 
@@ -517,11 +613,299 @@ export default function AdminSettingsPage() {
 
         {/* Payment Settings */}
         <TabsContent value="payment" className="space-y-6">
+          {/* Payment Gateway Configuration */}
           <Card>
             <CardHeader>
-              <CardTitle>Currency & Payment Gateway</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="h-5 w-5" />
+                Payment Gateway Configuration
+              </CardTitle>
               <CardDescription>
-                Configure your payment currency and Razorpay settings
+                Configure your payment gateway (Stripe or Razorpay). Keys are stored securely in the database.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Current Status */}
+              <div className="p-4 rounded-lg bg-muted/50">
+                <p className="text-sm font-medium mb-2">Current Status</p>
+                <div className="flex flex-wrap gap-2">
+                  {paymentConfig?.gateway === "none" || !paymentConfig?.gateway ? (
+                    <Badge variant="outline" className="text-yellow-600 border-yellow-600">
+                      <AlertCircle className="h-3 w-3 mr-1" />
+                      No Payment Gateway Configured
+                    </Badge>
+                  ) : (
+                    <>
+                      <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                        <Check className="h-3 w-3 mr-1" />
+                        {paymentConfig.gateway.charAt(0).toUpperCase() + paymentConfig.gateway.slice(1)} Active
+                      </Badge>
+                      <Badge variant={paymentConfig.isLive ? "default" : "secondary"}>
+                        {paymentConfig.isLive ? "🔴 LIVE MODE" : "🟡 Test Mode"}
+                      </Badge>
+                      {paymentConfig.testSuccessful !== undefined && (
+                        <Badge variant={paymentConfig.testSuccessful ? "outline" : "destructive"}>
+                          {paymentConfig.testSuccessful ? "✓ Connection Verified" : "✗ Connection Failed"}
+                        </Badge>
+                      )}
+                    </>
+                  )}
+                </div>
+                {paymentConfig?.lastTestedAt && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Last tested: {new Date(paymentConfig.lastTestedAt).toLocaleString()}
+                  </p>
+                )}
+              </div>
+
+              {/* Gateway Selection */}
+              <div className="space-y-2">
+                <Label>Active Payment Gateway</Label>
+                <Select 
+                  value={paymentForm.gateway} 
+                  onValueChange={(value: PaymentGatewayType) => setPaymentForm({ ...paymentForm, gateway: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment gateway" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">None (Payments Disabled)</SelectItem>
+                    <SelectItem value="stripe">Stripe (Global)</SelectItem>
+                    <SelectItem value="razorpay">Razorpay (India)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Live Mode Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg border">
+                <div>
+                  <p className="font-medium">Live Mode</p>
+                  <p className="text-sm text-muted-foreground">
+                    Enable to process real payments. Keep disabled for testing.
+                  </p>
+                </div>
+                <Switch
+                  checked={paymentForm.isLive}
+                  onCheckedChange={(checked) => setPaymentForm({ ...paymentForm, isLive: checked })}
+                />
+              </div>
+
+              <Separator />
+
+              {/* Stripe Configuration */}
+              {paymentForm.gateway === "stripe" && (
+                <div className="space-y-4">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Stripe Configuration
+                  </h4>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="stripePublishableKey">Publishable Key</Label>
+                      <Input
+                        id="stripePublishableKey"
+                        value={paymentForm.stripePublishableKey}
+                        onChange={(e) => setPaymentForm({ ...paymentForm, stripePublishableKey: e.target.value })}
+                        placeholder={paymentConfig?.stripePublishableKey || "pk_live_... or pk_test_..."}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Safe to expose - used on frontend
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="stripeSecretKey">Secret Key</Label>
+                      <div className="relative">
+                        <Input
+                          id="stripeSecretKey"
+                          type={showStripeSecret ? "text" : "password"}
+                          value={paymentForm.stripeSecretKey}
+                          onChange={(e) => setPaymentForm({ ...paymentForm, stripeSecretKey: e.target.value })}
+                          placeholder={paymentConfig?.stripeSecretKeyMasked || "sk_live_... or sk_test_..."}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7"
+                          onClick={() => setShowStripeSecret(!showStripeSecret)}
+                        >
+                          {showStripeSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Keep secret - stored encrypted in database
+                      </p>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-sm">
+                    <p className="font-medium mb-2">Get Stripe Keys:</p>
+                    <ol className="list-decimal ml-4 space-y-1 text-xs text-muted-foreground">
+                      <li>Go to <a href="https://dashboard.stripe.com/apikeys" target="_blank" className="text-blue-600 hover:underline">Stripe Dashboard → API Keys</a></li>
+                      <li>Copy your Publishable key (pk_live_... or pk_test_...)</li>
+                      <li>Reveal and copy your Secret key (sk_live_... or sk_test_...)</li>
+                      <li>For testing, use test mode keys first</li>
+                    </ol>
+                  </div>
+                </div>
+              )}
+
+              {/* Razorpay Configuration */}
+              {paymentForm.gateway === "razorpay" && (
+                <div className="space-y-4">
+                  <h4 className="font-medium flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Razorpay Configuration
+                  </h4>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="razorpayKeyId">Key ID</Label>
+                      <Input
+                        id="razorpayKeyId"
+                        value={paymentForm.razorpayKeyId}
+                        onChange={(e) => setPaymentForm({ ...paymentForm, razorpayKeyId: e.target.value })}
+                        placeholder={paymentConfig?.razorpayKeyId || "rzp_live_... or rzp_test_..."}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="razorpayKeySecret">Key Secret</Label>
+                      <div className="relative">
+                        <Input
+                          id="razorpayKeySecret"
+                          type={showRazorpaySecret ? "text" : "password"}
+                          value={paymentForm.razorpayKeySecret}
+                          onChange={(e) => setPaymentForm({ ...paymentForm, razorpayKeySecret: e.target.value })}
+                          placeholder={paymentConfig?.razorpayKeySecretMasked || "Enter secret key"}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7"
+                          onClick={() => setShowRazorpaySecret(!showRazorpaySecret)}
+                        >
+                          {showRazorpaySecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-sm">
+                    <p className="font-medium mb-2">Get Razorpay Keys:</p>
+                    <ol className="list-decimal ml-4 space-y-1 text-xs text-muted-foreground">
+                      <li>Go to <a href="https://dashboard.razorpay.com/app/keys" target="_blank" className="text-blue-600 hover:underline">Razorpay Dashboard → API Keys</a></li>
+                      <li>Generate new keys or copy existing ones</li>
+                      <li>Use test mode keys for development</li>
+                    </ol>
+                  </div>
+                </div>
+              )}
+
+              {/* Save & Test Buttons */}
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={savePaymentConfig} disabled={paymentSaving}>
+                  {paymentSaving ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Payment Configuration
+                    </>
+                  )}
+                </Button>
+                {paymentForm.gateway !== "none" && (
+                  <Button variant="outline" onClick={testPaymentConfig} disabled={paymentTesting}>
+                    {paymentTesting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Testing...
+                      </>
+                    ) : (
+                      <>
+                        <TestTube className="h-4 w-4 mr-2" />
+                        Test Connection
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Test Payment Card */}
+          {paymentForm.gateway !== "none" && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Test Payment (₹1)
+                </CardTitle>
+                <CardDescription>
+                  Create a test payment to verify your payment gateway is working correctly.
+                  This will create a real payment intent but won't charge unless completed.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Test Amount</Label>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">{getCurrencySymbol()}</span>
+                      <Input
+                        type="number"
+                        value={testAmount}
+                        onChange={(e) => setTestAmount(e.target.value)}
+                        min="1"
+                        max="100"
+                        className="w-24"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Minimum ₹1 for testing
+                    </p>
+                  </div>
+                </div>
+                <Button 
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      const amount = Math.max(1, parseInt(testAmount) || 1) * 100; // Convert to paise
+                      const response = await fetch("/api/admin/test-payment", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ 
+                          amount,
+                          currency: settings?.currency || "INR"
+                        })
+                      });
+                      const data = await response.json();
+                      if (data.success) {
+                        toast.success(`Test payment created: ${data.message}`);
+                        console.log("Test payment details:", data);
+                      } else {
+                        toast.error(data.error || "Failed to create test payment");
+                      }
+                    } catch (error) {
+                      toast.error("Failed to create test payment");
+                    }
+                  }}
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Create Test Payment
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  This creates a PaymentIntent. Check the browser console for details.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Currency & Pricing</CardTitle>
+              <CardDescription>
+                Configure your payment currency and default pricing
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -529,9 +913,9 @@ export default function AdminSettingsPage() {
                 <div className="space-y-2">
                   <Label htmlFor="currency">Currency</Label>
                   <Select
-                    value={settings.currency}
+                    value={settings?.currency}
                     onValueChange={(value: SupportedCurrency) =>
-                      setSettings({ ...settings, currency: value })
+                      setSettings(settings ? { ...settings, currency: value } : null)
                     }
                   >
                     <SelectTrigger>
@@ -549,55 +933,44 @@ export default function AdminSettingsPage() {
                     All prices will be displayed in this currency
                   </p>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="razorpayKey">Razorpay Key ID (Public)</Label>
-                  <Input
-                    id="razorpayKey"
-                    value={settings.razorpayKeyId || ""}
-                    onChange={(e) =>
-                      setSettings({ ...settings, razorpayKeyId: e.target.value })
-                    }
-                    placeholder="rzp_live_..."
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Your Razorpay public key (starts with rzp_)
-                  </p>
-                </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Profile Unlock Pricing</CardTitle>
+              <CardTitle>Business Model Info</CardTitle>
               <CardDescription>
-                Set the price for NGOs to unlock free volunteer profiles (pay-per-unlock)
+                How the subscription system works
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="unlockPrice">Single Profile Unlock Price</Label>
-                <div className="relative max-w-xs">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                    {getCurrencySymbol()}
-                  </span>
-                  <Input
-                    id="unlockPrice"
-                    type="number"
-                    className="pl-8"
-                    value={settings.singleProfileUnlockPrice}
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        singleProfileUnlockPrice: parseInt(e.target.value) || 0,
-                      })
-                    }
-                  />
+              <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+                <div className="flex items-start gap-2">
+                  <Building2 className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium">NGO Pro Subscription</p>
+                    <p className="text-sm text-muted-foreground">
+                      NGOs with Pro subscription can unlock <strong>unlimited FREE volunteer profiles</strong>.
+                      NGOs can view paid volunteer profiles without subscription.
+                    </p>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  This is what NGOs pay to unlock a single volunteer profile (free tier NGOs)
-                </p>
+                <div className="flex items-start gap-2">
+                  <Users className="h-5 w-5 text-primary mt-0.5" />
+                  <div>
+                    <p className="font-medium">Volunteer Pro Subscription</p>
+                    <p className="text-sm text-muted-foreground">
+                      Volunteers with Pro subscription can apply to <strong>unlimited jobs</strong>.
+                      Free volunteers are limited to {settings?.volunteerFreeApplicationsPerMonth || 3} applications/month.
+                    </p>
+                  </div>
+                </div>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Note: Individual profile unlock payments are not part of the business model. 
+                NGOs must upgrade to Pro to unlock volunteer profiles.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -773,7 +1146,7 @@ export default function AdminSettingsPage() {
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Free profile unlocks (0 = pay-per-unlock only)
+                    Free profile unlocks (0 = must upgrade to Pro)
                   </p>
                 </div>
               </div>

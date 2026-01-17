@@ -15,11 +15,12 @@ async function checkPaymentSetup() {
     const settings = await db.collection("admin_settings").findOne({})
     if (settings) {
       console.log("  - Platform:", settings.platformName)
-      console.log("  - Single Profile Unlock Price:", settings.singleProfileUnlockPrice || 499)
+      console.log("  - NGO Pro Price:", settings.ngoProPrice || 1, "(test price)")
+      console.log("  - Volunteer Pro Price:", settings.volunteerProPrice || 1, "(test price)")
       console.log("  - Currency:", settings.currency || "INR")
       console.log("  - Payments Enabled:", settings.enablePayments !== false)
     } else {
-      console.log("  ⚠️ No admin settings found - will use defaults (₹499)")
+      console.log("  ⚠️ No admin settings found - will use defaults")
     }
     
     // Check NGO users
