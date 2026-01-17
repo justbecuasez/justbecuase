@@ -15,9 +15,8 @@ export async function GET() {
           platformDescription: "Connecting NGOs with skilled volunteers",
           supportEmail: "support@justbecause.asia",
           currency: "INR",
-          singleProfileUnlockPrice: 499,
           volunteerFreeApplicationsPerMonth: 3,
-          volunteerProPrice: 999,
+          volunteerProPrice: 1, // TEST PRICE (use 999 for production)
           volunteerProFeatures: [
             "Unlimited job applications",
             "Featured profile badge",
@@ -29,7 +28,7 @@ export async function GET() {
           ],
           ngoFreeProjectsPerMonth: 3,
           ngoFreeProfileUnlocksPerMonth: 0,
-          ngoProPrice: 2999,
+          ngoProPrice: 1, // TEST PRICE (use 2999 for production)
           ngoProFeatures: [
             "Unlimited projects",
             "Unlimited profile unlocks",
@@ -56,7 +55,6 @@ export async function GET() {
         supportEmail: settings.supportEmail,
         platformLogo: settings.platformLogo,
         currency: settings.currency,
-        singleProfileUnlockPrice: settings.singleProfileUnlockPrice,
         volunteerFreeApplicationsPerMonth: settings.volunteerFreeApplicationsPerMonth,
         volunteerProPrice: settings.volunteerProPrice,
         volunteerProFeatures: settings.volunteerProFeatures || [],

@@ -97,33 +97,33 @@ export default function PricingPage() {
       features: [
         `Post up to ${platformSettings?.ngoFreeProjectsPerMonth || 3} projects per month`,
         "Browse volunteer profiles",
+        "View paid volunteer profiles",
         "Basic volunteer matching",
         "Email support",
-        "Community access",
       ],
       limitations: [
-        platformSettings?.ngoFreeProfileUnlocksPerMonth === 0
-          ? `Pay-per-unlock available (${currencySymbol}${platformSettings?.singleProfileUnlockPrice || 499}/profile)`
-          : `${platformSettings?.ngoFreeProfileUnlocksPerMonth || 0} free profile unlocks/month`,
+        "Cannot unlock FREE volunteer profiles",
+        "Upgrade to Pro to unlock volunteers",
       ],
       popular: false,
     },
     {
       id: "ngo-pro",
       name: "Pro",
-      description: "For established organizations with regular needs",
-      price: platformSettings?.ngoProPrice || 2999,
-      priceDisplay: `${currencySymbol}${platformSettings?.ngoProPrice || 2999}`,
+      description: "Unlock unlimited FREE volunteer profiles",
+      // TEST MODE: ₹1 for testing, change to 2999 for production
+      price: platformSettings?.ngoProPrice || 1, // TEST PRICE
+      priceDisplay: `${currencySymbol}${platformSettings?.ngoProPrice || 1}`,
       period: "per month",
       icon: Zap,
       features: platformSettings?.ngoProFeatures || [
         "Unlimited projects",
-        "Unlimited profile unlocks",
+        "Unlock UNLIMITED free volunteer profiles",
+        "View all paid volunteer profiles",
         "Advanced AI-powered matching",
         "Priority support",
         "Project analytics & reports",
         "Featured NGO badge",
-        "Bulk volunteer outreach",
       ],
       limitations: [],
       popular: true,
@@ -154,9 +154,10 @@ export default function PricingPage() {
     {
       id: "volunteer-pro",
       name: "Pro",
-      description: "Maximize your impact with unlimited access",
-      price: platformSettings?.volunteerProPrice || 999,
-      priceDisplay: `${currencySymbol}${platformSettings?.volunteerProPrice || 999}`,
+      description: "Apply to unlimited jobs",
+      // TEST MODE: ₹1 for testing, change to 999 for production
+      price: platformSettings?.volunteerProPrice || 1, // TEST PRICE
+      priceDisplay: `${currencySymbol}${platformSettings?.volunteerProPrice || 1}`,
       period: "per month",
       icon: Sparkles,
       features: platformSettings?.volunteerProFeatures || [
@@ -187,6 +188,20 @@ export default function PricingPage() {
     })
   }
 
+  const loadStripeScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if ((window as any).Stripe) {
+        resolve(true)
+        return
+      }
+      const script = document.createElement("script")
+      script.src = "https://js.stripe.com/v3/"
+      script.onload = () => resolve(true)
+      script.onerror = () => resolve(false)
+      document.body.appendChild(script)
+    })
+  }
+
   const handleSubscribe = async (planId: string, amount: number, planName: string) => {
     if (!user) {
       window.location.href = "/auth/signin?redirect=/pricing"
@@ -202,12 +217,6 @@ export default function PricingPage() {
     setLoadingPlan(planId)
 
     try {
-      const scriptLoaded = await loadRazorpayScript()
-      if (!scriptLoaded) {
-        alert("Failed to load payment gateway")
-        return
-      }
-
       // Create subscription order
       const response = await fetch("/api/payments/create-subscription", {
         method: "POST",
@@ -220,84 +229,129 @@ export default function PricingPage() {
         throw new Error(data.error || "Failed to create order")
       }
 
-      // Open Razorpay checkout
-      const options = {
-        key: data.keyId,
-        amount: data.amount * 100,
-        currency: data.currency,
-        name: "JustBecause.asia",
-        description: `${planName} Plan Subscription`,
-        order_id: data.orderId,
-        handler: async function (response: any) {
-          try {
-            const verifyResponse = await fetch("/api/payments/verify-subscription", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                planId,
-              }),
-            })
-
-            const verifyData = await verifyResponse.json()
-            if (!verifyResponse.ok) {
-              throw new Error(verifyData.error || "Payment verification failed")
-            }
-
-            // Update Zustand store with new subscription
-            const expiryDate = new Date()
-            expiryDate.setMonth(expiryDate.getMonth() + 1)
-            
-            if (planId.startsWith("ngo-")) {
-              setNGOSubscription({
-                plan: planId === "ngo-pro" ? "pro" : "free",
-                unlocksUsed: 0,
-                expiryDate: expiryDate.toISOString(),
-              })
-            } else if (planId.startsWith("volunteer-")) {
-              setVolunteerSubscription({
-                plan: planId === "volunteer-pro" ? "pro" : "free",
-                applicationsUsed: 0,
-                expiryDate: expiryDate.toISOString(),
-              })
-            }
-
-            // Show success toast immediately
-            toast.success("🎉 Subscription activated!", {
-              description: "Welcome to Pro! Enjoy unlimited access.",
-            })
-            
-            // Redirect after a short delay to let toast show
-            setTimeout(() => {
-              window.location.href = userRole === "ngo" ? "/ngo/dashboard" : "/volunteer/dashboard"
-            }, 1500)
-          } catch (error: any) {
-            toast.error("Payment failed", {
-              description: error.message || "Payment verification failed",
-            })
-          }
-        },
-        prefill: {
-          name: user.name,
-          email: user.email,
-        },
-        theme: { color: "#0ea5e9" },
-        modal: {
-          ondismiss: () => setLoadingPlan(null),
-        },
+      // Handle based on gateway type
+      if (data.gateway === "stripe") {
+        await handleStripePayment(data, planId, planName)
+      } else if (data.gateway === "razorpay") {
+        await handleRazorpayPayment(data, planId, planName)
+      } else {
+        throw new Error("No payment gateway configured")
       }
-
-      const razorpay = new window.Razorpay(options)
-      razorpay.open()
     } catch (error: any) {
       toast.error("Payment error", {
         description: error.message || "Failed to initiate payment",
       })
-    } finally {
       setLoadingPlan(null)
     }
+  }
+
+  const handleStripePayment = async (data: any, planId: string, planName: string) => {
+    const scriptLoaded = await loadStripeScript()
+    if (!scriptLoaded) {
+      toast.error("Failed to load Stripe")
+      setLoadingPlan(null)
+      return
+    }
+
+    const stripe = (window as any).Stripe(data.publishableKey)
+    
+    // For Stripe, we'll use a simple redirect to checkout or embedded form
+    // Using Payment Element for better UX
+    const { error } = await stripe.confirmPayment({
+      clientSecret: data.clientSecret,
+      confirmParams: {
+        return_url: `${window.location.origin}/api/payments/stripe-callback?planId=${planId}`,
+      },
+    })
+
+    if (error) {
+      toast.error("Payment failed", {
+        description: error.message,
+      })
+      setLoadingPlan(null)
+    }
+  }
+
+  const handleRazorpayPayment = async (data: any, planId: string, planName: string) => {
+    const scriptLoaded = await loadRazorpayScript()
+    if (!scriptLoaded) {
+      toast.error("Failed to load payment gateway")
+      setLoadingPlan(null)
+      return
+    }
+
+    // Open Razorpay checkout
+    const options = {
+      key: data.keyId,
+      amount: data.amount * 100,
+      currency: data.currency,
+      name: "JustBecause.asia",
+      description: `${planName} Plan Subscription`,
+      order_id: data.orderId,
+      handler: async function (response: any) {
+        try {
+          const verifyResponse = await fetch("/api/payments/verify-subscription", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              gateway: "razorpay",
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              planId,
+            }),
+          })
+
+          const verifyData = await verifyResponse.json()
+          if (!verifyResponse.ok) {
+            throw new Error(verifyData.error || "Payment verification failed")
+          }
+
+          // Update Zustand store with new subscription
+          const expiryDate = new Date()
+          expiryDate.setMonth(expiryDate.getMonth() + 1)
+          
+          if (planId.startsWith("ngo-")) {
+            setNGOSubscription({
+              plan: planId === "ngo-pro" ? "pro" : "free",
+              unlocksUsed: 0,
+              expiryDate: expiryDate.toISOString(),
+            })
+          } else if (planId.startsWith("volunteer-")) {
+            setVolunteerSubscription({
+              plan: planId === "volunteer-pro" ? "pro" : "free",
+              applicationsUsed: 0,
+              expiryDate: expiryDate.toISOString(),
+            })
+          }
+
+          // Show success toast immediately
+          toast.success("🎉 Subscription activated!", {
+            description: "Welcome to Pro! Enjoy unlimited access.",
+          })
+          
+          // Redirect after a short delay to let toast show
+          setTimeout(() => {
+            window.location.href = userRole === "ngo" ? "/ngo/dashboard" : "/volunteer/dashboard"
+          }, 1500)
+        } catch (error: any) {
+          toast.error("Payment failed", {
+            description: error.message || "Payment verification failed",
+          })
+        }
+      },
+      prefill: {
+        name: user?.name,
+        email: user?.email,
+      },
+      theme: { color: "#0ea5e9" },
+      modal: {
+        ondismiss: () => setLoadingPlan(null),
+      },
+    }
+
+    const razorpay = new window.Razorpay(options)
+    razorpay.open()
   }
 
   const renderPlanCard = (plan: typeof ngoPlans[0], currentPlan?: string) => {
@@ -463,10 +517,9 @@ export default function PricingPage() {
               <div className="p-6 bg-background rounded-lg border">
                 <h3 className="font-semibold text-foreground mb-2">What is a profile unlock? (NGOs)</h3>
                 <p className="text-muted-foreground">
-                  When you find a free volunteer you&apos;d like to connect with, you need to unlock their profile 
-                  to view their contact information. {platformSettings?.ngoFreeProfileUnlocksPerMonth === 0 
-                    ? `Free plan requires pay-per-unlock (${currencySymbol}${platformSettings?.singleProfileUnlockPrice || 499}/profile).`
-                    : `Free plan includes ${platformSettings?.ngoFreeProfileUnlocksPerMonth} unlocks per month.`}
+                  When you find a FREE volunteer you&apos;d like to connect with, you need to unlock their profile 
+                  to view their contact information. NGO Pro subscribers can unlock <strong>unlimited</strong> free volunteer profiles.
+                  Free plan NGOs must upgrade to Pro to unlock any profiles.
                 </p>
               </div>
               
