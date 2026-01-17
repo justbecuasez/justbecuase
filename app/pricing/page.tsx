@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Check, Building2, User, Sparkles, Zap, Loader2 } from "lucide-react"
+import { Check, Building2, User, Sparkles, Zap, Loader2, ExternalLink } from "lucide-react"
 import { client } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { useSubscriptionStore, usePlatformSettingsStore } from "@/lib/store"
 import type { SupportedCurrency } from "@/lib/types"
+import { getPaymentLinkUrl } from "@/lib/stripe-payment-links"
 
 const CURRENCY_SYMBOLS: Record<SupportedCurrency, string> = {
   INR: "₹",
@@ -68,6 +69,7 @@ export default function PricingPage() {
   const defaultTab = userRole === "volunteer" ? "volunteer" : "ngo"
   const [activeTab, setActiveTab] = useState(defaultTab)
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+  const [usePaymentLinks, setUsePaymentLinks] = useState(true) // Use Stripe Payment Links by default
   
   // Get current plan from store
   const currentNGOPlan = ngoSubscription?.plan || "free"
@@ -202,7 +204,48 @@ export default function PricingPage() {
     })
   }
 
+  // Handle subscription via Stripe Payment Links
+  const handlePaymentLink = (planId: string) => {
+    if (!user?.id) {
+      toast.error("Please sign in first")
+      window.location.href = "/auth/signin"
+      return
+    }
+
+    setLoadingPlan(planId)
+    
+    // Determine payment link type
+    const linkType = planId === "ngo-pro" ? "ngo-pro-monthly" : "volunteer-pro-monthly"
+    
+    // Get payment URL
+    const paymentUrl = getPaymentLinkUrl(linkType as any, {
+      userId: user.id,
+      metadata: {
+        planId,
+        userName: user.name || "",
+        userEmail: user.email || "",
+      },
+    })
+
+    if (paymentUrl) {
+      // Redirect to Stripe Payment Link
+      window.location.href = paymentUrl
+    } else {
+      toast.error("Payment not configured", {
+        description: "Stripe Payment Links not set up yet.",
+      })
+      setLoadingPlan(null)
+    }
+  }
+
   const handleSubscribe = async (planId: string, amount: number, planName: string) => {
+    // If Payment Links enabled, use that
+    if (usePaymentLinks) {
+      handlePaymentLink(planId)
+      return
+    }
+    
+    // Otherwise use Razorpay
     if (!user) {
       window.location.href = "/auth/signin?redirect=/pricing"
       return
