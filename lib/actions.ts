@@ -1140,27 +1140,7 @@ export async function unlockVolunteerProfile(
       }
     }
     
-    // If paid unlock, create transaction record
-    if (paymentId) {
-      try {
-        await transactionsDb.create({
-          userId: user.id,
-          type: "profile_unlock",
-          referenceId: volunteerId,
-          referenceType: "volunteer",
-          amount: unlockPrice,
-          currency: settings?.currency || "INR",
-          paymentGateway: "razorpay",
-          paymentId,
-          status: "completed",
-          paymentStatus: "completed",
-          description: "Profile Unlock",
-          createdAt: new Date(),
-        })
-      } catch (e) {
-        console.error("Failed to create transaction:", e)
-      }
-    }
+    // Pro users get free unlocks via subscription - no transaction needed
 
     // Best effort: Notify volunteer
     try {
