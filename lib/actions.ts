@@ -420,6 +420,7 @@ export async function saveNGOOnboarding(data: {
   }
   causes: string[]
   requiredSkills: { categoryId: string; subskillId: string; priority: string }[]
+  verificationDocuments?: { name: string; url: string; type: string }[]
 }): Promise<ApiResponse<string>> {
   try {
     const user = await requireAuth()
@@ -450,6 +451,8 @@ export async function saveNGOOnboarding(data: {
         subskillId: s.subskillId,
         priority: s.priority as "must-have" | "nice-to-have",
       })),
+      // Save verification documents if provided
+      verificationDocuments: data.verificationDocuments || [],
       acceptRemoteVolunteers: true,
       acceptOnsiteVolunteers: true,
       projectsPosted: 0,
@@ -497,7 +500,7 @@ const ALLOWED_NGO_UPDATE_FIELDS = [
   "address", "city", "country", "description", "mission", "yearFounded",
   "teamSize", "logo", "socialLinks", "causes", "typicalSkillsNeeded",
   "acceptRemoteVolunteers", "acceptOnsiteVolunteers", "contactPersonName", "contactEmail", "contactPhone",
-  "coordinates"
+  "coordinates", "verificationDocuments"
 ] as const
 
 export async function updateNGOProfile(

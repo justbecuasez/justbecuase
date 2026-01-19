@@ -15,11 +15,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Camera, Save, Loader2, CheckCircle, MapPin, LocateFixed } from "lucide-react"
+import { Camera, Save, Loader2, CheckCircle, MapPin, LocateFixed, FileText, Upload, X } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import { getVolunteerProfile, updateVolunteerProfile } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
-import { uploadToCloudinary, validateImageFile } from "@/lib/upload"
+import { uploadToCloudinary, validateImageFile, uploadDocumentToCloudinary, validateDocumentFile } from "@/lib/upload"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function VolunteerProfileEditPage() {
@@ -31,6 +31,7 @@ export default function VolunteerProfileEditPage() {
   const [isSaved, setIsSaved] = useState(false)
   const [error, setError] = useState("")
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
+  const [uploadingResume, setUploadingResume] = useState(false)
   const [isGettingLocation, setIsGettingLocation] = useState(false)
 
   const [formData, setFormData] = useState({
@@ -188,6 +189,64 @@ export default function VolunteerProfileEditPage() {
       })
     } finally {
       setUploadingPhoto(false)
+    }
+  }
+
+  const handleResumeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file
+    const validation = validateDocumentFile(file, 10)
+    if (!validation.valid) {
+      toast.error("Invalid file", { description: validation.error })
+      return
+    }
+
+    setUploadingResume(true)
+    toast.loading("Uploading resume...", { id: "resume-upload" })
+
+    try {
+      // Upload with signed request
+      const uploadResult = await uploadDocumentToCloudinary(file, "volunteer_resumes", {
+        onProgress: (percent) => {
+          // Could show progress here if needed
+        },
+      })
+
+      if (!uploadResult.success) {
+        throw new Error(uploadResult.error || "Upload failed")
+      }
+
+      // Update profile with new resume URL
+      const result = await updateVolunteerProfile({ resumeUrl: uploadResult.url })
+      
+      if (result.success) {
+        setProfile((prev: any) => ({ ...prev, resumeUrl: uploadResult.url }))
+        toast.success("Resume uploaded!", { id: "resume-upload" })
+      } else {
+        throw new Error(result.error || "Failed to save resume")
+      }
+    } catch (err: any) {
+      console.error("Resume upload error:", err)
+      toast.error("Upload failed", { 
+        id: "resume-upload",
+        description: err.message || "Please try again."
+      })
+    } finally {
+      setUploadingResume(false)
+    }
+  }
+
+  const removeResume = async () => {
+    try {
+      const result = await updateVolunteerProfile({ resumeUrl: "" })
+      if (result.success) {
+        setProfile((prev: any) => ({ ...prev, resumeUrl: null }))
+        toast.success("Resume removed")
+      }
+    } catch (err) {
+      toast.error("Failed to remove resume")
     }
   }
 
@@ -411,6 +470,93 @@ export default function VolunteerProfileEditPage() {
                             placeholder="https://yourportfolio.com"
                           />
                         </div>
+                      </div>
+
+                      {/* Resume Upload Section */}
+                      <div className="space-y-3 pt-4 border-t">
+                        <Label>Resume / CV</Label>
+                        <p className="text-sm text-muted-foreground">
+                          Upload your resume to help NGOs understand your experience (PDF, DOC, DOCX - max 10MB)
+                        </p>
+                        
+                        {profile?.resumeUrl ? (
+                          <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-5 w-5 text-primary" />
+                              <div>
+                                <a 
+                                  href={profile.resumeUrl} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="text-sm font-medium hover:underline text-primary"
+                                >
+                                  View Resume
+                                </a>
+                                <p className="text-xs text-muted-foreground">Click to download or view</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <label className="cursor-pointer">
+                                <input
+                                  type="file"
+                                  accept=".pdf,.doc,.docx"
+                                  onChange={handleResumeUpload}
+                                  className="hidden"
+                                  disabled={uploadingResume}
+                                />
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  size="sm"
+                                  asChild
+                                  disabled={uploadingResume}
+                                >
+                                  <span>
+                                    {uploadingResume ? (
+                                      <Loader2 className="h-4 w-4 animate-spin" />
+                                    ) : (
+                                      "Replace"
+                                    )}
+                                  </span>
+                                </Button>
+                              </label>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={removeResume}
+                                className="text-destructive hover:text-destructive/80"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                            <input
+                              type="file"
+                              accept=".pdf,.doc,.docx"
+                              onChange={handleResumeUpload}
+                              className="hidden"
+                              id="resume-upload"
+                              disabled={uploadingResume}
+                            />
+                            <label htmlFor="resume-upload" className="cursor-pointer">
+                              {uploadingResume ? (
+                                <>
+                                  <Loader2 className="h-8 w-8 mx-auto mb-2 text-primary animate-spin" />
+                                  <p className="text-sm text-muted-foreground">Uploading...</p>
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                                  <p className="text-sm font-medium text-foreground">Upload Resume</p>
+                                  <p className="text-xs text-muted-foreground mt-1">PDF, DOC, or DOCX up to 10MB</p>
+                                </>
+                              )}
+                            </label>
+                          </div>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

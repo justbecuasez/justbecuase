@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { toast } from "sonner"
 import {
   Send,
   ArrowLeft,
@@ -24,9 +25,12 @@ import {
   Video,
   Info,
   Circle,
+  X,
+  FileText,
 } from "lucide-react"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
+import { uploadDocumentToCloudinary, validateDocumentFile, SUPPORTED_ALL_TYPES } from "@/lib/upload"
 
 interface Message {
   _id?: string | { toString: () => string }
@@ -214,8 +218,13 @@ export function MessageThreadPro({
   const [isOnline] = useState(true) // Placeholder for online status
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastMessageTimeRef = useRef<string | null>(null)
+  
+  // Attachment state
+  const [pendingAttachments, setPendingAttachments] = useState<{ file: File; previewUrl?: string; type: string }[]>([])
+  const [uploadingAttachment, setUploadingAttachment] = useState(false)
 
   // Scroll to bottom with smooth animation
   const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
@@ -321,10 +330,71 @@ export function MessageThreadPro({
     }, 2000)
   }
 
+  // Handle file attachment selection
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    for (const file of Array.from(files)) {
+      const validation = validateDocumentFile(file, 10)
+      if (!validation.valid) {
+        toast.error("Invalid file", { description: validation.error })
+        continue
+      }
+
+      // Create preview for images
+      let previewUrl: string | undefined
+      if (file.type.startsWith("image/")) {
+        previewUrl = URL.createObjectURL(file)
+      }
+
+      setPendingAttachments(prev => [...prev, {
+        file,
+        previewUrl,
+        type: file.type,
+      }])
+    }
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""
+    }
+  }
+
+  // Remove pending attachment
+  const removePendingAttachment = (index: number) => {
+    setPendingAttachments(prev => {
+      const attachment = prev[index]
+      if (attachment.previewUrl) {
+        URL.revokeObjectURL(attachment.previewUrl)
+      }
+      return prev.filter((_, i) => i !== index)
+    })
+  }
+
+  // Upload attachments and return URLs
+  const uploadAttachments = async (): Promise<{ type: string; url: string; name: string }[]> => {
+    const uploadedAttachments: { type: string; url: string; name: string }[] = []
+    
+    for (const attachment of pendingAttachments) {
+      const result = await uploadDocumentToCloudinary(attachment.file, "message_attachments")
+      
+      if (result.success && result.url) {
+        uploadedAttachments.push({
+          type: attachment.type,
+          url: result.url,
+          name: attachment.file.name,
+        })
+      }
+    }
+    
+    return uploadedAttachments
+  }
+
   // Send message using API
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!newMessage.trim() || sending) return
+    if ((!newMessage.trim() && pendingAttachments.length === 0) || sending) return
 
     const messageContent = newMessage.trim()
     setNewMessage("")
@@ -341,6 +411,26 @@ export function MessageThreadPro({
       body: JSON.stringify({ isTyping: false }),
     }).catch(() => {})
 
+    // Upload attachments first if any
+    let uploadedAttachments: { type: string; url: string; name: string }[] = []
+    if (pendingAttachments.length > 0) {
+      setUploadingAttachment(true)
+      try {
+        uploadedAttachments = await uploadAttachments()
+        // Clear pending attachments after upload
+        pendingAttachments.forEach(a => {
+          if (a.previewUrl) URL.revokeObjectURL(a.previewUrl)
+        })
+        setPendingAttachments([])
+      } catch (err) {
+        toast.error("Failed to upload attachments")
+        setSending(false)
+        setUploadingAttachment(false)
+        return
+      }
+      setUploadingAttachment(false)
+    }
+
     // Optimistic update - add message immediately
     const tempId = `temp-${Date.now()}`
     const optimisticMessage: Message = {
@@ -348,6 +438,7 @@ export function MessageThreadPro({
       senderId: currentUserId,
       receiverId: otherParticipant.id,
       content: messageContent,
+      attachments: uploadedAttachments,
       isRead: false,
       createdAt: new Date(),
       status: "sending",
@@ -360,7 +451,10 @@ export function MessageThreadPro({
       const response = await fetch(`/api/messages/${conversationId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: messageContent }),
+        body: JSON.stringify({ 
+          content: messageContent,
+          attachments: uploadedAttachments,
+        }),
       })
 
       if (response.ok) {
@@ -577,8 +671,55 @@ export function MessageThreadPro({
       </CardContent>
 
       {/* Enhanced Input Area */}
-      <div className="flex-shrink-0 border-t p-4 bg-background/80 backdrop-blur-sm">
-        <form onSubmit={handleSend} className="flex items-center gap-2">
+      <div className="flex-shrink-0 border-t bg-background/80 backdrop-blur-sm">
+        {/* Pending attachments preview */}
+        {pendingAttachments.length > 0 && (
+          <div className="px-4 pt-3 pb-1 flex flex-wrap gap-2 border-b border-border/50">
+            {pendingAttachments.map((attachment, index) => (
+              <div key={index} className="relative group">
+                {attachment.type.startsWith("image/") && attachment.previewUrl ? (
+                  <div className="relative w-16 h-16 rounded-lg overflow-hidden border">
+                    <img
+                      src={attachment.previewUrl}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-lg">
+                    <FileText className="h-4 w-4 text-primary" />
+                    <span className="text-xs truncate max-w-[100px]">{attachment.file.name}</span>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => removePendingAttachment(index)}
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            {uploadingAttachment && (
+              <div className="flex items-center gap-2 px-3 py-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-xs">Uploading...</span>
+              </div>
+            )}
+          </div>
+        )}
+        
+        <form onSubmit={handleSend} className="p-4 flex items-center gap-2">
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          
           {/* Attachment button */}
           <TooltipProvider>
             <Tooltip>
@@ -588,12 +729,13 @@ export function MessageThreadPro({
                   variant="ghost" 
                   size="icon" 
                   className="hover:bg-muted flex-shrink-0"
-                  disabled
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={sending || uploadingAttachment}
                 >
                   <Paperclip className="h-5 w-5 text-muted-foreground" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Attach file (coming soon)</TooltipContent>
+              <TooltipContent>Attach file</TooltipContent>
             </Tooltip>
           </TooltipProvider>
           
@@ -604,7 +746,7 @@ export function MessageThreadPro({
               placeholder="Type a message..."
               value={newMessage}
               onChange={handleInputChange}
-              disabled={sending}
+              disabled={sending || uploadingAttachment}
               className="pr-10 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
             />
             <Button 
@@ -622,10 +764,10 @@ export function MessageThreadPro({
           <Button 
             type="submit" 
             size="icon"
-            disabled={!newMessage.trim() || sending}
+            disabled={(!newMessage.trim() && pendingAttachments.length === 0) || sending || uploadingAttachment}
             className="flex-shrink-0 bg-primary hover:bg-primary/90 transition-all duration-200"
           >
-            {sending ? (
+            {sending || uploadingAttachment ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <Send className="h-4 w-4" />
@@ -634,7 +776,7 @@ export function MessageThreadPro({
         </form>
         
         {/* Encryption notice */}
-        <p className="text-[10px] text-center text-muted-foreground mt-2">
+        <p className="text-[10px] text-center text-muted-foreground pb-2">
           Messages are private and secure between you and {otherParticipant.name}
         </p>
       </div>
