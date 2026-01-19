@@ -12,7 +12,7 @@ import { client } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { useSubscriptionStore, usePlatformSettingsStore } from "@/lib/store"
 import type { SupportedCurrency } from "@/lib/types"
-import { getPaymentLinkUrl } from "@/lib/stripe-payment-links"
+import { getPaymentLinkUrl, STRIPE_PAYMENT_LINKS } from "@/lib/stripe-payment-links"
 
 const CURRENCY_SYMBOLS: Record<SupportedCurrency, string> = {
   INR: "₹",
@@ -113,9 +113,9 @@ export default function PricingPage() {
       id: "ngo-pro",
       name: "Pro",
       description: "Unlock unlimited FREE volunteer profiles",
-      // TEST MODE: ₹1 for testing, change to 2999 for production
-      price: platformSettings?.ngoProPrice || 1, // TEST PRICE
-      priceDisplay: `${currencySymbol}${platformSettings?.ngoProPrice || 1}`,
+      // Use Stripe Payment Link price for accurate display
+      price: STRIPE_PAYMENT_LINKS["ngo-pro-monthly"].price,
+      priceDisplay: `${STRIPE_PAYMENT_LINKS["ngo-pro-monthly"].currency === "USD" ? "$" : currencySymbol}${STRIPE_PAYMENT_LINKS["ngo-pro-monthly"].price}`,
       period: "per month",
       icon: Zap,
       features: platformSettings?.ngoProFeatures || [
@@ -157,9 +157,9 @@ export default function PricingPage() {
       id: "volunteer-pro",
       name: "Pro",
       description: "Apply to unlimited jobs",
-      // TEST MODE: ₹1 for testing, change to 999 for production
-      price: platformSettings?.volunteerProPrice || 1, // TEST PRICE
-      priceDisplay: `${currencySymbol}${platformSettings?.volunteerProPrice || 1}`,
+      // Use Stripe Payment Link price for accurate display
+      price: STRIPE_PAYMENT_LINKS["volunteer-pro-monthly"].price,
+      priceDisplay: `${STRIPE_PAYMENT_LINKS["volunteer-pro-monthly"].currency === "USD" ? "$" : currencySymbol}${STRIPE_PAYMENT_LINKS["volunteer-pro-monthly"].price}`,
       period: "per month",
       icon: Sparkles,
       features: platformSettings?.volunteerProFeatures || [

@@ -9,24 +9,24 @@
 
 export const STRIPE_PAYMENT_LINKS = {
   // NGO Pro Subscription
-  // For TESTING: Create with Price = ₹1 INR, Billing = Monthly
+  // For TESTING: Create with Price = $0.05 USD, Billing = Monthly
   // For PRODUCTION: Create with Price = ₹2999 INR, Billing = Monthly
   // Redirect URL: https://yoursite.com/api/payments/stripe-link-callback?type=subscription&plan=ngo-pro
   "ngo-pro-monthly": {
-    url: "https://buy.stripe.com/00w4gAeb27bQ91U6jdcs801", // TEST LINK
-    price: 1, // TEST PRICE - change to 2999 for production
-    currency: "INR",
+    url: "https://buy.stripe.com/00w4gAeb27bQ91U6jdcs801", // TEST LINK ($0.05)
+    price: 0.05, // TEST PRICE in USD - change to 2999 INR for production
+    currency: "USD", // TEST CURRENCY - change to INR for production
     description: "NGO Pro - Unlock unlimited free volunteer profiles",
   },
   
   // Volunteer Pro Subscription  
-  // For TESTING: Create with Price = ₹1 INR, Billing = Monthly
+  // For TESTING: Create with Price = $0.05 USD, Billing = Monthly
   // For PRODUCTION: Create with Price = ₹999 INR, Billing = Monthly
   // Redirect URL: https://yoursite.com/api/payments/stripe-link-callback?type=subscription&plan=volunteer-pro
   "volunteer-pro-monthly": {
-    url: "https://buy.stripe.com/aFafZid6YeEi3HAfTNcs800", // TEST LINK
-    price: 1, // TEST PRICE - change to 999 for production
-    currency: "INR", 
+    url: "https://buy.stripe.com/aFafZid6YeEi3HAfTNcs800", // TEST LINK ($0.05)
+    price: 0.05, // TEST PRICE in USD - change to 999 INR for production
+    currency: "USD", // TEST CURRENCY - change to INR for production
     description: "Volunteer Pro - Apply to unlimited jobs",
   },
 }
