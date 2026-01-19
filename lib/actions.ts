@@ -1415,11 +1415,12 @@ export async function getAdminAnalytics() {
   await requireRole(["admin"])
   
   const db = await getDb()
+  const userCollection = db.collection("user")
   const now = new Date()
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
   
-  // Get counts
+  // Get counts - use user collection with role filter
   const [
     totalVolunteers,
     totalNGOs,
@@ -1432,23 +1433,25 @@ export async function getAdminAnalytics() {
     verifiedNGOs,
     verifiedVolunteers,
   ] = await Promise.all([
-    volunteerProfilesDb.count(),
-    ngoProfilesDb.count(),
+    userCollection.countDocuments({ role: "volunteer" }),
+    userCollection.countDocuments({ role: "ngo" }),
     projectsDb.count(),
     applicationsDb.count({}),
-    projectsDb.count({ status: "active" }),
+    projectsDb.count({ status: { $in: ["active", "open"] } }),
     projectsDb.count({ status: "completed" }),
     applicationsDb.count({ status: "pending" }),
     applicationsDb.count({ status: "accepted" }),
-    ngoProfilesDb.count({ isVerified: true }),
-    volunteerProfilesDb.count({ isVerified: true }),
+    userCollection.countDocuments({ role: "ngo", isVerified: true }),
+    userCollection.countDocuments({ role: "volunteer", isVerified: true }),
   ])
   
-  // Get recent signups (last 30 days)
-  const recentVolunteers = await db.collection("volunteerProfiles").countDocuments({
+  // Get recent signups (last 30 days) - use user collection
+  const recentVolunteers = await userCollection.countDocuments({
+    role: "volunteer",
     createdAt: { $gte: thirtyDaysAgo }
   })
-  const recentNGOs = await db.collection("ngoProfiles").countDocuments({
+  const recentNGOs = await userCollection.countDocuments({
+    role: "ngo",
     createdAt: { $gte: thirtyDaysAgo }
   })
   
@@ -1469,16 +1472,17 @@ export async function getAdminAnalytics() {
     { $group: { _id: null, total: { $sum: "$amount" } } }
   ]).toArray()
   
-  // Get pending verification counts
-  const pendingNGOVerifications = await db.collection("ngoProfiles").countDocuments({
+  // Get pending verification counts - use user collection
+  const pendingNGOVerifications = await userCollection.countDocuments({
+    role: "ngo",
     isVerified: { $ne: true },
-    isActive: { $ne: false }
+    isOnboarded: true
   })
   
-  // Recent activity from various collections
+  // Recent activity from user collection and other collections
   const recentActivity = await Promise.all([
-    db.collection("volunteerProfiles")
-      .find({})
+    userCollection
+      .find({ role: "volunteer" })
       .sort({ createdAt: -1 })
       .limit(5)
       .project({ name: 1, createdAt: 1 })
@@ -1488,15 +1492,15 @@ export async function getAdminAnalytics() {
         text: `New volunteer: ${d.name || "Anonymous"}`,
         createdAt: d.createdAt 
       }))),
-    db.collection("ngoProfiles")
-      .find({})
+    userCollection
+      .find({ role: "ngo" })
       .sort({ createdAt: -1 })
       .limit(5)
-      .project({ organizationName: 1, orgName: 1, createdAt: 1 })
+      .project({ organizationName: 1, orgName: 1, name: 1, createdAt: 1 })
       .toArray()
       .then(docs => docs.map(d => ({ 
         type: "ngo_signup" as const,
-        text: `New NGO: ${d.organizationName || d.orgName || "Organization"}`,
+        text: `New NGO: ${d.organizationName || d.orgName || d.name || "Organization"}`,
         createdAt: d.createdAt 
       }))),
     db.collection("projects")

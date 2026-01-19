@@ -9,9 +9,9 @@ async function updateTestPrices() {
     console.log('✅ Connected to MongoDB');
     
     const db = client.db();
-    
+
     // Update settings with test prices and remove singleProfileUnlockPrice
-    const result = await db.collection('admin_settings').updateOne(
+    const result = await db.collection('adminSettings').updateOne(
       {},
       { 
         $set: { 
@@ -23,12 +23,12 @@ async function updateTestPrices() {
         }
       }
     );
-    
+
     console.log('\n📋 Updated settings:');
     console.log('  Modified:', result.modifiedCount > 0 ? 'Yes' : 'No');
-    
+
     // Verify the update
-    const settings = await db.collection('admin_settings').findOne({});
+    const settings = await db.collection('adminSettings').findOne({});
     if (settings) {
       console.log('\n✅ Current Settings:');
       console.log('  - NGO Pro Price:', settings.ngoProPrice);

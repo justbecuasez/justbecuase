@@ -11,11 +11,11 @@ async function initializeSettings() {
     const db = client.db();
     
     // Check if settings exist
-    const existing = await db.collection('admin_settings').findOne({});
-    
+    const existing = await db.collection('adminSettings').findOne({});
+
     if (existing) {
       console.log('📋 Settings exist, updating test prices...');
-      await db.collection('admin_settings').updateOne(
+      await db.collection('adminSettings').updateOne(
         {},
         { 
           $set: { 
@@ -27,7 +27,7 @@ async function initializeSettings() {
       );
     } else {
       console.log('📋 No settings found, creating with test prices...');
-      await db.collection('admin_settings').insertOne({
+      await db.collection('adminSettings').insertOne({
         // Platform Settings
         platformName: "JustBecause.Asia",
         platformDescription: "Connecting NGOs with skilled volunteers",
@@ -89,7 +89,7 @@ async function initializeSettings() {
     }
     
     // Verify
-    const settings = await db.collection('admin_settings').findOne({});
+    const settings = await db.collection('adminSettings').findOne({});
     console.log('\n✅ Current Settings:');
     console.log('  - Platform:', settings.platformName);
     console.log('  - NGO Pro Price: ₹' + settings.ngoProPrice, '(test price)');
