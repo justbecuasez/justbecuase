@@ -15,11 +15,11 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Camera, Save, Loader2, CheckCircle, Building2, Globe, Users, ExternalLink } from "lucide-react"
+import { Camera, Save, Loader2, CheckCircle, Building2, Globe, Users, ExternalLink, FileText, Upload, X } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { getNGOProfile, updateNGOProfile } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
-import { uploadToCloudinary, validateImageFile } from "@/lib/upload"
+import { uploadToCloudinary, validateImageFile, uploadDocumentToCloudinary, validateDocumentFile } from "@/lib/upload"
 import type { NGOProfile } from "@/lib/types"
 
 const teamSizes = [
@@ -55,6 +55,8 @@ export default function NGOProfilePage() {
   const [isSaved, setIsSaved] = useState(false)
   const [error, setError] = useState("")
   const [uploadingLogo, setUploadingLogo] = useState(false)
+  const [uploadingDoc, setUploadingDoc] = useState(false)
+  const [verificationDocs, setVerificationDocs] = useState<Array<{ name: string; url: string; type: string }>>([])
 
   const [formData, setFormData] = useState({
     orgName: "",
@@ -111,6 +113,7 @@ export default function NGOProfilePage() {
             },
           })
           setSelectedCauses(profileData.causes || [])
+          setVerificationDocs(profileData.verificationDocuments || [])
         }
       } catch (err) {
         console.error("Failed to load profile:", err)
@@ -183,6 +186,64 @@ export default function NGOProfilePage() {
       })
     } finally {
       setUploadingLogo(false)
+    }
+  }
+
+  const handleVerificationDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setUploadingDoc(true)
+
+    try {
+      for (const file of Array.from(files)) {
+        // Validate file
+        const validation = validateDocumentFile(file, 10)
+        if (!validation.valid) {
+          toast.error("Invalid file", { description: validation.error })
+          continue
+        }
+
+        // Upload to Cloudinary
+        const result = await uploadDocumentToCloudinary(file, "ngo_verification_documents")
+
+        if (!result.success) {
+          toast.error("Upload failed", { description: result.error })
+          continue
+        }
+
+        // Add to documents list
+        const newDoc = {
+          name: file.name,
+          url: result.url!,
+          type: file.type,
+        }
+        
+        setVerificationDocs(prev => [...prev, newDoc])
+        
+        // Save to profile
+        const updatedDocs = [...verificationDocs, newDoc]
+        await updateNGOProfile({ verificationDocuments: updatedDocs })
+        
+        toast.success("Document uploaded successfully!")
+      }
+    } catch (err) {
+      console.error("Document upload error:", err)
+      toast.error("Failed to upload document")
+    } finally {
+      setUploadingDoc(false)
+    }
+  }
+
+  const removeVerificationDoc = async (index: number) => {
+    const updatedDocs = verificationDocs.filter((_, i) => i !== index)
+    setVerificationDocs(updatedDocs)
+    
+    try {
+      await updateNGOProfile({ verificationDocuments: updatedDocs })
+      toast.success("Document removed")
+    } catch (err) {
+      toast.error("Failed to remove document")
     }
   }
 
@@ -329,6 +390,91 @@ export default function NGOProfilePage() {
                       )}
                     </div>
                   </div>
+                </CardContent>
+              </Card>
+
+              {/* Verification Documents Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    Verification Documents
+                    {profile?.isVerified && (
+                      <Badge className="bg-green-500/10 text-green-600 border-green-200">
+                        <CheckCircle className="h-3 w-3 mr-1" />
+                        Verified
+                      </Badge>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    Upload your registration certificate or other verification documents to get the verified badge
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Upload Button */}
+                  <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      multiple
+                      onChange={handleVerificationDocUpload}
+                      className="hidden"
+                      id="verification-doc-upload"
+                      disabled={uploadingDoc}
+                    />
+                    <label htmlFor="verification-doc-upload" className="cursor-pointer">
+                      {uploadingDoc ? (
+                        <>
+                          <Loader2 className="h-8 w-8 mx-auto mb-2 text-primary animate-spin" />
+                          <p className="text-sm text-muted-foreground">Uploading...</p>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                          <p className="text-sm font-medium text-foreground">Upload Documents</p>
+                          <p className="text-xs text-muted-foreground mt-1">PDF, DOC, or images up to 10MB</p>
+                        </>
+                      )}
+                    </label>
+                  </div>
+                  
+                  {/* Uploaded documents list */}
+                  {verificationDocs.length > 0 && (
+                    <div className="space-y-2">
+                      {verificationDocs.map((doc, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-primary" />
+                            <a 
+                              href={doc.url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-sm font-medium hover:underline text-primary truncate max-w-[200px]"
+                            >
+                              {doc.name}
+                            </a>
+                            <Badge variant="secondary" className="text-xs">
+                              {doc.type.includes("pdf") ? "PDF" : doc.type.includes("word") || doc.type.includes("doc") ? "DOC" : "Image"}
+                            </Badge>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeVerificationDoc(index)}
+                            className="text-destructive hover:text-destructive/80 h-8 w-8 p-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {!profile?.isVerified && verificationDocs.length > 0 && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      Documents submitted. Our team will review and verify your organization.
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 

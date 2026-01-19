@@ -232,6 +232,60 @@ export default function NGOOnboardingPage() {
     }
   }
 
+  // Handle verification document upload
+  const handleVerificationDocUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setUploadingDoc(true)
+
+    try {
+      for (const file of Array.from(files)) {
+        // Validate file
+        const validation = validateDocumentFile(file, 10)
+        if (!validation.valid) {
+          toast.error("Invalid file", { description: validation.error })
+          continue
+        }
+
+        // Upload to Cloudinary
+        const result = await uploadDocumentToCloudinary(file, "ngo_verification_documents", {
+          onProgress: (percent) => {
+            // Could show progress if needed
+          }
+        })
+
+        if (!result.success) {
+          toast.error("Upload failed", { description: result.error })
+          continue
+        }
+
+        // Add to documents list
+        setVerificationDocuments(prev => [...prev, {
+          name: file.name,
+          url: result.url!,
+          type: file.type,
+        }])
+        
+        toast.success("Document uploaded successfully!")
+      }
+    } catch (err) {
+      console.error("Document upload error:", err)
+      toast.error("Failed to upload document")
+    } finally {
+      setUploadingDoc(false)
+      // Reset file input
+      if (verificationDocRef.current) {
+        verificationDocRef.current.value = ""
+      }
+    }
+  }
+
+  // Remove a verification document
+  const removeVerificationDoc = (index: number) => {
+    setVerificationDocuments(prev => prev.filter((_, i) => i !== index))
+  }
+
   // Geolocation function using react-geolocated
   const getExactLocation = async () => {
     if (!isGeolocationAvailable) {
@@ -527,6 +581,7 @@ export default function NGOOnboardingPage() {
         },
         causes: selectedCauses,
         requiredSkills,
+        verificationDocuments, // Include uploaded verification documents
       }
 
       const result = await saveNGOOnboarding(onboardingData)
@@ -1122,10 +1177,62 @@ export default function NGOOnboardingPage() {
             <p className="text-sm text-muted-foreground mb-4">
               Add your registration certificate to get verified badge
             </p>
-            <Button variant="outline" size="sm">
-              <FileText className="h-4 w-4 mr-2" />
-              Upload Document
+            
+            {/* Hidden file input */}
+            <input
+              ref={verificationDocRef}
+              type="file"
+              accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+              multiple
+              onChange={handleVerificationDocUpload}
+              className="hidden"
+              id="verification-doc-upload"
+            />
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => verificationDocRef.current?.click()}
+              disabled={uploadingDoc}
+            >
+              {uploadingDoc ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Upload Document
+                </>
+              )}
             </Button>
+            
+            {/* Uploaded documents list */}
+            {verificationDocuments.length > 0 && (
+              <div className="mt-4 space-y-2 text-left">
+                {verificationDocuments.map((doc, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-primary" />
+                      <span className="text-sm truncate max-w-[200px]">{doc.name}</span>
+                      <Badge variant="secondary" className="text-xs">
+                        {doc.type.includes("pdf") ? "PDF" : doc.type.includes("word") || doc.type.includes("doc") ? "DOC" : "Image"}
+                      </Badge>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeVerificationDoc(index)}
+                      className="text-destructive hover:text-destructive/80 h-8 w-8 p-0"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

@@ -178,6 +178,13 @@ export interface NGOProfile {
   isActive: boolean
   isBanned?: boolean
   
+  // Verification Documents (for NGO verification)
+  verificationDocuments?: {
+    name: string
+    url: string
+    type: string
+  }[]
+  
   // Subscription (simplified to 2 plans)
   subscriptionPlan: "free" | "pro"
   subscriptionExpiry?: Date
