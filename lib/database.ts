@@ -279,9 +279,9 @@ export const ngoProfilesDb = {
   },
 
   async decrementUnlocks(userId: string): Promise<boolean> {
-    const collection = await getCollection<NGOProfile>(COLLECTIONS.NGO_PROFILES)
+    const collection = await getCollection<any>("user")
     const result = await collection.updateOne(
-      { userId, profileUnlocksRemaining: { $gt: 0 } },
+      { $expr: { $eq: [{ $toString: "$_id" }, userId] }, profileUnlocksRemaining: { $gt: 0 } },
       { $inc: { profileUnlocksRemaining: -1 }, $set: { updatedAt: new Date() } }
     )
     return result.modifiedCount > 0
@@ -289,9 +289,9 @@ export const ngoProfilesDb = {
 
   // Increment monthly unlock count (new subscription system)
   async incrementMonthlyUnlocks(userId: string): Promise<boolean> {
-    const collection = await getCollection<NGOProfile>(COLLECTIONS.NGO_PROFILES)
+    const collection = await getCollection<any>("user")
     const result = await collection.updateOne(
-      { userId },
+      { $expr: { $eq: [{ $toString: "$_id" }, userId] } },
       { 
         $inc: { monthlyUnlocksUsed: 1 }, 
         $set: { updatedAt: new Date() } 

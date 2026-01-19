@@ -16,14 +16,13 @@ export async function GET() {
     const db = await getDb()
     const userId = session.user.id
 
-    // Determine role
+    // Get user from user collection
+    const user = await db.collection("user").findOne({ id: userId })
     const role = session.user.role as string
 
     if (role === "volunteer") {
-      const profile = await db.collection("volunteerProfiles").findOne({ userId })
-      
       return NextResponse.json({
-        privacy: profile?.privacy || {
+        privacy: user?.privacy || {
           showProfile: true,
           showInSearch: true,
           emailNotifications: true,
@@ -33,10 +32,8 @@ export async function GET() {
         }
       })
     } else if (role === "ngo") {
-      const profile = await db.collection("ngoProfiles").findOne({ userId })
-      
       return NextResponse.json({
-        privacy: profile?.privacy || {
+        privacy: user?.privacy || {
           showProfile: true,
           showInSearch: true,
           emailNotifications: true,
@@ -66,12 +63,10 @@ export async function PUT(request: NextRequest) {
     const { privacy } = await request.json()
     const db = await getDb()
     const userId = session.user.id
-    const role = session.user.role as string
 
-    const collection = role === "volunteer" ? "volunteerProfiles" : "ngoProfiles"
-    
-    await db.collection(collection).updateOne(
-      { userId },
+    // Update privacy in user collection
+    await db.collection("user").updateOne(
+      { id: userId },
       { 
         $set: { 
           privacy,

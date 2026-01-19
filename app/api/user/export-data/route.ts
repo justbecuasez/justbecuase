@@ -30,8 +30,8 @@ export async function GET() {
     }
 
     if (role === "volunteer") {
-      // Get volunteer profile
-      const profile = await db.collection("volunteerProfiles").findOne({ userId })
+      // Get volunteer profile from user collection
+      const profile = await db.collection("user").findOne({ id: userId })
       if (profile) {
         userData.profile = {
           name: profile.name,
@@ -97,8 +97,8 @@ export async function GET() {
       }))
 
     } else if (role === "ngo") {
-      // Get NGO profile
-      const profile = await db.collection("ngoProfiles").findOne({ userId })
+      // Get NGO profile from user collection
+      const profile = await db.collection("user").findOne({ id: userId })
       if (profile) {
         userData.profile = {
           orgName: profile.orgName,
