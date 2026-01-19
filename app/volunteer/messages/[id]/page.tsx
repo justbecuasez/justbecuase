@@ -24,6 +24,22 @@ export default async function VolunteerMessageThreadPage({ params }: Props) {
     redirect("/auth/signin")
   }
 
+  // Role verification: Ensure user is a volunteer
+  if (session.user.role !== "volunteer") {
+    if (session.user.role === "ngo") {
+      redirect("/ngo/dashboard")
+    } else if (session.user.role === "admin") {
+      redirect("/admin")
+    } else {
+      redirect("/auth/role-select")
+    }
+  }
+
+  // Redirect to onboarding if not completed
+  if (!session.user.isOnboarded) {
+    redirect("/volunteer/onboarding")
+  }
+
   const conversation = await getConversation(id)
 
   if (!conversation) {
