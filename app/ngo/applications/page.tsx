@@ -3,7 +3,7 @@ import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import Link from "next/link"
 import { auth } from "@/lib/auth"
-import { getNGOProfile, getNGOApplications, getProject, getVolunteerProfile, updateApplicationStatus } from "@/lib/actions"
+import { getNGOProfile, getNGOApplicationsEnriched } from "@/lib/actions"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { NGOSidebar } from "@/components/dashboard/ngo-sidebar"
 import { Button } from "@/components/ui/button"
@@ -21,6 +21,22 @@ export default async function ApplicationsPage() {
 
   if (!session?.user) {
     redirect("/auth/signin")
+  }
+
+  // Role verification: Ensure user is an NGO
+  if (session.user.role !== "ngo") {
+    if (session.user.role === "volunteer") {
+      redirect("/volunteer/dashboard")
+    } else if (session.user.role === "admin") {
+      redirect("/admin")
+    } else {
+      redirect("/auth/role-select")
+    }
+  }
+
+  // Redirect to onboarding if not completed
+  if (!session.user.isOnboarded) {
+    redirect("/ngo/onboarding")
   }
 
   const ngoProfile = await getNGOProfile()
@@ -52,26 +68,12 @@ export default async function ApplicationsPage() {
 }
 
 async function ApplicationsList() {
-  const applications = await getNGOApplications()
-  
-  // Enrich applications with project and volunteer data
-  const enrichedApplications = await Promise.all(
-    applications.map(async (app) => {
-      const [project, volunteerProfile] = await Promise.all([
-        getProject(app.projectId),
-        getVolunteerProfile(app.volunteerId),
-      ])
-      return {
-        ...app,
-        project,
-        volunteerProfile,
-      }
-    })
-  )
+  // Use optimized batch query instead of N+1 individual queries
+  const enrichedApplications = await getNGOApplicationsEnriched()
 
-  const pendingCount = enrichedApplications.filter((a) => a.status === "pending").length
-  const acceptedCount = enrichedApplications.filter((a) => a.status === "accepted").length
-  const shortlistedCount = enrichedApplications.filter((a) => a.status === "shortlisted").length
+  const pendingCount = enrichedApplications.filter((a: any) => a.status === "pending").length
+  const acceptedCount = enrichedApplications.filter((a: any) => a.status === "accepted").length
+  const shortlistedCount = enrichedApplications.filter((a: any) => a.status === "shortlisted").length
 
   if (enrichedApplications.length === 0) {
     return (

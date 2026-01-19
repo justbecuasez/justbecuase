@@ -959,6 +959,47 @@ export async function getNGOApplications(): Promise<Application[]> {
   return serializeDocuments(applications)
 }
 
+/**
+ * Get NGO applications with enriched data (project and volunteer info)
+ * Optimized to avoid N+1 queries
+ */
+export async function getNGOApplicationsEnriched() {
+  const user = await getCurrentUser()
+  if (!user) return []
+  
+  const applications = await applicationsDb.findByNgoId(user.id)
+  
+  if (applications.length === 0) return []
+  
+  // Collect unique IDs
+  const projectIds = [...new Set(applications.map((a) => a.projectId))]
+  const volunteerIds = [...new Set(applications.map((a) => a.volunteerId))]
+  
+  // Batch fetch projects and volunteer profiles
+  const [projects, volunteerProfiles] = await Promise.all([
+    Promise.all(projectIds.map((id) => projectsDb.findById(id))),
+    Promise.all(volunteerIds.map((id) => volunteerProfilesDb.findByUserId(id))),
+  ])
+  
+  // Create lookup maps
+  const projectMap = new Map(
+    projects.filter(Boolean).map((p) => [p!._id?.toString(), p])
+  )
+  const volunteerMap = new Map(
+    volunteerProfiles.filter(Boolean).map((v) => [v!.userId, v])
+  )
+  
+  // Enrich applications
+  const enrichedApplications = applications.map((app) => ({
+    ...app,
+    _id: app._id?.toString(),
+    project: projectMap.get(app.projectId) || null,
+    volunteerProfile: volunteerMap.get(app.volunteerId) || null,
+  }))
+  
+  return serializeDocuments(enrichedApplications)
+}
+
 export async function updateApplicationStatus(
   applicationId: string,
   status: Application["status"],
@@ -2148,7 +2189,7 @@ export async function getMyConversations() {
         ...conv,
         ngoName: otherUser.name,
         ngoLogo: otherUser.image,
-        otherParticipantType: "ngo",
+        otherParticipantType: "ngo" as const,
         otherParticipantId,
       }
     }
@@ -2157,7 +2198,7 @@ export async function getMyConversations() {
       ...conv,
       volunteerName: otherUser?.name || "Volunteer",
       volunteerAvatar: otherUser?.image,
-      otherParticipantType: "volunteer",
+      otherParticipantType: "volunteer" as const,
       otherParticipantId,
     }
   })

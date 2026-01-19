@@ -15,7 +15,7 @@ import {
   Film,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { uploadToCloudinary } from "@/lib/upload"
+import { uploadDocumentToCloudinary, validateDocumentFile } from "@/lib/upload"
 import { toast } from "sonner"
 
 interface Attachment {
@@ -64,10 +64,11 @@ export function MessageInput({
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
 
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`File ${file.name} is too large`, {
-          description: "Maximum file size is 10MB",
+      // Validate file using the document validator
+      const validation = validateDocumentFile(file, 10)
+      if (!validation.valid) {
+        toast.error(`File ${file.name} is not valid`, {
+          description: validation.error,
         })
         continue
       }
@@ -86,7 +87,7 @@ export function MessageInput({
 
       // Upload file
       try {
-        const result = await uploadToCloudinary(file, "messages", {
+        const result = await uploadDocumentToCloudinary(file, "messages", {
           onProgress: (percent) => {
             setAttachments((prev) =>
               prev.map((a) =>

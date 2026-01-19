@@ -388,6 +388,15 @@ export interface Conversation {
   // For NGO - is this volunteer profile unlocked?
   isUnlocked: boolean
   
+  // Enriched fields from getMyConversations
+  otherParticipantType?: "ngo" | "volunteer"
+  otherParticipantId?: string
+  ngoName?: string
+  ngoLogo?: string
+  volunteerName?: string
+  volunteerAvatar?: string
+  unreadCount?: number
+  
   createdAt: Date
   updatedAt: Date
 }

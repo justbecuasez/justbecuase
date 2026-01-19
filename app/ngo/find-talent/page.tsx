@@ -15,6 +15,22 @@ export default async function NGOFindTalentPage() {
     redirect("/auth/signin")
   }
 
+  // Role verification: Ensure user is an NGO
+  if (session.user.role !== "ngo") {
+    if (session.user.role === "volunteer") {
+      redirect("/volunteer/dashboard")
+    } else if (session.user.role === "admin") {
+      redirect("/admin")
+    } else {
+      redirect("/auth/role-select")
+    }
+  }
+
+  // Redirect to onboarding if not completed
+  if (!session.user.isOnboarded) {
+    redirect("/ngo/onboarding")
+  }
+
   const ngoProfile = await getNGOProfile()
   const volunteers = await browseVolunteers()
   const unlockedProfiles = await getUnlockedProfiles()

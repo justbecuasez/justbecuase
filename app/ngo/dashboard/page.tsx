@@ -41,7 +41,7 @@ export default async function NGODashboard() {
   const subscriptionStatus = await getNGOSubscriptionStatus()
 
   // Calculate stats
-  const activeProjects = projects.filter((p) => p.status === "open")
+  const activeProjects = projects.filter((p) => p.status === "open" || p.status === "active")
   const completedProjects = projects.filter((p) => p.status === "completed")
   const pendingApplications = applications.filter((a) => a.status === "pending")
 

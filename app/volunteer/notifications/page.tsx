@@ -31,6 +31,22 @@ export default async function VolunteerNotificationsPage() {
     redirect("/auth/signin")
   }
 
+  // Role verification: Ensure user is a volunteer
+  if (session.user.role !== "volunteer") {
+    if (session.user.role === "ngo") {
+      redirect("/ngo/dashboard")
+    } else if (session.user.role === "admin") {
+      redirect("/admin")
+    } else {
+      redirect("/auth/role-select")
+    }
+  }
+
+  // Redirect to onboarding if not completed
+  if (!session.user.isOnboarded) {
+    redirect("/volunteer/onboarding")
+  }
+
   const notifications = await getMyNotifications()
 
   const unreadNotifications = notifications.filter((n) => !n.isRead)
