@@ -8,7 +8,7 @@ import { usePlatformSettingsStore } from "@/lib/store"
 export function Footer() {
   // Get platform settings for branding and social links
   const platformSettings = usePlatformSettingsStore((state) => state.settings)
-  const platformName = platformSettings?.platformName || "JustBecause.Asia"
+  const platformName = platformSettings?.platformName || "JustBecause Network"
   const socialLinks = platformSettings?.socialLinks
 
   return (

@@ -62,8 +62,8 @@ export default function ContactPage() {
                     <p className="text-sm text-muted-foreground mb-2">
                       For general inquiries and support.
                     </p>
-                    <a href="mailto:hello@justbecause.asia" className="text-primary hover:underline">
-                      hello@justbecause.asia
+                    <a href="mailto:hello@justbecausenetwork.com" className="text-primary hover:underline">
+                      hello@justbecausenetwork.com
                     </a>
                   </div>
                 </CardContent>

@@ -12,7 +12,7 @@ const changelogEntries = [
       {
         type: "feature",
         title: "Platform Launch",
-        description: "Initial release of JustBecause.asia with core features for volunteers and NGOs.",
+        description: "Initial release of JustBecause Network with core features for volunteers and NGOs.",
       },
       {
         type: "feature",
@@ -112,7 +112,7 @@ export default function ChangelogPage() {
               Changelog
             </h1>
             <p className="text-xl text-muted-foreground">
-              Track new features, improvements, and fixes to JustBecause.asia
+              Track new features, improvements, and fixes to JustBecause Network
             </p>
           </div>
 

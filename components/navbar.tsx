@@ -61,7 +61,7 @@ export function Navbar() {
   
   // Get platform settings for branding
   const platformSettings = usePlatformSettingsStore((state) => state.settings)
-  const platformName = platformSettings?.platformName || "JustBecause.Asia"
+  const platformName = platformSettings?.platformName || "JustBecause Network"
   
   const isPro = user?.role === 'ngo' 
     ? ngoSubscription?.plan === 'pro' 

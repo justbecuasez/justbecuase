@@ -21,7 +21,7 @@ export default function TermsPage() {
               </CardHeader>
               <CardContent className="prose prose-sm max-w-none">
                 <p>
-                  By accessing and using JustBecause.asia ("the Platform"), you accept and agree to be bound by
+                  By accessing and using JustBecause Network ("the Platform"), you accept and agree to be bound by
                   these Terms of Service. If you do not agree to these terms, please do not use the Platform.
                 </p>
               </CardContent>
@@ -75,7 +75,7 @@ export default function TermsPage() {
                   services. Any paid arrangements must be clearly disclosed and agreed upon between parties.
                 </p>
                 <p>
-                  <strong>4.2 No Employment Relationship:</strong> JustBecause.asia does not create an employment
+                  <strong>4.2 No Employment Relationship:</strong> JustBecause Network does not create an employment
                   relationship between volunteers and NGOs. Users are responsible for their own tax and legal
                   obligations.
                 </p>
@@ -93,7 +93,7 @@ export default function TermsPage() {
               <CardContent className="prose prose-sm max-w-none">
                 <p>
                   <strong>5.1 Platform Content:</strong> All content on the Platform, including design, logos, and
-                  text, is owned by JustBecause.asia and protected by copyright laws.
+                  text, is owned by JustBecause Network and protected by copyright laws.
                 </p>
                 <p>
                   <strong>5.2 User Content:</strong> You retain ownership of content you post but grant us a
@@ -112,7 +112,7 @@ export default function TermsPage() {
               </CardHeader>
               <CardContent className="prose prose-sm max-w-none">
                 <p>
-                  JustBecause.asia is a platform connecting volunteers with NGOs. We are not responsible for:
+                  JustBecause Network is a platform connecting volunteers with NGOs. We are not responsible for:
                 </p>
                 <ul className="list-disc pl-6 space-y-2">
                   <li>The quality or outcome of volunteer work</li>
@@ -166,7 +166,7 @@ export default function TermsPage() {
               </CardHeader>
               <CardContent className="prose prose-sm max-w-none">
                 <p>For questions about these Terms of Service, please contact us at:</p>
-                <p className="font-medium">support@justbecause.asia</p>
+                <p className="font-medium">support@justbecausenetwork.com</p>
               </CardContent>
             </Card>
           </div>

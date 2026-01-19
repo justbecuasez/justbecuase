@@ -119,7 +119,7 @@ export default function PrivacyPage() {
                   <li>Object to processing of your data for certain purposes</li>
                 </ul>
                 <p>
-                  To exercise these rights, please contact us at privacy@justbecause.asia or through your account
+                  To exercise these rights, please contact us at privacy@justbecausenetwork.com or through your account
                   settings.
                 </p>
               </CardContent>
@@ -199,9 +199,9 @@ export default function PrivacyPage() {
                   contact us at:
                 </p>
                 <p className="font-medium">
-                  Email: privacy@justbecause.asia
+                  Email: privacy@justbecausenetwork.com
                   <br />
-                  Platform: JustBecause.asia
+                  Platform: JustBecause Network
                 </p>
               </CardContent>
             </Card>

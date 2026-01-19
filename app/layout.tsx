@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "JustBecause.asia - Skills-Based Volunteering Platform",
+  title: "JustBecause Network - Skills-Based Volunteering Platform",
   description:
     "Connect your skills with meaningful causes. Join thousands of professionals making an impact across Asia through skills-based volunteering.",
   keywords: ["volunteering", "skills-based", "NGO", "nonprofit", "social impact", "Asia"],

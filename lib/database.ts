@@ -798,9 +798,9 @@ export const adminSettingsDb = {
     if (!exists) {
       await collection.insertOne({
         // Platform Settings
-        platformName: "JustBecause.Asia",
+        platformName: "JustBecause Network",
         platformDescription: "Connecting NGOs with skilled volunteers",
-        supportEmail: "support@justbecause.asia",
+        supportEmail: "support@justbecausenetwork.com",
         
         // Payment Settings
         currency: "INR",
@@ -856,7 +856,7 @@ export const adminSettingsDb = {
         maintenanceMode: false,
         
         // SEO
-        metaTitle: "JustBecause.Asia - Connect NGOs with Volunteers",
+        metaTitle: "JustBecause Network - Connect NGOs with Volunteers",
         metaDescription: "Platform connecting NGOs with skilled volunteers for social impact",
         
         updatedAt: new Date(),
