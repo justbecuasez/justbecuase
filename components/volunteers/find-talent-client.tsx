@@ -301,7 +301,7 @@ function VolunteerCard({
       <CardContent className="p-4 sm:p-6">
         <div className="flex items-start gap-3 sm:gap-4 mb-4">
           <div className="relative shrink-0">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-muted flex items-center justify-center overflow-hidden">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-muted flex items-center justify-center overflow-hidden">
               {volunteer.avatar ? (
                 <img
                   src={volunteer.avatar}
@@ -309,13 +309,13 @@ function VolunteerCard({
                   className={`w-full h-full object-cover ${isFree && !unlocked ? "blur-sm" : ""}`}
                 />
               ) : (
-                <span className="text-lg sm:text-xl font-bold text-muted-foreground">
+                <span className="text-xl sm:text-2xl font-bold text-muted-foreground">
                   {unlocked ? volunteer.name?.charAt(0) : "?"}
                 </span>
               )}
             </div>
             {isFree && !unlocked && (
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-yellow-500 flex items-center justify-center">
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-yellow-500 flex items-center justify-center">
                 <Lock className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white" />
               </div>
             )}

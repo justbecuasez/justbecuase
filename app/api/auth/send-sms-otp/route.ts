@@ -80,12 +80,24 @@ export async function POST(request: NextRequest) {
     const smsConfig = await configCollection.findOne({ type: "sms" })
     const dbConfig = smsConfig?.data || {}
     
+    console.log(`[SMS] DB Config found: ${smsConfig ? 'YES' : 'NO'}`)
+    console.log(`[SMS] DB Config data: ${JSON.stringify({
+      provider: dbConfig.provider,
+      hasTwilioSid: !!dbConfig.twilioAccountSid,
+      hasTwilioToken: !!dbConfig.twilioAuthToken,
+      twilioPhone: dbConfig.twilioPhoneNumber
+    })}`)
+    
     const smsProvider = dbConfig.provider || process.env.SMS_PROVIDER || "none"
+    
+    console.log(`[SMS] Final Provider: ${smsProvider}, Phone: ${formattedPhone}`)
     
     if (smsProvider === "twilio") {
       const accountSid = dbConfig.twilioAccountSid || process.env.TWILIO_ACCOUNT_SID
       const authToken = dbConfig.twilioAuthToken || process.env.TWILIO_AUTH_TOKEN
       const fromNumber = dbConfig.twilioPhoneNumber || process.env.TWILIO_PHONE_NUMBER
+      
+      console.log(`[SMS] Twilio config - SID: ${accountSid ? accountSid.substring(0, 6) + '...' : 'MISSING'}, Token: ${authToken ? 'SET (' + authToken.length + ' chars)' : 'MISSING'}, From: ${fromNumber}`)
       
       if (accountSid && authToken && fromNumber) {
         // Send via Twilio
@@ -93,13 +105,20 @@ export async function POST(request: NextRequest) {
         const client = twilio(accountSid, authToken)
         
         try {
-          await client.messages.create({
+          console.log(`[SMS] Attempting to send to ${formattedPhone} from ${fromNumber}`)
+          const message = await client.messages.create({
             body: `Your JustBecause.asia verification code is: ${otp}. Valid for 10 minutes.`,
             from: fromNumber,
             to: formattedPhone
           })
+          console.log(`[SMS] Message sent successfully. SID: ${message.sid}`)
         } catch (twilioError: any) {
-          console.error("Twilio SMS error:", twilioError)
+          console.error("[SMS] Twilio SMS error:", {
+            code: twilioError.code,
+            message: twilioError.message,
+            moreInfo: twilioError.moreInfo,
+            status: twilioError.status
+          })
           
           // Handle Twilio trial account restrictions (Error 21408)
           if (twilioError.code === 21408) {
@@ -118,6 +137,12 @@ export async function POST(request: NextRequest) {
             }
             
             throw new Error("Phone number not verified in Twilio. Please verify your number in Twilio Console or contact support.")
+          }
+          
+          // Handle invalid credentials (Error 20003)
+          if (twilioError.code === 20003) {
+            console.error(`[SMS] Invalid Twilio credentials - SID: ${accountSid?.substring(0, 6)}...`)
+            throw new Error("SMS service configuration error. Please contact support.")
           }
           
           // Other Twilio errors
@@ -261,6 +286,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: any) {
     console.error("Send SMS OTP error:", error)
-    return NextResponse.json({ error: "Failed to send OTP" }, { status: 500 })
+    // Return the actual error message for better debugging
+    const errorMessage = error.message || "Failed to send OTP"
+    console.error("[SMS] Returning error to client:", errorMessage)
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

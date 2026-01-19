@@ -54,7 +54,7 @@ export function VolunteerCard({ volunteer }: VolunteerCardProps) {
           <div className="flex items-start gap-4">
             <div className="relative">
               <div
-                className={`w-16 h-16 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-xl font-semibold ${
+                className={`w-20 h-20 rounded-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-2xl font-semibold ${
                   isLocked ? "blur-sm" : ""
                 }`}
               >
