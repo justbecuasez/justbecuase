@@ -1027,7 +1027,7 @@ export default function NGOOnboardingPage() {
         <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="h-8 w-8 text-secondary" />
         </div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">Welcome to JustBecause.asia!</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-2">Welcome to JustBecause Network!</h2>
         <p className="text-muted-foreground">
           Your organization profile is ready. Review and complete setup.
         </p>

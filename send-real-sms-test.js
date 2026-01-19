@@ -46,7 +46,7 @@ async function sendTestSMS() {
     
     console.log('📤 Sending SMS...');
     const message = await twilioClient.messages.create({
-      body: `Your JustBecause.asia verification code is: ${otp}. Valid for 10 minutes.`,
+      body: `Your JustBecause Network verification code is: ${otp}. Valid for 10 minutes.`,
       from: twilioPhoneNumber,
       to: TEST_PHONE_NUMBER
     });

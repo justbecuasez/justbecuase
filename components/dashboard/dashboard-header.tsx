@@ -59,7 +59,7 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                   <Heart className="h-4 w-4 text-primary-foreground" fill="currentColor" />
                 </div>
-                <span className="text-lg font-bold text-foreground">JustBecause.asia</span>
+                <span className="text-lg font-bold text-foreground">JustBecause Network</span>
               </div>
               <nav className="flex flex-col gap-2">
                 {mobileLinks.map((link) => (
@@ -81,7 +81,7 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
               <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
             </div>
             <span className="hidden sm:inline text-xl font-bold text-foreground">
-              JustBecause<span className="text-primary">.asia</span>
+              JustBecause<span className="text-primary"> Network</span>
             </span>
           </Link>
         </div>

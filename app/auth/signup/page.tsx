@@ -276,7 +276,7 @@ export default function SignUpPage() {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-xl font-semibold text-foreground mb-2">Choose your account type</h2>
-        <p className="text-muted-foreground">Select how you'd like to use JustBecause.asia</p>
+        <p className="text-muted-foreground">Select how you'd like to use JustBecause Network</p>
       </div>
 
       <div className="grid gap-4">
@@ -716,7 +716,7 @@ export default function SignUpPage() {
         <div className="max-w-md text-primary-foreground">
           <h2 className="text-3xl font-bold mb-4">Turn Your Skills Into Impact</h2>
           <p className="text-primary-foreground/90 mb-8">
-            Whether you're a skilled professional looking to give back or an NGO seeking expert help, JustBecause.asia
+            Whether you're a skilled professional looking to give back or an NGO seeking expert help, JustBecause Network
             connects you with opportunities that matter.
           </p>
           <div className="grid grid-cols-2 gap-6">

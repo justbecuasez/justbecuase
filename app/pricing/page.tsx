@@ -328,7 +328,7 @@ export default function PricingPage() {
       key: data.keyId,
       amount: data.amount * 100,
       currency: data.currency,
-      name: "JustBecause.asia",
+      name: "JustBecause Network",
       description: `${planName} Plan Subscription`,
       order_id: data.orderId,
       handler: async function (response: any) {

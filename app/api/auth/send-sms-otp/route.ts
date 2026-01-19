@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
         try {
           console.log(`[SMS] Attempting to send to ${formattedPhone} from ${fromNumber}`)
           const message = await client.messages.create({
-            body: `Your JustBecause.asia verification code is: ${otp}. Valid for 10 minutes.`,
+            body: `Your JustBecause Network verification code is: ${otp}. Valid for 10 minutes.`,
             from: fromNumber,
             to: formattedPhone
           })
@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
           api_secret: apiSecret,
           to: formattedPhone.replace("+", ""), // Remove + prefix as per Vonage docs
           from: fromNumber,
-          text: `Your JustBecause.asia verification code is: ${otp}. Valid for 10 minutes.`
+          text: `Your JustBecause Network verification code is: ${otp}. Valid for 10 minutes.`
         })
         
         const response = await fetch("https://rest.nexmo.com/sms/json", {
@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
         const params = new URLSearchParams({
           apikey: apiKey,
           numbers: formattedPhone.replace("+", ""),
-          message: `Your JustBecause.asia verification code is: ${otp}. Valid for 10 minutes.`,
+          message: `Your JustBecause Network verification code is: ${otp}. Valid for 10 minutes.`,
           sender: sender
         })
         
