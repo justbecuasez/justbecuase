@@ -178,29 +178,22 @@ export async function POST(
       }
     )
 
-    // Get sender name for notification
-    const usersCollection = db.collection("users")
-    const volunteerProfilesCollection = db.collection("volunteerProfiles")
-    const ngoProfilesCollection = db.collection("ngoProfiles")
+    // Get sender name for notification - use "user" collection
+    const userCollection = db.collection("user")
     
     let senderName = "Someone"
-    const senderUser = await usersCollection.findOne({ id: session.user.id })
+    const senderUser = await userCollection.findOne({ id: session.user.id })
     if (senderUser) {
-      senderName = senderUser.name || senderName
-    } else {
-      const volunteerProfile = await volunteerProfilesCollection.findOne({ userId: session.user.id })
-      if (volunteerProfile) {
-        senderName = volunteerProfile.name || senderName
+      // For NGOs, prefer orgName/organizationName
+      if (senderUser.role === "ngo") {
+        senderName = senderUser.orgName || senderUser.organizationName || senderUser.name || senderName
       } else {
-        const ngoProfile = await ngoProfilesCollection.findOne({ userId: session.user.id })
-        if (ngoProfile) {
-          senderName = ngoProfile.orgName || ngoProfile.organizationName || senderName
-        }
+        senderName = senderUser.name || senderName
       }
     }
 
     // Determine link based on receiver type
-    const receiverUser = await usersCollection.findOne({ id: receiverId })
+    const receiverUser = await userCollection.findOne({ id: receiverId })
     const receiverType = receiverUser?.role || "volunteer"
     const messageLink = receiverType === "ngo"
       ? `/ngo/messages/${conversationId}`

@@ -49,32 +49,23 @@ export async function GET(request: NextRequest) {
       },
     ]).toArray()
 
-    // Get sender names for notifications
+    // Get sender names for notifications - use "user" collection (not "users")
     const senderIds = [...new Set(unreadByConversation.map(u => u.senderId))]
-    const usersCollection = db.collection("users")
-    const volunteerProfilesCollection = db.collection("volunteerProfiles")
-    const ngoProfilesCollection = db.collection("ngoProfiles")
+    const userCollection = db.collection("user")
 
     const senderNames = new Map<string, string>()
     
     for (const senderId of senderIds) {
       let name = "Someone"
       
-      // Check users collection first
-      const user = await usersCollection.findOne({ id: senderId })
+      // Check user collection - all user data is now consolidated here
+      const user = await userCollection.findOne({ id: senderId })
       if (user) {
-        name = user.name || name
-      } else {
-        // Check volunteer profiles
-        const volunteer = await volunteerProfilesCollection.findOne({ userId: senderId })
-        if (volunteer) {
-          name = volunteer.name || name
+        // For NGOs, prefer orgName/organizationName, otherwise use name
+        if (user.role === "ngo") {
+          name = user.orgName || user.organizationName || user.name || name
         } else {
-          // Check NGO profiles
-          const ngo = await ngoProfilesCollection.findOne({ userId: senderId })
-          if (ngo) {
-            name = ngo.orgName || ngo.organizationName || name
-          }
+          name = user.name || name
         }
       }
       
