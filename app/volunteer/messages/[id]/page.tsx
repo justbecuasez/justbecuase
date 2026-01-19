@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth"
 import { getConversation, getConversationMessages } from "@/lib/actions"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
-import { MessageThread } from "@/components/messages/message-thread"
+import { MessageThreadPro } from "@/components/messages/message-thread-pro"
 import { getUserInfo } from "@/lib/user-utils"
 import { getDb } from "@/lib/database"
 import { ObjectId } from "mongodb"
@@ -68,7 +68,7 @@ export default async function VolunteerMessageThreadPage({ params }: Props) {
 
         <main className="flex-1 p-6 lg:p-8">
           <div className="max-w-4xl mx-auto">
-            <MessageThread
+            <MessageThreadPro
               conversationId={id}
               currentUserId={session.user.id}
               otherParticipant={{
