@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { ngoProfilesDb, volunteerProfilesDb, transactionsDb } from "@/lib/database"
+import { STRIPE_PAYMENT_LINKS } from "@/lib/stripe-payment-links"
 
 // This endpoint handles the redirect back from Stripe Payment Links
 // Configure this URL in your Payment Link settings: "After payment" → "Redirect to website"
@@ -82,13 +83,14 @@ export async function GET(request: NextRequest) {
           
           // Also create a transaction record
           try {
+            const ngoLinkConfig = STRIPE_PAYMENT_LINKS["ngo-pro-monthly"]
             await transactionsDb.create({
               userId: userId,
               type: "subscription",
               referenceId: effectivePlan,
               referenceType: "subscription",
-              amount: 2999, // NGO Pro price
-              currency: "INR",
+              amount: ngoLinkConfig.price,
+              currency: ngoLinkConfig.currency,
               paymentGateway: "stripe",
               paymentId: checkoutSessionId || `stripe_link_${Date.now()}`,
               status: "completed",
@@ -120,13 +122,14 @@ export async function GET(request: NextRequest) {
           
           // Create transaction record
           try {
+            const volunteerLinkConfig = STRIPE_PAYMENT_LINKS["volunteer-pro-monthly"]
             await transactionsDb.create({
               userId: userId,
               type: "subscription",
               referenceId: effectivePlan,
               referenceType: "subscription",
-              amount: 999, // Volunteer Pro price
-              currency: "INR",
+              amount: volunteerLinkConfig.price,
+              currency: volunteerLinkConfig.currency,
               paymentGateway: "stripe",
               paymentId: checkoutSessionId || `stripe_link_${Date.now()}`,
               status: "completed",
