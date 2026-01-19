@@ -58,6 +58,11 @@ function serializeDocuments<T>(docs: T[]): T[] {
   return JSON.parse(JSON.stringify(docs))
 }
 
+// Helper to check if error is a Next.js redirect that should not be caught
+function isRedirectError(error: unknown): boolean {
+  return (error as any)?.digest?.startsWith("NEXT_REDIRECT")
+}
+
 // ============================================
 // AUTH HELPERS
 // ============================================
@@ -2284,7 +2289,11 @@ export async function sendMessage(
     console.log(`[sendMessage] Revalidated paths for conversation ${conversationIdStr}`)
     
     return { success: true, data: messageId }
-  } catch (error) {
+  } catch (error: any) {
+    // Re-throw redirect errors (NEXT_REDIRECT) - they should not be caught
+    if (isRedirectError(error)) {
+      throw error
+    }
     console.error("Error sending message:", error)
     return { success: false, error: "Failed to send message" }
   }
@@ -2298,18 +2307,38 @@ export async function startConversation(
   try {
     const user = await requireAuth()
     
+    console.log(`[startConversation] User ${user.id} starting conversation with ${receiverId}`)
+    
+    if (!receiverId) {
+      return { success: false, error: "Recipient ID is required" }
+    }
+    
     // Find or create conversation
     const conversation = await conversationsDb.findOrCreate([user.id, receiverId], projectId)
     
+    if (!conversation || !conversation._id) {
+      console.error("[startConversation] Failed to create conversation")
+      return { success: false, error: "Failed to create conversation" }
+    }
+    
+    console.log(`[startConversation] Conversation created/found: ${conversation._id}`)
+    
     // If initial message provided, send it
     if (initialMessage?.trim()) {
-      await sendMessage(receiverId, initialMessage, projectId)
+      const msgResult = await sendMessage(receiverId, initialMessage, projectId)
+      if (!msgResult.success) {
+        console.error("[startConversation] Failed to send initial message:", msgResult.error)
+      }
     }
     
     return { success: true, data: conversation._id!.toString() }
-  } catch (error) {
-    console.error("Error starting conversation:", error)
-    return { success: false, error: "Failed to start conversation" }
+  } catch (error: any) {
+    // Re-throw redirect errors (NEXT_REDIRECT) - they should not be caught
+    if (isRedirectError(error)) {
+      throw error
+    }
+    console.error("[startConversation] Error:", error)
+    return { success: false, error: error.message || "Failed to start conversation" }
   }
 }
 
