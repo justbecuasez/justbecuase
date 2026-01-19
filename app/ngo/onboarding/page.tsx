@@ -28,10 +28,13 @@ import {
   LocateFixed,
   Phone,
   ShieldCheck,
+  X,
 } from "lucide-react"
 import { skillCategories, causes } from "../../../lib/skills-data"
 import { saveNGOOnboarding, completeOnboarding } from "@/lib/actions"
 import { authClient } from "@/lib/auth-client"
+import { uploadDocumentToCloudinary, validateDocumentFile } from "@/lib/upload"
+import { toast } from "sonner"
 
 type RequiredSkill = {
   categoryId: string
@@ -96,6 +99,11 @@ export default function NGOOnboardingPage() {
   const [phoneResendCooldown, setPhoneResendCooldown] = useState(0)
   const [devOtp, setDevOtp] = useState<string | null>(null)
   const phoneOtpRefs = useRef<(HTMLInputElement | null)[]>([])
+  const verificationDocRef = useRef<HTMLInputElement>(null)
+
+  // Verification documents state
+  const [verificationDocuments, setVerificationDocuments] = useState<Array<{ name: string; url: string; type: string }>>([])
+  const [uploadingDoc, setUploadingDoc] = useState(false)
 
   // Phone resend cooldown timer
   useEffect(() => {

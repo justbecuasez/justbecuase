@@ -15,6 +15,7 @@ import { Heart, Bell, Search, Menu, User, Settings, LogOut } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState, useEffect } from "react"
 import { useNotificationStore } from "@/lib/store"
+import { MessageNotificationBadge } from "@/components/messages/message-notification-badge"
 
 interface DashboardHeaderProps {
   userType: "volunteer" | "ngo"
@@ -96,6 +97,10 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
 
         {/* Right side */}
         <div className="flex items-center gap-2">
+          {/* Message Notifications */}
+          <MessageNotificationBadge userType={userType} />
+          
+          {/* Bell Notifications */}
           <Link href={userType === "volunteer" ? "/volunteer/notifications" : "/ngo/notifications"}>
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />

@@ -4,19 +4,9 @@ import { auth } from "@/lib/auth"
 import { getMyConversations } from "@/lib/actions"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import Link from "next/link"
-import {
-  Search,
-  MessageSquare,
-  Building2,
-  Clock,
-  Check,
-  CheckCheck,
-} from "lucide-react"
+import { ConversationsList } from "@/components/messages/conversations-list"
+import { Card, CardContent } from "@/components/ui/card"
+import { MessageSquare, Building2, Send } from "lucide-react"
 
 export default async function VolunteerMessagesPage() {
   const session = await auth.api.getSession({
@@ -28,6 +18,10 @@ export default async function VolunteerMessagesPage() {
   }
 
   const conversations = await getMyConversations()
+
+  // Calculate stats
+  const totalConversations = conversations.length
+  const unreadCount = conversations.reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0)
 
   return (
     <div className="min-h-screen bg-background">
@@ -41,6 +35,7 @@ export default async function VolunteerMessagesPage() {
         <VolunteerSidebar />
 
         <main className="flex-1 p-6 lg:p-8">
+          {/* Page Header */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">Messages</h1>
             <p className="text-muted-foreground">
@@ -48,50 +43,68 @@ export default async function VolunteerMessagesPage() {
             </p>
           </div>
 
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/20">
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <MessageSquare className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{totalConversations}</p>
+                  <p className="text-xs text-muted-foreground">Total Conversations</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className={unreadCount > 0 ? "bg-gradient-to-br from-orange-500/10 to-transparent border-orange-500/20" : ""}>
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${unreadCount > 0 ? "bg-orange-500/10" : "bg-muted"}`}>
+                  <Send className={`h-5 w-5 ${unreadCount > 0 ? "text-orange-500" : "text-muted-foreground"}`} />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{unreadCount}</p>
+                  <p className="text-xs text-muted-foreground">Unread Messages</p>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4 flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                  <Building2 className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{conversations.filter((c: any) => c.ngoName).length}</p>
+                  <p className="text-xs text-muted-foreground">Connected NGOs</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           <div className="grid lg:grid-cols-3 gap-6">
             {/* Conversations List */}
             <div className="lg:col-span-1">
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search conversations..." className="pl-9" />
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0">
-                  {conversations.length === 0 ? (
-                    <div className="py-12 text-center">
-                      <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">No conversations yet</p>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        Apply to projects to start chatting with NGOs
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="divide-y">
-                      {conversations.map((conversation) => (
-                        <ConversationItem
-                          key={conversation._id?.toString()}
-                          conversation={conversation}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <ConversationsList
+                initialConversations={conversations}
+                userType="volunteer"
+                baseUrl="/volunteer/messages"
+              />
             </div>
 
-            {/* Message Thread */}
+            {/* Message Thread Placeholder */}
             <div className="lg:col-span-2">
-              <Card className="h-[600px] flex flex-col">
+              <Card className="h-[600px] flex flex-col border-dashed">
                 <CardContent className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <MessageSquare className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="font-medium text-foreground mb-2">
+                  <div className="text-center max-w-sm">
+                    <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
+                      <MessageSquare className="h-10 w-10 text-muted-foreground" />
+                    </div>
+                    <h3 className="font-semibold text-lg text-foreground mb-2">
                       Select a conversation
                     </h3>
-                    <p className="text-sm text-muted-foreground max-w-xs">
-                      Choose a conversation from the list to view messages and continue chatting
+                    <p className="text-sm text-muted-foreground">
+                      Choose a conversation from the list to view messages and continue chatting with NGOs about opportunities
                     </p>
                   </div>
                 </CardContent>
@@ -101,51 +114,5 @@ export default async function VolunteerMessagesPage() {
         </main>
       </div>
     </div>
-  )
-}
-
-function ConversationItem({ conversation }: { conversation: any }) {
-  const lastMessage = conversation.lastMessage
-  const unreadCount = conversation.unreadCount || 0
-
-  return (
-    <Link
-      href={`/volunteer/messages/${conversation._id?.toString()}`}
-      className="block p-4 hover:bg-muted/50 transition-colors"
-    >
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-          {conversation.ngoLogo ? (
-            <img 
-              src={conversation.ngoLogo} 
-              alt={conversation.ngoName || "NGO"} 
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <Building2 className="h-5 w-5 text-primary" />
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-medium text-foreground truncate">
-              {conversation.ngoName || "NGO"}
-            </span>
-            {conversation.lastMessageAt && (
-              <span className="text-xs text-muted-foreground">
-                {new Date(conversation.lastMessageAt).toLocaleDateString()}
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground truncate">
-            {lastMessage || "No messages yet"}
-          </p>
-        </div>
-        {unreadCount > 0 && (
-          <Badge className="bg-primary text-primary-foreground">
-            {unreadCount}
-          </Badge>
-        )}
-      </div>
-    </Link>
   )
 }
