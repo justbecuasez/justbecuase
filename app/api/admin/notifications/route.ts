@@ -95,13 +95,13 @@ export async function POST(request: NextRequest) {
       const users = await db.collection("user").find({}).toArray()
       targetUserIds = users.map((u) => u.id)
     } else if (userType === "volunteers") {
-      // Get all volunteers
-      const volunteers = await db.collection("volunteer_profiles").find({}).toArray()
-      targetUserIds = volunteers.map((v) => v.userId)
+      // Get all volunteers from user collection
+      const volunteers = await db.collection("user").find({ role: "volunteer" }).toArray()
+      targetUserIds = volunteers.map((v) => v.id)
     } else if (userType === "ngos") {
-      // Get all NGOs
-      const ngos = await db.collection("ngo_profiles").find({}).toArray()
-      targetUserIds = ngos.map((n) => n.userId)
+      // Get all NGOs from user collection
+      const ngos = await db.collection("user").find({ role: "ngo" }).toArray()
+      targetUserIds = ngos.map((n) => n.id)
     } else if (userType === "specific" && userIds && Array.isArray(userIds)) {
       targetUserIds = userIds
     } else {

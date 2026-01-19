@@ -2510,10 +2510,10 @@ export async function deleteAccount(): Promise<ApiResponse<boolean>> {
 
     // Delete all user data
     await Promise.all([
-      // Delete volunteer profile
-      db.collection("volunteer_profiles").deleteOne({ userId: user.id }),
-      // Delete NGO profile
-      db.collection("ngo_profiles").deleteOne({ userId: user.id }),
+      // Delete volunteer profile from volunteerProfiles collection
+      db.collection("volunteerProfiles").deleteOne({ userId: user.id }),
+      // Delete NGO profile from ngoProfiles collection
+      db.collection("ngoProfiles").deleteOne({ userId: user.id }),
       // Delete user's projects (for NGOs)
       db.collection("projects").deleteMany({ ngoId: user.id }),
       // Delete user's applications (for volunteers)
@@ -2527,7 +2527,7 @@ export async function deleteAccount(): Promise<ApiResponse<boolean>> {
       // Delete user's notifications
       db.collection("notifications").deleteMany({ userId: user.id }),
       // Delete profile unlocks related to user
-      db.collection("profile_unlocks").deleteMany({ 
+      db.collection("profileUnlocks").deleteMany({ 
         $or: [{ ngoId: user.id }, { volunteerId: user.id }] 
       }),
       // Delete user's transactions

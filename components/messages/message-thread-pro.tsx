@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+
 import { toast } from "sonner"
 import {
   Send,
@@ -580,36 +580,15 @@ export function MessageThreadPro({
 
           {/* Header actions */}
           <div className="flex items-center gap-1">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hover:bg-muted" disabled>
-                    <Phone className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Voice call (coming soon)</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hover:bg-muted" disabled>
-                    <Video className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Video call (coming soon)</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hover:bg-muted">
-                    <Info className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Conversation info</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Button variant="ghost" size="icon" className="hover:bg-muted" disabled title="Voice call (coming soon)">
+              <Phone className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="hover:bg-muted" disabled title="Video call (coming soon)">
+              <Video className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="hover:bg-muted" title="Conversation info">
+              <Info className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </CardHeader>
@@ -721,23 +700,17 @@ export function MessageThreadPro({
           />
           
           {/* Attachment button */}
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="icon" 
-                  className="hover:bg-muted flex-shrink-0"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={sending || uploadingAttachment}
-                >
-                  <Paperclip className="h-5 w-5 text-muted-foreground" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Attach file</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="icon" 
+            className="hover:bg-muted flex-shrink-0"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={sending || uploadingAttachment}
+            title="Attach file"
+          >
+            <Paperclip className="h-5 w-5 text-muted-foreground" />
+          </Button>
           
           {/* Message input */}
           <div className="flex-1 relative">
