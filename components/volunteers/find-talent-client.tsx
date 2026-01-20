@@ -41,7 +41,7 @@ interface Volunteer {
   country?: string
   hoursPerWeek?: number
   skills?: { categoryId: string; subskillId: string; level?: string }[]
-  volunteerType?: "free" | "paid"
+  volunteerType?: "free" | "paid" | "both"
   hourlyRate?: number
   discountedRate?: number
   currency?: string
@@ -296,6 +296,8 @@ function VolunteerCard({
   unlocked: boolean
 }) {
   const isFree = volunteer.volunteerType === "free"
+  const isPaid = volunteer.volunteerType === "paid"
+  const isBoth = volunteer.volunteerType === "both"
   const volunteerId = volunteer.id || volunteer.userId || ""
 
   return (
@@ -331,13 +333,31 @@ function VolunteerCard({
             </p>
           </div>
           <div className="flex flex-col items-end gap-1 shrink-0">
-            <Badge variant={isFree ? "secondary" : "outline"} className="text-xs">
-              {isFree ? "Free" : `${volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}${volunteer.hourlyRate}/hr`}
-            </Badge>
-            {!isFree && volunteer.discountedRate && (
-              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
-                NGO: {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.discountedRate}/hr
-              </Badge>
+            {isBoth ? (
+              <>
+                <Badge variant="secondary" className="text-xs">
+                  Free
+                </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.hourlyRate}/hr
+                </Badge>
+                {volunteer.discountedRate && (
+                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
+                    NGO: {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.discountedRate}/hr
+                  </Badge>
+                )}
+              </>
+            ) : (
+              <>
+                <Badge variant={isFree ? "secondary" : "outline"} className="text-xs">
+                  {isFree ? "Free" : `${volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}${volunteer.hourlyRate}/hr`}
+                </Badge>
+                {isPaid && volunteer.discountedRate && (
+                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
+                    NGO: {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.discountedRate}/hr
+                  </Badge>
+                )}
+              </>
             )}
           </div>
         </div>
