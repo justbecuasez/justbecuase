@@ -860,36 +860,182 @@ export default function VolunteerSettingsPage() {
 
             {/* Billing Settings */}
             <TabsContent value="billing">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Current Plan
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-lg">
-                          {profile?.volunteerType === "paid" ? "Paid Volunteer" : "Free Volunteer"}
-                        </p>
-                        <Badge
-                          variant={profile?.volunteerType === "paid" ? "default" : "secondary"}
-                        >
-                          {profile?.volunteerType === "paid" ? "Pro" : "Free"}
-                        </Badge>
+              <div className="space-y-6">
+                {/* Volunteer Type & Pricing */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <CreditCard className="h-5 w-5" />
+                      Your Pricing & Volunteer Type
+                    </CardTitle>
+                    <CardDescription>
+                      Set your volunteer type and rates for NGOs
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Volunteer Type Selection */}
+                    <div className="space-y-3">
+                      <Label className="text-base font-medium">Volunteer Type</Label>
+                      <div className="grid sm:grid-cols-3 gap-3">
+                        {[
+                          { value: "free", label: "Pro-Bono Only", desc: "Volunteer for free", icon: "❤️" },
+                          { value: "paid", label: "Paid Only", desc: "Charge for your time", icon: "💰" },
+                          { value: "both", label: "Open to Both", desc: "Flexible based on project", icon: "💡" },
+                        ].map((type) => (
+                          <div
+                            key={type.value}
+                            onClick={() => setProfile({ ...profile, volunteerType: type.value })}
+                            className={`flex flex-col items-center p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                              profile?.volunteerType === type.value
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-primary/50"
+                            }`}
+                          >
+                            <span className="text-2xl mb-2">{type.icon}</span>
+                            <span className="font-medium">{type.label}</span>
+                            <span className="text-xs text-muted-foreground text-center mt-1">{type.desc}</span>
+                          </div>
+                        ))}
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {profile?.volunteerType === "paid"
-                          ? "Your profile is fully visible to all NGOs"
-                          : "NGOs need to unlock your profile to see full details"
-                        }
-                      </p>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+
+                    {/* Pricing Fields - Only show when paid or both */}
+                    {(profile?.volunteerType === "paid" || profile?.volunteerType === "both") && (
+                      <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                        <h3 className="font-medium text-foreground flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-green-600" />
+                          Your Rates
+                        </h3>
+                        
+                        <div className="grid sm:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="hourlyRate">Hourly Rate</Label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                              <Input
+                                id="hourlyRate"
+                                type="number"
+                                placeholder="e.g. 500"
+                                className="pl-8"
+                                value={profile?.hourlyRate || ""}
+                                onChange={(e) =>
+                                  setProfile({
+                                    ...profile,
+                                    hourlyRate: parseInt(e.target.value) || 0,
+                                  })
+                                }
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground">Your standard hourly rate</p>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <Label htmlFor="discountedRate">Discounted Rate for NGOs</Label>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                              <Input
+                                id="discountedRate"
+                                type="number"
+                                placeholder="e.g. 300"
+                                className="pl-8"
+                                value={profile?.discountedRate || ""}
+                                onChange={(e) =>
+                                  setProfile({
+                                    ...profile,
+                                    discountedRate: parseInt(e.target.value) || 0,
+                                  })
+                                }
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground">Special discounted rate for non-profits (Low Bono)</p>
+                          </div>
+                        </div>
+                        
+                        {profile?.hourlyRate > 0 && profile?.discountedRate > 0 && (
+                          <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/20 p-2 rounded">
+                            <CheckCircle className="h-4 w-4" />
+                            <span>
+                              NGOs save {Math.round(((profile.hourlyRate - profile.discountedRate) / profile.hourlyRate) * 100)}% with your discounted rate!
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <Button 
+                      onClick={async () => {
+                        setIsSaving(true)
+                        try {
+                          const result = await updateVolunteerProfile({
+                            volunteerType: profile?.volunteerType,
+                            hourlyRate: profile?.hourlyRate,
+                            discountedRate: profile?.discountedRate,
+                          })
+                          if (result.success) {
+                            toast.success("Pricing updated successfully")
+                          } else {
+                            toast.error(result.error || "Failed to update pricing")
+                          }
+                        } catch (err) {
+                          toast.error("An error occurred")
+                        } finally {
+                          setIsSaving(false)
+                        }
+                      }}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="mr-2 h-4 w-4" />
+                          Save Pricing
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Subscription Plan Card */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Sparkles className="h-5 w-5" />
+                      Subscription Plan
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-lg">
+                            {profile?.subscriptionPlan === "pro" ? "Pro Plan" : "Free Plan"}
+                          </p>
+                          <Badge
+                            variant={profile?.subscriptionPlan === "pro" ? "default" : "secondary"}
+                          >
+                            {profile?.subscriptionPlan === "pro" ? "Pro" : "Free"}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {profile?.subscriptionPlan === "pro"
+                            ? "Unlimited applications per month"
+                            : `${3 - (profile?.monthlyApplicationsUsed || 0)} applications remaining this month`
+                          }
+                        </p>
+                      </div>
+                      {profile?.subscriptionPlan !== "pro" && (
+                        <Button variant="outline" onClick={() => router.push("/pricing")}>
+                          Upgrade to Pro
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </main>

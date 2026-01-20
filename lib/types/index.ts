@@ -73,6 +73,7 @@ export interface VolunteerProfile {
   // Work Preferences
   volunteerType: VolunteerType // "free" | "paid" | "both"
   hourlyRate?: number // Only if paid
+  discountedRate?: number // Discounted rate for NGOs (low bono)
   currency?: string
   workMode: WorkMode
   hoursPerWeek: string
@@ -653,6 +654,7 @@ export interface VolunteerProfileView {
   portfolioUrl?: string | null
   resumeUrl?: string | null
   hourlyRate?: number | null
+  discountedRate?: number | null
   
   // Meta
   isUnlocked: boolean

@@ -298,6 +298,12 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                       <span className="text-sm font-medium">₹{volunteer.hourlyRate}/hr</span>
                     </div>
                   )}
+                  {volunteer.discountedRate && !isLocked && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">NGO Discounted Rate</span>
+                      <span className="text-sm font-medium text-green-600">₹{volunteer.discountedRate}/hr</span>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 

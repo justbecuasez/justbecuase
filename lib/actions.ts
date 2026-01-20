@@ -208,6 +208,8 @@ export async function saveVolunteerOnboarding(data: {
     hoursPerWeek: string
     availability: string
     hourlyRate?: number
+    discountedRate?: number
+    currency?: string
   }
 }): Promise<ApiResponse<string>> {
   try {
@@ -240,7 +242,8 @@ export async function saveVolunteerOnboarding(data: {
       interests: [],
       volunteerType: data.workPreferences.volunteerType as "free" | "paid" | "both",
       hourlyRate: data.workPreferences.hourlyRate,
-      currency: "INR",
+      discountedRate: data.workPreferences.discountedRate,
+      currency: data.workPreferences.currency || "INR",
       workMode: data.workPreferences.workMode as "remote" | "onsite" | "hybrid",
       hoursPerWeek: data.workPreferences.hoursPerWeek,
       availability: data.workPreferences.availability as "weekdays" | "weekends" | "evenings" | "flexible",
@@ -359,7 +362,7 @@ export async function getNGOSubscriptionStatus(): Promise<{
 // Allowed fields for volunteer profile updates - filters out sensitive fields
 const ALLOWED_VOLUNTEER_UPDATE_FIELDS = [
   "name", "avatar", "phone", "location", "city", "country", "bio", "linkedinUrl", "portfolioUrl",
-  "resumeUrl", "skills", "causes", "volunteerType", "hourlyRate", "currency",
+  "resumeUrl", "skills", "causes", "volunteerType", "hourlyRate", "discountedRate", "currency",
   "workMode", "hoursPerWeek", "availability"
 ] as const
 
@@ -1101,6 +1104,7 @@ export async function getVolunteerProfileView(
     portfolioUrl: isUnlocked ? volunteerProfile.portfolioUrl : null,
     resumeUrl: isUnlocked ? volunteerProfile.resumeUrl : null,
     hourlyRate: isUnlocked ? volunteerProfile.hourlyRate : null,
+    discountedRate: isUnlocked ? volunteerProfile.discountedRate : null,
   }
 
   return view
