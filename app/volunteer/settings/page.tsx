@@ -907,15 +907,38 @@ export default function VolunteerSettingsPage() {
                           Your Rates
                         </h3>
                         
-                        <div className="grid sm:grid-cols-2 gap-4">
+                        <div className="grid sm:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="currency">Currency</Label>
+                            <select
+                              id="currency"
+                              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              value={profile?.currency || "USD"}
+                              onChange={(e) =>
+                                setProfile({ ...profile, currency: e.target.value })
+                              }
+                            >
+                              <option value="USD">$ USD</option>
+                              <option value="EUR">€ EUR</option>
+                              <option value="GBP">£ GBP</option>
+                              <option value="INR">₹ INR</option>
+                              <option value="SGD">S$ SGD</option>
+                              <option value="AED">د.إ AED</option>
+                              <option value="MYR">RM MYR</option>
+                            </select>
+                            <p className="text-xs text-muted-foreground">Select your currency</p>
+                          </div>
+                          
                           <div className="space-y-2">
                             <Label htmlFor="hourlyRate">Hourly Rate</Label>
                             <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                {(profile?.currency || "USD") === "USD" ? "$" : (profile?.currency || "USD") === "EUR" ? "€" : (profile?.currency || "USD") === "GBP" ? "£" : (profile?.currency || "USD") === "INR" ? "₹" : (profile?.currency || "USD") === "SGD" ? "S$" : (profile?.currency || "USD") === "AED" ? "د.إ" : "RM"}
+                              </span>
                               <Input
                                 id="hourlyRate"
                                 type="number"
-                                placeholder="e.g. 500"
+                                placeholder="e.g. 50"
                                 className="pl-8"
                                 value={profile?.hourlyRate || ""}
                                 onChange={(e) =>
@@ -932,11 +955,13 @@ export default function VolunteerSettingsPage() {
                           <div className="space-y-2">
                             <Label htmlFor="discountedRate">Discounted Rate for NGOs</Label>
                             <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                                {(profile?.currency || "USD") === "USD" ? "$" : (profile?.currency || "USD") === "EUR" ? "€" : (profile?.currency || "USD") === "GBP" ? "£" : (profile?.currency || "USD") === "INR" ? "₹" : (profile?.currency || "USD") === "SGD" ? "S$" : (profile?.currency || "USD") === "AED" ? "د.إ" : "RM"}
+                              </span>
                               <Input
                                 id="discountedRate"
                                 type="number"
-                                placeholder="e.g. 300"
+                                placeholder="e.g. 30"
                                 className="pl-8"
                                 value={profile?.discountedRate || ""}
                                 onChange={(e) =>
@@ -970,6 +995,7 @@ export default function VolunteerSettingsPage() {
                             volunteerType: profile?.volunteerType,
                             hourlyRate: profile?.hourlyRate,
                             discountedRate: profile?.discountedRate,
+                            currency: profile?.currency || "USD",
                           })
                           if (result.success) {
                             toast.success("Pricing updated successfully")

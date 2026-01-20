@@ -295,13 +295,17 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                   {volunteer.hourlyRate && !isLocked && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Hourly Rate</span>
-                      <span className="text-sm font-medium">₹{volunteer.hourlyRate}/hr</span>
+                      <span className="text-sm font-medium">
+                        {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "€" : volunteer.currency === "GBP" ? "£" : volunteer.currency === "INR" ? "₹" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "د.إ" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.hourlyRate}/hr
+                      </span>
                     </div>
                   )}
                   {volunteer.discountedRate && !isLocked && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">NGO Discounted Rate</span>
-                      <span className="text-sm font-medium text-green-600">₹{volunteer.discountedRate}/hr</span>
+                      <span className="text-sm font-medium text-green-600">
+                        {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "€" : volunteer.currency === "GBP" ? "£" : volunteer.currency === "INR" ? "₹" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "د.إ" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.discountedRate}/hr
+                      </span>
                     </div>
                   )}
                 </CardContent>

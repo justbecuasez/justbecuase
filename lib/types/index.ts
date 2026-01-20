@@ -655,6 +655,7 @@ export interface VolunteerProfileView {
   resumeUrl?: string | null
   hourlyRate?: number | null
   discountedRate?: number | null
+  currency?: string | null
   
   // Meta
   isUnlocked: boolean
