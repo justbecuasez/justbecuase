@@ -50,7 +50,7 @@ export default async function NGOFindTalentPage() {
     country: v.location?.split(',')[1]?.trim(),
     hoursPerWeek: typeof v.hoursPerWeek === 'number' ? v.hoursPerWeek : parseInt(v.hoursPerWeek) || 10,
     skills: v.skills,
-    volunteerType: v.volunteerType as "free" | "paid" | undefined,
+    volunteerType: v.volunteerType as "free" | "paid" | "both" | undefined,
     hourlyRate: v.hourlyRate || undefined,
     discountedRate: v.discountedRate || undefined,
     currency: v.currency || "USD",
