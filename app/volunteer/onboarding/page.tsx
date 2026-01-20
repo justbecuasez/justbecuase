@@ -292,6 +292,9 @@ export default function VolunteerOnboardingPage() {
   // Step 4: Work preferences
   const [workPreferences, setWorkPreferences] = useState({
     volunteerType: "free", // free, paid, both
+    hourlyRate: 0, // Hourly rate for paid work
+    discountedRate: 0, // Discounted rate for NGOs (low bono)
+    currency: "INR",
     workMode: "remote", // remote, onsite, hybrid
     hoursPerWeek: "5-10",
     availability: "weekends", // weekdays, weekends, evenings, flexible
@@ -917,6 +920,72 @@ export default function VolunteerOnboardingPage() {
           </RadioGroup>
         </div>
 
+        {/* Pricing Section - Only show when paid or both is selected */}
+        {(workPreferences.volunteerType === "paid" || workPreferences.volunteerType === "both") && (
+          <>
+            <Separator />
+            <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="h-5 w-5 text-green-600" />
+                <h3 className="font-medium text-foreground">Your Pricing</h3>
+              </div>
+              
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="hourlyRate">Hourly Rate</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                    <Input
+                      id="hourlyRate"
+                      type="number"
+                      placeholder="e.g. 500"
+                      className="pl-8"
+                      value={workPreferences.hourlyRate || ""}
+                      onChange={(e) =>
+                        setWorkPreferences({
+                          ...workPreferences,
+                          hourlyRate: parseInt(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Your standard hourly rate</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="discountedRate">Discounted Rate for NGOs</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                    <Input
+                      id="discountedRate"
+                      type="number"
+                      placeholder="e.g. 300"
+                      className="pl-8"
+                      value={workPreferences.discountedRate || ""}
+                      onChange={(e) =>
+                        setWorkPreferences({
+                          ...workPreferences,
+                          discountedRate: parseInt(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Special discounted rate for non-profits (Low Bono)</p>
+                </div>
+              </div>
+              
+              {workPreferences.hourlyRate > 0 && workPreferences.discountedRate > 0 && (
+                <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/20 p-2 rounded">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>
+                    NGOs save {Math.round(((workPreferences.hourlyRate - workPreferences.discountedRate) / workPreferences.hourlyRate) * 100)}% with your discounted rate!
+                  </span>
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
         <Separator />
 
         <div className="space-y-3">
@@ -1087,6 +1156,18 @@ export default function VolunteerOnboardingPage() {
                 <h3 className="font-medium text-sm text-muted-foreground">Availability</h3>
                 <p className="text-foreground capitalize">{workPreferences.availability}</p>
               </div>
+              {(workPreferences.volunteerType === "paid" || workPreferences.volunteerType === "both") && (
+                <>
+                  <div>
+                    <h3 className="font-medium text-sm text-muted-foreground">Hourly Rate</h3>
+                    <p className="text-foreground">₹{workPreferences.hourlyRate || 0}/hr</p>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-sm text-muted-foreground">Discounted Rate</h3>
+                    <p className="text-foreground text-green-600">₹{workPreferences.discountedRate || 0}/hr</p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </CardContent>
