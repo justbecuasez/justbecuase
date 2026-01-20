@@ -1105,6 +1105,7 @@ export async function getVolunteerProfileView(
     resumeUrl: isUnlocked ? volunteerProfile.resumeUrl : null,
     hourlyRate: isUnlocked ? volunteerProfile.hourlyRate : null,
     discountedRate: isUnlocked ? volunteerProfile.discountedRate : null,
+    currency: isUnlocked ? volunteerProfile.currency : null,
   }
 
   return view

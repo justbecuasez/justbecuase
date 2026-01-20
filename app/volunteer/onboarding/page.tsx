@@ -294,7 +294,7 @@ export default function VolunteerOnboardingPage() {
     volunteerType: "free", // free, paid, both
     hourlyRate: 0, // Hourly rate for paid work
     discountedRate: 0, // Discounted rate for NGOs (low bono)
-    currency: "INR",
+    currency: "USD",
     workMode: "remote", // remote, onsite, hybrid
     hoursPerWeek: "5-10",
     availability: "weekends", // weekdays, weekends, evenings, flexible
@@ -930,15 +930,38 @@ export default function VolunteerOnboardingPage() {
                 <h3 className="font-medium text-foreground">Your Pricing</h3>
               </div>
               
-              <div className="grid sm:grid-cols-2 gap-4">
+              <div className="grid sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <select
+                    id="currency"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    value={workPreferences.currency}
+                    onChange={(e) =>
+                      setWorkPreferences({ ...workPreferences, currency: e.target.value })
+                    }
+                  >
+                    <option value="USD">$ USD</option>
+                    <option value="EUR">€ EUR</option>
+                    <option value="GBP">£ GBP</option>
+                    <option value="INR">₹ INR</option>
+                    <option value="SGD">S$ SGD</option>
+                    <option value="AED">د.إ AED</option>
+                    <option value="MYR">RM MYR</option>
+                  </select>
+                  <p className="text-xs text-muted-foreground">Select your currency</p>
+                </div>
+                
                 <div className="space-y-2">
                   <Label htmlFor="hourlyRate">Hourly Rate</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      {workPreferences.currency === "USD" ? "$" : workPreferences.currency === "EUR" ? "€" : workPreferences.currency === "GBP" ? "£" : workPreferences.currency === "INR" ? "₹" : workPreferences.currency === "SGD" ? "S$" : workPreferences.currency === "AED" ? "د.إ" : "RM"}
+                    </span>
                     <Input
                       id="hourlyRate"
                       type="number"
-                      placeholder="e.g. 500"
+                      placeholder="e.g. 50"
                       className="pl-8"
                       value={workPreferences.hourlyRate || ""}
                       onChange={(e) =>
@@ -955,11 +978,13 @@ export default function VolunteerOnboardingPage() {
                 <div className="space-y-2">
                   <Label htmlFor="discountedRate">Discounted Rate for NGOs</Label>
                   <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">₹</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      {workPreferences.currency === "USD" ? "$" : workPreferences.currency === "EUR" ? "€" : workPreferences.currency === "GBP" ? "£" : workPreferences.currency === "INR" ? "₹" : workPreferences.currency === "SGD" ? "S$" : workPreferences.currency === "AED" ? "د.إ" : "RM"}
+                    </span>
                     <Input
                       id="discountedRate"
                       type="number"
-                      placeholder="e.g. 300"
+                      placeholder="e.g. 30"
                       className="pl-8"
                       value={workPreferences.discountedRate || ""}
                       onChange={(e) =>
@@ -1160,11 +1185,11 @@ export default function VolunteerOnboardingPage() {
                 <>
                   <div>
                     <h3 className="font-medium text-sm text-muted-foreground">Hourly Rate</h3>
-                    <p className="text-foreground">₹{workPreferences.hourlyRate || 0}/hr</p>
+                    <p className="text-foreground">{workPreferences.currency === "USD" ? "$" : workPreferences.currency === "EUR" ? "€" : workPreferences.currency === "GBP" ? "£" : workPreferences.currency === "INR" ? "₹" : workPreferences.currency === "SGD" ? "S$" : workPreferences.currency === "AED" ? "د.إ" : "RM"}{workPreferences.hourlyRate || 0}/hr</p>
                   </div>
                   <div>
                     <h3 className="font-medium text-sm text-muted-foreground">Discounted Rate</h3>
-                    <p className="text-foreground text-green-600">₹{workPreferences.discountedRate || 0}/hr</p>
+                    <p className="text-foreground text-green-600">{workPreferences.currency === "USD" ? "$" : workPreferences.currency === "EUR" ? "€" : workPreferences.currency === "GBP" ? "£" : workPreferences.currency === "INR" ? "₹" : workPreferences.currency === "SGD" ? "S$" : workPreferences.currency === "AED" ? "د.إ" : "RM"}{workPreferences.discountedRate || 0}/hr</p>
                   </div>
                 </>
               )}
