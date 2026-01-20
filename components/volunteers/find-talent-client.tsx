@@ -43,6 +43,8 @@ interface Volunteer {
   skills?: { categoryId: string; subskillId: string; level?: string }[]
   volunteerType?: "free" | "paid"
   hourlyRate?: number
+  discountedRate?: number
+  currency?: string
   rating?: number
   completedProjects?: number
 }
@@ -328,9 +330,16 @@ function VolunteerCard({
               {volunteer.headline || "Skilled Volunteer"}
             </p>
           </div>
-          <Badge variant={isFree ? "secondary" : "outline"} className="shrink-0 text-xs">
-            {isFree ? "Free" : `₹${volunteer.hourlyRate}/hr`}
-          </Badge>
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            <Badge variant={isFree ? "secondary" : "outline"} className="text-xs">
+              {isFree ? "Free" : `${volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}${volunteer.hourlyRate}/hr`}
+            </Badge>
+            {!isFree && volunteer.discountedRate && (
+              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
+                NGO: {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.discountedRate}/hr
+              </Badge>
+            )}
+          </div>
         </div>
 
         <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-muted-foreground mb-4">

@@ -52,6 +52,8 @@ export default async function NGOFindTalentPage() {
     skills: v.skills,
     volunteerType: v.volunteerType as "free" | "paid" | undefined,
     hourlyRate: v.hourlyRate || undefined,
+    discountedRate: v.discountedRate || undefined,
+    currency: v.currency || "USD",
     rating: v.rating,
     completedProjects: v.completedProjects,
   }))
