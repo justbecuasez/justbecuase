@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShareButton } from "@/components/share-button"
-import { getNGOById, getActiveProjects } from "@/lib/actions"
+import { FollowButton } from "@/components/ngos/follow-button"
+import { getNGOById, getActiveProjects, isFollowingNgo } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
 import { 
   MapPin, 
@@ -43,6 +44,9 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
   // Get NGO's projects
   const allProjects = await getActiveProjects(20)
   const ngoProjects = allProjects.filter(p => p.ngoId === id)
+  
+  // Check if current user is following this NGO
+  const isFollowing = await isFollowingNgo(id)
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -99,10 +103,11 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <Button className="bg-primary hover:bg-primary/90">
-                  <Heart className="h-4 w-4 mr-2" />
-                  Follow Organization
-                </Button>
+                <FollowButton 
+                  ngoId={id} 
+                  ngoName={ngo.orgName}
+                  isFollowing={isFollowing}
+                />
                 <ShareButton
                   url={`/ngos/${id}`}
                   title={ngo.orgName}

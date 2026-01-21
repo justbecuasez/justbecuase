@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { ApplyButton } from "@/components/projects/apply-button"
 import Link from "next/link"
 import {
   Search,
@@ -258,10 +259,12 @@ function OpportunityCard({
               View Details
             </Link>
           </Button>
-          <Button size="sm" className="flex-1">
-            Apply
-            <ArrowRight className="h-4 w-4 ml-1" />
-          </Button>
+          <ApplyButton 
+            projectId={project._id?.toString() || ""}
+            projectTitle={project.title}
+            size="sm"
+            className="flex-1"
+          />
         </div>
       </CardContent>
     </Card>

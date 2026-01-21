@@ -88,6 +88,9 @@ export interface VolunteerProfile {
   // Saved/Bookmarked Projects
   savedProjects?: string[] // Array of project IDs
   
+  // Followed NGOs
+  followedNgos?: string[] // Array of NGO user IDs
+  
   // Subscription (for application limits)
   subscriptionPlan: "free" | "pro"
   subscriptionExpiry?: Date

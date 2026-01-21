@@ -2607,3 +2607,75 @@ export async function initializePlatform(): Promise<void> {
   // Initialize admin settings with a system user
   await adminSettingsDb.initialize("system")
 }
+
+// ============================================
+// NGO FOLLOW/UNFOLLOW
+// ============================================
+
+export async function followNgo(ngoId: string): Promise<ApiResponse<void>> {
+  try {
+    const user = await requireRole(["volunteer"])
+    
+    const volunteerProfile = await volunteerProfilesDb.findByUserId(user.id)
+    if (!volunteerProfile) {
+      return { success: false, error: "Volunteer profile not found" }
+    }
+
+    const followedNgos = volunteerProfile.followedNgos || []
+    if (followedNgos.includes(ngoId)) {
+      return { success: false, error: "Already following this organization" }
+    }
+
+    await volunteerProfilesDb.update(user.id, {
+      followedNgos: [...followedNgos, ngoId],
+    })
+
+    revalidatePath(`/ngos/${ngoId}`)
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("Failed to follow NGO:", error)
+    return { success: false, error: "Failed to follow organization" }
+  }
+}
+
+export async function unfollowNgo(ngoId: string): Promise<ApiResponse<void>> {
+  try {
+    const user = await requireRole(["volunteer"])
+    
+    const volunteerProfile = await volunteerProfilesDb.findByUserId(user.id)
+    if (!volunteerProfile) {
+      return { success: false, error: "Volunteer profile not found" }
+    }
+
+    const followedNgos = volunteerProfile.followedNgos || []
+    await volunteerProfilesDb.update(user.id, {
+      followedNgos: followedNgos.filter((id) => id !== ngoId),
+    })
+
+    revalidatePath(`/ngos/${ngoId}`)
+    return { success: true, data: undefined }
+  } catch (error) {
+    console.error("Failed to unfollow NGO:", error)
+    return { success: false, error: "Failed to unfollow organization" }
+  }
+}
+
+export async function isFollowingNgo(ngoId: string): Promise<boolean> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user || session.user.role !== "volunteer") {
+      return false
+    }
+
+    const volunteerProfile = await volunteerProfilesDb.findByUserId(session.user.id)
+    if (!volunteerProfile) {
+      return false
+    }
+
+    const followedNgos = volunteerProfile.followedNgos || []
+    return followedNgos.includes(ngoId)
+  } catch (error) {
+    return false
+  }
+}
+
