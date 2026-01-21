@@ -2,14 +2,14 @@ import { Suspense } from "react"
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { getVolunteerProfile, getMatchedOpportunitiesForVolunteer, browseProjects } from "@/lib/actions"
+import { getVolunteerProfile, getMatchedOpportunitiesForVolunteer, browseProjects, hasAppliedToProject } from "@/lib/actions"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ApplyButton } from "@/components/projects/apply-button"
+import { ApplyButton } from "@/app/projects/[id]/apply-button"
 import Link from "next/link"
 import {
   Search,
@@ -145,13 +145,13 @@ async function RecommendedOpportunities() {
 
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {matches.slice(0, 6).map((match) => (
+      {await Promise.all(matches.slice(0, 6).map(async (match) => (
         <OpportunityCard
           key={match.projectId}
           project={match.project}
           matchScore={match.score}
         />
-      ))}
+      )))}
     </div>
   )
 }
@@ -175,20 +175,23 @@ async function AllOpportunities() {
 
   return (
     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {projects.map((project) => (
+      {await Promise.all(projects.map(async (project) => (
         <OpportunityCard key={project._id?.toString()} project={project} />
-      ))}
+      )))}
     </div>
   )
 }
 
-function OpportunityCard({
+async function OpportunityCard({
   project,
   matchScore,
 }: {
   project: any
   matchScore?: number
 }) {
+  const projectId = project._id?.toString() || ""
+  const hasApplied = await hasAppliedToProject(projectId)
+  
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <CardContent className="p-6">
@@ -255,16 +258,17 @@ function OpportunityCard({
 
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="flex-1" asChild>
-            <Link href={`/projects/${project._id?.toString()}`}>
+            <Link href={`/projects/${projectId}`}>
               View Details
             </Link>
           </Button>
-          <ApplyButton 
-            projectId={project._id?.toString() || ""}
-            projectTitle={project.title}
-            size="sm"
-            className="flex-1"
-          />
+          <div className="flex-1">
+            <ApplyButton 
+              projectId={projectId}
+              projectTitle={project.title}
+              hasApplied={hasApplied}
+            />
+          </div>
         </div>
       </CardContent>
     </Card>
