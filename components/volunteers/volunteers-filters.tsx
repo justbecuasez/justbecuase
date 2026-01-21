@@ -1,42 +1,59 @@
 "use client"
 
-import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { useCallback, useTransition } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Filter, X } from "lucide-react"
+import { Filter, X, Loader2 } from "lucide-react"
 import { skillCategories, causes } from "@/lib/skills-data"
 
 export function VolunteersFilters() {
-  const [selectedSkills, setSelectedSkills] = useState<string[]>([])
-  const [selectedCauses, setSelectedCauses] = useState<string[]>([])
-  const [volunteerType, setVolunteerType] = useState<string>("all")
-  const [workMode, setWorkMode] = useState<string>("all")
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [isPending, startTransition] = useTransition()
+
+  // Read current filters from URL
+  const selectedSkills = searchParams.get("skills")?.split(",").filter(Boolean) || []
+  const selectedCauses = searchParams.get("causes")?.split(",").filter(Boolean) || []
+  const volunteerType = searchParams.get("type") || "all"
+  const workMode = searchParams.get("workMode") || "all"
+
+  // Update URL with new filters
+  const updateFilters = useCallback((updates: Record<string, string | null>) => {
+    startTransition(() => {
+      const params = new URLSearchParams(searchParams.toString())
+      
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value === null || value === "" || value === "all") {
+          params.delete(key)
+        } else {
+          params.set(key, value)
+        }
+      })
+      
+      router.push(`/volunteers?${params.toString()}`)
+    })
+  }, [router, searchParams])
 
   const handleSkillToggle = (skillId: string) => {
-    setSelectedSkills((prev) =>
-      prev.includes(skillId)
-        ? prev.filter((s) => s !== skillId)
-        : [...prev, skillId]
-    )
+    const newSkills = selectedSkills.includes(skillId)
+      ? selectedSkills.filter((s) => s !== skillId)
+      : [...selectedSkills, skillId]
+    updateFilters({ skills: newSkills.length > 0 ? newSkills.join(",") : null })
   }
 
   const handleCauseToggle = (causeId: string) => {
-    setSelectedCauses((prev) =>
-      prev.includes(causeId)
-        ? prev.filter((c) => c !== causeId)
-        : [...prev, causeId]
-    )
+    const newCauses = selectedCauses.includes(causeId)
+      ? selectedCauses.filter((c) => c !== causeId)
+      : [...selectedCauses, causeId]
+    updateFilters({ causes: newCauses.length > 0 ? newCauses.join(",") : null })
   }
 
   const clearFilters = () => {
-    setSelectedSkills([])
-    setSelectedCauses([])
-    setVolunteerType("all")
-    setWorkMode("all")
+    router.push("/volunteers")
   }
 
   const hasFilters =
@@ -52,6 +69,7 @@ export function VolunteersFilters() {
           <CardTitle className="flex items-center gap-2 text-lg">
             <Filter className="h-4 w-4" />
             Filters
+            {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
           </CardTitle>
           {hasFilters && (
             <Button variant="ghost" size="sm" onClick={clearFilters}>
@@ -65,7 +83,10 @@ export function VolunteersFilters() {
         {/* Volunteer Type */}
         <div>
           <Label className="text-sm font-medium mb-3 block">Volunteer Type</Label>
-          <RadioGroup value={volunteerType} onValueChange={setVolunteerType}>
+          <RadioGroup 
+            value={volunteerType} 
+            onValueChange={(value) => updateFilters({ type: value })}
+          >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="all" id="type-all" />
               <Label htmlFor="type-all" className="text-sm font-normal cursor-pointer">
@@ -76,7 +97,6 @@ export function VolunteersFilters() {
               <RadioGroupItem value="free" id="type-free" />
               <Label htmlFor="type-free" className="text-sm font-normal cursor-pointer">
                 Free Volunteers
-                <Badge variant="outline" className="ml-2 text-xs">Premium</Badge>
               </Label>
             </div>
             <div className="flex items-center space-x-2">
@@ -85,13 +105,22 @@ export function VolunteersFilters() {
                 Paid Volunteers
               </Label>
             </div>
+            <div className="flex items-center space-x-2">
+              <RadioGroupItem value="both" id="type-both" />
+              <Label htmlFor="type-both" className="text-sm font-normal cursor-pointer">
+                Open to Both
+              </Label>
+            </div>
           </RadioGroup>
         </div>
 
         {/* Work Mode */}
         <div>
           <Label className="text-sm font-medium mb-3 block">Work Mode</Label>
-          <RadioGroup value={workMode} onValueChange={setWorkMode}>
+          <RadioGroup 
+            value={workMode} 
+            onValueChange={(value) => updateFilters({ workMode: value })}
+          >
             <div className="flex items-center space-x-2">
               <RadioGroupItem value="all" id="mode-all" />
               <Label htmlFor="mode-all" className="text-sm font-normal cursor-pointer">
@@ -168,9 +197,6 @@ export function VolunteersFilters() {
             ))}
           </div>
         </div>
-
-        {/* Apply Filters Button (for mobile) */}
-        <Button className="w-full lg:hidden">Apply Filters</Button>
       </CardContent>
     </Card>
   )

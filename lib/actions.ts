@@ -2049,11 +2049,11 @@ export async function browseVolunteers(filters?: {
       if (!hasCause) return false
     }
     
-    if (filters?.workMode && v.availability !== filters.workMode) {
+    if (filters?.workMode && filters.workMode !== "all" && v.workMode !== filters.workMode) {
       return false
     }
     
-    if (filters?.volunteerType && v.volunteerType !== filters.volunteerType) {
+    if (filters?.volunteerType && filters.volunteerType !== "all" && v.volunteerType !== filters.volunteerType) {
       return false
     }
     
@@ -2111,7 +2111,28 @@ export async function browseProjects(filters?: {
   // Limit results
   filteredProjects = filteredProjects.slice(0, 50)
   
-  return serializeDocuments(filteredProjects)
+  // Fetch NGO info for each project
+  const ngoIds = [...new Set(filteredProjects.map(p => p.ngoId).filter(Boolean))]
+  const ngoMap: Record<string, { name: string; logo?: string; verified: boolean }> = {}
+  
+  for (const ngoId of ngoIds) {
+    const ngoProfile = await ngoProfilesDb.findByUserId(ngoId)
+    if (ngoProfile) {
+      ngoMap[ngoId] = {
+        name: ngoProfile.orgName || "Organization",
+        logo: ngoProfile.logo,
+        verified: ngoProfile.isVerified || false,
+      }
+    }
+  }
+  
+  // Attach NGO info to projects
+  const projectsWithNgo = filteredProjects.map(p => ({
+    ...p,
+    ngo: ngoMap[p.ngoId] || { name: "Organization", verified: false },
+  }))
+  
+  return serializeDocuments(projectsWithNgo)
 }
 
 // Get skill category project counts for home page

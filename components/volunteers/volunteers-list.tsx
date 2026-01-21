@@ -1,8 +1,17 @@
 import { browseVolunteers } from "@/lib/actions"
 import { VolunteerCard } from "./volunteer-card"
 
-export async function VolunteersList() {
-  const volunteers = await browseVolunteers()
+interface VolunteersListProps {
+  filters?: {
+    skills?: string[]
+    causes?: string[]
+    volunteerType?: string
+    workMode?: string
+  }
+}
+
+export async function VolunteersList({ filters }: VolunteersListProps) {
+  const volunteers = await browseVolunteers(filters)
 
   if (volunteers.length === 0) {
     return (
