@@ -281,7 +281,7 @@ export default function AdminSettingsPage() {
 
   const getCurrencySymbol = () => {
     const curr = CURRENCIES.find(c => c.value === settings?.currency)
-    return curr?.symbol || "₹"
+    return curr?.symbol || "$"
   }
 
   const addVolunteerFeature = () => {
@@ -839,7 +839,7 @@ export default function AdminSettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5" />
-                  Test Payment (₹1)
+                  Test Payment ($1)
                 </CardTitle>
                 <CardDescription>
                   Create a test payment to verify your payment gateway is working correctly.
@@ -862,7 +862,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Minimum ₹1 for testing
+                      Minimum $1 for testing
                     </p>
                   </div>
                 </div>
@@ -876,7 +876,7 @@ export default function AdminSettingsPage() {
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ 
                           amount,
-                          currency: settings?.currency || "INR"
+                          currency: settings?.currency || "USD"
                         })
                       });
                       const data = await response.json();

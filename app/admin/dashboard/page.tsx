@@ -91,9 +91,9 @@ async function DashboardContent() {
         />
         <MetricCard
           title="Total Revenue"
-          value={`₹${analytics.totalRevenue.toLocaleString()}`}
+          value={`$${analytics.totalRevenue.toLocaleString()}`}
           icon={IndianRupee}
-          subtext={`₹${analytics.monthlyRevenue.toLocaleString()} this month`}
+          subtext={`$${analytics.monthlyRevenue.toLocaleString()} this month`}
           trend="up"
           trendValue={analytics.totalRevenue > 0 ? `+${Math.round((analytics.monthlyRevenue / analytics.totalRevenue) * 100)}%` : "0%"}
         />
