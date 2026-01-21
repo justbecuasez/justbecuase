@@ -1,5 +1,5 @@
 // ============================================
-// Matching Algorithm for JustBecause.Asia
+// Matching Algorithm for JustBecause Network
 // ============================================
 
 import type {

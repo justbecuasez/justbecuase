@@ -11,9 +11,9 @@ export async function GET() {
       return NextResponse.json({
         success: true,
         data: {
-          platformName: "JustBecause.Asia",
+          platformName: "JustBecause Network",
           platformDescription: "Connecting NGOs with skilled volunteers",
-          supportEmail: "support@justbecause.asia",
+          supportEmail: "support@justbecausenetwork.com",
           currency: "INR",
           volunteerFreeApplicationsPerMonth: 3,
           volunteerProPrice: 1, // TEST PRICE (use 999 for production)
@@ -40,7 +40,7 @@ export async function GET() {
           ],
           enablePayments: true,
           enableMessaging: true,
-          metaTitle: "JustBecause.Asia - Connect NGOs with Volunteers",
+          metaTitle: "JustBecause Network - Connect NGOs with Volunteers",
           metaDescription: "Platform connecting NGOs with skilled volunteers for social impact",
         }
       })

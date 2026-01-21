@@ -1,7 +1,7 @@
 "use server"
 
 // ============================================
-// Server Actions for JustBecause.Asia
+// Server Actions for JustBecause Network
 // ============================================
 
 import { revalidatePath } from "next/cache"
@@ -1332,9 +1332,9 @@ export async function getPublicSettings(): Promise<Partial<AdminSettings> | null
   
   if (!settings) {
     return {
-      platformName: "JustBecause.Asia",
+      platformName: "JustBecause Network",
       platformDescription: "Connecting NGOs with skilled volunteers",
-      supportEmail: "support@justbecause.asia",
+      supportEmail: "support@justbecausenetwork.com",
       currency: "INR",
       volunteerFreeApplicationsPerMonth: 3,
       volunteerProPrice: 1, // TEST PRICE (use 999 for production)

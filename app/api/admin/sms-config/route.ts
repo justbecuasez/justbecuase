@@ -253,7 +253,7 @@ export async function PUT(request: NextRequest) {
     }
     
     const testCode = "123456"
-    const testMessage = `Test SMS from JustBecause.asia. If you received this, your SMS configuration is working! Test code: ${testCode}`
+    const testMessage = `Test SMS from JustBecause Network. If you received this, your SMS configuration is working! Test code: ${testCode}`
     
     try {
       if (provider === "twilio") {

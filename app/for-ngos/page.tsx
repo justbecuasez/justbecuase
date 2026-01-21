@@ -285,7 +285,7 @@ export default function ForNGOsPage() {
           <div className="container mx-auto px-4 md:px-6 text-center">
             <h2 className="text-3xl font-bold mb-4">Ready to Find Your Volunteers?</h2>
             <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
-              Join hundreds of NGOs across Asia already benefiting from skills-based volunteering
+              Join hundreds of NGOs already benefiting from skills-based volunteering
             </p>
             <Button size="lg" variant="secondary" asChild>
               <Link href="/auth/signup">

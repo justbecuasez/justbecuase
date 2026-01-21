@@ -1,6 +1,6 @@
-# JustBecause.Asia
+# JustBecause Network
 
-> Skills-based volunteer platform connecting NGOs with skilled professionals across Asia
+> Skills-based volunteer platform connecting NGOs with skilled professionals worldwide
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=for-the-badge&logo=typescript)](https://typescriptlang.org)
@@ -8,7 +8,7 @@
 
 ## 🌟 Overview
 
-JustBecause.Asia is a skills-based volunteer platform that connects NGOs with skilled professionals. Unlike traditional volunteer platforms, we focus on matching specific skills (design, development, marketing, legal, etc.) with NGO needs.
+JustBecause Network is a skills-based volunteer platform that connects NGOs with skilled professionals. Unlike traditional volunteer platforms, we focus on matching specific skills (design, development, marketing, legal, etc.) with NGO needs.
 
 ### Key Features
 
@@ -29,8 +29,8 @@ JustBecause.Asia is a skills-based volunteer platform that connects NGOs with sk
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/akashmahlaz/justbecause.asia.git
-   cd justbecause.asia
+   git clone https://github.com/akashmahlaz/justbecause-network.git
+   cd justbecause-network
    ```
 
 2. Install dependencies:
@@ -193,4 +193,4 @@ This project is private and proprietary.
 
 ---
 
-Built with ❤️ for the NGO community in Asia
+Built with ❤️ for the NGO community worldwide

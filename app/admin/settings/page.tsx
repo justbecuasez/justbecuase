@@ -412,7 +412,7 @@ export default function AdminSettingsPage() {
                     onChange={(e) =>
                       setSettings({ ...settings, platformName: e.target.value })
                     }
-                    placeholder="JustBecause.Asia"
+                    placeholder="JustBecause Network"
                   />
                   <p className="text-xs text-muted-foreground">
                     Displayed in navbar, emails, and meta tags

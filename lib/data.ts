@@ -9,7 +9,7 @@ export const sampleProjects = [
       verified: true,
     },
     description:
-      "Help us develop a comprehensive social media strategy to increase awareness about climate change initiatives in Southeast Asia.",
+      "Help us develop a comprehensive social media strategy to increase awareness about climate change initiatives globally.",
     skills: ["Social Media", "Marketing", "Content Strategy"],
     timeCommitment: "10-15 hours",
     projectType: "short-term",
@@ -151,7 +151,7 @@ export const sampleNGOs = [
     name: "Green Earth Foundation",
     logo: "/green-earth-environmental-logo.jpg",
     location: "Jakarta, Indonesia",
-    mission: "Protecting biodiversity and promoting sustainable practices across Southeast Asia.",
+    mission: "Protecting biodiversity and promoting sustainable practices worldwide.",
     causes: ["Environment", "Climate Action", "Sustainability"],
     verified: true,
     projectsCompleted: 24,
@@ -193,7 +193,7 @@ export const testimonials = [
   {
     id: "1",
     quote:
-      "JustBecause.asia connected me with an amazing designer who completely transformed our brand. The quality of work we received was exceptional.",
+      "JustBecause Network connected me with an amazing designer who completely transformed our brand. The quality of work we received was exceptional.",
     author: "Maria Santos",
     role: "Executive Director",
     organization: "Youth Empowerment Network",
@@ -213,7 +213,7 @@ export const testimonials = [
   {
     id: "3",
     quote:
-      "As a small nonprofit, we could never afford professional consulting. JustBecause.asia gave us access to incredible talent that helped us grow our impact.",
+      "As a small nonprofit, we could never afford professional consulting. JustBecause Network gave us access to incredible talent that helped us grow our impact.",
     author: "Dr. Ananya Patel",
     role: "Founder",
     organization: "Healthcare Access Initiative",

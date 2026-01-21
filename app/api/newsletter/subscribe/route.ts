@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     // Send welcome email
     await sendEmail({
       to: email,
-      subject: "Welcome to JustBecause.asia Newsletter!",
+      subject: "Welcome to JustBecause Network Newsletter!",
       html: `
         <!DOCTYPE html>
         <html>
@@ -39,13 +39,13 @@ export async function POST(request: NextRequest) {
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #10b981; margin: 0;">JustBecause.asia</h1>
+            <h1 style="color: #10b981; margin: 0;">JustBecause Network</h1>
             <p style="color: #666; margin-top: 5px;">Skills-Based Volunteering Platform</p>
           </div>
           
           <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
             <h2 style="margin-top: 0;">Welcome to our newsletter! 🎉</h2>
-            <p>Thank you for subscribing to the JustBecause.asia newsletter.</p>
+            <p>Thank you for subscribing to the JustBecause Network newsletter.</p>
             <p>You'll receive updates about:</p>
             <ul>
               <li>New volunteer opportunities</li>
@@ -57,12 +57,12 @@ export async function POST(request: NextRequest) {
           </div>
           
           <div style="text-align: center; color: #666; font-size: 12px;">
-            <p>© ${new Date().getFullYear()} JustBecause.asia. All rights reserved.</p>
+            <p>© ${new Date().getFullYear()} JustBecause Network. All rights reserved.</p>
           </div>
         </body>
         </html>
       `,
-      text: "Welcome to JustBecause.asia newsletter! You'll receive updates about new volunteer opportunities, impact stories, and more.",
+      text: "Welcome to JustBecause Network newsletter! You'll receive updates about new volunteer opportunities, impact stories, and more.",
     })
 
     return NextResponse.json({ success: true, message: "Subscribed successfully" })

@@ -20,7 +20,7 @@ async function check() {
   })
   
   // Get admin
-  const admin = await db.collection("user").findOne({ email: "admin@justbecause.asia" })
+  const admin = await db.collection("user").findOne({ email: "admin@justbecausenetwork.com" })
   console.log("\n\nAdmin user:")
   console.log("  _id type:", typeof admin?._id, admin?._id?.constructor?.name)
   console.log("  _id value:", admin?._id)

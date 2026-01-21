@@ -253,7 +253,7 @@ View SMS logs in Twilio Console:
 
 ## ✨ Summary
 
-Your JustBecause.Asia application now has:
+Your JustBecause Network application now has:
 1. ✅ **Working Twilio SMS OTP** for phone verification during onboarding
 2. ✅ **Email OTP** for email verification during signup
 3. ✅ **Razorpay payments** (existing)

@@ -49,7 +49,7 @@ export const auth = betterAuth({
         console.log(`[Reset] Sending email to ${user.email}`)
         const emailSent = await sendEmail({
           to: user.email,
-          subject: "Reset your password - JustBecause.asia",
+          subject: "Reset your password - JustBecause Network",
           html: getPasswordResetCodeEmailHtml(code, url, user.name),
           text: `Use this code to reset your password: ${code}`,
         })
@@ -59,7 +59,7 @@ export const auth = betterAuth({
         console.error(`[Reset] Error for ${user.email}:`, err)
         void sendEmail({
           to: user.email,
-          subject: "Reset your password - JustBecause.asia",
+          subject: "Reset your password - JustBecause Network",
           html: getPasswordResetEmailHtml(url, user.name),
           text: `Click the link to reset your password: ${url}`,
         })
@@ -85,7 +85,7 @@ export const auth = betterAuth({
   //   sendVerificationEmail: async ({ user, url }) => {
   //     void sendEmail({
   //       to: user.email,
-  //       subject: "Verify your email - JustBecause.asia",
+  //       subject: "Verify your email - JustBecause Network",
   //       html: getVerificationEmailHtml(url, user.name),
   //       text: `Click the link to verify your email: ${url}`,
   //     })
@@ -261,8 +261,8 @@ export const auth = betterAuth({
   },
   trustedOrigins: [
     "http://localhost:3000",
-    "https://justbecause.asia",
-    "https://www.justbecause.asia",
+    "https://justbecausenetwork.com",
+    "https://www.justbecausenetwork.com",
     "https://justbecause.vercel.app",
     "https://justbecause-one.vercel.app",
     process.env.BETTER_AUTH_URL || "",

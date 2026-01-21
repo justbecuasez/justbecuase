@@ -45,7 +45,7 @@ async function seedAdmin() {
     console.error("   ADMIN_NAME (optional) - The admin display name")
     console.error("")
     console.error("Example:")
-    console.error('   ADMIN_EMAIL="admin@justbecause.asia" ADMIN_PASSWORD="SecurePass123!" npx tsx lib/admin-seed.ts')
+    console.error('   ADMIN_EMAIL="admin@justbecausenetwork.com" ADMIN_PASSWORD="SecurePass123!" npx tsx lib/admin-seed.ts')
     process.exit(1)
   }
 

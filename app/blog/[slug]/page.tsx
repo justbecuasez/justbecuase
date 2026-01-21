@@ -17,8 +17,8 @@ const blogPosts: Record<string, {
   content: string
 }> = {
   "launch-announcement": {
-    title: "Introducing JustBecause.asia - Skills-Based Volunteering for Asia",
-    excerpt: "We're excited to launch JustBecause.asia, a platform connecting skilled professionals with NGOs across Asia that need their expertise.",
+    title: "Introducing JustBecause Network - Skills-Based Volunteering",
+    excerpt: "We're excited to launch JustBecause Network, a platform connecting skilled professionals with NGOs that need their expertise.",
     date: "December 6, 2025",
     author: "JustBecause Team",
     category: "Announcement",
@@ -26,11 +26,11 @@ const blogPosts: Record<string, {
     content: `
 ## A New Era of Meaningful Volunteering
 
-Today marks the beginning of something special. After months of development and countless conversations with NGOs and volunteers across Asia, we're thrilled to officially launch JustBecause.asia.
+Today marks the beginning of something special. After months of development and countless conversations with NGOs and volunteers, we're thrilled to officially launch JustBecause Network.
 
 ### The Problem We're Solving
 
-NGOs across Asia are doing incredible work - from environmental conservation to education, healthcare to community development. But many of them lack access to specialized skills they need to maximize their impact:
+NGOs worldwide are doing incredible work - from environmental conservation to education, healthcare to community development. But many of them lack access to specialized skills they need to maximize their impact:
 
 - **Marketing expertise** to spread their message further
 - **Technology skills** to build better systems
@@ -41,7 +41,7 @@ Meanwhile, millions of skilled professionals want to give back but don't know ho
 
 ### Our Solution
 
-JustBecause.asia bridges this gap by creating a marketplace where:
+JustBecause Network bridges this gap by creating a marketplace where:
 
 1. **NGOs can post specific projects** describing exactly what skills they need
 2. **Professionals can browse opportunities** that match their expertise
@@ -61,7 +61,7 @@ Unlike traditional volunteering platforms, we focus exclusively on **skills-base
 
 Whether you're an NGO looking for skilled support or a professional wanting to make a difference, we invite you to join our community.
 
-Together, we can create lasting change across Asia - one project at a time.
+Together, we can create lasting change worldwide - one project at a time.
 
 ---
 
@@ -111,7 +111,7 @@ Asia is home to:
 - The world's fastest-growing pool of skilled professionals
 - Unprecedented digital connectivity
 
-Yet the gap between NGO needs and available skilled support remains massive. That's why we built JustBecause.asia.
+Yet the gap between NGO needs and available skilled support remains massive. That's why we built JustBecause Network.
 
 ### Getting Started
 
@@ -132,7 +132,7 @@ The world needs what you know. Let's put it to work.
     category: "Guide",
     readTime: "7 min read",
     content: `
-## Welcome to JustBecause.asia
+## Welcome to JustBecause Network
 
 This guide will help you get the most out of our platform and connect with skilled volunteers who can help your organization grow.
 
@@ -298,7 +298,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       .filter(Boolean)
   }
 
-  const shareUrl = `https://justbecause.asia/blog/${slug}`
+  const shareUrl = `https://justbecausenetwork.com/blog/${slug}`
   const shareText = encodeURIComponent(post.title)
 
   return (
@@ -380,7 +380,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                   Ready to Make an Impact?
                 </h3>
                 <p className="text-muted-foreground mb-6">
-                  Join thousands of professionals using their skills to create change across Asia.
+                  Join thousands of professionals using their skills to create change worldwide.
                 </p>
                 <div className="flex items-center justify-center gap-4">
                   <Link href="/projects">
