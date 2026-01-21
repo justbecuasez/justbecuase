@@ -10,7 +10,21 @@ export const metadata = {
   description: "Find skilled volunteers ready to contribute to your cause",
 }
 
-export default function VolunteersPage() {
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}
+
+export default async function VolunteersPage({ searchParams }: PageProps) {
+  const params = await searchParams
+  
+  // Parse filters from URL
+  const filters = {
+    skills: typeof params.skills === "string" ? params.skills.split(",").filter(Boolean) : undefined,
+    causes: typeof params.causes === "string" ? params.causes.split(",").filter(Boolean) : undefined,
+    volunteerType: typeof params.type === "string" && params.type !== "all" ? params.type : undefined,
+    workMode: typeof params.workMode === "string" && params.workMode !== "all" ? params.workMode : undefined,
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -30,7 +44,7 @@ export default function VolunteersPage() {
             {/* Volunteers Grid */}
             <div className="lg:col-span-3">
               <Suspense fallback={<VolunteersListSkeleton />}>
-                <VolunteersList />
+                <VolunteersList filters={filters} />
               </Suspense>
             </div>
           </div>
