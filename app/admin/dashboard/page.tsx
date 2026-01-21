@@ -10,7 +10,7 @@ import {
   Building2,
   FolderKanban,
   FileText,
-  IndianRupee,
+  DollarSign,
   TrendingUp,
   TrendingDown,
   Activity,
@@ -92,7 +92,7 @@ async function DashboardContent() {
         <MetricCard
           title="Total Revenue"
           value={`$${analytics.totalRevenue.toLocaleString()}`}
-          icon={IndianRupee}
+          icon={DollarSign}
           subtext={`$${analytics.monthlyRevenue.toLocaleString()} this month`}
           trend="up"
           trendValue={analytics.totalRevenue > 0 ? `+${Math.round((analytics.monthlyRevenue / analytics.totalRevenue) * 100)}%` : "0%"}
@@ -357,7 +357,7 @@ async function DashboardContent() {
             <Link href="/admin/payments">
               <Button variant="outline" className="w-full justify-between">
                 <span className="flex items-center gap-2">
-                  <IndianRupee className="h-4 w-4" />
+                  <DollarSign className="h-4 w-4" />
                   Payments
                 </span>
                 <ArrowRight className="h-4 w-4" />

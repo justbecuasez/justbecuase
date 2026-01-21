@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { getAllTransactions, getPaymentStats } from "@/lib/actions"
 import {
-  IndianRupee,
+  DollarSign,
   Download,
   TrendingUp,
   CreditCard,
@@ -54,7 +54,7 @@ export default async function AdminPaymentsPage() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
-              <IndianRupee className="h-4 w-4 text-green-600" />
+              <DollarSign className="h-4 w-4 text-green-600" />
               <span className="text-sm text-muted-foreground">Total Revenue</span>
             </div>
             <p className="text-2xl font-bold text-foreground">${stats.totalRevenue.toLocaleString()}</p>
@@ -108,7 +108,7 @@ export default async function AdminPaymentsPage() {
         <CardContent>
           {transactions.length === 0 ? (
             <div className="text-center py-12">
-              <IndianRupee className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-muted-foreground">No transactions yet</p>
               <p className="text-sm text-muted-foreground mt-1">
                 Transactions will appear here when NGOs start unlocking profiles
