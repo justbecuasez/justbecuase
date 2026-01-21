@@ -459,7 +459,7 @@ export default function NGOOnboardingPage() {
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.latitude}&lon=${coords.longitude}&zoom=10`,
             {
               headers: {
-                'User-Agent': 'JustBecause.asia/1.0',
+                'User-Agent': 'JustBecauseNetwork/1.0',
                 'Accept-Language': 'en-US,en;q=0.9'
               }
             }

@@ -246,7 +246,7 @@ export default function SignInPage() {
         <div className="max-w-md text-primary-foreground">
           <h2 className="text-3xl font-bold mb-4">Make a Difference Today</h2>
           <p className="text-primary-foreground/90 mb-8">
-            Join thousands of skilled professionals who are creating lasting impact in communities across Asia.
+            Join thousands of skilled professionals who are creating lasting impact in communities worldwide.
           </p>
           <div className="space-y-4">
             <div className="flex items-center gap-3">

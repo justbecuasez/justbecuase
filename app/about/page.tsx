@@ -11,7 +11,7 @@ const values = [
   {
     icon: Heart,
     title: "Impact First",
-    description: "Every decision we make is guided by the impact it will create for communities across Asia.",
+    description: "Every decision we make is guided by the impact it will create for communities worldwide.",
   },
   {
     icon: Users,

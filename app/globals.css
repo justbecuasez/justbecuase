@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* JustBecause.asia - Skills-Based Volunteer Platform Theme */
+  /* JustBecause Network - Skills-Based Volunteer Platform Theme */
   --background: oklch(0.985 0.002 247);
   --foreground: oklch(0.205 0.015 247);
   --card: oklch(1 0 0);

@@ -30,7 +30,7 @@ export function Footer() {
               </span>
             </Link>
             <p className="text-muted-foreground mb-6 max-w-sm">
-              {platformSettings?.platformDescription || "Connecting skilled professionals with meaningful causes across Asia. Turn your expertise into lasting impact."}
+              {platformSettings?.platformDescription || "Connecting skilled professionals with meaningful causes worldwide. Turn your expertise into lasting impact."}
             </p>
             <div className="flex items-center gap-4">
               {(socialLinks?.linkedin || !socialLinks) && (

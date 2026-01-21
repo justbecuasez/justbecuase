@@ -29,7 +29,7 @@ export async function FeaturedProjects() {
               Featured Projects
             </h2>
             <p className="text-slate-500 leading-relaxed">
-              A curated directory of high-impact opportunities from verified NGOs across Asia. 
+              A curated directory of high-impact opportunities from verified NGOs worldwide. 
               Designed for architects of social change.
             </p>
           </div>

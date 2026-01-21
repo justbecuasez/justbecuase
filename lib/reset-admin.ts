@@ -11,7 +11,7 @@ async function resetAdmin() {
     const db = client.db("justbecause")
     
     // Find existing admin first to get the _id
-    const adminUser = await db.collection("user").findOne({ email: "admin@justbecause.asia" })
+    const adminUser = await db.collection("user").findOne({ email: "admin@justbecausenetwork.com" })
     
     if (adminUser) {
       // Delete account using the ObjectId

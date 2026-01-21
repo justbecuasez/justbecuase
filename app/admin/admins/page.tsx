@@ -160,7 +160,7 @@ export default function AdminManagementPage() {
                     type="email"
                     value={newAdminEmail}
                     onChange={(e) => setNewAdminEmail(e.target.value)}
-                    placeholder="admin@justbecause.asia"
+                    placeholder="admin@justbecausenetwork.com"
                     className="pl-10"
                     required
                   />

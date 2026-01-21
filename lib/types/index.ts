@@ -1,5 +1,5 @@
 // ============================================
-// JustBecause.Asia - Type Definitions
+// JustBecause Network - Type Definitions
 // ============================================
 
 import { ObjectId } from "mongodb"

@@ -28,7 +28,7 @@ export function HeroSection() {
 
           {/* Subtitle */}
           <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground md:text-xl text-pretty">
-            Connect with NGOs across Asia who need your expertise. Whether you have an hour or a month, your skills can
+            Connect with NGOs who need your expertise. Whether you have an hour or a month, your skills can
             transform communities and create lasting change.
           </p>
 

@@ -6,7 +6,7 @@ async function check() {
   await client.connect()
   const db = client.db("justbecause")
   
-  const user = await db.collection("user").findOne({email: "admin@justbecause.asia"})
+  const user = await db.collection("user").findOne({email: "admin@justbecausenetwork.com"})
   console.log("User:", JSON.stringify(user, null, 2))
   
   const accounts = await db.collection("account").find({}).toArray()

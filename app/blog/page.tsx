@@ -7,8 +7,8 @@ import { Calendar, User, ArrowRight } from "lucide-react"
 const blogPosts = [
   {
     id: "launch-announcement",
-    title: "Introducing JustBecause.asia - Skills-Based Volunteering for Asia",
-    excerpt: "We're excited to launch JustBecause.asia, a platform connecting skilled professionals with NGOs across Asia that need their expertise.",
+    title: "Introducing JustBecause Network - Skills-Based Volunteering",
+    excerpt: "We're excited to launch JustBecause Network, a platform connecting skilled professionals with NGOs that need their expertise.",
     date: "December 6, 2025",
     author: "JustBecause Team",
     category: "Announcement",
@@ -46,7 +46,7 @@ export default function BlogPage() {
               Blog
             </h1>
             <p className="text-xl text-muted-foreground">
-              Stories, insights, and updates from the JustBecause.asia community
+              Stories, insights, and updates from the JustBecause Network community
             </p>
           </div>
 

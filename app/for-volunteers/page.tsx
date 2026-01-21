@@ -21,7 +21,7 @@ const benefits = [
   {
     icon: Heart,
     title: "Make a Difference",
-    description: "Use your expertise to create lasting positive change in communities across Asia.",
+    description: "Use your expertise to create lasting positive change in communities worldwide.",
   },
   {
     icon: Globe,

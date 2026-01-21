@@ -29,9 +29,9 @@ async function initializeSettings() {
       console.log('📋 No settings found, creating with test prices...');
       await db.collection('adminSettings').insertOne({
         // Platform Settings
-        platformName: "JustBecause.Asia",
+        platformName: "JustBecause Network",
         platformDescription: "Connecting NGOs with skilled volunteers",
-        supportEmail: "support@justbecause.asia",
+        supportEmail: "support@justbecausenetwork.com",
         
         // Payment Settings
         currency: "INR",
@@ -80,7 +80,7 @@ async function initializeSettings() {
         requirePhoneVerification: false,
         
         // Meta
-        metaTitle: "JustBecause.Asia - Connect NGOs with Volunteers",
+        metaTitle: "JustBecause Network - Connect NGOs with Volunteers",
         metaDescription: "Platform connecting NGOs with skilled volunteers for social impact",
         
         createdAt: new Date(),
