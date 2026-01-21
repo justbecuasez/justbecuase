@@ -89,7 +89,7 @@ export function ReportsGenerator({ volunteers, ngos, projects, analytics }: Repo
           // Generate revenue report placeholder
           csvContent = [
             ["Date", "Total Revenue", "Profile Unlocks", "Subscriptions"].join(","),
-            [new Date().toLocaleDateString(), "₹0", "0", "0"].join(",")
+            [new Date().toLocaleDateString(), "$0", "0", "0"].join(",")
           ].join("\n")
           fileName = "revenue-report"
           break

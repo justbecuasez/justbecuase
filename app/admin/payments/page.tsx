@@ -57,7 +57,7 @@ export default async function AdminPaymentsPage() {
               <IndianRupee className="h-4 w-4 text-green-600" />
               <span className="text-sm text-muted-foreground">Total Revenue</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">₹{stats.totalRevenue.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-foreground">${stats.totalRevenue.toLocaleString()}</p>
             <p className="text-xs text-green-600 flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
               {stats.completedTransactions} completed transactions
@@ -70,7 +70,7 @@ export default async function AdminPaymentsPage() {
               <CreditCard className="h-4 w-4 text-primary" />
               <span className="text-sm text-muted-foreground">Profile Unlocks</span>
             </div>
-            <p className="text-2xl font-bold text-foreground">₹{stats.profileUnlockRevenue.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-foreground">${stats.profileUnlockRevenue.toLocaleString()}</p>
             <p className="text-xs text-muted-foreground">From profile unlock payments</p>
           </CardContent>
         </Card>
@@ -136,7 +136,7 @@ export default async function AdminPaymentsPage() {
                         {transaction.type.replace("_", " ")}
                       </td>
                       <td className="py-4 font-medium">
-                        ₹{transaction.amount.toLocaleString()}
+                        ${transaction.amount.toLocaleString()}
                       </td>
                       <td className="py-4">
                         <Badge className={statusColors[transaction.paymentStatus] || "bg-gray-100 text-gray-700"}>
