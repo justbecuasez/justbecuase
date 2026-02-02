@@ -34,25 +34,25 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-4">
               {(socialLinks?.linkedin || !socialLinks) && (
-                <a href={socialLinks?.linkedin || "#"} className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+                <a href={socialLinks?.linkedin || "https://www.linkedin.com/in/just-because-network-07599a3a9/"} className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
                   <Linkedin className="h-5 w-5" />
                   <span className="sr-only">LinkedIn</span>
                 </a>
               )}
               {(socialLinks?.twitter || !socialLinks) && (
-                <a href={socialLinks?.twitter || "#"} className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+                <a href={socialLinks?.twitter || "https://twitter.com/justbecausenet"} className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
                   <Twitter className="h-5 w-5" />
                   <span className="sr-only">Twitter</span>
                 </a>
               )}
               {(socialLinks?.instagram || !socialLinks) && (
-                <a href={socialLinks?.instagram || "#"} className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+                <a href={socialLinks?.instagram || "https://www.instagram.com/justbecausenet/"} className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
                   <Instagram className="h-5 w-5" />
                   <span className="sr-only">Instagram</span>
                 </a>
               )}
               {(socialLinks?.facebook || !socialLinks) && (
-                <a href={socialLinks?.facebook || "#"} className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
+                <a href={socialLinks?.facebook || "https://www.facebook.com/people/Justbecausenetwork/61587223264929/"} className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
                   <Facebook className="h-5 w-5" />
                   <span className="sr-only">Facebook</span>
                 </a>
