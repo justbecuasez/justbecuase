@@ -276,6 +276,10 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
   const [aiSearchApplied, setAiSearchApplied] = useState(false)
   const [aiSkillFilters, setAiSkillFilters] = useState<string[]>([])
   const [aiCauseFilters, setAiCauseFilters] = useState<string[]>([])
+  const [aiMatchedIds, setAiMatchedIds] = useState<string[]>([])
+  const [aiLocationFilter, setAiLocationFilter] = useState<string | null>(null)
+  const [aiVolunteerType, setAiVolunteerType] = useState<string | null>(null)
+  const [aiSearchIntent, setAiSearchIntent] = useState<string>("")
   
   // AI Search handler
   const handleAISearch = async () => {
@@ -290,9 +294,14 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
       const data = await res.json()
       if (data.success && data.data) {
         const f = data.data
+        // Set all AI filters
         if (f.skills?.length) setAiSkillFilters(f.skills)
         if (f.causes?.length) setAiCauseFilters(f.causes)
-        if (f.workMode) setLocationFilter(f.workMode) // reuse location filter slot
+        if (f.matchedVolunteerIds?.length) setAiMatchedIds(f.matchedVolunteerIds)
+        if (f.location) setAiLocationFilter(f.location)
+        if (f.volunteerType) setAiVolunteerType(f.volunteerType)
+        if (f.searchIntent) setAiSearchIntent(f.searchIntent)
+        if (f.workMode) setLocationFilter(f.workMode)
         if (f.minRating) setFilters(prev => ({ ...prev, minRating: f.minRating }))
         if (f.maxHourlyRate) setFilters(prev => ({ ...prev, maxHourlyRate: f.maxHourlyRate }))
         setAiSearchApplied(true)
@@ -308,6 +317,10 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
     setAiSearchApplied(false)
     setAiSkillFilters([])
     setAiCauseFilters([])
+    setAiMatchedIds([])
+    setAiLocationFilter(null)
+    setAiVolunteerType(null)
+    setAiSearchIntent("")
     setSearchQuery("")
     setCategoryFilter("all")
     setLocationFilter("all")
@@ -533,24 +546,66 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
 
         // ==========================================
         // AI SEARCH FILTERS
+        // When AI search is applied, use matched IDs from server-side DB search
+        // as the primary filter. Fall back to skill-based filtering only if
+        // no matched IDs were returned.
         // ==========================================
-        if (matches && aiSearchApplied && aiSkillFilters.length > 0) {
-          const hasAISkill = v.skills?.some(s => aiSkillFilters.includes(s.subskillId))
-          if (!hasAISkill) matches = false
-        }
-
-        if (matches && aiSearchApplied && aiCauseFilters.length > 0) {
-          // Causes are not on the Volunteer type in find-talent, so skip cause filtering here
-          // Causes are filtered server-side via browseVolunteers
+        if (matches && aiSearchApplied) {
+          // Primary: Use server-side matched volunteer IDs
+          if (aiMatchedIds.length > 0) {
+            const volunteerId = v.userId || v.id
+            if (!aiMatchedIds.includes(volunteerId)) {
+              matches = false
+            }
+          } else {
+            // Fallback: Client-side skill filtering when no DB matches returned
+            if (aiSkillFilters.length > 0) {
+              const hasAISkill = v.skills?.some(s => aiSkillFilters.includes(s.subskillId))
+              if (!hasAISkill) matches = false
+            }
+            
+            // Client-side location filtering
+            if (matches && aiLocationFilter) {
+              const locMatch = 
+                v.location?.toLowerCase().includes(aiLocationFilter.toLowerCase()) ||
+                v.city?.toLowerCase().includes(aiLocationFilter.toLowerCase()) ||
+                v.country?.toLowerCase().includes(aiLocationFilter.toLowerCase())
+              if (!locMatch) matches = false
+            }
+            
+            // Client-side volunteer type filtering
+            if (matches && aiVolunteerType && aiVolunteerType !== "both") {
+              if (v.volunteerType !== aiVolunteerType && v.volunteerType !== "both") {
+                matches = false
+              }
+            }
+          }
         }
         
         // Calculate relevance score
-        const relevanceScore = matches ? calculateRelevanceScore(v, parsedQuery) : -1
+        let relevanceScore = -1
+        if (matches) {
+          relevanceScore = calculateRelevanceScore(v, parsedQuery)
+          
+          // Boost relevance for AI-matched volunteers based on skill match count
+          if (aiSearchApplied && aiSkillFilters.length > 0) {
+            const matchedSkillCount = v.skills?.filter(s => aiSkillFilters.includes(s.subskillId)).length || 0
+            relevanceScore += matchedSkillCount * 15
+          }
+          
+          // Boost for location match when AI specified a location
+          if (aiSearchApplied && aiLocationFilter) {
+            const hasLocMatch = 
+              v.location?.toLowerCase().includes(aiLocationFilter.toLowerCase()) ||
+              v.city?.toLowerCase().includes(aiLocationFilter.toLowerCase())
+            if (hasLocMatch) relevanceScore += 20
+          }
+        }
         
         return { ...v, relevanceScore }
       })
       .filter(v => v.relevanceScore >= 0)
-  }, [parsedQuery, categoryFilter, locationFilter, filters, aiSearchApplied, aiSkillFilters, aiCauseFilters])
+  }, [parsedQuery, categoryFilter, locationFilter, filters, aiSearchApplied, aiSkillFilters, aiCauseFilters, aiMatchedIds, aiLocationFilter, aiVolunteerType])
 
   // Sort volunteers
   const sortVolunteers = useCallback((vols: Array<Volunteer & { relevanceScore: number }>) => {
@@ -854,8 +909,13 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
             <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
               <Wand2 className="h-4 w-4 text-primary flex-shrink-0" />
               <span className="text-sm text-primary flex-1">
-                AI matched: <strong>{aiSkillFilters.join(", ")}</strong>
-                {aiSkillFilters.length === 0 && " (no specific skills detected)"}
+                {aiSearchIntent ? (
+                  <>AI: <em>{aiSearchIntent}</em></>
+                ) : (
+                  <>AI matched: <strong>{aiSkillFilters.join(", ") || "all volunteers"}</strong></>
+                )}
+                {aiLocationFilter && <> in <strong>{aiLocationFilter}</strong></>}
+                {aiMatchedIds.length > 0 && <> ({aiMatchedIds.length} found)</>}
               </span>
               <Button variant="ghost" size="sm" onClick={clearAISearch} className="h-6 px-2 text-primary hover:text-primary/80">
                 <X className="h-3 w-3 mr-1" />
