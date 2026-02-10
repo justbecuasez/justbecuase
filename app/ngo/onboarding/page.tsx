@@ -631,7 +631,7 @@ export default function NGOOnboardingPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="registrationNumber">Registration Number</Label>
+            <Label htmlFor="registrationNumber">Registration Number *</Label>
             <Input
               id="registrationNumber"
               placeholder="NGO registration ID"
@@ -639,6 +639,7 @@ export default function NGOOnboardingPage() {
               onChange={(e) =>
                 setOrgDetails({ ...orgDetails, registrationNumber: e.target.value })
               }
+              required
             />
           </div>
         </div>
@@ -1305,6 +1306,10 @@ export default function NGOOnboardingPage() {
                   }
                   if (!orgDetails.orgName) {
                     setError("Please enter your organization name")
+                    return
+                  }
+                  if (!orgDetails.registrationNumber) {
+                    setError("Please enter your organization registration number")
                     return
                   }
                 }

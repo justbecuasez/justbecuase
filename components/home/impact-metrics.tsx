@@ -48,10 +48,10 @@ export function ImpactMetrics({ impactMetrics }: { impactMetrics: any }) {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-24 gap-8">
           <div className="max-w-xl">
             <h2 className="text-5xl md:text-7xl font-light tracking-tighter text-foreground mb-6">
-              Our <span className="font-semibold">Momentum.</span>
+              Our <span className="font-semibold">Impact.</span>
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed border-l-2 border-primary pl-6">
-              A quantitative overview of how professional skills are fueling social progress across the region.
+              Real numbers showing how skilled professionals are creating meaningful change across communities.
             </p>
           </div>
           <div className="text-right">

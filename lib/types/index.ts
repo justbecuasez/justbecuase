@@ -72,6 +72,7 @@ export interface VolunteerProfile {
   
   // Work Preferences
   volunteerType: VolunteerType // "free" | "paid" | "both"
+  freeHoursPerMonth?: number // Free hours available per month for NGOs
   hourlyRate?: number // Only if paid
   discountedRate?: number // Discounted rate for NGOs (low bono)
   currency?: string
@@ -643,6 +644,7 @@ export interface VolunteerProfileView {
   workMode: WorkMode
   hoursPerWeek: string
   volunteerType: VolunteerType
+  freeHoursPerMonth?: number // Free hours available per month
   completedProjects: number
   hoursContributed: number
   rating: number

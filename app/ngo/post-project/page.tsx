@@ -252,8 +252,8 @@ export default function PostProjectPage() {
         {step === 1 && (
           <div>
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-foreground mb-2">Post a New Project</h1>
-              <p className="text-muted-foreground">Choose a project type to get started quickly</p>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Post a New Requirement</h1>
+              <p className="text-muted-foreground">Choose a requirement type to get started quickly</p>
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -579,7 +579,7 @@ export default function PostProjectPage() {
                     ) : (
                       <>
                         <CheckCircle className="mr-2 h-4 w-4" />
-                        Post Project
+                        Post Requirement
                       </>
                     )}
                   </Button>

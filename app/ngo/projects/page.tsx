@@ -68,7 +68,7 @@ export default async function NGOProjectsPage() {
         <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground mb-2">My Projects</h1>
+              <h1 className="text-2xl font-bold text-foreground mb-2">My Requirements</h1>
               <p className="text-muted-foreground">
                 Manage your volunteer opportunities
               </p>
@@ -76,7 +76,7 @@ export default async function NGOProjectsPage() {
             <Button asChild>
               <Link href="/ngo/post-project">
                 <PlusCircle className="h-4 w-4 mr-2" />
-                Post New Project
+                Post New Requirement
               </Link>
             </Button>
           </div>

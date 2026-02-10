@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
+import { Suspense } from "react"
 import { auth } from "@/lib/auth"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
+import { WelcomeToast } from "@/components/dashboard/welcome-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -59,6 +61,9 @@ export default async function VolunteerDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Suspense fallback={null}>
+        <WelcomeToast />
+      </Suspense>
       <DashboardHeader 
         userType="volunteer" 
         userName={session.user.name || "Volunteer"} 

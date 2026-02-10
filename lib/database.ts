@@ -799,7 +799,7 @@ export const adminSettingsDb = {
       await collection.insertOne({
         // Platform Settings
         platformName: "JustBecause Network",
-        platformDescription: "Connecting NGOs with skilled volunteers",
+        platformDescription: "Connecting Skills with Purpose",
         supportEmail: "support@justbecausenetwork.com",
         
         // Payment Settings

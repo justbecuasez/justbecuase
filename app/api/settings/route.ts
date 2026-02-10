@@ -12,7 +12,7 @@ export async function GET() {
         success: true,
         data: {
           platformName: "JustBecause Network",
-          platformDescription: "Connecting NGOs with skilled volunteers",
+          platformDescription: "Connecting Skills with Purpose",
           supportEmail: "support@justbecausenetwork.com",
           currency: "INR",
           volunteerFreeApplicationsPerMonth: 3,

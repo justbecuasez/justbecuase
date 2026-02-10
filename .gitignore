@@ -3,6 +3,8 @@ node_modules/
 .pnp/
 .pnp.js
 
+justbecuase/
+
 # Build outputs
 .next/
 out/

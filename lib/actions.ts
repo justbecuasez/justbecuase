@@ -204,6 +204,7 @@ export async function saveVolunteerOnboarding(data: {
   causes: string[]
   workPreferences: {
     volunteerType: string
+    freeHoursPerMonth?: number
     workMode: string
     hoursPerWeek: string
     availability: string
@@ -241,6 +242,7 @@ export async function saveVolunteerOnboarding(data: {
       languages: [],
       interests: [],
       volunteerType: data.workPreferences.volunteerType as "free" | "paid" | "both",
+      freeHoursPerMonth: data.workPreferences.freeHoursPerMonth,
       hourlyRate: data.workPreferences.hourlyRate,
       discountedRate: data.workPreferences.discountedRate,
       currency: data.workPreferences.currency || "INR",
@@ -362,7 +364,7 @@ export async function getNGOSubscriptionStatus(): Promise<{
 // Allowed fields for volunteer profile updates - filters out sensitive fields
 const ALLOWED_VOLUNTEER_UPDATE_FIELDS = [
   "name", "avatar", "phone", "location", "city", "country", "bio", "linkedinUrl", "portfolioUrl",
-  "resumeUrl", "skills", "causes", "volunteerType", "hourlyRate", "discountedRate", "currency",
+  "resumeUrl", "skills", "causes", "volunteerType", "freeHoursPerMonth", "hourlyRate", "discountedRate", "currency",
   "workMode", "hoursPerWeek", "availability"
 ] as const
 
@@ -1088,6 +1090,7 @@ export async function getVolunteerProfileView(
     workMode: volunteerProfile.workMode,
     hoursPerWeek: volunteerProfile.hoursPerWeek,
     volunteerType: volunteerProfile.volunteerType,
+    freeHoursPerMonth: volunteerProfile.freeHoursPerMonth,
     completedProjects: volunteerProfile.completedProjects,
     hoursContributed: volunteerProfile.hoursContributed,
     rating: volunteerProfile.rating,
@@ -1333,7 +1336,7 @@ export async function getPublicSettings(): Promise<Partial<AdminSettings> | null
   if (!settings) {
     return {
       platformName: "JustBecause Network",
-      platformDescription: "Connecting NGOs with skilled volunteers",
+      platformDescription: "Connecting Skills with Purpose",
       supportEmail: "support@justbecausenetwork.com",
       currency: "INR",
       volunteerFreeApplicationsPerMonth: 3,

@@ -1,11 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -13,6 +15,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import Link from "next/link"
 import {
   Search,
@@ -27,8 +42,17 @@ import {
   MessageSquare,
   Sparkles,
   X,
+  SlidersHorizontal,
+  ArrowUpDown,
+  CheckCircle,
+  HelpCircle,
+  Zap,
 } from "lucide-react"
 import { skillCategories } from "@/lib/skills-data"
+
+// ==========================================
+// ADVANCED SEARCH TYPES & UTILITIES
+// ==========================================
 
 interface Volunteer {
   id: string
@@ -47,7 +71,193 @@ interface Volunteer {
   currency?: string
   rating?: number
   completedProjects?: number
+  freeHoursPerMonth?: number
 }
+
+interface SearchFilters {
+  minRating: number
+  minHoursPerWeek: number
+  maxHoursPerWeek: number
+  minProjects: number
+  verifiedOnly: boolean
+  hasDiscountedRate: boolean
+  maxHourlyRate: number
+  experienceLevel: "all" | "beginner" | "intermediate" | "expert"
+  hasFreeHours: boolean
+}
+
+type SortOption = "relevance" | "rating" | "projects" | "rate-low" | "rate-high" | "hours"
+
+// Fuzzy match function - handles typos with Levenshtein distance
+function fuzzyMatch(str: string, pattern: string, threshold: number = 2): boolean {
+  if (!str || !pattern) return false
+  str = str.toLowerCase()
+  pattern = pattern.toLowerCase()
+  
+  // Exact match or contains
+  if (str.includes(pattern)) return true
+  
+  // For short patterns, require exact match
+  if (pattern.length < 3) return str.includes(pattern)
+  
+  // Levenshtein distance for fuzzy matching
+  const matrix: number[][] = []
+  for (let i = 0; i <= pattern.length; i++) {
+    matrix[i] = [i]
+  }
+  for (let j = 0; j <= str.length; j++) {
+    matrix[0][j] = j
+  }
+  for (let i = 1; i <= pattern.length; i++) {
+    for (let j = 1; j <= str.length; j++) {
+      const cost = pattern[i - 1] === str[j - 1] ? 0 : 1
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
+      )
+    }
+  }
+  
+  // Check if any substring matches within threshold
+  const minDist = Math.min(...matrix[pattern.length])
+  return minDist <= threshold
+}
+
+// Parse advanced search query with operators
+interface ParsedQuery {
+  skills: string[]
+  locations: string[]
+  names: string[]
+  generalTerms: string[]
+  exactPhrases: string[]
+  excludeTerms: string[]
+  orGroups: string[][]
+}
+
+function parseSearchQuery(query: string): ParsedQuery {
+  const result: ParsedQuery = {
+    skills: [],
+    locations: [],
+    names: [],
+    generalTerms: [],
+    exactPhrases: [],
+    excludeTerms: [],
+    orGroups: [],
+  }
+  
+  if (!query.trim()) return result
+  
+  // Extract exact phrases (quoted strings)
+  const phraseRegex = /"([^"]+)"/g
+  let match
+  while ((match = phraseRegex.exec(query)) !== null) {
+    result.exactPhrases.push(match[1].toLowerCase())
+  }
+  // Remove quoted phrases from query for further parsing
+  let remainingQuery = query.replace(/"[^"]+"/g, " ")
+  
+  // Extract skill: operator
+  const skillRegex = /skill:(\S+)/gi
+  while ((match = skillRegex.exec(remainingQuery)) !== null) {
+    result.skills.push(match[1].toLowerCase())
+  }
+  remainingQuery = remainingQuery.replace(/skill:\S+/gi, " ")
+  
+  // Extract location: operator
+  const locationRegex = /location:(\S+)/gi
+  while ((match = locationRegex.exec(remainingQuery)) !== null) {
+    result.locations.push(match[1].toLowerCase())
+  }
+  remainingQuery = remainingQuery.replace(/location:\S+/gi, " ")
+  
+  // Extract name: operator
+  const nameRegex = /name:(\S+)/gi
+  while ((match = nameRegex.exec(remainingQuery)) !== null) {
+    result.names.push(match[1].toLowerCase())
+  }
+  remainingQuery = remainingQuery.replace(/name:\S+/gi, " ")
+  
+  // Extract exclusions (-)
+  const excludeRegex = /-(\S+)/g
+  while ((match = excludeRegex.exec(remainingQuery)) !== null) {
+    result.excludeTerms.push(match[1].toLowerCase())
+  }
+  remainingQuery = remainingQuery.replace(/-\S+/g, " ")
+  
+  // Handle OR groups
+  const orParts = remainingQuery.split(/\s+OR\s+/i)
+  if (orParts.length > 1) {
+    result.orGroups = orParts.map(part => 
+      part.trim().toLowerCase().split(/[,\s]+/).filter(t => t.length > 0)
+    )
+  } else {
+    // Regular terms
+    result.generalTerms = remainingQuery
+      .toLowerCase()
+      .split(/[,\s]+/)
+      .filter(t => t.length > 0)
+  }
+  
+  return result
+}
+
+// Calculate relevance score for sorting
+function calculateRelevanceScore(volunteer: Volunteer, parsedQuery: ParsedQuery): number {
+  let score = 0
+  
+  // Exact phrase matches score highest
+  for (const phrase of parsedQuery.exactPhrases) {
+    if (volunteer.name?.toLowerCase().includes(phrase)) score += 100
+    if (volunteer.headline?.toLowerCase().includes(phrase)) score += 80
+    if (volunteer.skills?.some(s => s.subskillId.toLowerCase().includes(phrase))) score += 90
+  }
+  
+  // Skill operator matches
+  for (const skill of parsedQuery.skills) {
+    if (volunteer.skills?.some(s => 
+      s.subskillId.toLowerCase().includes(skill) || 
+      s.categoryId.toLowerCase().includes(skill)
+    )) {
+      score += 50
+    }
+  }
+  
+  // Location operator matches
+  for (const loc of parsedQuery.locations) {
+    if (volunteer.location?.toLowerCase().includes(loc) ||
+        volunteer.city?.toLowerCase().includes(loc) ||
+        volunteer.country?.toLowerCase().includes(loc)) {
+      score += 40
+    }
+  }
+  
+  // Name operator matches
+  for (const name of parsedQuery.names) {
+    if (volunteer.name?.toLowerCase().includes(name)) score += 60
+  }
+  
+  // General term matches
+  for (const term of parsedQuery.generalTerms) {
+    if (volunteer.name?.toLowerCase().includes(term)) score += 30
+    if (volunteer.headline?.toLowerCase().includes(term)) score += 20
+    if (volunteer.location?.toLowerCase().includes(term)) score += 15
+    if (volunteer.skills?.some(s => s.subskillId.toLowerCase().includes(term))) score += 25
+    // Fuzzy match bonus (lower score for fuzzy)
+    if (fuzzyMatch(volunteer.name || "", term)) score += 10
+    if (volunteer.skills?.some(s => fuzzyMatch(s.subskillId, term))) score += 8
+  }
+  
+  // Bonus for verified/high-quality profiles
+  if (volunteer.rating && volunteer.rating >= 4.5) score += 20
+  if ((volunteer.completedProjects || 0) >= 5) score += 15
+  
+  return score
+}
+
+// ==========================================
+// MAIN COMPONENT
+// ==========================================
 
 interface FindTalentClientProps {
   volunteers: Volunteer[]
@@ -55,9 +265,42 @@ interface FindTalentClientProps {
 }
 
 export function FindTalentClient({ volunteers, unlockedProfileIds }: FindTalentClientProps) {
+  // Search state
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [locationFilter, setLocationFilter] = useState<string>("all")
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [sortBy, setSortBy] = useState<SortOption>("relevance")
+  
+  // Advanced filters
+  const [filters, setFilters] = useState<SearchFilters>({
+    minRating: 0,
+    minHoursPerWeek: 0,
+    maxHoursPerWeek: 40,
+    minProjects: 0,
+    verifiedOnly: false,
+    hasDiscountedRate: false,
+    maxHourlyRate: 500,
+    experienceLevel: "all",
+    hasFreeHours: false,
+  })
+
+  // Search suggestions based on skills
+  const searchSuggestions = useMemo(() => {
+    if (searchQuery.length < 2) return []
+    const query = searchQuery.toLowerCase()
+    const suggestions: string[] = []
+    
+    skillCategories.forEach(cat => {
+      cat.subskills.forEach(sub => {
+        if (sub.name.toLowerCase().includes(query) || sub.id.toLowerCase().includes(query)) {
+          suggestions.push(`skill:${sub.id}`)
+        }
+      })
+    })
+    
+    return suggestions.slice(0, 5)
+  }, [searchQuery])
 
   // Separate volunteers by type
   const paidVolunteers = volunteers.filter((v) => v.volunteerType === "paid")
@@ -78,70 +321,274 @@ export function FindTalentClient({ volunteers, unlockedProfileIds }: FindTalentC
     return Array.from(locs).filter(Boolean).slice(0, 10)
   }, [volunteers])
 
-  // Filter volunteers
-  const filterVolunteers = (vols: Volunteer[]) => {
-    return vols.filter((v) => {
-      // Search filter
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase()
-        const nameMatch = v.name?.toLowerCase().includes(query)
-        const headlineMatch = v.headline?.toLowerCase().includes(query)
-        const locationMatch = v.location?.toLowerCase().includes(query) || 
-                             v.city?.toLowerCase().includes(query) ||
-                             v.country?.toLowerCase().includes(query)
-        const skillMatch = v.skills?.some(s => 
-          s.subskillId?.toLowerCase().includes(query) ||
-          s.categoryId?.toLowerCase().includes(query)
-        )
-        if (!nameMatch && !headlineMatch && !locationMatch && !skillMatch) return false
-      }
+  // Parse the search query
+  const parsedQuery = useMemo(() => parseSearchQuery(searchQuery), [searchQuery])
 
-      // Category filter
-      if (categoryFilter && categoryFilter !== "all") {
-        const hasCategory = v.skills?.some(s => {
-          const categoryId = s.categoryId?.toLowerCase() || ""
-          return categoryId.includes(categoryFilter.toLowerCase())
-        })
-        if (!hasCategory) return false
-      }
+  // Advanced filter and search function
+  const filterAndScoreVolunteers = useCallback((vols: Volunteer[]): Array<Volunteer & { relevanceScore: number }> => {
+    return vols
+      .map(v => {
+        let matches = true
+        
+        // ==========================================
+        // ADVANCED SEARCH MATCHING
+        // ==========================================
+        
+        // Check exclusions first
+        for (const term of parsedQuery.excludeTerms) {
+          if (v.name?.toLowerCase().includes(term) ||
+              v.headline?.toLowerCase().includes(term) ||
+              v.location?.toLowerCase().includes(term) ||
+              v.skills?.some(s => s.subskillId.toLowerCase().includes(term))) {
+            matches = false
+            break
+          }
+        }
+        
+        if (!matches) return { ...v, relevanceScore: -1 }
+        
+        // If there are search terms, validate them
+        if (parsedQuery.skills.length > 0 ||
+            parsedQuery.locations.length > 0 ||
+            parsedQuery.names.length > 0 ||
+            parsedQuery.generalTerms.length > 0 ||
+            parsedQuery.exactPhrases.length > 0 ||
+            parsedQuery.orGroups.length > 0) {
+          
+          // Check skill: operator
+          if (parsedQuery.skills.length > 0) {
+            const hasSkill = parsedQuery.skills.every(skill =>
+              v.skills?.some(s => 
+                s.subskillId.toLowerCase().includes(skill) ||
+                s.categoryId.toLowerCase().includes(skill) ||
+                fuzzyMatch(s.subskillId, skill)
+              )
+            )
+            if (!hasSkill) matches = false
+          }
+          
+          // Check location: operator
+          if (parsedQuery.locations.length > 0 && matches) {
+            const hasLocation = parsedQuery.locations.every(loc =>
+              v.location?.toLowerCase().includes(loc) ||
+              v.city?.toLowerCase().includes(loc) ||
+              v.country?.toLowerCase().includes(loc) ||
+              fuzzyMatch(v.location || "", loc)
+            )
+            if (!hasLocation) matches = false
+          }
+          
+          // Check name: operator
+          if (parsedQuery.names.length > 0 && matches) {
+            const hasName = parsedQuery.names.every(name =>
+              v.name?.toLowerCase().includes(name) ||
+              fuzzyMatch(v.name || "", name)
+            )
+            if (!hasName) matches = false
+          }
+          
+          // Check exact phrases
+          if (parsedQuery.exactPhrases.length > 0 && matches) {
+            const hasPhrase = parsedQuery.exactPhrases.every(phrase => {
+              const allText = `${v.name || ""} ${v.headline || ""} ${v.location || ""} ${v.skills?.map(s => s.subskillId).join(" ") || ""}`.toLowerCase()
+              return allText.includes(phrase)
+            })
+            if (!hasPhrase) matches = false
+          }
+          
+          // Check OR groups
+          if (parsedQuery.orGroups.length > 0 && matches) {
+            const orMatches = parsedQuery.orGroups.some(group =>
+              group.some(term => {
+                const allText = `${v.name || ""} ${v.headline || ""} ${v.location || ""} ${v.skills?.map(s => s.subskillId).join(" ") || ""}`.toLowerCase()
+                return allText.includes(term) || fuzzyMatch(allText, term)
+              })
+            )
+            if (!orMatches) matches = false
+          }
+          
+          // Check general terms (AND logic with fuzzy)
+          if (parsedQuery.generalTerms.length > 0 && matches) {
+            const allMatch = parsedQuery.generalTerms.every(term => {
+              const nameMatch = v.name?.toLowerCase().includes(term) || fuzzyMatch(v.name || "", term)
+              const headlineMatch = v.headline?.toLowerCase().includes(term) || fuzzyMatch(v.headline || "", term)
+              const locationMatch = v.location?.toLowerCase().includes(term) || 
+                                   v.city?.toLowerCase().includes(term) ||
+                                   v.country?.toLowerCase().includes(term)
+              const skillMatch = v.skills?.some(s => 
+                s.subskillId.toLowerCase().includes(term) ||
+                s.categoryId.toLowerCase().includes(term) ||
+                fuzzyMatch(s.subskillId, term)
+              )
+              return nameMatch || headlineMatch || locationMatch || skillMatch
+            })
+            if (!allMatch) matches = false
+          }
+        }
+        
+        // ==========================================
+        // DROPDOWN FILTERS
+        // ==========================================
+        
+        if (categoryFilter && categoryFilter !== "all" && matches) {
+          const hasCategory = v.skills?.some(s => {
+            const categoryId = s.categoryId?.toLowerCase() || ""
+            return categoryId.includes(categoryFilter.toLowerCase())
+          })
+          if (!hasCategory) matches = false
+        }
+        
+        if (locationFilter && locationFilter !== "all" && matches) {
+          const matchLocation = v.location?.toLowerCase().includes(locationFilter.toLowerCase()) ||
+                               v.city?.toLowerCase().includes(locationFilter.toLowerCase())
+          if (!matchLocation) matches = false
+        }
+        
+        // ==========================================
+        // ADVANCED FILTERS
+        // ==========================================
+        
+        if (matches && filters.minRating > 0) {
+          if ((v.rating || 0) < filters.minRating) matches = false
+        }
+        
+        if (matches && filters.minProjects > 0) {
+          if ((v.completedProjects || 0) < filters.minProjects) matches = false
+        }
+        
+        if (matches && (v.hoursPerWeek || 10) < filters.minHoursPerWeek) {
+          matches = false
+        }
+        
+        if (matches && (v.hoursPerWeek || 10) > filters.maxHoursPerWeek) {
+          matches = false
+        }
+        
+        if (matches && filters.hasDiscountedRate) {
+          if (!v.discountedRate || v.discountedRate <= 0) matches = false
+        }
+        
+        if (matches && filters.maxHourlyRate < 500) {
+          if ((v.hourlyRate || 0) > filters.maxHourlyRate) matches = false
+        }
+        
+        if (matches && filters.experienceLevel !== "all") {
+          const hasExpertise = v.skills?.some(s => s.level === filters.experienceLevel)
+          if (!hasExpertise) matches = false
+        }
+        
+        if (matches && filters.hasFreeHours) {
+          if (!v.freeHoursPerMonth || v.freeHoursPerMonth <= 0) matches = false
+        }
+        
+        // Calculate relevance score
+        const relevanceScore = matches ? calculateRelevanceScore(v, parsedQuery) : -1
+        
+        return { ...v, relevanceScore }
+      })
+      .filter(v => v.relevanceScore >= 0)
+  }, [parsedQuery, categoryFilter, locationFilter, filters])
 
-      // Location filter
-      if (locationFilter && locationFilter !== "all") {
-        const matchLocation = v.location?.toLowerCase().includes(locationFilter.toLowerCase()) ||
-                             v.city?.toLowerCase().includes(locationFilter.toLowerCase())
-        if (!matchLocation) return false
+  // Sort volunteers
+  const sortVolunteers = useCallback((vols: Array<Volunteer & { relevanceScore: number }>) => {
+    return [...vols].sort((a, b) => {
+      switch (sortBy) {
+        case "relevance":
+          return b.relevanceScore - a.relevanceScore
+        case "rating":
+          return (b.rating || 0) - (a.rating || 0)
+        case "projects":
+          return (b.completedProjects || 0) - (a.completedProjects || 0)
+        case "rate-low":
+          return (a.hourlyRate || 0) - (b.hourlyRate || 0)
+        case "rate-high":
+          return (b.hourlyRate || 0) - (a.hourlyRate || 0)
+        case "hours":
+          return (b.hoursPerWeek || 0) - (a.hoursPerWeek || 0)
+        default:
+          return 0
       }
-
-      return true
     })
-  }
+  }, [sortBy])
 
-  const filteredAll = filterVolunteers(volunteers)
-  const filteredPaid = filterVolunteers(paidVolunteers)
-  const filteredFree = filterVolunteers(freeVolunteers)
+  // Apply filters and sorting
+  const filteredAll = useMemo(() => sortVolunteers(filterAndScoreVolunteers(volunteers)), [volunteers, filterAndScoreVolunteers, sortVolunteers])
+  const filteredPaid = useMemo(() => sortVolunteers(filterAndScoreVolunteers(paidVolunteers)), [paidVolunteers, filterAndScoreVolunteers, sortVolunteers])
+  const filteredFree = useMemo(() => sortVolunteers(filterAndScoreVolunteers(freeVolunteers)), [freeVolunteers, filterAndScoreVolunteers, sortVolunteers])
 
-  const hasActiveFilters = searchQuery.trim() !== "" || categoryFilter !== "all" || locationFilter !== "all"
+  const hasActiveFilters = searchQuery.trim() !== "" || 
+    categoryFilter !== "all" || 
+    locationFilter !== "all" ||
+    filters.minRating > 0 ||
+    filters.minProjects > 0 ||
+    filters.hasDiscountedRate ||
+    filters.hasFreeHours ||
+    filters.experienceLevel !== "all" ||
+    filters.maxHourlyRate < 500
 
   const clearFilters = () => {
     setSearchQuery("")
     setCategoryFilter("all")
     setLocationFilter("all")
+    setFilters({
+      minRating: 0,
+      minHoursPerWeek: 0,
+      maxHoursPerWeek: 40,
+      minProjects: 0,
+      verifiedOnly: false,
+      hasDiscountedRate: false,
+      maxHourlyRate: 500,
+      experienceLevel: "all",
+      hasFreeHours: false,
+    })
+    setSortBy("relevance")
   }
+
+  // Count active advanced filters
+  const activeAdvancedFilterCount = [
+    filters.minRating > 0,
+    filters.minProjects > 0,
+    filters.hasDiscountedRate,
+    filters.hasFreeHours,
+    filters.experienceLevel !== "all",
+    filters.maxHourlyRate < 500,
+  ].filter(Boolean).length
 
   return (
     <>
       {/* Search & Filters */}
-      <Card className="mb-8">
+      <Card className="mb-6">
         <CardContent className="p-4">
+          {/* Main Search Row */}
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search by skills, name, or location..." 
-                className="pl-9"
+                placeholder='Search: "full stack" skill:react location:india -mobile'
+                className="pl-9 pr-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      <HelpCircle className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs p-3">
+                    <p className="font-medium mb-2">Advanced Search Operators:</p>
+                    <ul className="text-xs space-y-1">
+                      <li><code className="bg-muted px-1 rounded">skill:react</code> - Search skills only</li>
+                      <li><code className="bg-muted px-1 rounded">location:india</code> - Search location only</li>
+                      <li><code className="bg-muted px-1 rounded">name:john</code> - Search name only</li>
+                      <li><code className="bg-muted px-1 rounded">"full stack"</code> - Exact phrase match</li>
+                      <li><code className="bg-muted px-1 rounded">-mobile</code> - Exclude results</li>
+                      <li><code className="bg-muted px-1 rounded">react OR angular</code> - Match either</li>
+                    </ul>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
             <div className="flex gap-2 flex-wrap">
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
@@ -170,6 +617,145 @@ export function FindTalentClient({ volunteers, unlockedProfileIds }: FindTalentC
                   ))}
                 </SelectContent>
               </Select>
+
+              {/* Advanced Filters Sheet */}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="default" className="relative">
+                    <SlidersHorizontal className="h-4 w-4 mr-2" />
+                    Filters
+                    {activeAdvancedFilterCount > 0 && (
+                      <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                        {activeAdvancedFilterCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent>
+                  <SheetHeader>
+                    <SheetTitle className="flex items-center gap-2">
+                      <Zap className="h-4 w-4 text-primary" />
+                      Advanced Filters
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div className="space-y-6 mt-6">
+                    
+                    {/* Minimum Rating */}
+                    <div className="space-y-2">
+                      <Label className="text-sm">Minimum Rating (0-5)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={5}
+                        step={0.5}
+                        value={filters.minRating || ""}
+                        placeholder="Any"
+                        onChange={(e) => setFilters(f => ({ ...f, minRating: parseFloat(e.target.value) || 0 }))}
+                      />
+                    </div>
+                    
+                    {/* Minimum Projects */}
+                    <div className="space-y-2">
+                      <Label className="text-sm">Minimum Completed Projects</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={filters.minProjects || ""}
+                        placeholder="Any"
+                        onChange={(e) => setFilters(f => ({ ...f, minProjects: parseInt(e.target.value) || 0 }))}
+                      />
+                    </div>
+                    
+                    {/* Experience Level */}
+                    <div className="space-y-2">
+                      <Label className="text-sm">Experience Level</Label>
+                      <Select 
+                        value={filters.experienceLevel} 
+                        onValueChange={(val) => setFilters(f => ({ ...f, experienceLevel: val as SearchFilters["experienceLevel"] }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Levels</SelectItem>
+                          <SelectItem value="beginner">Beginner</SelectItem>
+                          <SelectItem value="intermediate">Intermediate</SelectItem>
+                          <SelectItem value="expert">Expert</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* Max Hourly Rate */}
+                    <div className="space-y-2">
+                      <Label className="text-sm">Max Hourly Rate ($)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        step={10}
+                        value={filters.maxHourlyRate >= 500 ? "" : filters.maxHourlyRate}
+                        placeholder="No limit"
+                        onChange={(e) => setFilters(f => ({ ...f, maxHourlyRate: parseInt(e.target.value) || 500 }))}
+                      />
+                    </div>
+                    
+                    {/* Toggle Filters */}
+                    <div className="space-y-4 pt-4 border-t">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">Has NGO Discounted Rate</Label>
+                        <Switch
+                          checked={filters.hasDiscountedRate}
+                          onCheckedChange={(val) => setFilters(f => ({ ...f, hasDiscountedRate: val }))}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm">Offers Free Hours</Label>
+                        <Switch
+                          checked={filters.hasFreeHours}
+                          onCheckedChange={(val) => setFilters(f => ({ ...f, hasFreeHours: val }))}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Reset Filters */}
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => setFilters({
+                        minRating: 0,
+                        minHoursPerWeek: 0,
+                        maxHoursPerWeek: 40,
+                        minProjects: 0,
+                        verifiedOnly: false,
+                        hasDiscountedRate: false,
+                        maxHourlyRate: 500,
+                        experienceLevel: "all",
+                        hasFreeHours: false,
+                      })}
+                    >
+                      Reset Filters
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
+
+              {/* Sort Dropdown */}
+              <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortOption)}>
+                <SelectTrigger className="w-[140px]">
+                  <ArrowUpDown className="h-3 w-3 mr-2" />
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="relevance">Relevance</SelectItem>
+                  <SelectItem value="rating">Highest Rated</SelectItem>
+                  <SelectItem value="projects">Most Projects</SelectItem>
+                  <SelectItem value="rate-low">Rate: Low to High</SelectItem>
+                  <SelectItem value="rate-high">Rate: High to Low</SelectItem>
+                  <SelectItem value="hours">Most Available</SelectItem>
+                </SelectContent>
+              </Select>
+
               {hasActiveFilters && (
                 <Button variant="outline" size="icon" onClick={clearFilters}>
                   <X className="h-4 w-4" />
@@ -177,9 +763,59 @@ export function FindTalentClient({ volunteers, unlockedProfileIds }: FindTalentC
               )}
             </div>
           </div>
+
+          {/* Search suggestions */}
+          {searchSuggestions.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="text-xs text-muted-foreground">Suggestions:</span>
+              {searchSuggestions.map((suggestion, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSearchQuery(prev => prev + " " + suggestion)}
+                  className="text-xs px-2 py-1 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Active filters summary */}
           {hasActiveFilters && (
-            <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Showing {filteredAll.length} of {volunteers.length} volunteers</span>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                Showing {filteredAll.length} of {volunteers.length} volunteers
+              </span>
+              {parsedQuery.skills.length > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  Skills: {parsedQuery.skills.join(", ")}
+                </Badge>
+              )}
+              {parsedQuery.locations.length > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  Location: {parsedQuery.locations.join(", ")}
+                </Badge>
+              )}
+              {parsedQuery.excludeTerms.length > 0 && (
+                <Badge variant="destructive" className="text-xs">
+                  Excluding: {parsedQuery.excludeTerms.join(", ")}
+                </Badge>
+              )}
+              {filters.minRating > 0 && (
+                <Badge variant="outline" className="text-xs">
+                  {filters.minRating}+ rating
+                </Badge>
+              )}
+              {filters.hasDiscountedRate && (
+                <Badge variant="outline" className="text-xs">
+                  NGO Discount
+                </Badge>
+              )}
+              {filters.hasFreeHours && (
+                <Badge variant="outline" className="text-xs">
+                  Free Hours
+                </Badge>
+              )}
             </div>
           )}
         </CardContent>

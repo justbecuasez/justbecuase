@@ -38,8 +38,8 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
         ]
       : [
           { href: "/ngo/dashboard", label: "Dashboard" },
-          { href: "/ngo/projects", label: "My Projects" },
-          { href: "/ngo/post-project", label: "Post Project" },
+          { href: "/ngo/projects", label: "My Requirements" },
+          { href: "/ngo/post-project", label: "Post Requirement" },
           { href: "/ngo/applications", label: "Applications" },
           { href: "/ngo/profile", label: "Organization Profile" },
         ]

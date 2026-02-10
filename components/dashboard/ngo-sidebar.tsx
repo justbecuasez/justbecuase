@@ -29,8 +29,8 @@ interface SidebarLink {
 
 const sidebarLinks: SidebarLink[] = [
   { href: "/ngo/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/ngo/post-project", label: "Post Project", icon: PlusCircle },
-  { href: "/ngo/projects", label: "My Projects", icon: FolderKanban },
+  { href: "/ngo/post-project", label: "Post Requirement", icon: PlusCircle },
+  { href: "/ngo/projects", label: "My Requirements", icon: FolderKanban },
   { href: "/ngo/applications", label: "Applications", icon: Users },
   { href: "/ngo/find-talent", label: "Find Talent", icon: Search },
   { href: "/ngo/notifications", label: "Notifications", icon: Bell },

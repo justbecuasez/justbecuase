@@ -292,6 +292,7 @@ export default function VolunteerOnboardingPage() {
   // Step 4: Work preferences
   const [workPreferences, setWorkPreferences] = useState({
     volunteerType: "free", // free, paid, both
+    freeHoursPerMonth: 5, // Hours available to work for free per month
     hourlyRate: 0, // Hourly rate for paid work
     discountedRate: 0, // Discounted rate for NGOs (low bono)
     currency: "USD",
@@ -477,8 +478,11 @@ export default function VolunteerOnboardingPage() {
         // Still redirect - profile is saved
       }
 
-      // Redirect to dashboard
-      router.push("/volunteer/dashboard")
+      // Get the volunteer's name from session
+      const volunteerName = session?.user?.name || "there"
+      
+      // Redirect to dashboard with welcome message
+      router.push(`/volunteer/dashboard?welcome=${encodeURIComponent(volunteerName)}`)
     } catch (error) {
       console.error("Onboarding error:", error)
       setError("Something went wrong. Please try again.")
@@ -671,10 +675,10 @@ export default function VolunteerOnboardingPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="bio">Professional Bio</Label>
+          <Label htmlFor="bio">Tell us about yourself</Label>
           <Textarea
             id="bio"
-            placeholder="Tell us about your professional background and what drives you to volunteer..."
+            placeholder="Share your background, interests, and what drives you to volunteer..."
             value={profile.bio}
             onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
             rows={4}
@@ -919,6 +923,46 @@ export default function VolunteerOnboardingPage() {
             </Label>
           </RadioGroup>
         </div>
+
+        {/* Free Hours Section - Show for both and paid volunteer types */}
+        {(workPreferences.volunteerType === "paid" || workPreferences.volunteerType === "both") && (
+          <>
+            <Separator />
+            <div className="space-y-4 p-4 border rounded-lg bg-green-50 dark:bg-green-950/20">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="h-5 w-5 text-green-600" />
+                <h3 className="font-medium text-foreground">Free Hours Contribution</h3>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Would you like to offer some free hours per month for NGOs? After these hours, your paid rate applies.
+              </p>
+              <div className="space-y-2">
+                <Label htmlFor="freeHoursPerMonth">Free Hours per Month</Label>
+                <div className="flex items-center gap-4">
+                  <Input
+                    id="freeHoursPerMonth"
+                    type="number"
+                    min="0"
+                    max="40"
+                    placeholder="e.g. 5"
+                    className="w-32"
+                    value={workPreferences.freeHoursPerMonth || ""}
+                    onChange={(e) =>
+                      setWorkPreferences({
+                        ...workPreferences,
+                        freeHoursPerMonth: parseInt(e.target.value) || 0,
+                      })
+                    }
+                  />
+                  <span className="text-sm text-muted-foreground">hours/month</span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Example: If you set 5 free hours, NGOs can use your services for 5 hours at no charge, then your hourly rate applies.
+                </p>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Pricing Section - Only show when paid or both is selected */}
         {(workPreferences.volunteerType === "paid" || workPreferences.volunteerType === "both") && (
@@ -1183,6 +1227,10 @@ export default function VolunteerOnboardingPage() {
               </div>
               {(workPreferences.volunteerType === "paid" || workPreferences.volunteerType === "both") && (
                 <>
+                  <div>
+                    <h3 className="font-medium text-sm text-muted-foreground">Free Hours/Month</h3>
+                    <p className="text-foreground text-green-600">{workPreferences.freeHoursPerMonth || 0} hours</p>
+                  </div>
                   <div>
                     <h3 className="font-medium text-sm text-muted-foreground">Hourly Rate</h3>
                     <p className="text-foreground">{workPreferences.currency === "USD" ? "$" : workPreferences.currency === "EUR" ? "€" : workPreferences.currency === "GBP" ? "£" : workPreferences.currency === "INR" ? "₹" : workPreferences.currency === "SGD" ? "S$" : workPreferences.currency === "AED" ? "د.إ" : "RM"}{workPreferences.hourlyRate || 0}/hr</p>
