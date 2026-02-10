@@ -84,7 +84,7 @@ async function searchWithAgent(query: string) {
 
   // Step 1: Use AI to parse the natural language query into structured filters
   const { output: parsedFilters } = await generateText({
-    model: openai("gpt-4o"),
+    model: openai("gpt-4.1"),
     temperature: 0,
     system: `You are a search query parser for JustBeCause Network — a volunteer marketplace connecting NGOs with skilled volunteers.
 
