@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
-
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY
+import { generateText, Output, tool, stepCountIs } from "ai"
+import { openai } from "@ai-sdk/openai"
+import { z } from "zod"
+import client from "@/lib/db"
 
 // All valid skill IDs and cause IDs from the platform
 const VALID_SKILLS = [
@@ -18,26 +20,28 @@ const VALID_SKILLS = [
   "impact-story-writing", "annual-report-writing",
   "volunteer-recruitment", "event-planning", "event-onground-support",
   "telecalling", "customer-support", "logistics-management",
-]
+] as const
 
 const VALID_CAUSES = [
   "education", "healthcare", "environment", "poverty-alleviation",
   "women-empowerment", "child-welfare", "animal-welfare", "disaster-relief",
   "human-rights", "arts-culture", "senior-citizens", "disability-support",
-]
+] as const
 
-const VALID_WORK_MODES = ["remote", "onsite", "hybrid"]
-const VALID_VOLUNTEER_TYPES = ["free", "paid", "both"]
+const VALID_WORK_MODES = ["remote", "onsite", "hybrid"] as const
+const VALID_VOLUNTEER_TYPES = ["free", "paid", "both"] as const
 
-interface ParsedSearchFilters {
-  skills: string[]
-  causes: string[]
-  workMode?: string
-  volunteerType?: string
-  location?: string
-  minRating?: number
-  maxHourlyRate?: number
-}
+// Schema for the structured search output
+const searchFiltersSchema = z.object({
+  skills: z.array(z.string()).describe("Matching skill IDs from the platform"),
+  causes: z.array(z.string()).describe("Matching cause IDs from the platform"),
+  workMode: z.string().optional().describe("Work mode: remote, onsite, or hybrid"),
+  volunteerType: z.string().optional().describe("Volunteer type: free, paid, or both"),
+  location: z.string().optional().describe("City or country name if mentioned"),
+  minRating: z.number().optional().describe("Minimum rating 1-5 if quality mentioned"),
+  maxHourlyRate: z.number().optional().describe("Max hourly rate if budget mentioned"),
+  matchedVolunteerIds: z.array(z.string()).optional().describe("IDs of directly matched volunteers from database search"),
+})
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,17 +55,17 @@ export async function POST(req: NextRequest) {
     }
 
     // If no OpenAI key, fall back to keyword matching
-    if (!OPENAI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       console.log("[AI Search] No OpenAI API key, using keyword fallback")
       const filters = keywordFallback(query)
       return NextResponse.json({ success: true, data: filters, method: "keyword" })
     }
 
     try {
-      const filters = await parseWithOpenAI(query)
-      return NextResponse.json({ success: true, data: filters, method: "ai" })
+      const filters = await searchWithAgent(query)
+      return NextResponse.json({ success: true, data: filters, method: "ai-agent" })
     } catch (aiError) {
-      console.error("[AI Search] OpenAI failed, using keyword fallback:", aiError)
+      console.error("[AI Search] AI agent failed, using keyword fallback:", aiError)
       const filters = keywordFallback(query)
       return NextResponse.json({ success: true, data: filters, method: "keyword" })
     }
@@ -74,97 +78,136 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function parseWithOpenAI(query: string): Promise<ParsedSearchFilters> {
-  const systemPrompt = `You are a search query parser for a volunteer marketplace platform called JustBeCause Network. 
-Parse the user's natural language search query into structured filters.
+async function searchWithAgent(query: string) {
+  const db = client.db("justbecause")
+
+  const { output } = await generateText({
+    model: openai("gpt-4o-mini"),
+    system: `You are a smart search agent for JustBeCause Network — a volunteer marketplace connecting NGOs with skilled volunteers.
+
+Your job: Parse a natural language search query into structured filters AND optionally search the database for matching volunteers.
 
 Available skill IDs: ${VALID_SKILLS.join(", ")}
 Available cause IDs: ${VALID_CAUSES.join(", ")}
 Available work modes: ${VALID_WORK_MODES.join(", ")}
 Available volunteer types: ${VALID_VOLUNTEER_TYPES.join(", ")}
 
-Return a JSON object with these optional fields:
-- skills: array of matching skill IDs (match semantically, e.g. "website design" → "ux-ui", "wordpress-development")
-- causes: array of matching cause IDs
-- workMode: one of the valid work modes
-- volunteerType: one of the valid volunteer types  
-- location: city or country name if mentioned
-- minRating: minimum rating (1-5) if quality/experience is mentioned
-- maxHourlyRate: max hourly rate if budget is mentioned
+Match semantically — e.g.:
+- "website design" → ux-ui, wordpress-development, website-redesign
+- "SEO expert" → seo-content
+- "video creator" → videography, video-editing, motion-graphics
+- "marketing" → ALL marketing skills
+- "fundraising" → ALL fundraising skills
+- "writer" or "copywriter" → email-copywriting, press-release, impact-story-writing, annual-report-writing
+- "graphic designer" → graphic-design, ux-ui
+- "photographer/cameraman" → photography, videography
 
-Only include fields that are clearly indicated by the query. Be generous with skill matching - if someone says "marketing", include ALL marketing-related skills.
+Be generous — include ALL related skills. Only include fields clearly indicated by the query.
 
-IMPORTANT: Only return valid IDs from the lists above. Return ONLY the JSON object, no markdown.`
+If the query mentions a specific person's name, location, or seems like it would benefit from a database search, use the searchVolunteers tool to find matching profiles.
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${OPENAI_API_KEY}`,
-      "Content-Type": "application/json",
+Return the structured filters as the final output.`,
+    tools: {
+      searchVolunteers: tool({
+        description: "Search the volunteer database for profiles matching specific criteria like name, headline, location, or skills. Use when the query mentions specific names, cities, or very specific criteria that could benefit from a direct database lookup.",
+        inputSchema: z.object({
+          nameQuery: z.string().optional().describe("Search for volunteers by name"),
+          locationQuery: z.string().optional().describe("Search by city or country"),
+          headlineQuery: z.string().optional().describe("Search in volunteer headlines"),
+          skillIds: z.array(z.string()).optional().describe("Filter by specific skill IDs"),
+          limit: z.number().optional().describe("Max results to return, default 20"),
+        }),
+        execute: async ({ nameQuery, locationQuery, headlineQuery, skillIds, limit = 20 }) => {
+          try {
+            const filter: Record<string, unknown> = {}
+
+            if (nameQuery) {
+              filter.name = { $regex: nameQuery, $options: "i" }
+            }
+            if (locationQuery) {
+              filter.$or = [
+                { location: { $regex: locationQuery, $options: "i" } },
+                { city: { $regex: locationQuery, $options: "i" } },
+                { country: { $regex: locationQuery, $options: "i" } },
+              ]
+            }
+            if (headlineQuery) {
+              filter.headline = { $regex: headlineQuery, $options: "i" }
+            }
+            if (skillIds && skillIds.length > 0) {
+              filter["skills.subskillId"] = { $in: skillIds }
+            }
+
+            const volunteers = await db
+              .collection("volunteer_profiles")
+              .find(filter)
+              .project({ _id: 0, userId: 1, name: 1, headline: 1, location: 1, city: 1, skills: 1, volunteerType: 1, hourlyRate: 1 })
+              .limit(limit)
+              .toArray()
+
+            return {
+              count: volunteers.length,
+              volunteers: volunteers.map(v => ({
+                id: v.userId,
+                name: v.name,
+                headline: v.headline,
+                location: v.location || v.city,
+                skills: v.skills?.map((s: { subskillId: string }) => s.subskillId).slice(0, 5),
+                type: v.volunteerType,
+              })),
+            }
+          } catch (err) {
+            return { count: 0, volunteers: [], error: "Database query failed" }
+          }
+        },
+      }),
+      getAvailableSkills: tool({
+        description: "Get all skill categories with their sub-skills to help map the query to the right skill IDs",
+        inputSchema: z.object({}),
+        execute: async () => {
+          return {
+            categories: [
+              { name: "Digital Marketing", skills: ["community-management", "email-marketing", "social-media-ads", "ppc-google-ads", "seo-content", "social-media-strategy", "whatsapp-marketing"] },
+              { name: "Fundraising", skills: ["grant-writing", "grant-research", "corporate-sponsorship", "major-gift-strategy", "peer-to-peer-campaigns", "fundraising-pitch-deck"] },
+              { name: "Website & Tech", skills: ["wordpress-development", "ux-ui", "html-css", "website-security", "cms-maintenance", "website-redesign", "landing-page-optimization"] },
+              { name: "Finance & Accounting", skills: ["bookkeeping", "budgeting-forecasting", "payroll-processing", "financial-reporting", "accounting-software"] },
+              { name: "Photography & Video", skills: ["photography", "videography", "video-editing", "photo-editing", "motion-graphics", "graphic-design"] },
+              { name: "Content & Writing", skills: ["donor-communications", "email-copywriting", "press-release", "impact-story-writing", "annual-report-writing"] },
+              { name: "Operations & Events", skills: ["volunteer-recruitment", "event-planning", "event-onground-support", "telecalling", "customer-support", "logistics-management"] },
+            ],
+          }
+        },
+      }),
     },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: query },
-      ],
-      temperature: 0.1,
-      max_tokens: 500,
-    }),
+    output: Output.object({ schema: searchFiltersSchema }),
+    stopWhen: stepCountIs(4),
+    prompt: query,
   })
 
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`OpenAI API error (${response.status}): ${error}`)
-  }
-
-  const data = await response.json()
-  const content = data.choices?.[0]?.message?.content?.trim()
-
-  if (!content) {
-    throw new Error("Empty response from OpenAI")
-  }
-
-  // Parse JSON - handle potential markdown wrapping
-  let parsed: any
-  try {
-    const jsonStr = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim()
-    parsed = JSON.parse(jsonStr)
-  } catch {
-    throw new Error(`Failed to parse OpenAI response: ${content}`)
+  if (!output) {
+    throw new Error("No structured output generated")
   }
 
   // Validate and filter to only valid IDs
-  const filters: ParsedSearchFilters = {
-    skills: (parsed.skills || []).filter((s: string) => VALID_SKILLS.includes(s)),
-    causes: (parsed.causes || []).filter((c: string) => VALID_CAUSES.includes(c)),
+  const validated = {
+    skills: (output.skills || []).filter((s: string) => (VALID_SKILLS as readonly string[]).includes(s)),
+    causes: (output.causes || []).filter((c: string) => (VALID_CAUSES as readonly string[]).includes(c)),
+    workMode: output.workMode && (VALID_WORK_MODES as readonly string[]).includes(output.workMode) ? output.workMode : undefined,
+    volunteerType: output.volunteerType && (VALID_VOLUNTEER_TYPES as readonly string[]).includes(output.volunteerType) ? output.volunteerType : undefined,
+    location: output.location || undefined,
+    minRating: output.minRating && output.minRating >= 1 && output.minRating <= 5 ? output.minRating : undefined,
+    maxHourlyRate: output.maxHourlyRate && output.maxHourlyRate > 0 ? output.maxHourlyRate : undefined,
+    matchedVolunteerIds: output.matchedVolunteerIds || undefined,
   }
 
-  if (parsed.workMode && VALID_WORK_MODES.includes(parsed.workMode)) {
-    filters.workMode = parsed.workMode
-  }
-  if (parsed.volunteerType && VALID_VOLUNTEER_TYPES.includes(parsed.volunteerType)) {
-    filters.volunteerType = parsed.volunteerType
-  }
-  if (parsed.location && typeof parsed.location === "string") {
-    filters.location = parsed.location
-  }
-  if (parsed.minRating && typeof parsed.minRating === "number" && parsed.minRating >= 1 && parsed.minRating <= 5) {
-    filters.minRating = parsed.minRating
-  }
-  if (parsed.maxHourlyRate && typeof parsed.maxHourlyRate === "number" && parsed.maxHourlyRate > 0) {
-    filters.maxHourlyRate = parsed.maxHourlyRate
-  }
-
-  console.log(`[AI Search] Parsed "${query}" →`, filters)
-  return filters
+  console.log(`[AI Search Agent] Parsed "${query}" →`, validated)
+  return validated
 }
 
-function keywordFallback(query: string): ParsedSearchFilters {
+function keywordFallback(query: string) {
   const q = query.toLowerCase()
-  const filters: ParsedSearchFilters = { skills: [], causes: [] }
+  const filters: { skills: string[]; causes: string[]; workMode?: string; volunteerType?: string } = { skills: [], causes: [] }
 
-  // Simple keyword → skill mapping
   const skillKeywords: Record<string, string[]> = {
     "marketing": ["community-management", "email-marketing", "social-media-ads", "ppc-google-ads", "seo-content", "social-media-strategy", "whatsapp-marketing"],
     "social media": ["social-media-ads", "social-media-strategy", "community-management"],
@@ -241,16 +284,13 @@ function keywordFallback(query: string): ParsedSearchFilters {
     }
   }
 
-  // Deduplicate
   filters.skills = [...new Set(filters.skills)]
   filters.causes = [...new Set(filters.causes)]
 
-  // Work mode detection
   if (q.includes("remote")) filters.workMode = "remote"
   else if (q.includes("onsite") || q.includes("on-site") || q.includes("in person")) filters.workMode = "onsite"
   else if (q.includes("hybrid")) filters.workMode = "hybrid"
 
-  // Volunteer type detection
   if (q.includes("free") || q.includes("pro bono") || q.includes("probono")) filters.volunteerType = "free"
   else if (q.includes("paid")) filters.volunteerType = "paid"
 

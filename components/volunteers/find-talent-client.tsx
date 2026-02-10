@@ -379,97 +379,100 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
         
         // ==========================================
         // ADVANCED SEARCH MATCHING
+        // (Skipped when AI search is applied — AI filters handle matching)
         // ==========================================
         
-        // Check exclusions first
-        for (const term of parsedQuery.excludeTerms) {
-          if (v.name?.toLowerCase().includes(term) ||
-              v.headline?.toLowerCase().includes(term) ||
-              v.location?.toLowerCase().includes(term) ||
-              v.skills?.some(s => s.subskillId.toLowerCase().includes(term))) {
-            matches = false
-            break
+        if (!aiSearchApplied) {
+          // Check exclusions first
+          for (const term of parsedQuery.excludeTerms) {
+            if (v.name?.toLowerCase().includes(term) ||
+                v.headline?.toLowerCase().includes(term) ||
+                v.location?.toLowerCase().includes(term) ||
+                v.skills?.some(s => s.subskillId.toLowerCase().includes(term))) {
+              matches = false
+              break
+            }
           }
-        }
-        
-        if (!matches) return { ...v, relevanceScore: -1 }
-        
-        // If there are search terms, validate them
-        if (parsedQuery.skills.length > 0 ||
-            parsedQuery.locations.length > 0 ||
-            parsedQuery.names.length > 0 ||
-            parsedQuery.generalTerms.length > 0 ||
-            parsedQuery.exactPhrases.length > 0 ||
-            parsedQuery.orGroups.length > 0) {
           
-          // Check skill: operator
-          if (parsedQuery.skills.length > 0) {
-            const hasSkill = parsedQuery.skills.every(skill =>
-              v.skills?.some(s => 
-                s.subskillId.toLowerCase().includes(skill) ||
-                s.categoryId.toLowerCase().includes(skill) ||
-                fuzzyMatch(s.subskillId, skill)
+          if (!matches) return { ...v, relevanceScore: -1 }
+          
+          // If there are search terms, validate them
+          if (parsedQuery.skills.length > 0 ||
+              parsedQuery.locations.length > 0 ||
+              parsedQuery.names.length > 0 ||
+              parsedQuery.generalTerms.length > 0 ||
+              parsedQuery.exactPhrases.length > 0 ||
+              parsedQuery.orGroups.length > 0) {
+            
+            // Check skill: operator
+            if (parsedQuery.skills.length > 0) {
+              const hasSkill = parsedQuery.skills.every(skill =>
+                v.skills?.some(s => 
+                  s.subskillId.toLowerCase().includes(skill) ||
+                  s.categoryId.toLowerCase().includes(skill) ||
+                  fuzzyMatch(s.subskillId, skill)
+                )
               )
-            )
-            if (!hasSkill) matches = false
-          }
-          
-          // Check location: operator
-          if (parsedQuery.locations.length > 0 && matches) {
-            const hasLocation = parsedQuery.locations.every(loc =>
-              v.location?.toLowerCase().includes(loc) ||
-              v.city?.toLowerCase().includes(loc) ||
-              v.country?.toLowerCase().includes(loc) ||
-              fuzzyMatch(v.location || "", loc)
-            )
-            if (!hasLocation) matches = false
-          }
-          
-          // Check name: operator
-          if (parsedQuery.names.length > 0 && matches) {
-            const hasName = parsedQuery.names.every(name =>
-              v.name?.toLowerCase().includes(name) ||
-              fuzzyMatch(v.name || "", name)
-            )
-            if (!hasName) matches = false
-          }
-          
-          // Check exact phrases
-          if (parsedQuery.exactPhrases.length > 0 && matches) {
-            const hasPhrase = parsedQuery.exactPhrases.every(phrase => {
-              const allText = `${v.name || ""} ${v.headline || ""} ${v.location || ""} ${v.skills?.map(s => s.subskillId).join(" ") || ""}`.toLowerCase()
-              return allText.includes(phrase)
-            })
-            if (!hasPhrase) matches = false
-          }
-          
-          // Check OR groups
-          if (parsedQuery.orGroups.length > 0 && matches) {
-            const orMatches = parsedQuery.orGroups.some(group =>
-              group.some(term => {
+              if (!hasSkill) matches = false
+            }
+            
+            // Check location: operator
+            if (parsedQuery.locations.length > 0 && matches) {
+              const hasLocation = parsedQuery.locations.every(loc =>
+                v.location?.toLowerCase().includes(loc) ||
+                v.city?.toLowerCase().includes(loc) ||
+                v.country?.toLowerCase().includes(loc) ||
+                fuzzyMatch(v.location || "", loc)
+              )
+              if (!hasLocation) matches = false
+            }
+            
+            // Check name: operator
+            if (parsedQuery.names.length > 0 && matches) {
+              const hasName = parsedQuery.names.every(name =>
+                v.name?.toLowerCase().includes(name) ||
+                fuzzyMatch(v.name || "", name)
+              )
+              if (!hasName) matches = false
+            }
+            
+            // Check exact phrases
+            if (parsedQuery.exactPhrases.length > 0 && matches) {
+              const hasPhrase = parsedQuery.exactPhrases.every(phrase => {
                 const allText = `${v.name || ""} ${v.headline || ""} ${v.location || ""} ${v.skills?.map(s => s.subskillId).join(" ") || ""}`.toLowerCase()
-                return allText.includes(term) || fuzzyMatch(allText, term)
+                return allText.includes(phrase)
               })
-            )
-            if (!orMatches) matches = false
-          }
-          
-          // Check general terms (AND logic with fuzzy)
-          if (parsedQuery.generalTerms.length > 0 && matches) {
-            const allMatch = parsedQuery.generalTerms.every(term => {
-              const nameMatch = v.name?.toLowerCase().includes(term) || fuzzyMatch(v.name || "", term)
-              const headlineMatch = v.headline?.toLowerCase().includes(term) || fuzzyMatch(v.headline || "", term)
-              const locationMatch = v.location?.toLowerCase().includes(term) || 
-                                   v.city?.toLowerCase().includes(term) ||
-                                   v.country?.toLowerCase().includes(term)
-              const skillMatch = v.skills?.some(s => 
-                s.subskillId.toLowerCase().includes(term) ||
-                s.categoryId.toLowerCase().includes(term) ||
-                fuzzyMatch(s.subskillId, term)
+              if (!hasPhrase) matches = false
+            }
+            
+            // Check OR groups
+            if (parsedQuery.orGroups.length > 0 && matches) {
+              const orMatches = parsedQuery.orGroups.some(group =>
+                group.some(term => {
+                  const allText = `${v.name || ""} ${v.headline || ""} ${v.location || ""} ${v.skills?.map(s => s.subskillId).join(" ") || ""}`.toLowerCase()
+                  return allText.includes(term) || fuzzyMatch(allText, term)
+                })
               )
-              return nameMatch || headlineMatch || locationMatch || skillMatch
-            })
-            if (!allMatch) matches = false
+              if (!orMatches) matches = false
+            }
+            
+            // Check general terms (AND logic with fuzzy)
+            if (parsedQuery.generalTerms.length > 0 && matches) {
+              const allMatch = parsedQuery.generalTerms.every(term => {
+                const nameMatch = v.name?.toLowerCase().includes(term) || fuzzyMatch(v.name || "", term)
+                const headlineMatch = v.headline?.toLowerCase().includes(term) || fuzzyMatch(v.headline || "", term)
+                const locationMatch = v.location?.toLowerCase().includes(term) || 
+                                     v.city?.toLowerCase().includes(term) ||
+                                     v.country?.toLowerCase().includes(term)
+                const skillMatch = v.skills?.some(s => 
+                  s.subskillId.toLowerCase().includes(term) ||
+                  s.categoryId.toLowerCase().includes(term) ||
+                  fuzzyMatch(s.subskillId, term)
+                )
+                return nameMatch || headlineMatch || locationMatch || skillMatch
+              })
+              if (!allMatch) matches = false
+            }
           }
         }
         
@@ -618,14 +621,14 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
     <>
       {/* Search & Filters */}
       <Card className="mb-6">
-        <CardContent className="p-4">
-          {/* Main Search Row */}
-          <div className="flex flex-col md:flex-row gap-4">
+        <CardContent className="p-4 space-y-3">
+          {/* Row 1: Search input + AI Search */}
+          <div className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder='Try: "I need a graphic designer for education NGO" or skill:react'
-                className="pl-9 pr-10"
+                placeholder='Try: "SEO expert for education" or "remote designer near Mumbai"'
+                className="pl-9 pr-10 h-11"
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value)
@@ -643,61 +646,77 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom" className="max-w-xs p-3">
-                    <p className="font-medium mb-2">Advanced Search Operators:</p>
+                    <p className="font-medium mb-2">Search Tips:</p>
                     <ul className="text-xs space-y-1">
+                      <li>Type naturally — <strong>AI Search</strong> understands intent</li>
                       <li><code className="bg-muted px-1 rounded">skill:react</code> - Search skills only</li>
-                      <li><code className="bg-muted px-1 rounded">location:india</code> - Search location only</li>
-                      <li><code className="bg-muted px-1 rounded">name:john</code> - Search name only</li>
-                      <li><code className="bg-muted px-1 rounded">"full stack"</code> - Exact phrase match</li>
-                      <li><code className="bg-muted px-1 rounded">-mobile</code> - Exclude results</li>
-                      <li><code className="bg-muted px-1 rounded">react OR angular</code> - Match either</li>
+                      <li><code className="bg-muted px-1 rounded">location:india</code> - Filter by location</li>
+                      <li><code className="bg-muted px-1 rounded">"full stack"</code> - Exact phrase</li>
+                      <li><code className="bg-muted px-1 rounded">-mobile</code> - Exclude term</li>
                     </ul>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <div className="flex gap-2 flex-wrap">
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[160px]">
-                  <SelectValue placeholder="All Categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {skillCategories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={locationFilter} onValueChange={setLocationFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="All Locations" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Locations</SelectItem>
-                  {locations.map((loc) => (
-                    <SelectItem key={loc} value={loc}>
-                      {loc}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <Button 
+              onClick={handleAISearch} 
+              disabled={isAISearching || searchQuery.length < 3}
+              variant={aiSearchApplied ? "default" : "secondary"}
+              size="lg"
+              className="h-11 px-5 gap-2 shrink-0"
+            >
+              {isAISearching ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Wand2 className="h-4 w-4" />
+              )}
+              {aiSearchApplied ? "AI Applied" : "AI Search"}
+            </Button>
+          </div>
 
-              {/* Advanced Filters Sheet */}
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="default" className="relative">
-                    <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    Filters
-                    {activeAdvancedFilterCount > 0 && (
-                      <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
-                        {activeAdvancedFilterCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent>
+          {/* Row 2: Filters & Sort */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-[160px] h-9">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                {skillCategories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={locationFilter} onValueChange={setLocationFilter}>
+              <SelectTrigger className="w-[140px] h-9">
+                <SelectValue placeholder="All Locations" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Locations</SelectItem>
+                {locations.map((loc) => (
+                  <SelectItem key={loc} value={loc}>
+                    {loc}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Advanced Filters Sheet */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm" className="h-9 relative">
+                  <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5" />
+                  Filters
+                  {activeAdvancedFilterCount > 0 && (
+                    <Badge className="ml-1.5 h-4 w-4 p-0 flex items-center justify-center text-[10px]">
+                      {activeAdvancedFilterCount}
+                    </Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent>
                   <SheetHeader>
                     <SheetTitle className="flex items-center gap-2">
                       <Zap className="h-4 w-4 text-primary" />
@@ -808,8 +827,8 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
 
               {/* Sort Dropdown */}
               <Select value={sortBy} onValueChange={(val) => setSortBy(val as SortOption)}>
-                <SelectTrigger className="w-[140px]">
-                  <ArrowUpDown className="h-3 w-3 mr-2" />
+                <SelectTrigger className="w-[150px] h-9">
+                  <ArrowUpDown className="h-3 w-3 mr-1.5" />
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
                 <SelectContent>
@@ -823,44 +842,31 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
               </Select>
 
               {hasActiveFilters && (
-                <Button variant="outline" size="icon" onClick={clearFilters}>
-                  <X className="h-4 w-4" />
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 text-muted-foreground hover:text-foreground">
+                  <X className="h-3.5 w-3.5 mr-1" />
+                  Clear
                 </Button>
               )}
-
-              {/* AI Search Button */}
-              <Button 
-                onClick={handleAISearch} 
-                disabled={isAISearching || searchQuery.length < 3}
-                variant={aiSearchApplied ? "default" : "secondary"}
-                size="default"
-              >
-                {isAISearching ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Wand2 className="h-4 w-4 mr-2" />
-                )}
-                {aiSearchApplied ? "AI Applied" : "AI Search"}
-              </Button>
             </div>
-          </div>
 
           {/* AI Search Applied Banner */}
           {aiSearchApplied && (
-            <div className="mt-3 flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
+            <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/5 border border-primary/20">
               <Wand2 className="h-4 w-4 text-primary flex-shrink-0" />
               <span className="text-sm text-primary flex-1">
-                AI matched {aiSkillFilters.length} skill{aiSkillFilters.length !== 1 ? "s" : ""}: {aiSkillFilters.join(", ")}
+                AI matched: <strong>{aiSkillFilters.join(", ")}</strong>
+                {aiSkillFilters.length === 0 && " (no specific skills detected)"}
               </span>
-              <Button variant="ghost" size="sm" onClick={clearAISearch} className="h-6 px-2">
-                <X className="h-3 w-3" />
+              <Button variant="ghost" size="sm" onClick={clearAISearch} className="h-6 px-2 text-primary hover:text-primary/80">
+                <X className="h-3 w-3 mr-1" />
+                Clear
               </Button>
             </div>
           )}
 
           {/* Search suggestions */}
-          {searchSuggestions.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
+          {searchSuggestions.length > 0 && !aiSearchApplied && (
+            <div className="flex flex-wrap gap-2">
               <span className="text-xs text-muted-foreground">Suggestions:</span>
               {searchSuggestions.map((suggestion, i) => (
                 <button
@@ -876,8 +882,8 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
 
           {/* Active filters summary */}
           {hasActiveFilters && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-xs text-muted-foreground font-medium">
                 Showing {filteredAll.length} of {volunteers.length} volunteers
               </span>
               {parsedQuery.skills.length > 0 && (
