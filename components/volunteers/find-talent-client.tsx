@@ -547,39 +547,23 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
         // ==========================================
         // AI SEARCH FILTERS
         // When AI search is applied, use matched IDs from server-side DB search
-        // as the primary filter. Fall back to skill-based filtering only if
-        // no matched IDs were returned.
+        // as the primary filter. Fall back to skill-based filtering if no IDs.
         // ==========================================
         if (matches && aiSearchApplied) {
-          // Primary: Use server-side matched volunteer IDs
           if (aiMatchedIds.length > 0) {
+            // Primary: Use server-side matched volunteer IDs
             const volunteerId = v.userId || v.id
             if (!aiMatchedIds.includes(volunteerId)) {
               matches = false
             }
-          } else {
-            // Fallback: Client-side skill filtering when no DB matches returned
-            if (aiSkillFilters.length > 0) {
-              const hasAISkill = v.skills?.some(s => aiSkillFilters.includes(s.subskillId))
-              if (!hasAISkill) matches = false
-            }
-            
-            // Client-side location filtering
-            if (matches && aiLocationFilter) {
-              const locMatch = 
-                v.location?.toLowerCase().includes(aiLocationFilter.toLowerCase()) ||
-                v.city?.toLowerCase().includes(aiLocationFilter.toLowerCase()) ||
-                v.country?.toLowerCase().includes(aiLocationFilter.toLowerCase())
-              if (!locMatch) matches = false
-            }
-            
-            // Client-side volunteer type filtering
-            if (matches && aiVolunteerType && aiVolunteerType !== "both") {
-              if (v.volunteerType !== aiVolunteerType && v.volunteerType !== "both") {
-                matches = false
-              }
-            }
+          } else if (aiSkillFilters.length > 0) {
+            // Fallback: Only filter by skills (no location restriction)
+            // This ensures we always show skill-matched volunteers even if
+            // nobody is in the specific city the user searched for
+            const hasAISkill = v.skills?.some(s => aiSkillFilters.includes(s.subskillId))
+            if (!hasAISkill) matches = false
           }
+          // If neither matchedIds nor skills — show all (no AI filter applied)
         }
         
         // Calculate relevance score

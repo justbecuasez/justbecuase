@@ -86,9 +86,13 @@ async function searchWithAgent(query: string) {
   const { output: parsedFilters } = await generateText({
     model: openai("gpt-4.1"),
     temperature: 0,
-    system: `You are a search query parser for JustBeCause Network — a volunteer marketplace connecting NGOs with skilled volunteers.
+    system: `You are a search query parser. Your ONLY job is to extract structured filters from the user's EXACT query text.
 
-Your job: Parse a natural language search query into structured filters.
+RULES:
+1. ONLY extract information that is EXPLICITLY written in the query. NEVER add, infer, or hallucinate any information not present.
+2. For location: extract the EXACT city/country name written in the query, in lowercase. If the query says "in mysore", location must be "mysore". If the query says "in delhi", location must be "delhi". If no location is mentioned, set null.
+3. For skills: map to the closest matching skill IDs from the list below.
+4. Set null for any field NOT mentioned in the query.
 
 AVAILABLE SKILL IDs (use ONLY these exact IDs):
 ${VALID_SKILLS.join(", ")}
@@ -96,43 +100,30 @@ ${VALID_SKILLS.join(", ")}
 AVAILABLE CAUSE IDs (use ONLY these exact IDs):
 ${VALID_CAUSES.join(", ")}
 
-SKILL MAPPING EXAMPLES — be generous, include ALL semantically related skills:
-- "email marketing" or "email-marketing" → ["email-marketing"]
+SKILL MAPPING — include ALL semantically related skills:
 - "SEO" or "seo expert" → ["seo-content"]
+- "email marketing" → ["email-marketing"]
 - "marketing" → ["community-management", "email-marketing", "social-media-ads", "ppc-google-ads", "seo-content", "social-media-strategy", "whatsapp-marketing"]
-- "website design" or "web developer" → ["ux-ui", "wordpress-development", "website-redesign", "html-css"]
-- "video creator" → ["videography", "video-editing", "motion-graphics"]
-- "writer" or "copywriter" → ["email-copywriting", "press-release", "impact-story-writing", "annual-report-writing", "donor-communications"]
+- "website" or "web developer" → ["ux-ui", "wordpress-development", "website-redesign", "html-css"]
+- "video" → ["videography", "video-editing", "motion-graphics"]
+- "writer" → ["email-copywriting", "press-release", "impact-story-writing", "annual-report-writing", "donor-communications"]
 - "graphic designer" → ["graphic-design", "ux-ui"]
 - "fundraising" → ["grant-writing", "grant-research", "corporate-sponsorship", "major-gift-strategy", "peer-to-peer-campaigns", "fundraising-pitch-deck"]
 - "photographer" → ["photography", "photo-editing"]
 
-LOCATION EXAMPLES:
-- "in dubai" → location: "dubai"
-- "from india" → location: "india"
-- "based in new york" → location: "new york"
-- "remote" → workMode: "remote", location: null
-
-HOURS/TIME EXAMPLES:
-- "can work for four hours" or "4 hours" → maxHoursPerWeek: 4
-- "part time" → maxHoursPerWeek: 20
-- "full time" → no limit
-
-VOLUNTEER TYPE EXAMPLES:
+OTHER FILTERS:
+- "remote" → workMode: "remote"
 - "free" or "pro bono" → volunteerType: "free"
 - "paid" → volunteerType: "paid"
+- "four hours" or "4 hours" → maxHoursPerWeek: 4
 
-IMPORTANT:
-- Only set fields that are clearly indicated by the query
-- For skills, always match semantically and include ALL related skill IDs
-- For location, extract the city/country name as-is (lowercase)
-- Set null for any field not mentioned in the query`,
+CRITICAL: Do NOT invent locations, skills, or any other data that is not in the user's query.`,
     output: Output.object({
       schema: queryParseSchema,
       name: "SearchFilters",
       description: "Structured search filters parsed from the user's natural language query",
     }),
-    prompt: query,
+    prompt: `Parse this search query. Extract ONLY what is explicitly written: "${query}"`,
   })
 
   if (!parsedFilters) {
@@ -148,8 +139,8 @@ IMPORTANT:
 
   console.log(`[AI Search] Parsed "${query}" → skills: [${validatedSkills}], location: ${validatedLocation}, type: ${validatedVolunteerType}, workMode: ${validatedWorkMode}`)
 
-  // Step 3: Query MongoDB directly with the parsed filters
-  const matchedVolunteerIds = await searchVolunteersInDB(db, {
+  // Step 3: Tiered DB search — try strict first, then relax filters if 0 results
+  const dbFilters = {
     skills: validatedSkills,
     location: validatedLocation,
     volunteerType: validatedVolunteerType,
@@ -157,9 +148,31 @@ IMPORTANT:
     maxHourlyRate: parsedFilters.maxHourlyRate,
     minRating: parsedFilters.minRating,
     maxHoursPerWeek: parsedFilters.maxHoursPerWeek,
-  })
+  }
 
-  console.log(`[AI Search] Found ${matchedVolunteerIds.length} matching volunteers in DB`)
+  // Tier 1: Try with ALL filters
+  let matchedVolunteerIds = await searchVolunteersInDB(db, dbFilters)
+  console.log(`[AI Search] Tier 1 (all filters): ${matchedVolunteerIds.length} matches`)
+
+  // Tier 2: If 0 results and we have both skills + location, try skills only
+  if (matchedVolunteerIds.length === 0 && validatedSkills.length > 0 && validatedLocation) {
+    matchedVolunteerIds = await searchVolunteersInDB(db, {
+      ...dbFilters,
+      location: null, // drop location filter
+    })
+    console.log(`[AI Search] Tier 2 (skills only, no location): ${matchedVolunteerIds.length} matches`)
+  }
+
+  // Tier 3: If still 0 and we have location but no skills matched, try location only
+  if (matchedVolunteerIds.length === 0 && validatedLocation && validatedSkills.length === 0) {
+    matchedVolunteerIds = await searchVolunteersInDB(db, {
+      ...dbFilters,
+      skills: [],
+    })
+    console.log(`[AI Search] Tier 3 (location only): ${matchedVolunteerIds.length} matches`)
+  }
+
+  console.log(`[AI Search] Final: ${matchedVolunteerIds.length} matching volunteers`)
 
   return {
     skills: validatedSkills,
