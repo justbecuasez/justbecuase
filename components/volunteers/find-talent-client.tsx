@@ -46,6 +46,8 @@ import {
   CheckCircle,
   HelpCircle,
   Zap,
+  Loader2,
+  Wand2,
 } from "lucide-react"
 import { skillCategories } from "@/lib/skills-data"
 
@@ -270,6 +272,57 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
   const [locationFilter, setLocationFilter] = useState<string>("all")
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [sortBy, setSortBy] = useState<SortOption>("relevance")
+  const [isAISearching, setIsAISearching] = useState(false)
+  const [aiSearchApplied, setAiSearchApplied] = useState(false)
+  const [aiSkillFilters, setAiSkillFilters] = useState<string[]>([])
+  const [aiCauseFilters, setAiCauseFilters] = useState<string[]>([])
+  
+  // AI Search handler
+  const handleAISearch = async () => {
+    if (!searchQuery.trim() || searchQuery.length < 3) return
+    setIsAISearching(true)
+    try {
+      const res = await fetch("/api/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: searchQuery }),
+      })
+      const data = await res.json()
+      if (data.success && data.data) {
+        const f = data.data
+        if (f.skills?.length) setAiSkillFilters(f.skills)
+        if (f.causes?.length) setAiCauseFilters(f.causes)
+        if (f.workMode) setLocationFilter(f.workMode) // reuse location filter slot
+        if (f.minRating) setFilters(prev => ({ ...prev, minRating: f.minRating }))
+        if (f.maxHourlyRate) setFilters(prev => ({ ...prev, maxHourlyRate: f.maxHourlyRate }))
+        setAiSearchApplied(true)
+      }
+    } catch (err) {
+      console.error("AI search failed:", err)
+    } finally {
+      setIsAISearching(false)
+    }
+  }
+
+  const clearAISearch = () => {
+    setAiSearchApplied(false)
+    setAiSkillFilters([])
+    setAiCauseFilters([])
+    setSearchQuery("")
+    setCategoryFilter("all")
+    setLocationFilter("all")
+    setFilters({
+      minRating: 0,
+      minHoursPerWeek: 0,
+      maxHoursPerWeek: 40,
+      minProjects: 0,
+      verifiedOnly: false,
+      hasDiscountedRate: false,
+      maxHourlyRate: 500,
+      experienceLevel: "all",
+      hasFreeHours: false,
+    })
+  }
   
   // Advanced filters
   const [filters, setFilters] = useState<SearchFilters>({
@@ -474,6 +527,19 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
         if (matches && filters.hasFreeHours) {
           if (!v.freeHoursPerMonth || v.freeHoursPerMonth <= 0) matches = false
         }
+
+        // ==========================================
+        // AI SEARCH FILTERS
+        // ==========================================
+        if (matches && aiSearchApplied && aiSkillFilters.length > 0) {
+          const hasAISkill = v.skills?.some(s => aiSkillFilters.includes(s.subskillId))
+          if (!hasAISkill) matches = false
+        }
+
+        if (matches && aiSearchApplied && aiCauseFilters.length > 0) {
+          // Causes are not on the Volunteer type in find-talent, so skip cause filtering here
+          // Causes are filtered server-side via browseVolunteers
+        }
         
         // Calculate relevance score
         const relevanceScore = matches ? calculateRelevanceScore(v, parsedQuery) : -1
@@ -481,7 +547,7 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
         return { ...v, relevanceScore }
       })
       .filter(v => v.relevanceScore >= 0)
-  }, [parsedQuery, categoryFilter, locationFilter, filters])
+  }, [parsedQuery, categoryFilter, locationFilter, filters, aiSearchApplied, aiSkillFilters, aiCauseFilters])
 
   // Sort volunteers
   const sortVolunteers = useCallback((vols: Array<Volunteer & { relevanceScore: number }>) => {
@@ -558,10 +624,16 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder='Search: "full stack" skill:react location:india -mobile'
+                placeholder='Try: "I need a graphic designer for education NGO" or skill:react'
                 className="pl-9 pr-10"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value)
+                  if (aiSearchApplied) setAiSearchApplied(false)
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && searchQuery.length >= 3) handleAISearch()
+                }}
               />
               <TooltipProvider>
                 <Tooltip>
@@ -755,8 +827,36 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
                   <X className="h-4 w-4" />
                 </Button>
               )}
+
+              {/* AI Search Button */}
+              <Button 
+                onClick={handleAISearch} 
+                disabled={isAISearching || searchQuery.length < 3}
+                variant={aiSearchApplied ? "default" : "secondary"}
+                size="default"
+              >
+                {isAISearching ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Wand2 className="h-4 w-4 mr-2" />
+                )}
+                {aiSearchApplied ? "AI Applied" : "AI Search"}
+              </Button>
             </div>
           </div>
+
+          {/* AI Search Applied Banner */}
+          {aiSearchApplied && (
+            <div className="mt-3 flex items-center gap-2 p-2 rounded-lg bg-primary/5 border border-primary/20">
+              <Wand2 className="h-4 w-4 text-primary flex-shrink-0" />
+              <span className="text-sm text-primary flex-1">
+                AI matched {aiSkillFilters.length} skill{aiSkillFilters.length !== 1 ? "s" : ""}: {aiSkillFilters.join(", ")}
+              </span>
+              <Button variant="ghost" size="sm" onClick={clearAISearch} className="h-6 px-2">
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
 
           {/* Search suggestions */}
           {searchSuggestions.length > 0 && (
