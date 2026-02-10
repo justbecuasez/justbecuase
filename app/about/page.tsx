@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { impactMetrics } from "@/lib/data"
 import { getActiveTeamMembers } from "@/lib/actions"
+
+// Render at request time (needs MongoDB connection)
+export const dynamic = "force-dynamic"
 import { Heart, Target, Users, Globe, Award, ArrowRight, Linkedin, Twitter, Clock, Sparkles, Code, Palette, BarChart3, BookOpen } from "lucide-react"
 
 const values = [

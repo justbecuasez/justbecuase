@@ -10,6 +10,9 @@ import { Testimonials } from "@/components/home/testimonials"
 import { CTASection } from "@/components/home/cta-section"
 import { getImpactMetrics } from "@/lib/actions"
 
+// Render at request time (needs MongoDB connection)
+export const dynamic = "force-dynamic"
+
 
 export default async function HomePage() {
   // Fetch real impact metrics from database
