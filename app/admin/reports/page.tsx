@@ -99,7 +99,7 @@ export default async function AdminReportsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">New Projects (This Month)</p>
+                <p className="text-sm text-muted-foreground">New Opportunities (This Month)</p>
                 <p className="text-2xl font-bold text-foreground">{newProjectsThisMonth}</p>
               </div>
               <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
@@ -145,7 +145,7 @@ export default async function AdminReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-secondary" />
-              Project Activity
+              Opportunity Activity
             </CardTitle>
           </CardHeader>
           <CardContent>

@@ -185,7 +185,7 @@ export default function AdminNotificationsPage() {
                   <SelectItem value="application_rejected">Application Rejected</SelectItem>
                   <SelectItem value="profile_viewed">Profile Viewed</SelectItem>
                   <SelectItem value="profile_unlocked">Profile Unlocked</SelectItem>
-                  <SelectItem value="project_match">Project Match</SelectItem>
+                  <SelectItem value="project_match">Opportunity Match</SelectItem>
                 </SelectContent>
               </Select>
             </div>

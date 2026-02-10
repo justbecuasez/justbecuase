@@ -95,7 +95,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                   </div>
                   <div className="flex items-center gap-1 text-foreground">
                     <CheckCircle className="h-4 w-4 text-success" />
-                    {volunteer.completedProjects} projects completed
+                    {volunteer.completedProjects} opportunities completed
                   </div>
                   {volunteer.volunteerType === "paid" && (
                     <Badge variant="secondary">Pro Bono & Paid</Badge>
@@ -135,7 +135,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                 ) : null}
                 <ShareButton
                   url={`/volunteers/${id}`}
-                  title={isLocked ? "Skilled Volunteer on JustBecause" : `${volunteer.name} - Volunteer Profile`}
+                  title={isLocked ? "Skilled Volunteer on JustBeCause" : `${volunteer.name} - Volunteer Profile`}
                   description={`Discover this talented volunteer with ${volunteer.completedProjects} completed projects and a ${volunteer.rating.toFixed(1)} rating.`}
                   variant="outline"
                 />

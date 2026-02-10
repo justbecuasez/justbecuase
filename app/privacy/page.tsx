@@ -48,9 +48,9 @@ export default function PrivacyPage() {
                 <p>We use your information to:</p>
                 <ul className="list-disc pl-6 space-y-2">
                   <li>Provide and improve the Platform services</li>
-                  <li>Match volunteers with appropriate NGO projects</li>
+                  <li>Match volunteers with appropriate NGO opportunities</li>
                   <li>Facilitate communication between users</li>
-                  <li>Send notifications about projects, applications, and platform updates</li>
+                  <li>Send notifications about opportunities, applications, and platform updates</li>
                   <li>Verify NGO legitimacy and maintain platform security</li>
                   <li>Analyze platform usage to improve user experience</li>
                   <li>Comply with legal obligations</li>
@@ -201,7 +201,7 @@ export default function PrivacyPage() {
                 <p className="font-medium">
                   Email: privacy@justbecausenetwork.com
                   <br />
-                  Platform: JustBecause Network
+                  Platform: JustBeCause Network
                 </p>
               </CardContent>
             </Card>

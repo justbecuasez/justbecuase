@@ -214,7 +214,7 @@ export default function PostProjectPage() {
       if (result.success) {
         router.push("/ngo/projects")
       } else {
-        setError(result.error || "Failed to create project")
+        setError(result.error || "Failed to create opportunity")
       }
     } catch (err) {
       setError("An unexpected error occurred")
@@ -281,13 +281,13 @@ export default function PostProjectPage() {
                 }}
                 className="bg-transparent"
               >
-                Or create a custom project
+                Or create a custom opportunity
               </Button>
             </div>
           </div>
         )}
 
-        {/* Step 2: Project Details */}
+        {/* Step 2: Opportunity Details */}
         {step === 2 && (
           <Card>
             <CardHeader>
@@ -296,8 +296,8 @@ export default function PostProjectPage() {
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
-                  <CardTitle>Project Details</CardTitle>
-                  <CardDescription>Provide information about your project</CardDescription>
+                  <CardTitle>Opportunity Details</CardTitle>
+                  <CardDescription>Provide information about your opportunity</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -310,7 +310,7 @@ export default function PostProjectPage() {
                 className="space-y-6"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="title">Project Title</Label>
+                  <Label htmlFor="title">Opportunity Title</Label>
                   <Input
                     id="title"
                     placeholder="e.g., Social Media Strategy for Environmental Campaign"
@@ -321,7 +321,7 @@ export default function PostProjectPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Project Description</Label>
+                  <Label htmlFor="description">Opportunity Description</Label>
                   <Textarea
                     id="description"
                     placeholder="Describe what you need help with, the background, and any specific requirements..."
@@ -425,7 +425,7 @@ export default function PostProjectPage() {
                   <Label htmlFor="deliverables">Expected Deliverables</Label>
                   <Textarea
                     id="deliverables"
-                    placeholder="List the specific outputs you expect from this project..."
+                    placeholder="List the specific outputs you expect from this opportunity..."
                     value={formData.deliverables}
                     onChange={(e) => setFormData({ ...formData, deliverables: e.target.value })}
                     rows={3}
@@ -487,7 +487,7 @@ export default function PostProjectPage() {
                     Back
                   </Button>
                   <Button type="submit" className="bg-primary hover:bg-primary/90">
-                    Review Project
+                    Review Opportunity
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
@@ -505,7 +505,7 @@ export default function PostProjectPage() {
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
-                  <CardTitle>Review Your Project</CardTitle>
+                  <CardTitle>Review Your Opportunity</CardTitle>
                   <CardDescription>Make sure everything looks good before posting</CardDescription>
                 </div>
               </div>
@@ -513,7 +513,7 @@ export default function PostProjectPage() {
             <CardContent>
               <div className="space-y-6">
                 <div className="p-6 rounded-xl border border-border bg-muted/30">
-                  <h3 className="text-xl font-semibold text-foreground mb-4">{formData.title || "Untitled Project"}</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-4">{formData.title || "Untitled Opportunity"}</h3>
 
                   <div className="grid gap-4">
                     <div>
@@ -568,7 +568,7 @@ export default function PostProjectPage() {
 
                 <div className="flex justify-end gap-4">
                   <Button type="button" variant="outline" onClick={() => setStep(2)} className="bg-transparent">
-                    Edit Project
+                    Edit Opportunity
                   </Button>
                   <Button onClick={handleSubmit} className="bg-primary hover:bg-primary/90" disabled={isLoading}>
                     {isLoading ? (

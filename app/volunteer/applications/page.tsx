@@ -151,7 +151,7 @@ async function ApplicationsList({ filter }: { filter?: string }) {
                   <div>
                     <h3 className="font-medium text-foreground">Application #{application._id?.toString().slice(-6)}</h3>
                     <p className="text-sm text-muted-foreground">
-                      Project ID: {application.projectId.slice(-8)}
+                      Opportunity ID: {application.projectId.slice(-8)}
                     </p>
                   </div>
                 </div>
@@ -183,7 +183,7 @@ async function ApplicationsList({ filter }: { filter?: string }) {
                 <Button variant="outline" size="sm" asChild>
                   <Link href={`/projects/${application.projectId}`}>
                     <Eye className="h-4 w-4 mr-1" />
-                    View Project
+                    View Opportunity
                   </Link>
                 </Button>
               </div>

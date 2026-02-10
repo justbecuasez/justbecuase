@@ -119,12 +119,12 @@ export default function PricingPage() {
       period: "per month",
       icon: Zap,
       features: platformSettings?.ngoProFeatures || [
-        "Unlimited projects",
+        "Unlimited opportunities",
         "Unlock UNLIMITED free volunteer profiles",
         "View all paid volunteer profiles",
         "Advanced AI-powered matching",
         "Priority support",
-        "Project analytics & reports",
+        "Opportunity analytics & reports",
         "Featured NGO badge",
       ],
       limitations: [],
@@ -328,7 +328,7 @@ export default function PricingPage() {
       key: data.keyId,
       amount: data.amount * 100,
       currency: data.currency,
-      name: "JustBecause Network",
+      name: "JustBeCause Network",
       description: `${planName} Plan Subscription`,
       order_id: data.orderId,
       handler: async function (response: any) {

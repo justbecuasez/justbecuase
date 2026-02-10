@@ -243,7 +243,7 @@ export default function ProjectsPage() {
         {/* Header */}
         <div className="border-b border-border bg-muted/30">
           <div className="container mx-auto px-4 md:px-6 py-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Browse Projects</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Browse Opportunities</h1>
             <p className="text-muted-foreground">Find opportunities that match your skills and interests</p>
           </div>
         </div>
@@ -254,7 +254,7 @@ export default function ProjectsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search projects, skills, or organizations..."
+                placeholder="Search opportunities, skills, or organizations..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -360,7 +360,7 @@ export default function ProjectsPage() {
             <div className="flex-1">
               <div className="flex items-center justify-between mb-6">
                 <p className="text-muted-foreground">
-                  Showing <span className="font-medium text-foreground">{filteredProjects.length}</span> of {projects.length} projects
+                  Showing <span className="font-medium text-foreground">{filteredProjects.length}</span> of {projects.length} opportunities
                 </p>
               </div>
 
@@ -370,7 +370,7 @@ export default function ProjectsPage() {
                 </div>
               ) : filteredProjects.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">No projects found</p>
+                  <p className="text-muted-foreground">No opportunities found</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     {hasActiveFilters ? "Try adjusting your filters" : "Check back later for new opportunities"}
                   </p>
@@ -403,7 +403,7 @@ export default function ProjectsPage() {
               {projects.length > 0 && (
                 <div className="mt-12 text-center">
                   <Button variant="outline" size="lg">
-                    Load More Projects
+                    Load More Opportunities
                   </Button>
                 </div>
               )}

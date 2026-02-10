@@ -89,7 +89,7 @@ export function VolunteerCard({ volunteer }: VolunteerCardProps) {
           )}
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <CheckCircle className="h-4 w-4 text-green-500" />
-            <span>{volunteer.completedProjects} projects</span>
+            <span>{volunteer.completedProjects} opportunities</span>
           </div>
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             <Clock className="h-4 w-4" />

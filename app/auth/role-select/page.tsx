@@ -96,7 +96,7 @@ function RoleSelectContent() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center p-4">
       <div className="w-full max-w-3xl">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-foreground mb-3">Welcome to JustBecause Network</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-3">Welcome to JustBeCause Network</h1>
           <p className="text-lg text-muted-foreground">
             How would you like to use the platform?
           </p>

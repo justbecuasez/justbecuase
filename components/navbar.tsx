@@ -61,7 +61,7 @@ export function Navbar() {
   
   // Get platform settings for branding
   const platformSettings = usePlatformSettingsStore((state) => state.settings)
-  const platformName = platformSettings?.platformName || "JustBecause Network"
+  const platformName = platformSettings?.platformName || "JustBeCause Network"
   
   const isPro = user?.role === 'ngo' 
     ? ngoSubscription?.plan === 'pro' 
@@ -73,7 +73,7 @@ export function Navbar() {
 
   // ⭐ Role-based nav
   const baseLinks = [
-    { href: "/projects", label: "Browse Projects" },
+    { href: "/projects", label: "Browse Opportunities" },
     { href: "/for-volunteers", label: "For Volunteers" },
     { href: "/for-ngos", label: "For NGOs" },
     { href: "/about", label: "About Us" },

@@ -7,10 +7,10 @@ import { Calendar, User, ArrowRight } from "lucide-react"
 const blogPosts = [
   {
     id: "launch-announcement",
-    title: "Introducing JustBecause Network - Skills-Based Volunteering",
-    excerpt: "We're excited to launch JustBecause Network, a platform connecting skilled professionals with NGOs that need their expertise.",
+    title: "Introducing JustBeCause Network - Skills-Based Volunteering",
+    excerpt: "We're excited to launch JustBeCause Network, a platform connecting skilled professionals with NGOs that need their expertise.",
     date: "December 6, 2025",
-    author: "JustBecause Team",
+    author: "JustBeCause Team",
     category: "Announcement",
     readTime: "3 min read",
   },
@@ -26,9 +26,9 @@ const blogPosts = [
   {
     id: "getting-started-ngos",
     title: "Getting Started: A Guide for NGOs",
-    excerpt: "Learn how to post your first project, attract the right volunteers, and maximize the value of skills-based partnerships.",
+    excerpt: "Learn how to post your first opportunity, attract the right volunteers, and maximize the value of skills-based partnerships.",
     date: "December 4, 2025",
-    author: "JustBecause Team",
+    author: "JustBeCause Team",
     category: "Guide",
     readTime: "7 min read",
   },
@@ -46,7 +46,7 @@ export default function BlogPage() {
               Blog
             </h1>
             <p className="text-xl text-muted-foreground">
-              Stories, insights, and updates from the JustBecause Network community
+              Stories, insights, and updates from the JustBeCause Network community
             </p>
           </div>
 

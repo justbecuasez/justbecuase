@@ -276,7 +276,7 @@ export default function SignUpPage() {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-xl font-semibold text-foreground mb-2">Choose your account type</h2>
-        <p className="text-muted-foreground">Select how you'd like to use JustBecause Network</p>
+        <p className="text-muted-foreground">Select how you'd like to use JustBeCause Network</p>
       </div>
 
       <div className="grid gap-4">
@@ -321,7 +321,7 @@ export default function SignUpPage() {
             <div className="flex-1">
               <h3 className="font-semibold text-foreground mb-1">I'm an NGO / Nonprofit</h3>
               <p className="text-sm text-muted-foreground">
-                I want to find skilled volunteers to help with projects and grow our capacity.
+                I want to find skilled volunteers to help with opportunities and grow our capacity.
               </p>
             </div>
             <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-secondary transition-colors" />
@@ -584,7 +584,7 @@ export default function SignUpPage() {
               <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
             </div>
             <span className="text-2xl font-bold text-foreground">
-              JustBecause<span className="text-primary">.asia</span>
+              JustBeCause<span className="text-primary">.asia</span>
             </span>
           </Link>
 
@@ -716,7 +716,7 @@ export default function SignUpPage() {
         <div className="max-w-md text-primary-foreground">
           <h2 className="text-3xl font-bold mb-4">Turn Your Skills Into Impact</h2>
           <p className="text-primary-foreground/90 mb-8">
-            Whether you're a skilled professional looking to give back or an NGO seeking expert help, JustBecause Network
+            Whether you're a skilled professional looking to give back or an NGO seeking expert help, JustBeCause Network
             connects you with opportunities that matter.
           </p>
           <div className="grid grid-cols-2 gap-6">
@@ -726,7 +726,7 @@ export default function SignUpPage() {
             </div>
             <div className="text-center">
               <p className="text-4xl font-bold mb-1">456</p>
-              <p className="text-sm text-primary-foreground/80">Projects Completed</p>
+              <p className="text-sm text-primary-foreground/80">Opportunities Completed</p>
             </div>
             <div className="text-center">
               <p className="text-4xl font-bold mb-1">128</p>

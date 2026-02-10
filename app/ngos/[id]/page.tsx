@@ -111,7 +111,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                 <ShareButton
                   url={`/ngos/${id}`}
                   title={ngo.orgName}
-                  description={ngo.description || `Discover ${ngo.orgName} and their impactful projects on JustBecause.`}
+                  description={ngo.description || `Discover ${ngo.orgName} and their impactful projects on JustBeCause.`}
                   variant="outline"
                 />
                 {ngo.website && (
@@ -196,9 +196,9 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                 <Card>
                   <CardContent className="py-12 text-center">
                     <FolderKanban className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="font-semibold text-foreground mb-2">No Open Projects</h3>
+                    <h3 className="font-semibold text-foreground mb-2">No Open Opportunities</h3>
                     <p className="text-muted-foreground">
-                      This organization doesn&apos;t have any open projects at the moment.
+                      This organization doesn&apos;t have any open opportunities at the moment.
                     </p>
                   </CardContent>
                 </Card>

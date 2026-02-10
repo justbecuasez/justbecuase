@@ -31,7 +31,7 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
     userType === "volunteer"
       ? [
           { href: "/volunteer/dashboard", label: "Dashboard" },
-          { href: "/projects", label: "Browse Projects" },
+          { href: "/projects", label: "Browse Opportunities" },
           { href: "/volunteer/applications", label: "My Applications" },
           { href: "/volunteer/opportunities", label: "Opportunities" },
           { href: "/volunteer/profile", label: "My Profile" },
@@ -60,7 +60,7 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                   <Heart className="h-4 w-4 text-primary-foreground" fill="currentColor" />
                 </div>
-                <span className="text-lg font-bold text-foreground">JustBecause Network</span>
+                <span className="text-lg font-bold text-foreground">JustBeCause Network</span>
               </div>
               <nav className="flex flex-col gap-2">
                 {mobileLinks.map((link) => (
@@ -82,7 +82,7 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
               <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
             </div>
             <span className="hidden sm:inline text-xl font-bold text-foreground">
-              JustBecause<span className="text-primary"> Network</span>
+              JustBeCause<span className="text-primary"> Network</span>
             </span>
           </Link>
         </div>
@@ -91,7 +91,7 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
         <div className="hidden md:flex flex-1 max-w-md mx-8">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search projects, skills, or NGOs..." className="pl-10 bg-muted/50" />
+            <Input placeholder="Search opportunities, skills, or NGOs..." className="pl-10 bg-muted/50" />
           </div>
         </div>
 

@@ -169,7 +169,7 @@ function EmptyState({ userType }: { userType: "volunteer" | "ngo" }) {
       <p className="text-sm text-muted-foreground max-w-xs mx-auto">
         {userType === "ngo" 
           ? "Messages with volunteers will appear here when you start a conversation"
-          : "Apply to projects or receive messages from NGOs to start chatting"
+          : "Apply to opportunities or receive messages from NGOs to start chatting"
         }
       </p>
     </div>

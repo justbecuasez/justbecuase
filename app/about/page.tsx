@@ -62,7 +62,7 @@ export default async function AboutPage() {
               In a world driven by transactions, we believe the most valuable asset you own isn't in your bank account—<span className="font-semibold text-foreground">it's in your schedule</span>.
             </p>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto mb-8">
-              At JustBecause Network, we bridge the gap between passionate professionals and high-impact NGOs. We believe that a single hour of your expertise can be the catalyst for global change.
+              At JustBeCause Network, we bridge the gap between passionate professionals and high-impact NGOs. We believe that a single hour of your expertise can be the catalyst for global change.
             </p>
             <div className="flex flex-wrap justify-center gap-4 mb-8">
               {skills.map((skill) => (
@@ -80,7 +80,7 @@ export default async function AboutPage() {
                 <Link href="/auth/signup">Join Our Community</Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="bg-transparent">
-                <Link href="/projects">Browse Projects</Link>
+                <Link href="/projects">Browse Opportunities</Link>
               </Button>
             </div>
           </div>
@@ -121,7 +121,7 @@ export default async function AboutPage() {
               </div>
               <div className="p-6 rounded-2xl bg-secondary/10 text-center">
                 <p className="text-4xl font-bold text-secondary mb-2">{impactMetrics.projectsCompleted}</p>
-                <p className="text-sm text-muted-foreground">Projects Completed</p>
+                <p className="text-sm text-muted-foreground">Opportunities Completed</p>
               </div>
               <div className="p-6 rounded-2xl bg-success-light text-center">
                 <p className="text-4xl font-bold text-success mb-2">{impactMetrics.ngosSupported}</p>
@@ -143,7 +143,7 @@ export default async function AboutPage() {
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-foreground mb-4">Our Values</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                These core principles guide everything we do at JustBecause Network
+                These core principles guide everything we do at JustBeCause Network
               </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -233,7 +233,7 @@ export default async function AboutPage() {
                 variant="outline"
                 className="bg-transparent border-primary-foreground text-primary-foreground hover:bg-primary-foreground/10"
               >
-                <Link href="/projects">Browse Projects</Link>
+                <Link href="/projects">Browse Opportunities</Link>
               </Button>
             </div>
           </div>

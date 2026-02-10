@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     }
 
     const html = getWelcomeEmailHtml(name, role)
-    const ok = await sendEmail({ to: email, subject: 'Welcome to JustBecause Network', html, text: `Welcome ${name}` })
+    const ok = await sendEmail({ to: email, subject: 'Welcome to JustBeCause Network', html, text: `Welcome ${name}` })
     return NextResponse.json({ success: ok })
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err?.message || 'Server error' }, { status: 500 })

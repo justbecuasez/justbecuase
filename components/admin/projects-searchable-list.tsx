@@ -159,7 +159,7 @@ export function ProjectsSearchableList({ projects, title }: ProjectsSearchableLi
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Project</th>
+                    <th className="text-left py-3 px-4 font-medium text-muted-foreground">Opportunity</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Type</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Work Mode</th>
                     <th className="text-left py-3 px-4 font-medium text-muted-foreground">Applications</th>
@@ -211,7 +211,7 @@ export function ProjectsSearchableList({ projects, title }: ProjectsSearchableLi
                               <DropdownMenuItem asChild>
                                 <Link href={`/projects/${projectId}`}>
                                   <Eye className="h-4 w-4 mr-2" />
-                                  View Project
+                                  View Opportunity
                                 </Link>
                               </DropdownMenuItem>
                               <DropdownMenuItem className="text-red-600">
@@ -229,7 +229,7 @@ export function ProjectsSearchableList({ projects, title }: ProjectsSearchableLi
             </div>
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              No projects found matching your criteria
+              No opportunities found matching your criteria
             </div>
           )}
         </CardContent>

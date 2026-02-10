@@ -11,7 +11,7 @@ export default async function AdminProjectsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Manage Projects</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-2">Manage Opportunities</h1>
         <p className="text-muted-foreground">
           View and manage all volunteer opportunities
         </p>
@@ -22,7 +22,7 @@ export default async function AdminProjectsPage() {
         <Card>
           <CardContent className="p-4">
             <p className="text-2xl font-bold text-foreground">{analytics.activeProjects + analytics.completedProjects}</p>
-            <p className="text-sm text-muted-foreground">Total Projects</p>
+            <p className="text-sm text-muted-foreground">Total Opportunities</p>
           </CardContent>
         </Card>
         <Card>
@@ -48,7 +48,7 @@ export default async function AdminProjectsPage() {
       {/* Searchable Projects List */}
       <ProjectsSearchableList 
         projects={projectsData.data} 
-        title="All Projects"
+        title="All Opportunities"
       />
     </div>
   )

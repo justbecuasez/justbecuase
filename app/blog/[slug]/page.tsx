@@ -17,16 +17,16 @@ const blogPosts: Record<string, {
   content: string
 }> = {
   "launch-announcement": {
-    title: "Introducing JustBecause Network - Skills-Based Volunteering",
-    excerpt: "We're excited to launch JustBecause Network, a platform connecting skilled professionals with NGOs that need their expertise.",
+    title: "Introducing JustBeCause Network - Skills-Based Volunteering",
+    excerpt: "We're excited to launch JustBeCause Network, a platform connecting skilled professionals with NGOs that need their expertise.",
     date: "December 6, 2025",
-    author: "JustBecause Team",
+    author: "JustBeCause Team",
     category: "Announcement",
     readTime: "3 min read",
     content: `
 ## A New Era of Meaningful Volunteering
 
-Today marks the beginning of something special. After months of development and countless conversations with NGOs and volunteers, we're thrilled to officially launch JustBecause Network.
+Today marks the beginning of something special. After months of development and countless conversations with NGOs and volunteers, we're thrilled to officially launch JustBeCause Network.
 
 ### The Problem We're Solving
 
@@ -41,7 +41,7 @@ Meanwhile, millions of skilled professionals want to give back but don't know ho
 
 ### Our Solution
 
-JustBecause Network bridges this gap by creating a marketplace where:
+JustBeCause Network bridges this gap by creating a marketplace where:
 
 1. **NGOs can post specific projects** describing exactly what skills they need
 2. **Professionals can browse opportunities** that match their expertise
@@ -111,7 +111,7 @@ Asia is home to:
 - The world's fastest-growing pool of skilled professionals
 - Unprecedented digital connectivity
 
-Yet the gap between NGO needs and available skilled support remains massive. That's why we built JustBecause Network.
+Yet the gap between NGO needs and available skilled support remains massive. That's why we built JustBeCause Network.
 
 ### Getting Started
 
@@ -128,11 +128,11 @@ The world needs what you know. Let's put it to work.
     title: "Getting Started: A Guide for NGOs",
     excerpt: "Learn how to post your first project, attract the right volunteers, and maximize the value of skills-based partnerships.",
     date: "December 4, 2025",
-    author: "JustBecause Team",
+    author: "JustBeCause Team",
     category: "Guide",
     readTime: "7 min read",
     content: `
-## Welcome to JustBecause Network
+## Welcome to JustBeCause Network
 
 This guide will help you get the most out of our platform and connect with skilled volunteers who can help your organization grow.
 
@@ -384,7 +384,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
                 </p>
                 <div className="flex items-center justify-center gap-4">
                   <Link href="/projects">
-                    <Button variant="outline">Browse Projects</Button>
+                    <Button variant="outline">Browse Opportunities</Button>
                   </Link>
                   <Link href="/auth/signup">
                     <Button>Join Now</Button>

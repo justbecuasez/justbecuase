@@ -83,7 +83,7 @@ export function ApplyButton({ projectId, projectTitle, hasApplied = false }: App
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg bg-background">
         <DialogHeader>
-          <DialogTitle>Apply for this Project</DialogTitle>
+          <DialogTitle>Apply for this Opportunity</DialogTitle>
           <DialogDescription>
             Tell the organization why you&apos;re interested and how you can help.
           </DialogDescription>
@@ -120,7 +120,7 @@ export function ApplyButton({ projectId, projectTitle, hasApplied = false }: App
               </div>
             )}
             <div>
-              <Label htmlFor="interest">Why are you interested in this project?</Label>
+              <Label htmlFor="interest">Why are you interested in this opportunity?</Label>
               <Textarea
                 id="interest"
                 name="interest"
@@ -135,7 +135,7 @@ export function ApplyButton({ projectId, projectTitle, hasApplied = false }: App
               <Textarea
                 id="experience"
                 name="experience"
-                placeholder="Describe your relevant skills and past projects..."
+                placeholder="Describe your relevant skills and past experience..."
                 className="mt-2"
                 rows={3}
                 required

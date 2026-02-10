@@ -74,7 +74,7 @@ async function DashboardContent() {
           trendValue={analytics.recentNGOs > 0 ? `+${Math.round((analytics.recentNGOs / Math.max(analytics.totalNGOs - analytics.recentNGOs, 1)) * 100)}%` : "0%"}
         />
         <MetricCard
-          title="Active Projects"
+          title="Active Opportunities"
           value={analytics.activeProjects}
           icon={FolderKanban}
           subtext={`${analytics.completedProjects} completed`}
@@ -273,7 +273,7 @@ async function DashboardContent() {
               <BarChart3 className="h-5 w-5 text-primary" />
               Skills in Demand
             </CardTitle>
-            <CardDescription>Most requested skills from active projects</CardDescription>
+            <CardDescription>Most requested skills from active opportunities</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">

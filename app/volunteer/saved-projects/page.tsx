@@ -66,9 +66,9 @@ export default async function SavedProjectsPage() {
 
         <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">Saved Projects</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Saved Opportunities</h1>
             <p className="text-muted-foreground">
-              Projects you&apos;ve bookmarked for later
+              Opportunities you&apos;ve bookmarked for later
             </p>
           </div>
 
@@ -76,9 +76,9 @@ export default async function SavedProjectsPage() {
             <Card>
               <CardContent className="py-12 text-center">
                 <Bookmark className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="font-semibold text-foreground mb-2">No saved projects yet</h3>
+                <h3 className="font-semibold text-foreground mb-2">No saved opportunities yet</h3>
                 <p className="text-muted-foreground mb-4">
-                  When you find projects you&apos;re interested in, save them here to review later.
+                  When you find opportunities you&apos;re interested in, save them here to review later.
                 </p>
                 <Button asChild>
                   <Link href="/volunteer/opportunities">

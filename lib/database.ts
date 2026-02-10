@@ -798,7 +798,7 @@ export const adminSettingsDb = {
     if (!exists) {
       await collection.insertOne({
         // Platform Settings
-        platformName: "JustBecause Network",
+        platformName: "JustBeCause Network",
         platformDescription: "Connecting Skills with Purpose",
         supportEmail: "support@justbecausenetwork.com",
         
@@ -856,7 +856,7 @@ export const adminSettingsDb = {
         maintenanceMode: false,
         
         // SEO
-        metaTitle: "JustBecause Network - Connect NGOs with Volunteers",
+        metaTitle: "JustBeCause Network - Connect NGOs with Volunteers",
         metaDescription: "Platform connecting NGOs with skilled volunteers for social impact",
         
         updatedAt: new Date(),

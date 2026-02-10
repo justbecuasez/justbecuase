@@ -106,7 +106,7 @@ export default async function VolunteerDashboard() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-foreground">{acceptedApplications.length}</p>
-                    <p className="text-sm text-muted-foreground">Active Projects</p>
+                    <p className="text-sm text-muted-foreground">Active Opportunities</p>
                   </div>
                 </div>
               </CardContent>
@@ -239,7 +239,7 @@ export default async function VolunteerDashboard() {
                     <div className="flex items-center gap-1 mt-2">
                       <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
                       <span className="font-medium">{profile?.rating || "New"}</span>
-                      <span className="text-muted-foreground">({completedProjects} projects)</span>
+                      <span className="text-muted-foreground">({completedProjects} tasks)</span>
                     </div>
                   </div>
 
@@ -324,7 +324,7 @@ export default async function VolunteerDashboard() {
                           Upgrade to Pro for unlimited applications
                         </p>
                         <p className="text-xs text-muted-foreground mb-3">
-                          Apply to as many projects as you want with Pro
+                          Apply to as many opportunities as you want with Pro
                         </p>
                         <Button asChild size="sm" className="w-full">
                           <Link href="/pricing">

@@ -8,7 +8,7 @@ import { usePlatformSettingsStore } from "@/lib/store"
 export function Footer() {
   // Get platform settings for branding and social links
   const platformSettings = usePlatformSettingsStore((state) => state.settings)
-  const platformName = platformSettings?.platformName || "JustBecause Network"
+  const platformName = platformSettings?.platformName || "JustBeCause Network"
   const socialLinks = platformSettings?.socialLinks
 
   return (
@@ -66,7 +66,7 @@ export function Footer() {
             <ul className="space-y-3">
               <li>
                 <Link href="/projects" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Browse Projects
+                  Browse Opportunities
                 </Link>
               </li>
               <li>
@@ -104,7 +104,7 @@ export function Footer() {
                   href="/ngo/post-project"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Post a Project
+                  Post an Opportunity
                 </Link>
               </li>
               <li>
@@ -148,7 +148,7 @@ export function Footer() {
           <div className="max-w-md mx-auto mb-8">
             <h4 className="font-semibold text-foreground mb-2 text-center">Stay Updated</h4>
             <p className="text-sm text-muted-foreground mb-4 text-center">
-              Get the latest projects and impact stories delivered to your inbox.
+              Get the latest opportunities and impact stories delivered to your inbox.
             </p>
             <NewsletterSubscribe />
           </div>

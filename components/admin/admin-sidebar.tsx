@@ -40,7 +40,7 @@ const navItems = [
     icon: Building2,
   },
   {
-    title: "Projects",
+    title: "Opportunities",
     href: "/admin/projects",
     icon: FolderKanban,
   },

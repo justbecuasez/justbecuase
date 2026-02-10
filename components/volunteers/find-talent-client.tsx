@@ -654,9 +654,9 @@ export function FindTalentClient({ volunteers, unlockedProfileIds }: FindTalentC
                       />
                     </div>
                     
-                    {/* Minimum Projects */}
+                    {/* Minimum Opportunities */}
                     <div className="space-y-2">
-                      <Label className="text-sm">Minimum Completed Projects</Label>
+                      <Label className="text-sm">Minimum Completed Opportunities</Label>
                       <Input
                         type="number"
                         min={0}
@@ -749,7 +749,7 @@ export function FindTalentClient({ volunteers, unlockedProfileIds }: FindTalentC
                 <SelectContent>
                   <SelectItem value="relevance">Relevance</SelectItem>
                   <SelectItem value="rating">Highest Rated</SelectItem>
-                  <SelectItem value="projects">Most Projects</SelectItem>
+                  <SelectItem value="projects">Most Opportunities</SelectItem>
                   <SelectItem value="rate-low">Rate: Low to High</SelectItem>
                   <SelectItem value="rate-high">Rate: High to Low</SelectItem>
                   <SelectItem value="hours">Most Available</SelectItem>
@@ -1011,7 +1011,7 @@ function VolunteerCard({
           </div>
           <div className="flex items-center gap-2">
             <Star className="h-3 w-3 sm:h-4 sm:w-4 text-yellow-500 shrink-0" />
-            {volunteer.rating || "New"} ({volunteer.completedProjects || 0} projects)
+            {volunteer.rating || "New"} ({volunteer.completedProjects || 0} opportunities)
           </div>
         </div>
 
@@ -1065,7 +1065,7 @@ function RecommendedVolunteers({
   return (
     <div>
       <p className="text-muted-foreground mb-4">
-        Volunteers recommended based on your active projects and hiring history
+        Volunteers recommended based on your active opportunities and hiring history
       </p>
       <VolunteerGrid
         volunteers={volunteers}

@@ -868,7 +868,7 @@ export default function NGOSettingsPage() {
                             </p>
                             <p className="text-sm text-muted-foreground mt-1">
                               This action cannot be undone. This will permanently delete your
-                              organization account, all projects, applications, and remove
+                              organization account, all opportunities, applications, and remove
                               all associated data.
                             </p>
                           </div>

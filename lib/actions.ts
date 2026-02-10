@@ -1335,7 +1335,7 @@ export async function getPublicSettings(): Promise<Partial<AdminSettings> | null
   
   if (!settings) {
     return {
-      platformName: "JustBecause Network",
+      platformName: "JustBeCause Network",
       platformDescription: "Connecting Skills with Purpose",
       supportEmail: "support@justbecausenetwork.com",
       currency: "INR",

@@ -16,26 +16,26 @@ export function HowItWorks() {
     },
     {
       icon: Search,
-      title: "Discover Projects",
-      description: "Browse meaningful projects matched to your expertise. Filter by skills, time, and location.",
+      title: "Discover Opportunities",
+      description: "Browse meaningful opportunities matched to your expertise. Filter by skills, time, and location.",
     },
     {
       icon: Rocket,
       title: "Make an Impact",
-      description: "Complete projects, build your portfolio, and create lasting change for communities.",
+      description: "Complete opportunities, build your portfolio, and create lasting change for communities.",
     },
   ];
 
   const ngoSteps = [
     {
       icon: FileText,
-      title: "Post Your Project",
+      title: "Post Your Opportunity",
       description: "Describe your needs in just 5 minutes using our pre-scoped templates.",
     },
     {
       icon: Users,
       title: "Review Applications",
-      description: "Browse volunteer profiles, check ratings, and find the perfect match for your project.",
+      description: "Browse volunteer profiles, check ratings, and find the perfect match for your opportunity.",
     },
     {
       icon: CheckCircle,

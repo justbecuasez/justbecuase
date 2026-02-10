@@ -37,7 +37,7 @@ export async function GET(req: Request) {
   }
 
   const RESEND_API_KEY = process.env.RESEND_API_KEY || process.env.RESEND_AKASH
-  const FROM_EMAIL = process.env.FROM_EMAIL || "JustBecause <onboarding@resend.dev>"
+  const FROM_EMAIL = process.env.FROM_EMAIL || "JustBeCause <onboarding@resend.dev>"
 
   if (!RESEND_API_KEY) {
     return NextResponse.json({ error: 'No RESEND_API_KEY configured' }, { status: 500 })
@@ -57,7 +57,7 @@ export async function GET(req: Request) {
       body: JSON.stringify({
         from: FROM_EMAIL,
         to: testEmail,
-        subject: "Test Email from JustBecause",
+        subject: "Test Email from JustBeCause",
         html: "<h1>Test Email</h1><p>If you receive this, email is working!</p>",
         text: "Test email - If you receive this, email is working!",
       }),

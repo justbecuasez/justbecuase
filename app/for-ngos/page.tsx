@@ -20,8 +20,8 @@ const benefits = [
   },
   {
     icon: Target,
-    title: "Skill-Matched Projects",
-    description: "Don't need a full-time hire? Post a specific project with your requirements and let our matching engine find the perfect specialist for the task.",
+    title: "Skill-Matched Opportunities",
+    description: "Don't need a full-time hire? Post a specific opportunity with your requirements and let our matching engine find the perfect specialist for the task.",
   },
   {
     icon: Shield,
@@ -30,8 +30,8 @@ const benefits = [
   },
   {
     icon: FileText,
-    title: "Project Templates",
-    description: "Use our pre-built templates to quickly post common project types and attract the right volunteers.",
+    title: "Opportunity Templates",
+    description: "Use our pre-built templates to quickly post common opportunity types and attract the right volunteers.",
   },
   {
     icon: MessageSquare,
@@ -51,14 +51,14 @@ const projectTypes = [
 
 const faqs = [
   {
-    question: "How do I post a project?",
+    question: "How do I post an opportunity?",
     answer:
-      "After creating your NGO account, click 'Post New Project' from your dashboard. You can choose from our project templates or create a custom project. It takes about 5 minutes to post a project.",
+      "After creating your NGO account, click 'Post New Opportunity' from your dashboard. You can choose from our opportunity templates or create a custom opportunity. It takes about 5 minutes to post an opportunity.",
   },
   {
-    question: "How are volunteers matched to our projects?",
+    question: "How are volunteers matched to our opportunities?",
     answer:
-      "Volunteers browse projects based on their skills and interests. They apply to projects that match their expertise, and you review their profiles and past work before accepting an application.",
+      "Volunteers browse opportunities based on their skills and interests. They apply to opportunities that match their expertise, and you review their profiles and past work before accepting an application.",
   },
   {
     question: "What's the difference between Pro Bono and Low Bono?",
@@ -71,14 +71,14 @@ const faqs = [
       "During signup, you'll provide your organization's registration details. We verify all NGOs to ensure they are legitimate nonprofits. Verified organizations receive a badge on their profile.",
   },
   {
-    question: "What if a volunteer doesn't complete the project?",
+    question: "What if a volunteer doesn't complete the opportunity?",
     answer:
-      "We encourage clear communication and milestone-setting. If issues arise, you can reopen the project to find a new volunteer. Our support team is also available to help mediate any challenges.",
+      "We encourage clear communication and milestone-setting. If issues arise, you can reopen the opportunity to find a new volunteer. Our support team is also available to help mediate any challenges.",
   },
   {
     question: "Can we work with multiple volunteers?",
     answer:
-      "Yes! You can post multiple projects simultaneously and work with different volunteers on each. Some larger projects can also be split into smaller pieces for multiple volunteers.",
+      "Yes! You can post multiple opportunities simultaneously and work with different volunteers on each. Some larger opportunities can also be split into smaller pieces for multiple volunteers.",
   },
 ]
 
@@ -101,7 +101,7 @@ export default function ForNGOsPage() {
                 </p>
                 <p className="text-lg text-muted-foreground mb-8">
                   Access skilled professionals ready to help with marketing, tech, design, finance, and more. Post a
-                  project in 5 minutes and start receiving applications from our global pool of purpose-driven talent.
+                  opportunity in 5 minutes and start receiving applications from our global pool of purpose-driven talent.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <Button asChild size="lg" className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
@@ -111,7 +111,7 @@ export default function ForNGOsPage() {
                     </Link>
                   </Button>
                   <Button asChild size="lg" variant="outline" className="bg-transparent">
-                    <Link href="/projects">See Example Projects</Link>
+                    <Link href="/projects">See Example Opportunities</Link>
                   </Button>
                 </div>
               </div>
@@ -174,9 +174,9 @@ export default function ForNGOsPage() {
                   <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center mb-4">
                     <Target className="h-6 w-6 text-secondary" />
                   </div>
-                  <h3 className="font-semibold text-foreground mb-2">Skill-Matched Projects</h3>
+                  <h3 className="font-semibold text-foreground mb-2">Skill-Matched Opportunities</h3>
                   <p className="text-sm text-muted-foreground">
-                    Don't need a full-time hire? Post a specific project with your requirements and let our matching engine find the perfect specialist for the task.
+                    Don't need a full-time hire? Post a specific opportunity with your requirements and let our matching engine find the perfect specialist for the task.
                   </p>
                 </CardContent>
               </Card>
@@ -194,7 +194,7 @@ export default function ForNGOsPage() {
               </div>
               <div>
                 <p className="text-4xl font-bold text-secondary mb-2">{impactMetrics.projectsCompleted}</p>
-                <p className="text-muted-foreground">Projects Completed</p>
+                <p className="text-muted-foreground">Opportunities Completed</p>
               </div>
               <div>
                 <p className="text-4xl font-bold text-primary mb-2">{impactMetrics.volunteers.toLocaleString()}</p>
@@ -241,7 +241,7 @@ export default function ForNGOsPage() {
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-foreground mb-4">See the Value You Could Receive</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Based on average consultant rates of $75/hour, here's what you could save on common projects
+                Based on average consultant rates of $75/hour, here's what you could save on common opportunities
               </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto">

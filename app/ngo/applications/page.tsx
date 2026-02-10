@@ -55,7 +55,7 @@ export default async function ApplicationsPage() {
         <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">Applications</h1>
-            <p className="text-muted-foreground">Review and manage volunteer applications for your projects</p>
+            <p className="text-muted-foreground">Review and manage volunteer applications for your opportunities</p>
           </div>
 
           <Suspense fallback={<ApplicationsSkeleton />}>
@@ -82,10 +82,10 @@ async function ApplicationsList() {
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground mb-2">No applications yet</p>
           <p className="text-sm text-muted-foreground">
-            When volunteers apply to your projects, they will appear here.
+            When volunteers apply to your opportunities, they will appear here.
           </p>
           <Button variant="link" asChild className="mt-2">
-            <Link href="/ngo/post-project">Post a Project</Link>
+            <Link href="/ngo/post-project">Post an Opportunity</Link>
           </Button>
         </CardContent>
       </Card>
@@ -141,7 +141,7 @@ async function ApplicationsList() {
                         </div>
 
                         <p className="text-sm text-foreground mb-2">
-                          Applied for: <span className="font-medium">{application.project?.title || "Project"}</span>
+                          Applied for: <span className="font-medium">{application.project?.title || "Opportunity"}</span>
                         </p>
 
                         {application.coverMessage && (
@@ -156,7 +156,7 @@ async function ApplicationsList() {
                             {new Date(application.appliedAt).toLocaleDateString()}
                           </span>
                           <span>
-                            {application.volunteerProfile?.completedProjects || 0} projects completed
+                            {application.volunteerProfile?.completedProjects || 0} tasks completed
                           </span>
                         </div>
 

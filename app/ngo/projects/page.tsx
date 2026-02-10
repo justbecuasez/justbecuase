@@ -148,9 +148,9 @@ function ProjectsList({ projects }: { projects: any[] }) {
       <Card>
         <CardContent className="py-12 text-center">
           <FolderKanban className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No projects found</p>
+          <p className="text-muted-foreground">No opportunities found</p>
           <Button variant="link" asChild>
-            <Link href="/ngo/post-project">Create your first project</Link>
+            <Link href="/ngo/post-project">Create your first opportunity</Link>
           </Button>
         </CardContent>
       </Card>

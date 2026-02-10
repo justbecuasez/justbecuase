@@ -11,12 +11,12 @@ const benefits = [
   {
     icon: Briefcase,
     title: "Build Your Portfolio",
-    description: "Add real-world projects to your resume and showcase your impact to future employers.",
+    description: "Add real-world opportunities to your resume and showcase your impact to future employers.",
   },
   {
     icon: TrendingUp,
     title: "Develop New Skills",
-    description: "Take on challenging projects that push your boundaries and help you grow professionally.",
+    description: "Take on challenging opportunities that push your boundaries and help you grow professionally.",
   },
   {
     icon: Heart,
@@ -26,7 +26,7 @@ const benefits = [
   {
     icon: Globe,
     title: "Flexible Volunteering",
-    description: "Choose from virtual opportunities or local projects that fit your schedule and lifestyle.",
+    description: "Choose from virtual opportunities or local opportunities that fit your schedule and lifestyle.",
   },
   {
     icon: Award,
@@ -36,7 +36,7 @@ const benefits = [
   {
     icon: Clock,
     title: "Choose Your Commitment",
-    description: "From 1-hour consultations to long-term projects, find opportunities that match your availability.",
+    description: "From 1-hour consultations to long-term opportunities, find ones that match your availability.",
   },
 ]
 
@@ -66,7 +66,7 @@ const steps = [
   },
   {
     number: "02",
-    title: "Browse Projects",
+    title: "Browse Opportunities",
     description: "Explore opportunities matched to your skills and interests from vetted NGOs.",
   },
   {
@@ -77,7 +77,7 @@ const steps = [
   {
     number: "04",
     title: "Make an Impact",
-    description: "Complete the project, receive feedback, and add it to your portfolio.",
+    description: "Complete the opportunity, receive feedback, and add it to your portfolio.",
   },
 ]
 
@@ -85,17 +85,17 @@ const faqs = [
   {
     question: "How much time do I need to commit?",
     answer:
-      "We have opportunities for every schedule! From 1-hour consultation calls to multi-week projects. You can filter opportunities by time commitment and choose what works best for you.",
+      "We have opportunities for every schedule! From 1-hour consultation calls to multi-week opportunities. You can filter by time commitment and choose what works best for you.",
   },
   {
     question: "Do I need professional experience?",
     answer:
-      "While we welcome professionals with all levels of experience, most projects require some level of expertise in your chosen skill area. Students and early-career professionals can find mentorship opportunities and shorter projects.",
+      "While we welcome professionals with all levels of experience, most opportunities require some level of expertise in your chosen skill area. Students and early-career professionals can find mentorship and shorter opportunities.",
   },
   {
-    question: "Are the projects remote or in-person?",
+    question: "Are the opportunities remote or in-person?",
     answer:
-      "Most projects are remote/virtual, allowing you to volunteer from anywhere. Some NGOs offer in-person opportunities for volunteers in specific locations. You can filter by location when browsing projects.",
+      "Most opportunities are remote/virtual, allowing you to volunteer from anywhere. Some NGOs offer in-person opportunities for volunteers in specific locations. You can filter by location when browsing opportunities.",
   },
   {
     question: "How are NGOs vetted?",
@@ -110,7 +110,7 @@ const faqs = [
   {
     question: "How do I track my impact?",
     answer:
-      "Your volunteer dashboard shows your hours contributed, projects completed, skills used, and estimated value of your contributions. You can also collect testimonials from NGOs you've worked with.",
+      "Your volunteer dashboard shows your hours contributed, opportunities completed, skills used, and estimated value of your contributions. You can also collect testimonials from NGOs you've worked with.",
   },
 ]
 
@@ -127,10 +127,10 @@ export default function ForVolunteersPage() {
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">Your Skills Have the Power to Change a Life</h1>
                 <p className="text-xl text-muted-foreground mb-4">
-                  At the JustBecause Network, we believe your professional expertise is more than just a paycheck—it's a pathway to impact.
+                  At the JustBeCause Network, we believe your professional expertise is more than just a paycheck—it's a pathway to impact.
                 </p>
                 <p className="text-lg text-muted-foreground mb-6">
-                  Join our Purpose-Driven Exchange and lend your talent to NGOs who are changing the world. Not because you have to, but <span className="font-semibold text-primary">JustBecause you can</span>.
+                  Join our Purpose-Driven Exchange and lend your talent to NGOs who are changing the world. Not because you have to, but <span className="font-semibold text-primary">JustBeCause you can</span>.
                 </p>
                 <p className="text-muted-foreground mb-8">
                   Our platform serves as a high-impact marketplace connecting skilled and semi-skilled professionals with NGOs and grassroots causes in the development sector that are actively healing our planet.
@@ -143,7 +143,7 @@ export default function ForVolunteersPage() {
                     </Link>
                   </Button>
                   <Button asChild size="lg" variant="outline" className="bg-transparent">
-                    <Link href="/projects">Browse Projects</Link>
+                    <Link href="/projects">Browse Opportunities</Link>
                   </Button>
                 </div>
               </div>

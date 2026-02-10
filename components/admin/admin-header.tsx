@@ -26,7 +26,7 @@ const mobileNavItems = [
   { title: "Users", href: "/admin/users", icon: Users },
   { title: "Volunteers", href: "/admin/volunteers", icon: Heart },
   { title: "NGOs", href: "/admin/ngos", icon: Building2 },
-  { title: "Projects", href: "/admin/projects", icon: FolderKanban },
+  { title: "Opportunities", href: "/admin/projects", icon: FolderKanban },
   { title: "Payments", href: "/admin/payments", icon: CreditCard },
   { title: "Notifications", href: "/admin/notifications", icon: Bell },
   { title: "Reports", href: "/admin/reports", icon: BarChart3 },
@@ -95,7 +95,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
             </SheetContent>
           </Sheet>
           <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <span className="text-lg sm:text-xl font-bold text-primary">JustBecause</span>
+            <span className="text-lg sm:text-xl font-bold text-primary">JustBeCause</span>
             <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Admin</span>
           </Link>
         </div>

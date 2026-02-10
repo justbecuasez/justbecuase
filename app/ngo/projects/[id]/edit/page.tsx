@@ -102,7 +102,7 @@ export default function EditProjectPage({ params }: Props) {
           })
         }
       } catch (err) {
-        setError("Failed to load project")
+        setError("Failed to load opportunity")
       } finally {
         setIsLoading(false)
       }
@@ -161,7 +161,7 @@ export default function EditProjectPage({ params }: Props) {
           router.push("/ngo/projects")
         }, 1500)
       } else {
-        setError(result.error || "Failed to update project")
+        setError(result.error || "Failed to update opportunity")
       }
     } catch (err) {
       setError("An unexpected error occurred")
@@ -183,12 +183,12 @@ export default function EditProjectPage({ params }: Props) {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Project Not Found</h2>
+          <h2 className="text-xl font-semibold mb-2">Opportunity Not Found</h2>
           <p className="text-muted-foreground mb-4">
-            The project you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to edit it.
+            The opportunity you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to edit it.
           </p>
           <Button asChild>
-            <Link href="/ngo/projects">Go to Projects</Link>
+            <Link href="/ngo/projects">Go to Opportunities</Link>
           </Button>
         </div>
       </div>
@@ -211,22 +211,22 @@ export default function EditProjectPage({ params }: Props) {
             className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Projects
+            Back to Opportunities
           </Link>
-          <h1 className="text-3xl font-bold text-foreground">Edit Project</h1>
-          <p className="text-muted-foreground">Update your project details</p>
+          <h1 className="text-3xl font-bold text-foreground">Edit Opportunity</h1>
+          <p className="text-muted-foreground">Update your opportunity details</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Project Details</CardTitle>
-            <CardDescription>Make changes to your project and save when done</CardDescription>
+            <CardTitle>Opportunity Details</CardTitle>
+            <CardDescription>Make changes to your opportunity and save when done</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Status */}
               <div className="space-y-2">
-                <Label htmlFor="status">Project Status</Label>
+                <Label htmlFor="status">Opportunity Status</Label>
                 <Select
                   value={formData.status}
                   onValueChange={(value: any) => setFormData({ ...formData, status: value })}
@@ -248,7 +248,7 @@ export default function EditProjectPage({ params }: Props) {
 
               {/* Title */}
               <div className="space-y-2">
-                <Label htmlFor="title">Project Title</Label>
+                <Label htmlFor="title">Opportunity Title</Label>
                 <Input
                   id="title"
                   placeholder="e.g., Social Media Strategy for Environmental Campaign"
@@ -260,7 +260,7 @@ export default function EditProjectPage({ params }: Props) {
 
               {/* Description */}
               <div className="space-y-2">
-                <Label htmlFor="description">Project Description</Label>
+                <Label htmlFor="description">Opportunity Description</Label>
                 <Textarea
                   id="description"
                   placeholder="Describe what you need help with, the background, and any specific requirements..."
@@ -405,9 +405,9 @@ export default function EditProjectPage({ params }: Props) {
                 </div>
               )}
 
-              {/* Project Type */}
+              {/* Opportunity Type */}
               <div className="space-y-2">
-                <Label htmlFor="projectType">Project Type</Label>
+                <Label htmlFor="projectType">Opportunity Type</Label>
                 <Select
                   value={formData.projectType}
                   onValueChange={(value: "short-term" | "long-term" | "consultation" | "ongoing") =>
@@ -415,7 +415,7 @@ export default function EditProjectPage({ params }: Props) {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select project type" />
+                    <SelectValue placeholder="Select opportunity type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="short-term">Short-term</SelectItem>
@@ -437,7 +437,7 @@ export default function EditProjectPage({ params }: Props) {
               {success && (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 flex items-center gap-2">
                   <CheckCircle className="h-4 w-4" />
-                  Project updated successfully! Redirecting...
+                  Opportunity updated successfully! Redirecting...
                 </div>
               )}
 
@@ -451,7 +451,7 @@ export default function EditProjectPage({ params }: Props) {
                 >
                   <Link href={`/ngo/projects/${id}/delete`}>
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Project
+                    Delete Opportunity
                   </Link>
                 </Button>
                 

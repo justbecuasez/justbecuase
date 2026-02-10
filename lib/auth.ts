@@ -49,7 +49,7 @@ export const auth = betterAuth({
         console.log(`[Reset] Sending email to ${user.email}`)
         const emailSent = await sendEmail({
           to: user.email,
-          subject: "Reset your password - JustBecause Network",
+          subject: "Reset your password - JustBeCause Network",
           html: getPasswordResetCodeEmailHtml(code, url, user.name),
           text: `Use this code to reset your password: ${code}`,
         })
@@ -59,7 +59,7 @@ export const auth = betterAuth({
         console.error(`[Reset] Error for ${user.email}:`, err)
         void sendEmail({
           to: user.email,
-          subject: "Reset your password - JustBecause Network",
+          subject: "Reset your password - JustBeCause Network",
           html: getPasswordResetEmailHtml(url, user.name),
           text: `Click the link to reset your password: ${url}`,
         })

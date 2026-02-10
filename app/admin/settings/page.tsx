@@ -412,7 +412,7 @@ export default function AdminSettingsPage() {
                     onChange={(e) =>
                       setSettings({ ...settings, platformName: e.target.value })
                     }
-                    placeholder="JustBecause Network"
+                    placeholder="JustBeCause Network"
                   />
                   <p className="text-xs text-muted-foreground">
                     Displayed in navbar, emails, and meta tags
@@ -1003,7 +1003,7 @@ export default function AdminSettingsPage() {
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Number of project applications allowed per month
+                    Number of opportunity applications allowed per month
                   </p>
                 </div>
                 <div className="space-y-2 flex items-center gap-4 pt-6">
@@ -1116,7 +1116,7 @@ export default function AdminSettingsPage() {
             <CardContent className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="ngoFreeProjects">Projects per Month</Label>
+                  <Label htmlFor="ngoFreeProjects">Opportunities per Month</Label>
                   <Input
                     id="ngoFreeProjects"
                     type="number"
@@ -1129,7 +1129,7 @@ export default function AdminSettingsPage() {
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Number of projects NGOs can post per month
+                    Number of opportunities NGOs can post per month
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -1192,7 +1192,7 @@ export default function AdminSettingsPage() {
                       setSettings({ ...settings, ngoProProjectsUnlimited: checked })
                     }
                   />
-                  <Label>Unlimited Projects</Label>
+                  <Label>Unlimited Opportunities</Label>
                 </div>
                 <div className="space-y-2 flex items-center gap-2 pt-6">
                   <Switch
@@ -1640,7 +1640,7 @@ export default function AdminSettingsPage() {
                 <div>
                   <p className="font-medium">NGO Verification</p>
                   <p className="text-sm text-muted-foreground">
-                    Require NGOs to be verified by admin before they can post projects
+                    Require NGOs to be verified by admin before they can post opportunities
                   </p>
                 </div>
                 <Switch

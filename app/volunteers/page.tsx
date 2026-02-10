@@ -6,7 +6,7 @@ import { VolunteersFilters } from "@/components/volunteers/volunteers-filters"
 import { VolunteersHero } from "@/components/volunteers/volunteers-hero"
 
 export const metadata = {
-  title: "Browse Volunteers | JustBecause Network",
+  title: "Browse Volunteers | JustBeCause Network",
   description: "Find skilled volunteers ready to contribute to your cause",
 }
 

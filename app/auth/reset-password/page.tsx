@@ -77,7 +77,7 @@ function ResetPasswordForm() {
             <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
           </div>
           <span className="text-2xl font-bold text-foreground">
-            JustBecause<span className="text-primary">.asia</span>
+            JustBeCause<span className="text-primary">.asia</span>
           </span>
         </Link>
 

@@ -83,7 +83,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Projects
+              Back to Opportunities
             </Link>
           </div>
         </div>
@@ -152,7 +152,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5 text-primary" />
-                    Project Description
+                    Opportunity Description
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="prose prose-slate max-w-none">
@@ -228,7 +228,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <FileText className="h-5 w-5 text-primary" />
-                      Project Documents
+                      Opportunity Documents
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -360,7 +360,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                     />
                   ) : (
                     <Button className="w-full" disabled>
-                      {project.status === "completed" ? "Project Completed" : 
+                      {project.status === "completed" ? "Opportunity Completed" : 
                        project.status === "closed" ? "Applications Closed" : 
                        "Not Accepting Applications"}
                     </Button>
@@ -385,7 +385,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <Eye className="h-4 w-4" />
-                    <span>{project.viewsCount} people viewed this project</span>
+                    <span>{project.viewsCount} people viewed this opportunity</span>
                   </div>
                 </CardContent>
               </Card>
@@ -394,7 +394,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               {similarProjects.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Similar Projects</CardTitle>
+                    <CardTitle className="text-lg">Similar Opportunities</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {similarProjects.map((p) => (

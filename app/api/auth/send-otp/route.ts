@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     // Send OTP email
     await sendEmail({
       to: email,
-      subject: "Verify your email - JustBecause Network",
+      subject: "Verify your email - JustBeCause Network",
       html: `
         <!DOCTYPE html>
         <html>
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #10b981; margin: 0;">JustBecause Network</h1>
+            <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
             <p style="color: #666; margin-top: 5px;">Skills-Based Volunteering Platform</p>
           </div>
           
@@ -65,12 +65,12 @@ export async function POST(request: NextRequest) {
           </div>
           
           <div style="text-align: center; color: #666; font-size: 12px;">
-            <p>© ${new Date().getFullYear()} JustBecause Network. All rights reserved.</p>
+            <p>© ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
           </div>
         </body>
         </html>
       `,
-      text: `Your JustBecause Network verification code is: ${otp}. This code expires in 10 minutes.`,
+      text: `Your JustBeCause Network verification code is: ${otp}. This code expires in 10 minutes.`,
     })
 
     return NextResponse.json({ 

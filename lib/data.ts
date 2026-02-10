@@ -193,7 +193,7 @@ export const testimonials = [
   {
     id: "1",
     quote:
-      "JustBecause Network connected me with an amazing designer who completely transformed our brand. The quality of work we received was exceptional.",
+      "JustBeCause Network connected me with an amazing designer who completely transformed our brand. The quality of work we received was exceptional.",
     author: "Maria Santos",
     role: "Executive Director",
     organization: "Youth Empowerment Network",
@@ -213,7 +213,7 @@ export const testimonials = [
   {
     id: "3",
     quote:
-      "As a small nonprofit, we could never afford professional consulting. JustBecause Network gave us access to incredible talent that helped us grow our impact.",
+      "As a small nonprofit, we could never afford professional consulting. JustBeCause Network gave us access to incredible talent that helped us grow our impact.",
     author: "Dr. Ananya Patel",
     role: "Founder",
     organization: "Healthcare Access Initiative",

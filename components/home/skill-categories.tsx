@@ -21,7 +21,7 @@ export async function SkillCategories() {
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4 md:px-6">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">Find Projects By Skill</h2>
+          <h2 className="text-3xl font-bold text-foreground mb-4">Find Opportunities By Skill</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
             Browse opportunities that match your expertise. Every skill has the power to create change.
           </p>
@@ -43,7 +43,7 @@ export async function SkillCategories() {
                   <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
                     {category.name}
                   </h3>
-                  <p className="text-sm text-muted-foreground">{category.count} projects</p>
+                  <p className="text-sm text-muted-foreground">{category.count} opportunities</p>
                 </div>
               </Link>
             )

@@ -880,7 +880,7 @@ export default function VolunteerSettingsPage() {
                         {[
                           { value: "free", label: "Pro-Bono Only", desc: "Volunteer for free", icon: "❤️" },
                           { value: "paid", label: "Paid Only", desc: "Charge for your time", icon: "💰" },
-                          { value: "both", label: "Open to Both", desc: "Flexible based on project", icon: "💡" },
+                          { value: "both", label: "Open to Both", desc: "Flexible based on opportunity", icon: "💡" },
                         ].map((type) => (
                           <div
                             key={type.value}

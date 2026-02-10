@@ -63,12 +63,12 @@ export default async function NGODashboard() {
               <h1 className="text-2xl font-bold text-foreground mb-2">
                 Welcome, {ngoProfile?.organizationName || session.user.name}
               </h1>
-              <p className="text-muted-foreground">Manage your projects and connect with skilled volunteers.</p>
+              <p className="text-muted-foreground">Manage your opportunities and connect with skilled volunteers.</p>
             </div>
             <Button asChild className="bg-primary hover:bg-primary/90">
               <Link href="/ngo/post-project" className="flex items-center gap-2">
                 <PlusCircle className="h-4 w-4" />
-                Post New Project
+                Post New Opportunity
               </Link>
             </Button>
           </div>
@@ -83,7 +83,7 @@ export default async function NGODashboard() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-foreground">{activeProjects.length}</p>
-                    <p className="text-sm text-muted-foreground">Active Projects</p>
+                    <p className="text-sm text-muted-foreground">Active Opportunities</p>
                   </div>
                 </div>
               </CardContent>
@@ -138,7 +138,7 @@ export default async function NGODashboard() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle>Active Projects</CardTitle>
+                    <CardTitle>Active Opportunities</CardTitle>
                     <Button asChild variant="outline" size="sm">
                       <Link href="/ngo/projects">View All</Link>
                     </Button>
@@ -148,9 +148,9 @@ export default async function NGODashboard() {
                   {activeProjects.length === 0 ? (
                     <div className="text-center py-8">
                       <FolderKanban className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">No active projects</p>
+                      <p className="text-muted-foreground">No active opportunities</p>
                       <Button variant="link" asChild>
-                        <Link href="/ngo/post-project">Create your first project</Link>
+                        <Link href="/ngo/post-project">Create your first opportunity</Link>
                       </Button>
                     </div>
                   ) : (
@@ -244,7 +244,7 @@ export default async function NGODashboard() {
                   <Button asChild variant="outline" className="w-full justify-start">
                     <Link href="/ngo/post-project">
                       <PlusCircle className="h-4 w-4 mr-2" />
-                      Post New Project
+                      Post New Opportunity
                     </Link>
                   </Button>
                   <Button asChild variant="outline" className="w-full justify-start">

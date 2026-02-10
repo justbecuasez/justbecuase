@@ -49,7 +49,7 @@ export function HeroSection() {
             >
               <Link href="/ngo/post-project" className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
-                Post a Project
+                Post an Opportunity
               </Link>
             </Button>
           </div>
@@ -78,7 +78,7 @@ export function HeroSection() {
             <div className="hidden sm:block h-4 w-px bg-border" />
             <div className="flex items-center gap-2">
               <span className="text-primary font-semibold">★ 4.9</span>
-              <span>Average project rating</span>
+              <span>Average opportunity rating</span>
             </div>
           </div>
         </div>

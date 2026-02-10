@@ -34,7 +34,7 @@ export default function NotFound() {
             <Button asChild variant="outline">
               <Link href="/projects">
                 <Search className="h-4 w-4 mr-2" />
-                Browse Projects
+                Browse Opportunities
               </Link>
             </Button>
           </div>
