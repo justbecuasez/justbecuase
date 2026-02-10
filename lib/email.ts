@@ -215,3 +215,95 @@ export function getWelcomeEmailHtml(userName: string, userRole: string): string 
     </html>
   `
 }
+
+export function getNewOpportunityEmailHtml(
+  volunteerName: string,
+  opportunityTitle: string,
+  ngoName: string,
+  opportunityId: string
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
+        <p style="color: #666; margin-top: 5px;">Skills-Based Volunteering Platform</p>
+      </div>
+      
+      <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
+        <h2 style="margin-top: 0;">New Opportunity Matching Your Skills! 🎯</h2>
+        <p>Hi ${volunteerName},</p>
+        <p><strong>${ngoName}</strong> just posted a new opportunity that matches your skills:</p>
+        
+        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <h3 style="color: #10b981; margin-top: 0;">${opportunityTitle}</h3>
+          <p style="color: #666; margin-bottom: 0;">Posted by ${ngoName}</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="https://justbecausenetwork.com/projects/${opportunityId}" style="display: inline-block; background: #10b981; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            View Opportunity
+          </a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px;">You received this email because your skills match this opportunity. You can manage your notification preferences in your dashboard settings.</p>
+      </div>
+      
+      <div style="text-align: center; color: #999; font-size: 12px;">
+        <p>&copy; ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+export function getNGOConnectionEmailHtml(
+  volunteerName: string,
+  ngoName: string,
+  message?: string
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
+        <p style="color: #666; margin-top: 5px;">Skills-Based Volunteering Platform</p>
+      </div>
+      
+      <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
+        <h2 style="margin-top: 0;">An NGO Wants to Connect! 🤝</h2>
+        <p>Hi ${volunteerName},</p>
+        <p><strong>${ngoName}</strong> has reached out to you on JustBeCause Network.</p>
+        
+        ${message ? `
+        <div style="background: white; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+          <p style="color: #666; font-style: italic; margin: 0;">&ldquo;${message}&rdquo;</p>
+        </div>
+        ` : ''}
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="https://justbecausenetwork.com/volunteer/messages" style="display: inline-block; background: #10b981; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            View Messages
+          </a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px;">Don't miss this connection opportunity! Log in to reply and start collaborating.</p>
+      </div>
+      
+      <div style="text-align: center; color: #999; font-size: 12px;">
+        <p>&copy; ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+      </div>
+    </body>
+    </html>
+  `
+}

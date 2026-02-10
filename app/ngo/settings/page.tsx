@@ -19,7 +19,6 @@ import { NotificationPermissionButton } from "@/components/notifications/notific
 import { 
   getNGOProfile, 
   updateNGOProfile, 
-  getUnlockedProfiles, 
   getMyTransactions,
   changePassword, 
   deleteAccount 
@@ -43,7 +42,6 @@ import {
   Users,
   Mail,
   History,
-  Unlock,
   Briefcase,
 } from "lucide-react"
 import Link from "next/link"
@@ -60,7 +58,6 @@ export default function NGOSettingsPage() {
   const router = useRouter()
   const { data: session, isPending } = authClient.useSession()
   const [profile, setProfile] = useState<any>(null)
-  const [unlockedProfiles, setUnlockedProfiles] = useState<any[]>([])
   const [transactions, setTransactions] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -110,9 +107,8 @@ export default function NGOSettingsPage() {
       if (!session?.user) return
       
       try {
-        const [profileData, unlockedData, txData] = await Promise.all([
+        const [profileData, txData] = await Promise.all([
           getNGOProfile(),
-          getUnlockedProfiles(),
           getMyTransactions(),
         ])
         
@@ -129,7 +125,6 @@ export default function NGOSettingsPage() {
           setCauses(profileData.causes || [])
         }
         
-        setUnlockedProfiles(unlockedData)
         setTransactions(txData)
 
         // Load privacy settings
@@ -569,53 +564,6 @@ export default function NGOSettingsPage() {
             {/* Billing Settings */}
             <TabsContent value="billing">
               <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Unlock className="h-5 w-5" />
-                      Profile Unlocks
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between p-4 border rounded-lg mb-4">
-                      <div>
-                        <p className="font-medium text-lg">
-                          {unlockedProfiles.length} Profiles Unlocked
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Free volunteer profiles you&apos;ve unlocked
-                        </p>
-                      </div>
-                      <Button variant="outline" asChild>
-                        <Link href="/ngo/find-talent">
-                          <Users className="h-4 w-4 mr-2" />
-                          Find More Talent
-                        </Link>
-                      </Button>
-                    </div>
-                    {unlockedProfiles.length > 0 && (
-                      <div className="space-y-2">
-                        <h4 className="text-sm font-medium text-muted-foreground">
-                          Recently Unlocked
-                        </h4>
-                        {unlockedProfiles.slice(0, 5).map((profile, i) => (
-                          <div
-                            key={i}
-                            className="flex items-center justify-between p-3 border rounded-lg"
-                          >
-                            <span className="text-sm">
-                              Volunteer Profile
-                            </span>
-                            <span className="text-sm text-muted-foreground">
-                              {new Date(profile.unlockedAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">

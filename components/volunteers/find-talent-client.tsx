@@ -35,8 +35,7 @@ import {
   MapPin,
   Clock,
   Star,
-  Lock,
-  Unlock,
+  Crown,
   IndianRupee,
   Heart,
   MessageSquare,
@@ -261,10 +260,10 @@ function calculateRelevanceScore(volunteer: Volunteer, parsedQuery: ParsedQuery)
 
 interface FindTalentClientProps {
   volunteers: Volunteer[]
-  unlockedProfileIds: string[]
+  subscriptionPlan: "free" | "pro"
 }
 
-export function FindTalentClient({ volunteers, unlockedProfileIds }: FindTalentClientProps) {
+export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentClientProps) {
   // Search state
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
@@ -305,11 +304,6 @@ export function FindTalentClient({ volunteers, unlockedProfileIds }: FindTalentC
   // Separate volunteers by type
   const paidVolunteers = volunteers.filter((v) => v.volunteerType === "paid")
   const freeVolunteers = volunteers.filter((v) => v.volunteerType === "free")
-
-  // Check if volunteer profile is unlocked
-  const isUnlocked = (volunteerId: string) => {
-    return unlockedProfileIds.includes(volunteerId)
-  }
 
   // Get unique locations
   const locations = useMemo(() => {
@@ -831,13 +825,34 @@ export function FindTalentClient({ volunteers, unlockedProfileIds }: FindTalentC
             <div>
               <h3 className="font-medium text-foreground mb-1">Profile Visibility</h3>
               <p className="text-sm text-muted-foreground">
-                <strong>Paid volunteers</strong> (charge for services) have fully visible profiles.{" "}
-                <strong>Free volunteers</strong> (work for free) require a small fee to unlock their full profile.
+                <strong>Paid volunteers</strong> have fully visible profiles.{" "}
+                <strong>Free volunteers</strong> are available to Pro subscribers.
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {subscriptionPlan === "free" && (
+        <Card className="mb-6 border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-3">
+              <Crown className="h-5 w-5 text-amber-600 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="font-medium text-foreground">Upgrade to Pro</p>
+                <p className="text-sm text-muted-foreground">
+                  You&apos;re viewing paid volunteers only. Subscribe to Pro to discover free and pro-bono volunteers too.
+                </p>
+              </div>
+              <Button asChild size="sm">
+                <Link href="/ngo/settings?tab=subscription">
+                  Upgrade
+                </Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Tabs defaultValue="all">
         <TabsList className="mb-6 flex-wrap">
@@ -864,28 +879,24 @@ export function FindTalentClient({ volunteers, unlockedProfileIds }: FindTalentC
         <TabsContent value="all">
           <VolunteerGrid
             volunteers={filteredAll}
-            isUnlocked={isUnlocked}
           />
         </TabsContent>
 
         <TabsContent value="paid">
           <VolunteerGrid
             volunteers={filteredPaid}
-            isUnlocked={isUnlocked}
           />
         </TabsContent>
 
         <TabsContent value="free">
           <VolunteerGrid
             volunteers={filteredFree}
-            isUnlocked={isUnlocked}
           />
         </TabsContent>
 
         <TabsContent value="recommended">
           <RecommendedVolunteers 
             volunteers={volunteers.slice(0, 6)} 
-            isUnlocked={isUnlocked}
           />
         </TabsContent>
       </Tabs>
@@ -895,10 +906,8 @@ export function FindTalentClient({ volunteers, unlockedProfileIds }: FindTalentC
 
 function VolunteerGrid({
   volunteers,
-  isUnlocked,
 }: {
   volunteers: Volunteer[]
-  isUnlocked: (id: string) => boolean
 }) {
   if (volunteers.length === 0) {
     return (
@@ -917,7 +926,6 @@ function VolunteerGrid({
         <VolunteerCard
           key={volunteer.id || volunteer.userId}
           volunteer={volunteer}
-          unlocked={volunteer.volunteerType === "paid" || isUnlocked(volunteer.id || volunteer.userId || "")}
         />
       ))}
     </div>
@@ -926,10 +934,8 @@ function VolunteerGrid({
 
 function VolunteerCard({
   volunteer,
-  unlocked,
 }: {
   volunteer: Volunteer
-  unlocked: boolean
 }) {
   const isFree = volunteer.volunteerType === "free"
   const isPaid = volunteer.volunteerType === "paid"
@@ -945,24 +951,19 @@ function VolunteerCard({
               {volunteer.avatar ? (
                 <img
                   src={volunteer.avatar}
-                  alt={unlocked ? volunteer.name : "Volunteer"}
-                  className={`w-full h-full object-cover ${isFree && !unlocked ? "blur-sm" : ""}`}
+                  alt={volunteer.name || "Volunteer"}
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 <span className="text-xl sm:text-2xl font-bold text-muted-foreground">
-                  {unlocked ? volunteer.name?.charAt(0) : "?"}
+                  {volunteer.name?.charAt(0) || "V"}
                 </span>
               )}
             </div>
-            {isFree && !unlocked && (
-              <div className="absolute -bottom-1 -right-1 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-yellow-500 flex items-center justify-center">
-                <Lock className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white" />
-              </div>
-            )}
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-foreground truncate text-sm sm:text-base">
-              {unlocked ? volunteer.name : "Volunteer"}
+              {volunteer.name || "Volunteer"}
             </h3>
             <p className="text-xs sm:text-sm text-muted-foreground truncate">
               {volunteer.headline || "Skilled Volunteer"}
@@ -971,8 +972,8 @@ function VolunteerCard({
           <div className="flex flex-col items-end gap-1 shrink-0">
             {isBoth ? (
               <>
-                <Badge variant="secondary" className="text-xs">
-                  Free
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400">
+                  {volunteer.freeHoursPerMonth || 0} hrs/mo free
                 </Badge>
                 <Badge variant="outline" className="text-xs">
                   {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.hourlyRate}/hr
@@ -999,7 +1000,7 @@ function VolunteerCard({
         </div>
 
         <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-muted-foreground mb-4">
-          {unlocked && (volunteer.location || volunteer.city) && (
+          {(volunteer.location || volunteer.city) && (
             <div className="flex items-center gap-2">
               <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="truncate">{volunteer.location || volunteer.city}</span>
@@ -1028,28 +1029,19 @@ function VolunteerCard({
           )}
         </div>
 
-        {isFree && !unlocked ? (
-          <Button className="w-full" size="sm" asChild>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm" asChild>
             <Link href={`/volunteers/${volunteerId}`}>
-              <Unlock className="h-4 w-4 mr-2" />
-              Unlock Profile
+              View Profile
             </Link>
           </Button>
-        ) : (
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm" asChild>
-              <Link href={`/volunteers/${volunteerId}`}>
-                View Profile
-              </Link>
-            </Button>
-            <Button size="sm" className="flex-1 text-xs sm:text-sm" asChild>
-              <Link href={`/volunteers/${volunteerId}?action=contact`}>
-                <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                Contact
-              </Link>
-            </Button>
-          </div>
-        )}
+          <Button size="sm" className="flex-1 text-xs sm:text-sm" asChild>
+            <Link href={`/volunteers/${volunteerId}?action=contact`}>
+              <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+              Contact
+            </Link>
+          </Button>
+        </div>
       </CardContent>
     </Card>
   )
@@ -1057,10 +1049,8 @@ function VolunteerCard({
 
 function RecommendedVolunteers({ 
   volunteers,
-  isUnlocked 
 }: { 
   volunteers: Volunteer[]
-  isUnlocked: (id: string) => boolean 
 }) {
   return (
     <div>
@@ -1069,7 +1059,6 @@ function RecommendedVolunteers({
       </p>
       <VolunteerGrid
         volunteers={volunteers}
-        isUnlocked={isUnlocked}
       />
     </div>
   )

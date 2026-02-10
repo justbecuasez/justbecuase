@@ -127,7 +127,7 @@ export function VolunteerCard({ volunteer }: VolunteerCardProps) {
           <div className="px-6 pb-4">
             <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 rounded-lg">
               <Lock className="h-4 w-4" />
-              <span>Unlock to view full profile & contact</span>
+              <span>Subscribe to Pro to view this profile</span>
             </div>
           </div>
         )}
@@ -141,9 +141,10 @@ export function VolunteerCard({ volunteer }: VolunteerCardProps) {
             </Link>
           </Button>
           {isLocked ? (
-            <Button className="flex-1">
-              <Lock className="h-4 w-4 mr-2" />
-              Unlock
+            <Button className="flex-1" asChild>
+              <Link href="/pricing">
+                Subscribe
+              </Link>
             </Button>
           ) : (
             <Button className="flex-1" disabled={!volunteer.canMessage}>

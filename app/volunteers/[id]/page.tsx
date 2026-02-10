@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShareButton } from "@/components/share-button"
 import { getVolunteerProfileView, getNGOSubscriptionStatus } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
-import { Star, MapPin, Clock, CheckCircle, ExternalLink, Award, TrendingUp, Lock, User } from "lucide-react"
-import { UnlockProfileButton } from "@/components/payments/unlock-profile-button"
+import { Star, MapPin, Clock, CheckCircle, ExternalLink, Award, TrendingUp, Lock, Crown, User } from "lucide-react"
 import { ContactVolunteerButton } from "@/components/messages/contact-volunteer-button"
 
 // Helper function to get skill name from ID
@@ -34,7 +33,6 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
   }
 
   const isLocked = !volunteer.isUnlocked
-  const ngoSubscriptionPlan = ngoSubscription?.plan || "free"
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -103,6 +101,12 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                   {volunteer.volunteerType === "free" && (
                     <Badge className="bg-green-100 text-green-800">Pro Bono</Badge>
                   )}
+                  {volunteer.volunteerType === "both" && (
+                    <Badge className="bg-blue-100 text-blue-800">Free & Paid</Badge>
+                  )}
+                  {volunteer.volunteerType === "both" && volunteer.freeHoursPerMonth && (
+                    <Badge variant="outline">{volunteer.freeHoursPerMonth} hrs/month free</Badge>
+                  )}
                 </div>
 
                 {/* Skills - always visible */}
@@ -121,11 +125,12 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
               {/* Action Button */}
               <div className="flex flex-col gap-2">
                 {isLocked ? (
-                  <UnlockProfileButton 
-                    volunteerId={volunteer.id}
-                    volunteerName="this volunteer"
-                    subscriptionPlan={ngoSubscriptionPlan}
-                  />
+                  <Button asChild>
+                    <Link href="/pricing">
+                      <Crown className="h-4 w-4 mr-2" />
+                      Subscribe to View
+                    </Link>
+                  </Button>
                 ) : volunteer.canMessage ? (
                   <ContactVolunteerButton
                     volunteerId={volunteer.id}
@@ -153,21 +158,20 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                 <Card className="border-amber-200 bg-amber-50/50">
                   <CardContent className="pt-6">
                     <div className="flex items-start gap-4">
-                      <Lock className="h-8 w-8 text-amber-600 flex-shrink-0" />
+                      <Crown className="h-8 w-8 text-amber-600 flex-shrink-0" />
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">
-                          This is a Free Volunteer Profile
+                          Pro Subscription Required
                         </h3>
                         <p className="text-muted-foreground mb-4">
-                          To view contact details, bio, portfolio, and connect with this volunteer,
-                          please unlock their profile. This helps support our platform and ensures
-                          quality connections.
+                          This is a free volunteer. Subscribe to our Pro plan to view their full profile,
+                          contact details, portfolio, and connect with them directly.
                         </p>
-                        <UnlockProfileButton 
-                          volunteerId={volunteer.id}
-                          volunteerName="this volunteer"
-                          subscriptionPlan={ngoSubscriptionPlan}
-                        />
+                        <Button asChild>
+                          <Link href="/pricing">
+                            Upgrade to Pro
+                          </Link>
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
@@ -187,7 +191,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                       <div className="h-4 bg-muted rounded w-4/5 animate-pulse" />
                       <p className="text-sm text-muted-foreground mt-4 flex items-center gap-2">
                         <Lock className="h-4 w-4" />
-                        Unlock profile to view full bio
+                        Subscribe to Pro to view full bio
                       </p>
                     </div>
                   ) : volunteer.bio ? (
