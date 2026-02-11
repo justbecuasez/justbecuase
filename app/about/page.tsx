@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -8,7 +9,7 @@ import { getActiveTeamMembers } from "@/lib/actions"
 
 // Render at request time (needs MongoDB connection)
 export const dynamic = "force-dynamic"
-import { Heart, Target, Users, Globe, Award, ArrowRight, Linkedin, Twitter, Clock, Sparkles, Code, Palette, BarChart3, BookOpen } from "lucide-react"
+import { Heart, Target, Users, Globe, Award, ArrowRight, Linkedin, Twitter, Clock, Sparkles, Code, Palette, BarChart3, BookOpen, Building2, Search, Handshake } from "lucide-react"
 
 const values = [
   {
@@ -59,10 +60,10 @@ export default async function AboutPage() {
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">ABOUT US</h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-4">
-              In a world driven by transactions, we believe the most valuable asset you own isn't in your bank account—<span className="font-semibold text-foreground">it's in your schedule</span>.
+              At <span className="font-semibold text-foreground">JustBeCause</span>, we believe the best actions don&apos;t need a &quot;why.&quot; We were founded on the simple idea that kindness, connection, and creativity are most powerful when they are spontaneous.
             </p>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto mb-8">
-              At JustBeCause Network, we bridge the gap between passionate professionals and high-impact NGOs. We believe that a single hour of your expertise can be the catalyst for global change.
+              We aren&apos;t here to meet a quota or follow a rigid corporate roadmap. We&apos;re here to build a community that celebrates doing things <span className="font-bold text-foreground">just because</span> it feels right, <span className="font-bold text-foreground">just because</span> it helps someone, and <span className="font-bold text-foreground">just because</span> we can.
             </p>
             <div className="flex flex-wrap justify-center gap-4 mb-8">
               {skills.map((skill) => (
@@ -73,7 +74,7 @@ export default async function AboutPage() {
               ))}
             </div>
             <p className="text-muted-foreground max-w-2xl mx-auto mb-8">
-              Whether you are a developer, a designer, a strategist, or a storyteller, your skills are the "capital" needed to build a more sustainable and equitable planet.
+              <a href="https://www.justbecausenetwork.com" className="text-primary hover:underline">www.justbecausenetwork.com</a> is a fully owned brand of Bizy Bees Asia Pte Ltd, Singapore.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
@@ -86,27 +87,91 @@ export default async function AboutPage() {
           </div>
         </section>
 
-        {/* Mission */}
+        {/* Mission Statement */}
         <section className="py-16 bg-muted/30">
           <div className="container mx-auto px-4 md:px-6">
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-8">
-                <h2 className="text-3xl font-bold text-foreground mb-4">Our Mission</h2>
+                <h2 className="text-3xl font-bold text-foreground mb-4">Mission Statement</h2>
               </div>
               <Card className="border-2 border-primary/20">
                 <CardContent className="p-8 md:p-12">
                   <div className="flex items-start gap-4">
                     <div className="hidden md:block">
-                      <Sparkles className="h-8 w-8 text-primary" />
+                      <Target className="h-8 w-8 text-primary" />
                     </div>
                     <div>
                       <p className="text-lg md:text-xl text-foreground italic leading-relaxed">
-                        "We believe that no professional skill should be confined to a cubicle when it could be changing a life. Our mission is to awaken the heartbeat within every career, creating a purpose-driven exchange that bridges the gap between world-class talent and the world's most urgent needs. We don't just match jobs; we align human potential with global hope—just because your talent was meant for more."
+                        "To accelerate social impact by seamlessly connecting mission-driven NGOs with the specialized talent they need to change the world."
                       </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Our Platform */}
+        <section className="py-16">
+          <div className="container mx-auto px-4 md:px-6">
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-foreground mb-2">Our Platform</h2>
+                <p className="text-lg text-muted-foreground">Precision Matching for Purpose-Driven Work</p>
+              </div>
+
+              <div className="mb-8">
+                <div className="flex items-start gap-4 mb-6">
+                  <div className="flex-shrink-0 w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Search className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-foreground leading-relaxed">
+                      The <span className="font-bold">JustBeCause Network</span> introduces an advanced AI search engine <span className="font-bold">JBCerta</span> specifically engineered for the unique ecosystem of NGOs and social impact talent. By moving beyond simple keyword searches, our platform uses intelligent filtering to ensure the <span className="font-bold">right role finds the right candidate</span>, and vice versa.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h3 className="text-xl font-bold text-foreground mb-6">Why It&apos;s a Game-Changer</h3>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                        <Building2 className="h-6 w-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold text-foreground mb-2">For NGOs</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Stop sifting through hundreds of mismatched resumes. Our AI analyzes candidate expertise, values, and past impact to present only those who truly align with your mission.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                        <Users className="h-6 w-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold text-foreground mb-2">For Talent</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Don&apos;t waste time on roles that don&apos;t fit your skills or passion. Receive highly relevant opportunities curated to your specific professional profile and altruistic goals.
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
+                        <Handshake className="h-6 w-6 text-primary" />
+                      </div>
+                      <h4 className="font-semibold text-foreground mb-2">Mutually Beneficial</h4>
+                      <p className="text-sm text-muted-foreground">
+                        By automating the heavy lifting of &quot;the search,&quot; we bridge the gap between world-changing organizations and the people who power them.
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             </div>
           </div>
         </section>
