@@ -2,8 +2,8 @@
   <!-- JBC Letters -->
   <text x="4" y="32" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="36" letter-spacing="-1" fill="#333333">JBC</text>
   
-  <!-- Bee 1 (larger, positioned above 'Network') -->
-  <g transform="translate(120, 10)">
+  <!-- Bee 1 (at mouth of C) -->
+  <g transform="translate(80, 18) scale(0.85)">
     <!-- Wings -->
     <ellipse cx="-5" cy="-2" rx="5" ry="3.5" fill="#F0F0F0" stroke="#CCCCCC" stroke-width="0.3" opacity="0.9" transform="rotate(-30)"/>
     <ellipse cx="5" cy="-2" rx="5" ry="3.5" fill="#F0F0F0" stroke="#CCCCCC" stroke-width="0.3" opacity="0.9" transform="rotate(30)"/>
@@ -25,8 +25,8 @@
     <circle cx="3" cy="-8" r="0.6" fill="#F5C542"/>
   </g>
   
-  <!-- Bee 2 (smaller, slightly right) -->
-  <g transform="translate(138, 6) scale(0.65)">
+  <!-- Bee 2 (smaller, slightly right and above bee 1) -->
+  <g transform="translate(94, 12) scale(0.6)">
     <!-- Wings -->
     <ellipse cx="-5" cy="-2" rx="5" ry="3.5" fill="#F0F0F0" stroke="#CCCCCC" stroke-width="0.3" opacity="0.9" transform="rotate(-30)"/>
     <ellipse cx="5" cy="-2" rx="5" ry="3.5" fill="#F0F0F0" stroke="#CCCCCC" stroke-width="0.3" opacity="0.9" transform="rotate(30)"/>
