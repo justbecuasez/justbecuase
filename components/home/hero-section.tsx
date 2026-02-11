@@ -65,7 +65,7 @@ export function HeroSection() {
             {/* Volunteer Registration */}
             <div className="flex flex-col items-center gap-2 p-6 rounded-2xl border border-border bg-card hover:border-primary/50 transition-colors min-w-[200px]">
               <Users className="h-8 w-8 text-primary mb-2" />
-              <span className="font-bold text-lg text-foreground">JBC Impact Agent</span>
+              <span className="font-bold text-lg text-foreground">Impact Agent</span>
               <span className="text-xs text-muted-foreground text-center">
                 Register here if you are an individual looking to offer your skill
               </span>
