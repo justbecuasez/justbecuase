@@ -14,7 +14,6 @@ import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "../../../components/ui/radio-group"
 import {
-  Heart,
   ArrowRight,
   ArrowLeft,
   Building2,

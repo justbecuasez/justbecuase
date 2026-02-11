@@ -3,13 +3,14 @@
 import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Heart, Mail, Lock, User, Building2, Loader2, ArrowRight, ArrowLeft, CheckCircle, MailCheck, ShieldCheck } from "lucide-react"
+import { Mail, Lock, User, Building2, Loader2, ArrowRight, ArrowLeft, CheckCircle, MailCheck, ShieldCheck } from "lucide-react"
 import { signUp, signIn, getSession } from "@/lib/auth-client"
 import { selectRole } from "@/lib/actions"
 
@@ -580,12 +581,7 @@ export default function SignUpPage() {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <Link href="/" className="flex items-center gap-2 mb-8">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-              <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
-            </div>
-            <span className="text-2xl font-bold text-foreground">
-              JustBeCause<span className="text-primary">.asia</span>
-            </span>
+            <Image src="/logo.svg" alt="JBC Logo" width={160} height={64} className="h-12 w-auto" />
           </Link>
 
           <Card className="border-0 shadow-lg">

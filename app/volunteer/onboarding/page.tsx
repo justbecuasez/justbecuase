@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useGeolocated } from "react-geolocated"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -1262,9 +1263,7 @@ export default function VolunteerOnboardingPage() {
       <div className="container max-w-3xl mx-auto px-4">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-            <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
-          </div>
+          <Image src="/logo.svg" alt="JBC Logo" width={120} height={48} className="h-10 w-auto" />
           <div>
             <h1 className="text-xl font-bold text-foreground">Complete Your Profile</h1>
             <p className="text-sm text-muted-foreground">Step {step} of {totalSteps}</p>

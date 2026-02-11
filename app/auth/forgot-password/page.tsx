@@ -3,12 +3,13 @@
 import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Heart, Mail, Loader2, ArrowLeft, CheckCircle } from "lucide-react"
+import { Mail, Loader2, ArrowLeft, CheckCircle } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 
 export default function ForgotPasswordPage() {
@@ -89,12 +90,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-6">
       <div className="w-full max-w-md">
         <Link href="/" className="flex items-center gap-2 mb-8 justify-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-            <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
-          </div>
-          <span className="text-2xl font-bold text-foreground">
-            JustBeCause<span className="text-primary">.asia</span>
-          </span>
+          <Image src="/logo.svg" alt="JBC Logo" width={160} height={64} className="h-12 w-auto" />
         </Link>
 
         <Card className="border-0 shadow-lg">
