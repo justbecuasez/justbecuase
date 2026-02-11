@@ -382,6 +382,12 @@ export function GlobalSearchSection() {
     setSearchQuery(item.text)
     addRecentSearch(item.text)
     setShowDropdown(false)
+
+    // Skill/cause suggestions (id like "skill:email-marketing") → just search, don't navigate
+    if (item.id?.startsWith("skill:") || item.id?.startsWith("cause:")) {
+      return
+    }
+
     if (item.id && item.resultType) {
       const path = item.resultType === "volunteer"
         ? `/volunteers/${item.id}`
