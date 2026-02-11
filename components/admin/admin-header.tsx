@@ -96,7 +96,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
             </SheetContent>
           </Sheet>
           <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <Image src="/logo.svg" alt="JBC Logo" width={100} height={40} className="h-8 w-auto" />
+            <Image src="/logo-nav.svg" alt="JBC Logo" width={120} height={38} className="h-9 w-auto" />
             <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Admin</span>
           </Link>
         </div>

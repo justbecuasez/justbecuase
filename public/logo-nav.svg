@@ -1,0 +1,29 @@
+<svg width="240" height="50" viewBox="0 0 240 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- JBC Letters -->
+  <text x="4" y="32" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="36" letter-spacing="-1" fill="#333333">JBC</text>
+  
+  <!-- Bee 1 -->
+  <g transform="translate(106, 8)">
+    <ellipse cx="-3" cy="-4" rx="4.5" ry="3" fill="#E8E8E8" stroke="#CCCCCC" stroke-width="0.4" opacity="0.85" transform="rotate(-20)"/>
+    <ellipse cx="3" cy="-4" rx="4.5" ry="3" fill="#E8E8E8" stroke="#CCCCCC" stroke-width="0.4" opacity="0.85" transform="rotate(20)"/>
+    <ellipse cx="0" cy="2" rx="4.5" ry="6.5" fill="#F5C542" transform="rotate(15)"/>
+    <rect x="-3.5" y="-1" width="7" height="2" rx="1" fill="#333333" transform="rotate(15)"/>
+    <rect x="-3" y="3" width="6" height="2" rx="1" fill="#333333" transform="rotate(15)"/>
+    <rect x="-2" y="7" width="4" height="1.5" rx="0.75" fill="#333333" transform="rotate(15)"/>
+  </g>
+  
+  <!-- Bee 2 (smaller) -->
+  <g transform="translate(122, 18) scale(0.6)">
+    <ellipse cx="-3" cy="-4" rx="4.5" ry="3" fill="#E8E8E8" stroke="#CCCCCC" stroke-width="0.4" opacity="0.85" transform="rotate(-20)"/>
+    <ellipse cx="3" cy="-4" rx="4.5" ry="3" fill="#E8E8E8" stroke="#CCCCCC" stroke-width="0.4" opacity="0.85" transform="rotate(20)"/>
+    <ellipse cx="0" cy="2" rx="4.5" ry="6.5" fill="#F5C542" transform="rotate(15)"/>
+    <rect x="-3.5" y="-1" width="7" height="2" rx="1" fill="#333333" transform="rotate(15)"/>
+    <rect x="-3" y="3" width="6" height="2" rx="1" fill="#333333" transform="rotate(15)"/>
+    <rect x="-2" y="7" width="4" height="1.5" rx="0.75" fill="#333333" transform="rotate(15)"/>
+  </g>
+
+  <!-- JustBeCause Network -->
+  <text x="4" y="47" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="11">
+    <tspan fill="#333333">JustBe</tspan><tspan fill="#0d9488">Cause</tspan><tspan fill="#333333"> Network</tspan>
+  </text>
+</svg>

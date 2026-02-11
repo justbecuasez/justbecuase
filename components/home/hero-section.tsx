@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Sparkles, Users, Building2 } from "lucide-react"
+import { ArrowRight, Users, Building2 } from "lucide-react"
 
 export function HeroSection() {
   return (
@@ -14,19 +14,6 @@ export function HeroSection() {
 
       <div className="container relative mx-auto px-4 md:px-6">
         <div className="mx-auto max-w-4xl text-center">
-          {/* Logo/Brand */}
-          <div className="mb-8 flex flex-col items-center">
-            <div className="flex items-baseline gap-1">
-              <span className="text-5xl md:text-6xl font-bold text-foreground tracking-tight">JBC</span>
-              <Sparkles className="h-5 w-5 text-primary mb-4" />
-            </div>
-            <div className="text-sm text-muted-foreground">
-              <span className="font-medium">JustBeCauseNetwork.com</span>
-            </div>
-            <div className="text-xs text-primary font-medium tracking-wide mt-1">
-              Connecting Skills to Purpose
-            </div>
-          </div>
 
           {/* Main Headline - MISSION IMPOSSIBLE */}
           <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">

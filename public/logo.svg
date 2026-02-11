@@ -1,40 +1,38 @@
-<svg width="200" height="80" viewBox="0 0 200 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <!-- JBC Letters -->
-  <text x="20" y="48" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="48" fill="#333333">J</text>
-  <text x="52" y="48" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="48" fill="#333333">B</text>
-  <text x="88" y="48" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="48" fill="#333333">C</text>
+<svg width="320" height="100" viewBox="0 0 320 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- JBC Letters - Large and clear -->
+  <text x="10" y="55" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="58" letter-spacing="-1" fill="#333333">JBC</text>
   
-  <!-- Bee 1 (larger, top-right) -->
-  <g transform="translate(125, 12)">
+  <!-- Bee 1 (larger, top-right of C) -->
+  <g transform="translate(152, 14)">
     <!-- Wings -->
-    <ellipse cx="-3" cy="-4" rx="5" ry="3.5" fill="#E8E8E8" stroke="#CCCCCC" stroke-width="0.5" opacity="0.8" transform="rotate(-20)"/>
-    <ellipse cx="3" cy="-4" rx="5" ry="3.5" fill="#E8E8E8" stroke="#CCCCCC" stroke-width="0.5" opacity="0.8" transform="rotate(20)"/>
+    <ellipse cx="-4" cy="-5" rx="6" ry="4" fill="#E8E8E8" stroke="#CCCCCC" stroke-width="0.5" opacity="0.85" transform="rotate(-20)"/>
+    <ellipse cx="4" cy="-5" rx="6" ry="4" fill="#E8E8E8" stroke="#CCCCCC" stroke-width="0.5" opacity="0.85" transform="rotate(20)"/>
     <!-- Body -->
-    <ellipse cx="0" cy="2" rx="5" ry="7" fill="#F5C542" transform="rotate(15)"/>
+    <ellipse cx="0" cy="2" rx="6" ry="8" fill="#F5C542" transform="rotate(15)"/>
     <!-- Stripes -->
-    <rect x="-4" y="-1" width="8" height="2" rx="1" fill="#333333" transform="rotate(15)"/>
-    <rect x="-3.5" y="3" width="7" height="2" rx="1" fill="#333333" transform="rotate(15)"/>
-    <rect x="-2.5" y="7" width="5" height="1.5" rx="0.75" fill="#333333" transform="rotate(15)"/>
+    <rect x="-5" y="-2" width="10" height="2.5" rx="1.25" fill="#333333" transform="rotate(15)"/>
+    <rect x="-4.5" y="3" width="9" height="2.5" rx="1.25" fill="#333333" transform="rotate(15)"/>
+    <rect x="-3" y="8" width="6" height="2" rx="1" fill="#333333" transform="rotate(15)"/>
   </g>
   
-  <!-- Bee 2 (smaller, offset) -->
-  <g transform="translate(140, 24) scale(0.7)">
+  <!-- Bee 2 (smaller) -->
+  <g transform="translate(172, 28) scale(0.65)">
     <!-- Wings -->
-    <ellipse cx="-3" cy="-4" rx="5" ry="3.5" fill="#E8E8E8" stroke="#CCCCCC" stroke-width="0.5" opacity="0.8" transform="rotate(-20)"/>
-    <ellipse cx="3" cy="-4" rx="5" ry="3.5" fill="#E8E8E8" stroke="#CCCCCC" stroke-width="0.5" opacity="0.8" transform="rotate(20)"/>
+    <ellipse cx="-4" cy="-5" rx="6" ry="4" fill="#E8E8E8" stroke="#CCCCCC" stroke-width="0.5" opacity="0.85" transform="rotate(-20)"/>
+    <ellipse cx="4" cy="-5" rx="6" ry="4" fill="#E8E8E8" stroke="#CCCCCC" stroke-width="0.5" opacity="0.85" transform="rotate(20)"/>
     <!-- Body -->
-    <ellipse cx="0" cy="2" rx="5" ry="7" fill="#F5C542" transform="rotate(15)"/>
+    <ellipse cx="0" cy="2" rx="6" ry="8" fill="#F5C542" transform="rotate(15)"/>
     <!-- Stripes -->
-    <rect x="-4" y="-1" width="8" height="2" rx="1" fill="#333333" transform="rotate(15)"/>
-    <rect x="-3.5" y="3" width="7" height="2" rx="1" fill="#333333" transform="rotate(15)"/>
-    <rect x="-2.5" y="7" width="5" height="1.5" rx="0.75" fill="#333333" transform="rotate(15)"/>
+    <rect x="-5" y="-2" width="10" height="2.5" rx="1.25" fill="#333333" transform="rotate(15)"/>
+    <rect x="-4.5" y="3" width="9" height="2.5" rx="1.25" fill="#333333" transform="rotate(15)"/>
+    <rect x="-3" y="8" width="6" height="2" rx="1" fill="#333333" transform="rotate(15)"/>
   </g>
   
-  <!-- Subtitle: JustBeCauseNetwork.com -->
-  <text x="20" y="64" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="10" fill="#333333">JustBe</text>
-  <text x="56" y="64" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="10" fill="#CC0000">Cause</text>
-  <text x="82" y="64" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="10" fill="#333333">Network.com</text>
+  <!-- Subtitle: JustBeCause Network - larger font for readability -->
+  <text x="10" y="78" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="16">
+    <tspan fill="#333333">JustBe</tspan><tspan fill="#0d9488">Cause</tspan><tspan fill="#333333"> Network</tspan>
+  </text>
   
   <!-- Tagline -->
-  <text x="20" y="76" font-family="Arial, Helvetica, sans-serif" font-style="italic" font-size="8" fill="#888888">Connecting Skills to Purpose</text>
+  <text x="10" y="96" font-family="Arial, Helvetica, sans-serif" font-style="italic" font-size="13" fill="#888888">Connecting Skills to Purpose</text>
 </svg>

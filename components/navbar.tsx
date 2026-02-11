@@ -99,7 +99,7 @@ export function Navbar() {
 
         {/* LOGO */}
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/logo.svg" alt="JBC Logo" width={140} height={56} className="h-10 w-auto" priority />
+          <Image src="/logo-nav.svg" alt="JBC Logo" width={160} height={50} className="h-12 w-auto" priority />
         </Link>
 
         {/* DESKTOP NAV */}
