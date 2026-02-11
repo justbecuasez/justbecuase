@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -11,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Heart, Bell, Search, Menu, User, Settings, LogOut } from "lucide-react"
+import { Bell, Search, Menu, User, Settings, LogOut } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { useState, useEffect } from "react"
 import { useNotificationStore } from "@/lib/store"
@@ -57,10 +58,7 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
             </SheetTrigger>
             <SheetContent side="left" className="w-64 bg-background">
               <div className="flex items-center gap-2 mb-8">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-                  <Heart className="h-4 w-4 text-primary-foreground" fill="currentColor" />
-                </div>
-                <span className="text-lg font-bold text-foreground">JustBeCause Network</span>
+                <Image src="/logo.svg" alt="JBC Logo" width={120} height={48} className="h-8 w-auto" />
               </div>
               <nav className="flex flex-col gap-2">
                 {mobileLinks.map((link) => (
@@ -78,12 +76,7 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
           </Sheet>
 
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-              <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
-            </div>
-            <span className="hidden sm:inline text-xl font-bold text-foreground">
-              JustBeCause<span className="text-primary"> Network</span>
-            </span>
+            <Image src="/logo.svg" alt="JBC Logo" width={140} height={56} className="h-10 w-auto" />
           </Link>
         </div>
 

@@ -1,7 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { Heart, Linkedin, Twitter, Instagram, Facebook } from "lucide-react"
+import { Linkedin, Twitter, Instagram, Facebook } from "lucide-react"
+import Image from "next/image"
 import { NewsletterSubscribe } from "./newsletter-subscribe"
 import { usePlatformSettingsStore } from "@/lib/store"
 
@@ -18,16 +19,7 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
-              </div>
-              <span className="text-xl font-bold text-foreground">
-                {platformName.includes('.') ? (
-                  <>
-                    {platformName.split('.')[0]}<span className="text-primary">.{platformName.split('.').slice(1).join('.')}</span>
-                  </>
-                ) : platformName}
-              </span>
+              <Image src="/logo.svg" alt="JBC Logo" width={140} height={56} className="h-10 w-auto" />
             </Link>
             <p className="text-muted-foreground mb-6 max-w-sm">
               {platformSettings?.platformDescription || "Connecting Skills with Purpose. Turn your expertise into lasting impact."}

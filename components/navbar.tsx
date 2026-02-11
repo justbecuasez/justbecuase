@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Menu, Heart, Bell, Sun, Moon, Sparkles, CreditCard, Zap } from "lucide-react"
+import { Menu, Bell, Sun, Moon, Sparkles, CreditCard, Zap } from "lucide-react"
+import Image from "next/image"
 import { client } from "@/lib/auth-client" // Better Auth
 import { useTheme } from "next-themes"
 import { useSubscriptionStore, usePlatformSettingsStore } from "@/lib/store"
@@ -98,16 +99,7 @@ export function Navbar() {
 
         {/* LOGO */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <Heart className="h-5 w-5 text-primary-foreground" fill="currentColor" />
-          </div>
-          <span className="text-xl font-bold">
-            {platformName.includes('.') ? (
-              <>
-                {platformName.split('.')[0]}<span className="text-primary">.{platformName.split('.').slice(1).join('.')}</span>
-              </>
-            ) : platformName}
-          </span>
+          <Image src="/logo.svg" alt="JBC Logo" width={140} height={56} className="h-10 w-auto" priority />
         </Link>
 
         {/* DESKTOP NAV */}

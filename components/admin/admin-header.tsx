@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -95,7 +96,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
             </SheetContent>
           </Sheet>
           <Link href="/admin/dashboard" className="flex items-center gap-2">
-            <span className="text-lg sm:text-xl font-bold text-primary">JustBeCause</span>
+            <Image src="/logo.svg" alt="JBC Logo" width={100} height={40} className="h-8 w-auto" />
             <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Admin</span>
           </Link>
         </div>
