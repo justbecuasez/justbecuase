@@ -6,8 +6,8 @@ import { NGOSidebar } from "@/components/dashboard/ngo-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { getNGOProfile, getMyProjectsAsNGO, getNGOApplications, getNGOSubscriptionStatus } from "@/lib/actions"
-import { PlusCircle, FolderKanban, Users, CheckCircle2, Eye, MessageSquare, Clock, ArrowRight, CreditCard, Zap, Unlock } from "lucide-react"
+import { getNGOProfile, getMyProjectsAsNGO, getNGOApplications, getNGOSubscriptionStatus, getRecommendedVolunteersForNGO } from "@/lib/actions"
+import { PlusCircle, FolderKanban, Users, CheckCircle2, Eye, MessageSquare, Clock, ArrowRight, CreditCard, Zap, Unlock, Star, Sparkles } from "lucide-react"
 import Link from "next/link"
 
 export default async function NGODashboard() {
@@ -39,6 +39,7 @@ export default async function NGODashboard() {
   const projects = await getMyProjectsAsNGO()
   const applications = await getNGOApplications()
   const subscriptionStatus = await getNGOSubscriptionStatus()
+  const recommendedVolunteers = await getRecommendedVolunteersForNGO()
 
   // Calculate stats
   const activeProjects = projects.filter((p) => p.status === "open" || p.status === "active")
@@ -229,6 +230,74 @@ export default async function NGODashboard() {
                             <Link href="/ngo/applications">View</Link>
                           </Button>
                         </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Recommended Volunteers - Best Matches */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Sparkles className="h-5 w-5 text-primary" />
+                      Best Matches
+                    </CardTitle>
+                    <Button asChild variant="ghost" size="sm">
+                      <Link href="/ngo/find-talent">Find More</Link>
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {recommendedVolunteers.length === 0 ? (
+                    <div className="text-center py-6">
+                      <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground">No matching volunteers yet</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Post an opportunity to get matched
+                      </p>
+                      <Button variant="link" size="sm" asChild>
+                        <Link href="/ngo/post-project">Post Opportunity</Link>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {recommendedVolunteers.slice(0, 4).map((match) => (
+                        <Link
+                          key={match.volunteerId}
+                          href={`/ngo/find-talent`}
+                          className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            {match.volunteer.avatar ? (
+                              <img src={match.volunteer.avatar} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-sm font-medium text-primary">
+                                {match.volunteer.name?.charAt(0) || "V"}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {match.volunteer.name || "Volunteer"}
+                            </p>
+                            <p className="text-xs text-muted-foreground truncate">
+                              {match.volunteer.headline || "Skilled professional"}
+                            </p>
+                          </div>
+                          <Badge
+                            className={
+                              match.score >= 70
+                                ? "bg-green-100 text-green-700"
+                                : match.score >= 40
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-gray-100 text-gray-700"
+                            }
+                          >
+                            {match.score}%
+                          </Badge>
+                        </Link>
                       ))}
                     </div>
                   )}

@@ -1216,6 +1216,61 @@ export async function getMatchedOpportunitiesForVolunteer(): Promise<
   }))
 }
 
+// Get recommended volunteers for NGO based on their active projects' skills
+export async function getRecommendedVolunteersForNGO(): Promise<
+  { volunteerId: string; score: number; volunteer: { name?: string; headline?: string; skills?: any[]; avatar?: string; freeHoursPerMonth?: number } }[]
+> {
+  const user = await getCurrentUser()
+  if (!user || user.role !== "ngo") return []
+
+  // Get NGO's active projects to determine what skills they need
+  const projects = await projectsDb.findByNgoId(user.id)
+  const activeProjects = projects.filter(p => p.status === "open" || p.status === "active")
+  
+  if (activeProjects.length === 0) return []
+
+  // Collect all required skills from active projects
+  const requiredSkillIds = new Set<string>()
+  activeProjects.forEach(project => {
+    project.skillsRequired?.forEach((skill: any) => {
+      requiredSkillIds.add(skill.subskillId)
+    })
+  })
+
+  if (requiredSkillIds.size === 0) return []
+
+  // Get all active volunteers
+  const volunteers = await volunteerProfilesDb.findMany({ isActive: true })
+  
+  // Score volunteers based on skill match
+  const scoredVolunteers = volunteers
+    .map(v => {
+      const volunteerSkillIds = v.skills?.map((s: any) => s.subskillId) || []
+      const matchingSkills = volunteerSkillIds.filter((id: string) => requiredSkillIds.has(id))
+      const skillMatchScore = (matchingSkills.length / requiredSkillIds.size) * 100
+      
+      // Bonus for free hours availability
+      const freeHoursBonus = (v.freeHoursPerMonth && v.freeHoursPerMonth > 0) ? 10 : 0
+      
+      return {
+        volunteerId: v.id,
+        score: Math.round(skillMatchScore + freeHoursBonus),
+        volunteer: {
+          name: v.name,
+          headline: v.bio?.slice(0, 60),
+          skills: v.skills?.slice(0, 4),
+          avatar: v.avatar,
+          freeHoursPerMonth: v.freeHoursPerMonth,
+        }
+      }
+    })
+    .filter(v => v.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 10)
+
+  return scoredVolunteers
+}
+
 // ============================================
 // NOTIFICATION ACTIONS
 // ============================================

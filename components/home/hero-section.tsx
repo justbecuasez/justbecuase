@@ -6,79 +6,74 @@ import { ArrowRight, Sparkles, Users, Building2 } from "lucide-react"
 
 export function HeroSection() {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-teal-light/50 to-background py-20 md:py-28 lg:py-36">
-      {/* Background decoration */}
+    <section className="relative overflow-hidden bg-background py-16 md:py-24 lg:py-32">
+      {/* Minimal background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 h-80 w-80 rounded-full bg-primary/5 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 h-80 w-80 rounded-full bg-secondary/5 blur-3xl" />
+        <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-primary/3 blur-3xl" />
       </div>
 
       <div className="container relative mx-auto px-4 md:px-6">
         <div className="mx-auto max-w-4xl text-center">
-          {/* Badge */}
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
-            <Sparkles className="h-4 w-4" />
-            <span>Join 2,800+ skilled volunteers making an impact</span>
+          {/* Logo/Brand */}
+          <div className="mb-8 flex flex-col items-center">
+            <div className="flex items-baseline gap-1">
+              <span className="text-5xl md:text-6xl font-bold text-foreground tracking-tight">JBC</span>
+              <Sparkles className="h-5 w-5 text-primary mb-4" />
+            </div>
+            <div className="text-sm text-muted-foreground">
+              <span className="font-medium">JustBeCauseNetwork.com</span>
+            </div>
+            <div className="text-xs text-primary font-medium tracking-wide mt-1">
+              Connecting Skills to Purpose
+            </div>
           </div>
 
-          {/* Headline */}
-          <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl lg:text-7xl text-balance">
-            Turn Your Skills Into <span className="text-primary">Meaningful Impact</span>
+          {/* Main Headline - MISSION IMPOSSIBLE */}
+          <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground sm:text-5xl md:text-6xl">
+            MISSION <span className="line-through decoration-2 text-muted-foreground/60">IM</span><span className="text-primary">POSSIBLE</span>
           </h1>
 
-          {/* Subtitle */}
-          <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground md:text-xl text-pretty">
-            Connect with NGOs who need your expertise. Whether you have an hour or a month, your skills can
-            transform communities and create lasting change.
+          {/* Tagline */}
+          <p className="mx-auto mb-6 max-w-xl text-lg text-foreground font-medium">
+            You've spent years perfecting your <span className="font-bold">skill</span>; now, give it a <span className="font-bold">purpose</span>.
           </p>
 
-          {/* CTAs */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-lg h-12 px-8">
-              <Link href="/projects" className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Find Opportunities
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto text-lg h-12 px-8 border-2 bg-transparent"
-            >
-              <Link href="/ngo/post-project" className="flex items-center gap-2">
-                <Building2 className="h-5 w-5" />
-                Post an Opportunity
-              </Link>
-            </Button>
-          </div>
+          {/* Description */}
+          <p className="mx-auto mb-12 max-w-2xl text-muted-foreground leading-relaxed">
+            Across the globe, visionary NGOs are working tirelessly to change lives, but they shouldn't have to do it alone. 
+            They have the passion, but they need your professional expertise to break through. 
+            <span className="font-semibold text-foreground"> JustBeCause Network</span> is the bridge between your talent and their impact. 
+            We believe that when your mastery meets their mission, the impossible becomes possible.
+          </p>
 
-          {/* Trust indicators */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <div className="flex -space-x-2">
-                {[
-                  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=32&h=32&fit=crop&crop=face",
-                  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face",
-                  "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=32&h=32&fit=crop&crop=face",
-                  "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face",
-                ].map((src, i) => (
-                  <div key={i} className="h-8 w-8 rounded-full border-2 border-background bg-muted overflow-hidden">
-                    <img
-                      src={src}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
-              <span>Trusted by 120+ NGOs</span>
+          {/* Registration Options */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-8">
+            {/* NGO Registration */}
+            <div className="flex flex-col items-center gap-2 p-6 rounded-2xl border border-border bg-card hover:border-primary/50 transition-colors min-w-[200px]">
+              <Building2 className="h-8 w-8 text-primary mb-2" />
+              <span className="font-bold text-lg text-foreground">NGO</span>
+              <span className="text-xs text-muted-foreground text-center">
+                Register here if you are an NGO looking for talent
+              </span>
+              <Button asChild size="sm" className="mt-3">
+                <Link href="/auth/signup?role=ngo" className="flex items-center gap-2">
+                  Register <ArrowRight className="h-3 w-3" />
+                </Link>
+              </Button>
             </div>
-            <div className="hidden sm:block h-4 w-px bg-border" />
-            <div className="flex items-center gap-2">
-              <span className="text-primary font-semibold">★ 4.9</span>
-              <span>Average opportunity rating</span>
+
+            {/* Volunteer Registration */}
+            <div className="flex flex-col items-center gap-2 p-6 rounded-2xl border border-border bg-card hover:border-primary/50 transition-colors min-w-[200px]">
+              <Users className="h-8 w-8 text-primary mb-2" />
+              <span className="font-bold text-lg text-foreground">JBC Impact Agent</span>
+              <span className="text-xs text-muted-foreground text-center">
+                Register here if you are an individual looking to offer your skill
+              </span>
+              <Button asChild size="sm" className="mt-3">
+                <Link href="/auth/signup?role=volunteer" className="flex items-center gap-2">
+                  Register <ArrowRight className="h-3 w-3" />
+                </Link>
+              </Button>
             </div>
           </div>
         </div>

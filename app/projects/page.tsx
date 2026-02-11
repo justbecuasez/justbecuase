@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
+import { useSearchParams } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { ProjectCard } from "@/components/project-card"
@@ -38,6 +39,7 @@ interface Project {
 }
 
 export default function ProjectsPage() {
+  const searchParams = useSearchParams()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -46,6 +48,14 @@ export default function ProjectsPage() {
   const [selectedTimeCommitment, setSelectedTimeCommitment] = useState<string[]>([])
   const [selectedLocation, setSelectedLocation] = useState<string>("")
   const [sortBy, setSortBy] = useState("newest")
+
+  // Read initial search query from URL
+  useEffect(() => {
+    const q = searchParams.get("q")
+    if (q) {
+      setSearchQuery(q)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     async function fetchProjects() {

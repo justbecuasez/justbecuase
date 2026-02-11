@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useMemo, useCallback } from "react"
+import { useState, useMemo, useCallback, useEffect } from "react"
+import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -50,6 +51,73 @@ import {
   Wand2,
 } from "lucide-react"
 import { skillCategories } from "@/lib/skills-data"
+
+// ==========================================
+// SKILL NAME TO ID MAPPING
+// Build a lookup map from human-readable skill names to skill IDs
+// ==========================================
+
+const skillNameToIdMap: Map<string, string> = new Map()
+const skillIdToNameMap: Map<string, string> = new Map()
+
+// Populate the maps
+skillCategories.forEach(cat => {
+  // Add category mappings
+  skillNameToIdMap.set(cat.name.toLowerCase(), cat.id)
+  skillIdToNameMap.set(cat.id, cat.name)
+  
+  cat.subskills.forEach(sub => {
+    // Add subskill mappings
+    skillNameToIdMap.set(sub.name.toLowerCase(), sub.id)
+    skillIdToNameMap.set(sub.id, sub.name)
+    
+    // Also add partial matches (e.g., "graphic design" -> "graphic-design")
+    // Handle words separately for better matching
+    const words = sub.name.toLowerCase().split(/\s+/)
+    words.forEach(word => {
+      if (word.length > 2 && !skillNameToIdMap.has(word)) {
+        // Map significant words to the skill ID (first match wins)
+        skillNameToIdMap.set(word, sub.id)
+      }
+    })
+  })
+})
+
+// Helper function to find matching skill IDs from a search term
+function findMatchingSkillIds(term: string): string[] {
+  const lowercaseTerm = term.toLowerCase()
+  const matches: string[] = []
+  
+  // Direct match in name map
+  if (skillNameToIdMap.has(lowercaseTerm)) {
+    matches.push(skillNameToIdMap.get(lowercaseTerm)!)
+  }
+  
+  // Partial matches
+  skillNameToIdMap.forEach((skillId, skillName) => {
+    if (skillName.includes(lowercaseTerm) || lowercaseTerm.includes(skillName)) {
+      if (!matches.includes(skillId)) {
+        matches.push(skillId)
+      }
+    }
+  })
+  
+  // Also check skill IDs directly
+  skillIdToNameMap.forEach((_, skillId) => {
+    if (skillId.includes(lowercaseTerm) || lowercaseTerm.includes(skillId)) {
+      if (!matches.includes(skillId)) {
+        matches.push(skillId)
+      }
+    }
+  })
+  
+  return matches
+}
+
+// Get human-readable skill name from ID
+function getSkillDisplayName(skillId: string): string {
+  return skillIdToNameMap.get(skillId) || skillId.replace(/-/g, ' ')
+}
 
 // ==========================================
 // ADVANCED SEARCH TYPES & UTILITIES
@@ -212,13 +280,18 @@ function calculateRelevanceScore(volunteer: Volunteer, parsedQuery: ParsedQuery)
     if (volunteer.name?.toLowerCase().includes(phrase)) score += 100
     if (volunteer.headline?.toLowerCase().includes(phrase)) score += 80
     if (volunteer.skills?.some(s => s.subskillId.toLowerCase().includes(phrase))) score += 90
+    // Also check against skill display names
+    if (volunteer.skills?.some(s => getSkillDisplayName(s.subskillId).toLowerCase().includes(phrase))) score += 85
   }
   
   // Skill operator matches
   for (const skill of parsedQuery.skills) {
+    const matchingIds = findMatchingSkillIds(skill)
     if (volunteer.skills?.some(s => 
       s.subskillId.toLowerCase().includes(skill) || 
-      s.categoryId.toLowerCase().includes(skill)
+      s.categoryId.toLowerCase().includes(skill) ||
+      matchingIds.includes(s.subskillId) ||
+      matchingIds.includes(s.categoryId)
     )) {
       score += 50
     }
@@ -238,12 +311,21 @@ function calculateRelevanceScore(volunteer: Volunteer, parsedQuery: ParsedQuery)
     if (volunteer.name?.toLowerCase().includes(name)) score += 60
   }
   
-  // General term matches
+  // General term matches - ENHANCED with skill name matching
   for (const term of parsedQuery.generalTerms) {
     if (volunteer.name?.toLowerCase().includes(term)) score += 30
     if (volunteer.headline?.toLowerCase().includes(term)) score += 20
     if (volunteer.location?.toLowerCase().includes(term)) score += 15
+    
+    // Direct skill ID match
     if (volunteer.skills?.some(s => s.subskillId.toLowerCase().includes(term))) score += 25
+    
+    // Skill DISPLAY NAME match (e.g., "Graphic Design" matches "graphic-design")
+    const matchingSkillIds = findMatchingSkillIds(term)
+    if (volunteer.skills?.some(s => matchingSkillIds.includes(s.subskillId) || matchingSkillIds.includes(s.categoryId))) {
+      score += 35 // Higher score for proper skill name matches
+    }
+    
     // Fuzzy match bonus (lower score for fuzzy)
     if (fuzzyMatch(volunteer.name || "", term)) score += 10
     if (volunteer.skills?.some(s => fuzzyMatch(s.subskillId, term))) score += 8
@@ -266,6 +348,8 @@ interface FindTalentClientProps {
 }
 
 export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentClientProps) {
+  const searchParams = useSearchParams()
+  
   // Search state
   const [searchQuery, setSearchQuery] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
@@ -278,6 +362,14 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
   const [aiCauseFilters, setAiCauseFilters] = useState<string[]>([])
   const [aiMatchedIds, setAiMatchedIds] = useState<string[]>([])
   const [aiLocationFilter, setAiLocationFilter] = useState<string | null>(null)
+
+  // Read initial search query from URL
+  useEffect(() => {
+    const q = searchParams.get("q")
+    if (q) {
+      setSearchQuery(q)
+    }
+  }, [searchParams])
   const [aiVolunteerType, setAiVolunteerType] = useState<string | null>(null)
   const [aiSearchIntent, setAiSearchIntent] = useState<string>("")
   
@@ -417,15 +509,19 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
               parsedQuery.exactPhrases.length > 0 ||
               parsedQuery.orGroups.length > 0) {
             
-            // Check skill: operator
+            // Check skill: operator - ENHANCED with skill name matching
             if (parsedQuery.skills.length > 0) {
-              const hasSkill = parsedQuery.skills.every(skill =>
-                v.skills?.some(s => 
+              const hasSkill = parsedQuery.skills.every(skill => {
+                const matchingIds = findMatchingSkillIds(skill)
+                return v.skills?.some(s => 
                   s.subskillId.toLowerCase().includes(skill) ||
                   s.categoryId.toLowerCase().includes(skill) ||
-                  fuzzyMatch(s.subskillId, skill)
+                  fuzzyMatch(s.subskillId, skill) ||
+                  matchingIds.includes(s.subskillId) ||
+                  matchingIds.includes(s.categoryId) ||
+                  getSkillDisplayName(s.subskillId).toLowerCase().includes(skill)
                 )
-              )
+              })
               if (!hasSkill) matches = false
             }
             
@@ -449,27 +545,32 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
               if (!hasName) matches = false
             }
             
-            // Check exact phrases
+            // Check exact phrases - ENHANCED with skill display names
             if (parsedQuery.exactPhrases.length > 0 && matches) {
               const hasPhrase = parsedQuery.exactPhrases.every(phrase => {
-                const allText = `${v.name || ""} ${v.headline || ""} ${v.location || ""} ${v.skills?.map(s => s.subskillId).join(" ") || ""}`.toLowerCase()
+                // Include skill display names in search text
+                const skillDisplayNames = v.skills?.map(s => getSkillDisplayName(s.subskillId)).join(" ") || ""
+                const allText = `${v.name || ""} ${v.headline || ""} ${v.location || ""} ${v.skills?.map(s => s.subskillId).join(" ") || ""} ${skillDisplayNames}`.toLowerCase()
                 return allText.includes(phrase)
               })
               if (!hasPhrase) matches = false
             }
             
-            // Check OR groups
+            // Check OR groups - ENHANCED with skill display names
             if (parsedQuery.orGroups.length > 0 && matches) {
               const orMatches = parsedQuery.orGroups.some(group =>
                 group.some(term => {
-                  const allText = `${v.name || ""} ${v.headline || ""} ${v.location || ""} ${v.skills?.map(s => s.subskillId).join(" ") || ""}`.toLowerCase()
-                  return allText.includes(term) || fuzzyMatch(allText, term)
+                  const skillDisplayNames = v.skills?.map(s => getSkillDisplayName(s.subskillId)).join(" ") || ""
+                  const allText = `${v.name || ""} ${v.headline || ""} ${v.location || ""} ${v.skills?.map(s => s.subskillId).join(" ") || ""} ${skillDisplayNames}`.toLowerCase()
+                  const matchingSkillIds = findMatchingSkillIds(term)
+                  const hasSkillMatch = v.skills?.some(s => matchingSkillIds.includes(s.subskillId) || matchingSkillIds.includes(s.categoryId))
+                  return allText.includes(term) || fuzzyMatch(allText, term) || hasSkillMatch
                 })
               )
               if (!orMatches) matches = false
             }
             
-            // Check general terms (AND logic with fuzzy)
+            // Check general terms (AND logic with fuzzy) - ENHANCED with skill name matching
             if (parsedQuery.generalTerms.length > 0 && matches) {
               const allMatch = parsedQuery.generalTerms.every(term => {
                 const nameMatch = v.name?.toLowerCase().includes(term) || fuzzyMatch(v.name || "", term)
@@ -477,10 +578,17 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
                 const locationMatch = v.location?.toLowerCase().includes(term) || 
                                      v.city?.toLowerCase().includes(term) ||
                                      v.country?.toLowerCase().includes(term)
+                
+                // Enhanced skill matching - check both ID and display name
+                const matchingSkillIds = findMatchingSkillIds(term)
                 const skillMatch = v.skills?.some(s => 
                   s.subskillId.toLowerCase().includes(term) ||
                   s.categoryId.toLowerCase().includes(term) ||
-                  fuzzyMatch(s.subskillId, term)
+                  fuzzyMatch(s.subskillId, term) ||
+                  matchingSkillIds.includes(s.subskillId) ||
+                  matchingSkillIds.includes(s.categoryId) ||
+                  // Also match against skill display names
+                  getSkillDisplayName(s.subskillId).toLowerCase().includes(term)
                 )
                 return nameMatch || headlineMatch || locationMatch || skillMatch
               })
