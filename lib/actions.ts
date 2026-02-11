@@ -1253,7 +1253,7 @@ export async function getRecommendedVolunteersForNGO(): Promise<
       const freeHoursBonus = (v.freeHoursPerMonth && v.freeHoursPerMonth > 0) ? 10 : 0
       
       return {
-        volunteerId: v.id,
+        volunteerId: v.userId,
         score: Math.round(skillMatchScore + freeHoursBonus),
         volunteer: {
           name: v.name,
