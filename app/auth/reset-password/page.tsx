@@ -74,7 +74,7 @@ function ResetPasswordForm() {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 p-6">
       <div className="w-full max-w-md">
         <Link href="/" className="flex items-center gap-2 mb-8 justify-center">
-          <Image src="/logo.svg" alt="JBC Logo" width={160} height={64} className="h-12 w-auto" />
+          <Image src="/logo-main.png" alt="JBC Logo" width={240} height={117} className="h-20 w-auto" />
         </Link>
 
         <Card className="border-0 shadow-lg">

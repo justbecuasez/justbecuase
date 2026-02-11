@@ -19,7 +19,7 @@ export function Footer() {
           {/* Brand */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <Image src="/logo.svg" alt="JBC Logo" width={140} height={56} className="h-10 w-auto" />
+              <Image src="/logo-main.png" alt="JBC Logo" width={200} height={98} className="h-16 w-auto" />
             </Link>
             <p className="text-muted-foreground mb-6 max-w-sm">
               {platformSettings?.platformDescription || "Connecting Skills with Purpose. Turn your expertise into lasting impact."}

@@ -58,7 +58,7 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
             </SheetTrigger>
             <SheetContent side="left" className="w-64 bg-background">
               <div className="flex items-center gap-2 mb-8">
-                <Image src="/logo-nav.svg" alt="JBC Logo" width={140} height={44} className="h-10 w-auto" />
+                <Image src="/logo-main.png" alt="JBC Logo" width={160} height={78} className="h-10 w-auto" />
               </div>
               <nav className="flex flex-col gap-2">
                 {mobileLinks.map((link) => (
@@ -76,7 +76,7 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
           </Sheet>
 
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo-nav.svg" alt="JBC Logo" width={160} height={50} className="h-12 w-auto" />
+            <Image src="/logo-main.png" alt="JBC Logo" width={200} height={98} className="h-14 w-auto" />
           </Link>
         </div>
 

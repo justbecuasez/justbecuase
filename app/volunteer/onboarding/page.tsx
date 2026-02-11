@@ -1263,7 +1263,7 @@ export default function VolunteerOnboardingPage() {
       <div className="container max-w-3xl mx-auto px-4">
         {/* Header */}
         <div className="flex items-center gap-3 mb-8">
-          <Image src="/logo.svg" alt="JBC Logo" width={120} height={48} className="h-10 w-auto" />
+          <Image src="/logo-main.png" alt="JBC Logo" width={200} height={98} className="h-14 w-auto" />
           <div>
             <h1 className="text-xl font-bold text-foreground">Complete Your Profile</h1>
             <p className="text-sm text-muted-foreground">Step {step} of {totalSteps}</p>

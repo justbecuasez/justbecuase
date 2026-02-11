@@ -105,7 +105,7 @@ export default function SignInPage() {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-md">
           <Link href="/" className="flex items-center gap-2 mb-8">
-            <Image src="/logo.svg" alt="JBC Logo" width={160} height={64} className="h-12 w-auto" />
+            <Image src="/logo-main.png" alt="JBC Logo" width={240} height={117} className="h-20 w-auto" />
           </Link>
 
           <Card className="border-0 shadow-lg">
