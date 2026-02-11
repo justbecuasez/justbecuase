@@ -8,7 +8,9 @@
 // - Privacy enforcement (showInSearch)
 // - Smart scoring with field-weighted relevance
 // - Search suggestions/autocomplete support
-// - Adaptive limit distribution (fills all slots)
+// - Covers ALL fields: skills, causes, hours, rates, languages, etc.
+// - Natural language number parsing ("4 hours" → numeric match)
+// - Project/Opportunity search with dot-notation on skillsRequired
 // ============================================
 
 import client from "./db"
@@ -18,16 +20,12 @@ const DB_NAME = "justbecause"
 // ============================================
 // SKILL & CAUSE LOOKUP TABLES
 // ============================================
-// Since skills are stored as JSON strings with IDs like "email-marketing",
-// we need to map human-readable names so searching "email" finds
-// volunteers with the "email-marketing" skill.
 
 interface SkillEntry {
   categoryId: string
   categoryName: string
   subskillId: string
   subskillName: string
-  /** all searchable terms: "email marketing automation digital-marketing email-marketing" */
   searchableText: string
 }
 
@@ -36,7 +34,6 @@ interface CauseEntry {
   name: string
 }
 
-// Hardcoded from skills-data.tsx (can't import .tsx with JSX in a server lib)
 const SKILL_CATEGORIES: { id: string; name: string; subskills: { id: string; name: string }[] }[] = [
   {
     id: "digital-marketing", name: "Digital Marketing",
@@ -132,6 +129,140 @@ const CAUSE_LIST: CauseEntry[] = [
   { id: "disability-support", name: "Disability Support" },
 ]
 
+// ============================================
+// SEMANTIC SYNONYM / RELATED-TERMS MAP
+// ============================================
+// When a user searches "ad campaign", we also want to find
+// PPC, Google Ads, Meta Ads, Social Media Ads, etc.
+// This maps concept keywords → all related terms that should
+// also be searched (bidirectional expansion).
+
+const SYNONYM_GROUPS: string[][] = [
+  // Advertising & Campaigns
+  ["ad", "ads", "advert", "advertising", "advertisement", "campaign", "campaigns", "promotion", "promote", "ppc", "google ads", "meta ads", "facebook ads", "social media ads", "paid media", "sponsored", "boost", "boosting"],
+  // Marketing broad
+  ["marketing", "digital marketing", "branding", "brand", "outreach", "engagement", "reach", "growth", "awareness"],
+  // SEO & Content Marketing
+  ["seo", "search engine", "ranking", "organic", "keywords", "content marketing", "blog", "blogging", "content strategy"],
+  // Social Media
+  ["social media", "social", "facebook", "instagram", "twitter", "linkedin", "youtube", "tiktok", "reels", "posts", "stories", "influencer"],
+  // Email & Messaging
+  ["email", "newsletter", "mailchimp", "email marketing", "automation", "drip", "email copywriting", "bulk email", "mailing"],
+  // WhatsApp
+  ["whatsapp", "whatsapp marketing", "messaging", "sms", "text message", "broadcast"],
+  // Website & Web Development
+  ["web", "website", "webpage", "site", "wordpress", "html", "css", "frontend", "front-end", "landing page", "cms", "web design", "web development", "webdev"],
+  // UX/UI Design
+  ["ux", "ui", "user experience", "user interface", "design", "wireframe", "prototype", "figma", "usability"],
+  // Graphic Design & Creative
+  ["graphic", "graphics", "graphic design", "creative", "visual", "illustration", "poster", "banner", "flyer", "brochure", "canva", "photoshop", "illustrator"],
+  // Video & Motion
+  ["video", "videography", "video editing", "motion graphics", "animation", "film", "filming", "shooting", "documentary", "premiere", "after effects", "reel"],
+  // Photography
+  ["photo", "photography", "photographer", "photo editing", "retouching", "lightroom", "camera", "portrait", "event photography"],
+  // Writing & Content
+  ["writing", "writer", "copywriting", "copywriter", "content", "content creation", "blog", "article", "storytelling", "impact story", "press release", "annual report", "report writing"],
+  // Fundraising & Grants
+  ["fundraising", "fundraiser", "donation", "donate", "grant", "grants", "grant writing", "grant research", "sponsorship", "sponsor", "corporate sponsorship", "crowdfunding", "charity", "philanthropy", "giving", "donor", "donors"],
+  // Finance & Accounting
+  ["finance", "financial", "accounting", "accountant", "bookkeeping", "bookkeeper", "budget", "budgeting", "forecasting", "payroll", "tally", "quickbooks", "zoho", "audit", "tax", "taxation", "revenue"],
+  // Events & Planning
+  ["event", "events", "event planning", "event management", "conference", "seminar", "workshop", "meetup", "webinar", "logistics", "coordination", "organizing"],
+  // Support & Communication
+  ["support", "customer support", "helpdesk", "telecalling", "calling", "phone support", "customer service", "help"],
+  // Volunteer & Recruitment
+  ["volunteer", "volunteering", "recruitment", "recruit", "hire", "hiring", "talent", "onboarding", "staffing"],
+  // Education & Learning
+  ["education", "teaching", "teacher", "tutor", "tutoring", "mentoring", "mentor", "training", "learning", "school", "student", "academic", "literacy", "scholarship"],
+  // Healthcare & Medical
+  ["healthcare", "health", "medical", "medicine", "doctor", "hospital", "clinic", "nursing", "nurse", "wellness", "mental health", "therapy", "counseling", "sanitation", "hygiene"],
+  // Environment & Climate
+  ["environment", "environmental", "climate", "green", "sustainability", "sustainable", "ecology", "conservation", "pollution", "recycle", "recycling", "clean energy", "renewable", "tree", "plantation", "nature", "wildlife"],
+  // Poverty & Development
+  ["poverty", "poor", "underprivileged", "slum", "rural", "development", "livelihood", "income", "microfinance", "welfare", "food", "hunger", "nutrition", "shelter", "housing"],
+  // Women & Gender
+  ["women", "woman", "girl", "girls", "gender", "empowerment", "women empowerment", "feminine", "maternal", "pregnancy", "domestic violence"],
+  // Children & Youth
+  ["child", "children", "kids", "youth", "young", "child welfare", "orphan", "juvenile", "adolescent", "teen", "teenager", "pediatric"],
+  // Animals
+  ["animal", "animals", "animal welfare", "pet", "pets", "dog", "cat", "stray", "shelter", "rescue", "veterinary", "wildlife", "endangered"],
+  // Disaster & Emergency
+  ["disaster", "relief", "emergency", "flood", "earthquake", "cyclone", "tsunami", "hurricane", "rescue", "rehabilitation", "crisis", "humanitarian"],
+  // Human Rights & Advocacy
+  ["human rights", "rights", "justice", "advocacy", "equality", "discrimination", "refugee", "migrants", "freedom", "democracy", "legal aid"],
+  // Disability
+  ["disability", "disabled", "differently abled", "handicap", "accessibility", "inclusive", "inclusion", "special needs", "blind", "deaf", "wheelchair"],
+  // Senior Citizens
+  ["senior", "elderly", "old age", "senior citizens", "retirement", "aged", "geriatric"],
+  // Arts & Culture
+  ["art", "arts", "culture", "cultural", "heritage", "music", "dance", "drama", "theater", "theatre", "painting", "craft", "crafts", "folk", "tradition"],
+  // Technology & IT
+  ["technology", "tech", "it", "software", "developer", "programming", "coding", "app", "application", "mobile", "data", "database", "cloud", "server", "devops", "api"],
+  // Management & Strategy
+  ["management", "manager", "strategy", "strategic", "planning", "operations", "project management", "leadership", "administration", "admin"],
+  // Remote / Work Mode
+  ["remote", "work from home", "wfh", "online", "virtual", "distributed", "telecommute"],
+  ["onsite", "on-site", "in-person", "office", "physical", "field work", "on ground"],
+  ["hybrid", "flexible", "part remote", "mixed"],
+  // Free / Paid volunteering
+  ["free", "unpaid", "pro bono", "no cost", "voluntary", "complimentary"],
+  ["paid", "stipend", "compensated", "salary", "honorarium", "remuneration"],
+]
+
+// Build a fast lookup: word → set of all related words
+const SYNONYM_MAP = new Map<string, Set<string>>()
+for (const group of SYNONYM_GROUPS) {
+  for (const term of group) {
+    const termLower = term.toLowerCase()
+    if (!SYNONYM_MAP.has(termLower)) {
+      SYNONYM_MAP.set(termLower, new Set<string>())
+    }
+    const set = SYNONYM_MAP.get(termLower)!
+    for (const related of group) {
+      if (related.toLowerCase() !== termLower) {
+        set.add(related.toLowerCase())
+      }
+    }
+  }
+}
+
+/**
+ * Expand search terms with synonyms/related concepts.
+ * "ad campaign" → ["ad", "campaign", "ads", "advertising", "ppc", "google ads", "meta ads", ...]
+ * Only expands terms that have known synonyms. Does NOT expand random words.
+ */
+function expandWithSynonyms(searchTerms: string[]): string[] {
+  const expanded = new Set<string>(searchTerms)
+  const fullQuery = searchTerms.join(" ").toLowerCase()
+
+  // First try matching the full query as a phrase (e.g., "ad campaign")
+  for (const [key, synonyms] of SYNONYM_MAP) {
+    if (fullQuery.includes(key) || key.includes(fullQuery)) {
+      for (const syn of synonyms) expanded.add(syn)
+    }
+  }
+
+  // Then match each individual term
+  for (const term of searchTerms) {
+    const termLower = term.toLowerCase()
+    const synonyms = SYNONYM_MAP.get(termLower)
+    if (synonyms) {
+      for (const syn of synonyms) expanded.add(syn)
+    }
+    // Also check if term is a substring of any synonym key (e.g., "fund" → matches "fundraising")
+    if (termLower.length >= 3) {
+      for (const [key, synonyms] of SYNONYM_MAP) {
+        if (key.startsWith(termLower) || (termLower.length >= 4 && key.includes(termLower))) {
+          expanded.add(key)
+          for (const syn of synonyms) expanded.add(syn)
+        }
+      }
+    }
+  }
+
+  return Array.from(expanded)
+}
+
 // Build flat lookup: subskillId → full searchable data
 const SKILL_LOOKUP = new Map<string, SkillEntry>()
 const ALL_SKILL_ENTRIES: SkillEntry[] = []
@@ -150,18 +281,19 @@ for (const cat of SKILL_CATEGORIES) {
 }
 
 /**
- * Given search terms like ["email"], find all matching skill subskillIds
- * e.g., "email" → ["email-marketing", "email-copywriting"]
+ * Given search terms like ["email"], find all matching skill subskillIds.
+ * Uses synonym expansion: "ad campaign" → finds PPC, Google Ads, Meta Ads, etc.
  */
 function findMatchingSkillIds(searchTerms: string[]): string[] {
   const matchedIds = new Set<string>()
-  for (const term of searchTerms) {
+  // Expand with synonym/related terms
+  const expandedTerms = expandWithSynonyms(searchTerms)
+  for (const term of expandedTerms) {
     const termLower = term.toLowerCase()
     for (const entry of ALL_SKILL_ENTRIES) {
       if (entry.searchableText.includes(termLower)) {
         matchedIds.add(entry.subskillId)
       }
-      // Fuzzy: allow 1 char difference for terms >= 4 chars
       if (termLower.length >= 4) {
         const words = entry.searchableText.split(/\s+/)
         for (const word of words) {
@@ -177,12 +309,13 @@ function findMatchingSkillIds(searchTerms: string[]): string[] {
 }
 
 /**
- * Given search terms, find all matching cause IDs
- * e.g., "health" → ["healthcare"], "child" → ["child-welfare"]
+ * Given search terms, find all matching cause IDs.
+ * Uses synonym expansion: "children" → finds child-welfare, education, etc.
  */
 function findMatchingCauseIds(searchTerms: string[]): string[] {
   const matchedIds = new Set<string>()
-  for (const term of searchTerms) {
+  const expandedTerms = expandWithSynonyms(searchTerms)
+  for (const term of expandedTerms) {
     const termLower = term.toLowerCase()
     for (const cause of CAUSE_LIST) {
       const searchable = `${cause.name} ${cause.id.replace(/-/g, " ")}`.toLowerCase()
@@ -194,16 +327,10 @@ function findMatchingCauseIds(searchTerms: string[]): string[] {
   return Array.from(matchedIds)
 }
 
-/**
- * Get human-readable skill name from subskillId
- */
 function getSkillDisplayName(subskillId: string): string {
   return SKILL_LOOKUP.get(subskillId)?.subskillName || subskillId.replace(/-/g, " ")
 }
 
-/**
- * Get human-readable cause name from causeId
- */
 function getCauseDisplayName(causeId: string): string {
   return CAUSE_LIST.find(c => c.id === causeId)?.name || causeId.replace(/-/g, " ")
 }
@@ -233,17 +360,27 @@ export async function ensureSearchIndexes(): Promise<void> {
           city: "text",
           country: "text",
           organizationName: "text",
+          orgName: "text",
           description: "text",
           headline: "text",
+          mission: "text",
+          address: "text",
+          experience: "text",
+          contactPersonName: "text",
         },
         {
           name: "user_text_search",
           weights: {
             name: 10,
             organizationName: 10,
+            orgName: 10,
             headline: 5,
             bio: 3,
             description: 3,
+            mission: 3,
+            experience: 2,
+            contactPersonName: 2,
+            address: 2,
             location: 2,
             city: 2,
             country: 1,
@@ -254,11 +391,11 @@ export async function ensureSearchIndexes(): Promise<void> {
       console.log("[Search] Created text index on user collection")
     }
 
-    // Create regex-friendly indexes for prefix search
     const hasNameIndex = userIndexes.some(idx => idx.key?.name === 1)
     if (!hasNameIndex) {
       await userCollection.createIndex({ name: 1 })
       await userCollection.createIndex({ organizationName: 1 })
+      await userCollection.createIndex({ orgName: 1 })
     }
 
     const projectsCollection = db.collection("projects")
@@ -271,6 +408,8 @@ export async function ensureSearchIndexes(): Promise<void> {
           title: "text",
           description: "text",
           location: "text",
+          timeCommitment: "text",
+          duration: "text",
         },
         {
           name: "project_text_search",
@@ -278,6 +417,8 @@ export async function ensureSearchIndexes(): Promise<void> {
             title: 10,
             description: 5,
             location: 2,
+            timeCommitment: 1,
+            duration: 1,
           },
           default_language: "english",
         }
@@ -312,7 +453,7 @@ export interface SearchResult {
   score: number
   avatar?: string
   verified?: boolean
-  matchedField?: string // Which field matched (for highlighting)
+  matchedField?: string
 }
 
 export interface UnifiedSearchParams {
@@ -337,16 +478,10 @@ export interface SearchSuggestion {
 // FUZZY / UTILITY HELPERS
 // ============================================
 
-/**
- * Escape special regex characters in user input
- */
 function escapeRegex(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
 }
 
-/**
- * Levenshtein distance for typo tolerance
- */
 function levenshteinDistance(a: string, b: string): number {
   const matrix: number[][] = []
   const aLen = a.length
@@ -362,9 +497,9 @@ function levenshteinDistance(a: string, b: string): number {
     for (let j = 1; j <= aLen; j++) {
       const cost = b.charAt(i - 1) === a.charAt(j - 1) ? 0 : 1
       matrix[i][j] = Math.min(
-        matrix[i - 1][j] + 1,      // deletion
-        matrix[i][j - 1] + 1,      // insertion
-        matrix[i - 1][j - 1] + cost // substitution
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
       )
     }
   }
@@ -372,40 +507,26 @@ function levenshteinDistance(a: string, b: string): number {
   return matrix[bLen][aLen]
 }
 
-/**
- * Generate fuzzy regex variants for a search term
- * Allows 1-2 character edits depending on term length
- */
 function generateFuzzyPattern(term: string): RegExp {
   if (term.length <= 2) {
-    // For very short terms, do prefix match only
     return new RegExp(`^${escapeRegex(term)}`, "i")
   }
-
-  // Build a pattern that allows character transpositions and single-char wildcards
-  // e.g., "web" → matches "web", "wbe", "w.b", etc.
   const escaped = escapeRegex(term)
-  // Prefix match + contains match
   return new RegExp(`${escaped}`, "i")
 }
 
 /**
- * Build privacy-aware base filter
- * Respects showInSearch privacy setting
+ * Privacy filter - simplified to avoid $or collision
+ * MongoDB: $ne false matches missing fields, undefined, true, etc.
  */
 function buildPrivacyFilter(): Record<string, any> {
-  return {
-    $or: [
-      { "privacy.showInSearch": { $ne: false } }, // Default true if not set
-      { privacy: { $exists: false } },            // No privacy settings = visible
-    ],
-  }
+  return { "privacy.showInSearch": { $ne: false } }
 }
 
-/**
- * Parse skills from potentially mixed storage formats
- * Returns subskillIds
- */
+// ============================================
+// PARSE HELPERS
+// ============================================
+
 function parseSkillIds(skills: any): string[] {
   if (!skills) return []
   try {
@@ -422,17 +543,11 @@ function parseSkillIds(skills: any): string[] {
   }
 }
 
-/**
- * Parse skills and return human-readable display names (for search result display)
- */
 function parseSkillDisplayNames(skills: any): string[] {
   const ids = parseSkillIds(skills)
   return ids.slice(0, 5).map(id => getSkillDisplayName(id))
 }
 
-/**
- * Parse causes from JSON-stringified or array format
- */
 function parseCauses(causes: any): string[] {
   if (!causes) return []
   try {
@@ -445,8 +560,7 @@ function parseCauses(causes: any): string[] {
 }
 
 /**
- * Build a searchable text blob from a user's skills (JSON string)
- * Expands IDs into human-readable names so "email" matches "email-marketing"
+ * Build searchable text from skills (JSON string or array)
  */
 function buildSkillsSearchText(skills: any): string {
   const ids = parseSkillIds(skills)
@@ -457,19 +571,67 @@ function buildSkillsSearchText(skills: any): string {
   }).join(" ").toLowerCase()
 }
 
-/**
- * Build a searchable text blob from causes
- */
 function buildCausesSearchText(causes: any): string {
   const ids = parseCauses(causes)
   return ids.map(id => getCauseDisplayName(id)).join(" ").toLowerCase()
 }
 
 /**
- * Advanced relevance scoring
- * Weighs: exact match > starts-with > contains > fuzzy
- * Searches ALL profile fields including skills (expanded names), causes,
- * mission, address, orgName, workMode, volunteerType
+ * Build searchable text from typicalSkillsNeeded (NGO) or skillsRequired (Project)
+ * These are stored as arrays of objects: [{categoryId, subskillId, ...}]
+ */
+function buildObjectSkillsSearchText(skillsArr: any): string {
+  if (!skillsArr) return ""
+  try {
+    const parsed = typeof skillsArr === "string" ? JSON.parse(skillsArr) : skillsArr
+    if (!Array.isArray(parsed)) return ""
+    return parsed.map((s: any) => {
+      const subId = s.subskillId || ""
+      const entry = SKILL_LOOKUP.get(subId)
+      if (entry) return `${entry.subskillName} ${entry.categoryName}`
+      return `${subId.replace(/-/g, " ")} ${(s.categoryId || "").replace(/-/g, " ")}`
+    }).join(" ").toLowerCase()
+  } catch {
+    return ""
+  }
+}
+
+/**
+ * Extract numbers from search terms for numeric field matching.
+ * e.g., ["4", "hours"] → [4], ["10-15"] → [10, 15]
+ */
+function extractNumbers(searchTerms: string[]): number[] {
+  const numbers: number[] = []
+  for (const term of searchTerms) {
+    const num = parseFloat(term)
+    if (!isNaN(num) && isFinite(num)) {
+      numbers.push(num)
+    }
+    const rangeMatch = term.match(/^(\d+)\s*[-–]\s*(\d+)$/)
+    if (rangeMatch) {
+      numbers.push(parseFloat(rangeMatch[1]))
+      numbers.push(parseFloat(rangeMatch[2]))
+    }
+  }
+  return [...new Set(numbers)]
+}
+
+/**
+ * Convert any value to string for text-based scoring
+ */
+function numericToString(val: any): string {
+  if (val === null || val === undefined) return ""
+  if (typeof val === "number") return String(val)
+  if (typeof val === "string") return val
+  return ""
+}
+
+// ============================================
+// RELEVANCE SCORING
+// ============================================
+
+/**
+ * Advanced relevance scoring - searches ALL profile + project fields
  */
 function computeRelevanceScore(doc: any, searchTerms: string[]): number {
   let score = 0
@@ -484,14 +646,30 @@ function computeRelevanceScore(doc: any, searchTerms: string[]): number {
     { key: "bio", weight: 4 },
     { key: "description", weight: 4 },
     { key: "mission", weight: 4 },
+    { key: "experience", weight: 3 },
     { key: "location", weight: 3 },
     { key: "city", weight: 3 },
     { key: "address", weight: 3 },
     { key: "country", weight: 2 },
-    { key: "workMode", weight: 2 },
-    { key: "volunteerType", weight: 2 },
-    { key: "availability", weight: 1 },
+    { key: "workMode", weight: 3 },
+    { key: "volunteerType", weight: 3 },
+    { key: "availability", weight: 2 },
     { key: "contactPersonName", weight: 2 },
+    { key: "contactEmail", weight: 1 },
+    { key: "hoursPerWeek", weight: 2 },
+    { key: "currency", weight: 1 },
+    { key: "phone", weight: 1 },
+    { key: "linkedIn", weight: 1 },
+    { key: "portfolio", weight: 1 },
+    { key: "website", weight: 1 },
+    { key: "yearFounded", weight: 1 },
+    { key: "teamSize", weight: 1 },
+    { key: "registrationNumber", weight: 1 },
+    // Project-specific string fields
+    { key: "timeCommitment", weight: 2 },
+    { key: "duration", weight: 2 },
+    { key: "projectType", weight: 2 },
+    { key: "experienceLevel", weight: 2 },
   ]
 
   for (const term of searchTerms) {
@@ -532,19 +710,17 @@ function computeRelevanceScore(doc: any, searchTerms: string[]): number {
       }
     }
 
-    // --- Score SKILLS (expanded to human-readable names) ---
+    // --- Score SKILLS (user skills - JSON strings expanded to human-readable names) ---
     const skillsText = buildSkillsSearchText(doc.skills || doc.skillsRequired)
     if (skillsText) {
       if (skillsText.includes(termLower)) {
-        // Check if it's a word-boundary match (stronger)
         const wordBoundary = new RegExp(`\\b${escapeRegex(termLower)}`, "i")
         if (wordBoundary.test(skillsText)) {
-          score += 14 // Skill word match = very strong signal
+          score += 14
         } else {
-          score += 8  // Partial skill match
+          score += 8
         }
       } else if (termLower.length >= 3) {
-        // Fuzzy on skill text
         const skillWords = skillsText.split(/\s+/)
         for (const word of skillWords) {
           if (word.length >= 3 && levenshteinDistance(termLower, word) <= Math.floor(termLower.length / 3)) {
@@ -570,6 +746,79 @@ function computeRelevanceScore(doc: any, searchTerms: string[]): number {
         }
       }
     }
+
+    // --- Score TYPICAL SKILLS NEEDED (NGO) / skillsRequired (Project) as object arrays ---
+    const objectSkillsText = buildObjectSkillsSearchText(doc.typicalSkillsNeeded || doc.skillsRequired)
+    if (objectSkillsText) {
+      if (objectSkillsText.includes(termLower)) {
+        score += 10
+      } else if (termLower.length >= 3) {
+        const words = objectSkillsText.split(/\s+/)
+        for (const word of words) {
+          if (word.length >= 3 && levenshteinDistance(termLower, word) <= Math.floor(termLower.length / 3)) {
+            score += 5
+            break
+          }
+        }
+      }
+    }
+
+    // --- Score LANGUAGES (JSON string) ---
+    if (doc.languages) {
+      const langText = (typeof doc.languages === "string" ? doc.languages : JSON.stringify(doc.languages || [])).toLowerCase()
+      if (langText.includes(termLower)) score += 5
+    }
+
+    // --- Score INTERESTS (JSON string) ---
+    if (doc.interests) {
+      const interestText = (typeof doc.interests === "string" ? doc.interests : JSON.stringify(doc.interests || [])).toLowerCase()
+      if (interestText.includes(termLower)) score += 3
+    }
+
+    // --- Score NUMERIC FIELDS (converted to string for matching) ---
+    const numericFields = [
+      { key: "freeHoursPerMonth", weight: 3 },
+      { key: "hourlyRate", weight: 2 },
+      { key: "discountedRate", weight: 2 },
+      { key: "rating", weight: 2 },
+      { key: "completedProjects", weight: 1 },
+      { key: "hoursContributed", weight: 1 },
+      { key: "activeProjects", weight: 1 },
+      { key: "projectsPosted", weight: 1 },
+      { key: "volunteersEngaged", weight: 1 },
+    ]
+    for (const nf of numericFields) {
+      const val = numericToString(doc[nf.key])
+      if (!val) continue
+      if (val === termLower) {
+        score += nf.weight * 3
+      } else if (val.includes(termLower)) {
+        score += nf.weight
+      }
+    }
+  }
+
+  // --- SYNONYM-AWARE SCORING ---
+  // If the doc didn't match direct terms well, check if it matches expanded synonyms
+  // Synonym matches score lower than direct matches but still rank the result
+  if (score < 5) {
+    const expandedTerms = expandWithSynonyms(searchTerms)
+    const synonymOnly = expandedTerms.filter(t => !searchTerms.includes(t))
+
+    // Build a combined text blob for matching
+    const contentBlob = [
+      doc.headline, doc.bio, doc.description, doc.mission, doc.experience,
+      doc.workMode, doc.volunteerType,
+      buildSkillsSearchText(doc.skills || doc.skillsRequired),
+      buildCausesSearchText(doc.causes),
+      buildObjectSkillsSearchText(doc.typicalSkillsNeeded || doc.skillsRequired),
+    ].filter(Boolean).join(" ").toLowerCase()
+
+    for (const syn of synonymOnly) {
+      if (contentBlob.includes(syn)) {
+        score += 3 // Synonym match = moderate boost
+      }
+    }
   }
 
   return score
@@ -579,7 +828,15 @@ function computeRelevanceScore(doc: any, searchTerms: string[]): number {
  * Determine which field was the best match (for highlighting)
  */
 function findMatchedField(doc: any, searchTerms: string[]): string | undefined {
-  const fieldNames = ["name", "title", "organizationName", "orgName", "headline", "bio", "description", "mission", "location", "city", "address", "contactPersonName"]
+  const fieldNames = [
+    "name", "title", "organizationName", "orgName", "headline",
+    "bio", "description", "mission", "location", "city", "address",
+    "contactPersonName", "contactEmail", "experience", "workMode",
+    "volunteerType", "availability", "hoursPerWeek", "currency",
+    "phone", "linkedIn", "portfolio", "website", "yearFounded",
+    "teamSize", "registrationNumber", "timeCommitment", "duration",
+    "projectType", "experienceLevel",
+  ]
   for (const term of searchTerms) {
     const termLower = term.toLowerCase()
     for (const field of fieldNames) {
@@ -588,24 +845,61 @@ function findMatchedField(doc: any, searchTerms: string[]): string | undefined {
         return field
       }
     }
-    // Check skills
+    // Check skills (JSON string)
     const skillsText = buildSkillsSearchText(doc.skills || doc.skillsRequired)
     if (skillsText && skillsText.includes(termLower)) return "skills"
     // Check causes
     const causesText = buildCausesSearchText(doc.causes)
     if (causesText && causesText.includes(termLower)) return "causes"
+    // Check typical skills needed (NGO object array)
+    const typicalText = buildObjectSkillsSearchText(doc.typicalSkillsNeeded)
+    if (typicalText && typicalText.includes(termLower)) return "typicalSkillsNeeded"
+    // Check languages
+    if (doc.languages) {
+      const langText = (typeof doc.languages === "string" ? doc.languages : "").toLowerCase()
+      if (langText.includes(termLower)) return "languages"
+    }
+    // Check interests
+    if (doc.interests) {
+      const intText = (typeof doc.interests === "string" ? doc.interests : "").toLowerCase()
+      if (intText.includes(termLower)) return "interests"
+    }
+    // Check numeric fields
+    const numFields = ["freeHoursPerMonth", "hourlyRate", "discountedRate", "rating", "completedProjects"]
+    for (const f of numFields) {
+      const v = numericToString(doc[f])
+      if (v && v.includes(termLower)) return f
+    }
   }
+
+  // Fallback: check synonym-expanded terms (so we can report WHICH field matched via synonym)
+  const expandedTerms = expandWithSynonyms(searchTerms)
+  const synonymOnly = expandedTerms.filter(t => !searchTerms.includes(t))
+  for (const syn of synonymOnly) {
+    for (const field of fieldNames) {
+      const val = doc[field]
+      if (val && typeof val === "string" && val.toLowerCase().includes(syn)) {
+        return field
+      }
+    }
+    const skillsText = buildSkillsSearchText(doc.skills || doc.skillsRequired)
+    if (skillsText && skillsText.includes(syn)) return "skills"
+    const causesText = buildCausesSearchText(doc.causes)
+    if (causesText && causesText.includes(syn)) return "causes"
+    const typicalText = buildObjectSkillsSearchText(doc.typicalSkillsNeeded)
+    if (typicalText && typicalText.includes(syn)) return "typicalSkillsNeeded"
+  }
+
   return undefined
 }
 
 // ============================================
-// USER RESULT MAPPER
+// RESULT MAPPERS
 // ============================================
 
 function mapUserToResult(user: any, searchTerms: string[]): SearchResult {
   const matchedField = findMatchedField(user, searchTerms)
   if (user.role === "volunteer") {
-    // If skill/cause matched, show that in subtitle for context
     let subtitle = user.headline || user.bio?.slice(0, 80)
     if (matchedField === "skills") {
       const skillNames = parseSkillDisplayNames(user.skills)
@@ -613,6 +907,18 @@ function mapUserToResult(user: any, searchTerms: string[]): SearchResult {
     } else if (matchedField === "causes") {
       const causeIds = parseCauses(user.causes)
       subtitle = causeIds.map(getCauseDisplayName).join(", ") || subtitle
+    } else if (matchedField === "volunteerType") {
+      subtitle = `Volunteer Type: ${user.volunteerType}` + (user.headline ? ` · ${user.headline}` : "")
+    } else if (matchedField === "hoursPerWeek") {
+      subtitle = `${user.hoursPerWeek} hrs/week` + (user.headline ? ` · ${user.headline}` : "")
+    } else if (matchedField === "freeHoursPerMonth") {
+      subtitle = `${user.freeHoursPerMonth} free hrs/month` + (user.headline ? ` · ${user.headline}` : "")
+    } else if (matchedField === "hourlyRate") {
+      subtitle = `Rate: ${user.currency || "INR"} ${user.hourlyRate}/hr` + (user.headline ? ` · ${user.headline}` : "")
+    } else if (matchedField === "workMode") {
+      subtitle = `Work Mode: ${user.workMode}` + (user.headline ? ` · ${user.headline}` : "")
+    } else if (matchedField === "languages") {
+      subtitle = `Languages: ${user.languages}` + (user.headline ? ` · ${user.headline}` : "")
     }
     return {
       type: "volunteer",
@@ -626,12 +932,20 @@ function mapUserToResult(user: any, searchTerms: string[]): SearchResult {
       matchedField,
     }
   }
+  // NGO
   let subtitle = user.description?.slice(0, 80)
   if (matchedField === "causes") {
     const causeIds = parseCauses(user.causes)
     subtitle = causeIds.map(getCauseDisplayName).join(", ") || subtitle
   } else if (matchedField === "mission") {
     subtitle = user.mission?.slice(0, 80) || subtitle
+  } else if (matchedField === "typicalSkillsNeeded") {
+    const skillsText = buildObjectSkillsSearchText(user.typicalSkillsNeeded)
+    subtitle = `Needs: ${skillsText.slice(0, 80)}` || subtitle
+  } else if (matchedField === "yearFounded") {
+    subtitle = `Founded: ${user.yearFounded}` + (user.description ? ` · ${user.description.slice(0, 60)}` : "")
+  } else if (matchedField === "teamSize") {
+    subtitle = `Team Size: ${user.teamSize}` + (user.description ? ` · ${user.description.slice(0, 60)}` : "")
   }
   return {
     type: "ngo",
@@ -647,21 +961,36 @@ function mapUserToResult(user: any, searchTerms: string[]): SearchResult {
 }
 
 function mapProjectToResult(project: any, searchTerms: string[]): SearchResult {
+  let subtitle = project.workMode === "remote" ? "Remote" : project.location
+  if (project.timeCommitment) subtitle += ` · ${project.timeCommitment}`
+  if (project.duration) subtitle += ` · ${project.duration}`
+
+  // Build skills display from object array
+  let skills: string[] = []
+  if (project.skillsRequired && Array.isArray(project.skillsRequired)) {
+    skills = project.skillsRequired.slice(0, 5).map((s: any) => {
+      if (typeof s === "string") return getSkillDisplayName(s)
+      return getSkillDisplayName(s.subskillId || s.name || "")
+    })
+  } else {
+    skills = parseSkillDisplayNames(project.skillsRequired)
+  }
+
   return {
     type: "opportunity",
     id: project._id.toString(),
     title: project.title,
-    subtitle: project.workMode === "remote" ? "Remote" : project.location,
+    subtitle,
     description: project.description?.slice(0, 100),
     location: project.workMode === "remote" ? "Remote" : project.location,
-    skills: parseSkillDisplayNames(project.skillsRequired),
+    skills,
     score: project.score ?? computeRelevanceScore(project, searchTerms),
     matchedField: findMatchedField(project, searchTerms),
   }
 }
 
 // ============================================
-// SEARCH STRATEGIES
+// PROJECTIONS
 // ============================================
 
 const USER_PROJECTION = {
@@ -670,12 +999,36 @@ const USER_PROJECTION = {
   image: 1, avatar: 1, organizationName: 1, orgName: 1,
   description: 1, mission: 1, address: 1,
   causes: 1, workMode: 1, volunteerType: 1,
-  availability: 1, contactPersonName: 1,
+  availability: 1, contactPersonName: 1, contactEmail: 1,
   isVerified: 1, logo: 1, privacy: 1,
+  // Volunteer work/time fields
+  experience: 1, hoursPerWeek: 1, freeHoursPerMonth: 1,
+  hourlyRate: 1, discountedRate: 1, currency: 1,
+  // Contact/links
+  phone: 1, linkedIn: 1, portfolio: 1,
+  // NGO-specific
+  website: 1, yearFounded: 1, teamSize: 1,
+  registrationNumber: 1, typicalSkillsNeeded: 1,
+  // Stats
+  rating: 1, completedProjects: 1, hoursContributed: 1,
+  activeProjects: 1, projectsPosted: 1, volunteersEngaged: 1,
+  // JSON string fields
+  languages: 1, interests: 1,
 }
 
+const PROJECT_PROJECTION = {
+  _id: 1, title: 1, description: 1, location: 1,
+  skillsRequired: 1, workMode: 1, timeCommitment: 1,
+  causes: 1, duration: 1, projectType: 1,
+  experienceLevel: 1, ngoId: 1,
+}
+
+// ============================================
+// SEARCH STRATEGIES
+// ============================================
+
 /**
- * Strategy 1: MongoDB $text search (best for 3+ word queries)
+ * Strategy 1: MongoDB $text search (fastest, uses text index)
  */
 async function textSearch(
   db: any,
@@ -718,13 +1071,7 @@ async function textSearch(
           $text: { $search: searchQuery },
           status: { $in: ["open", "active"] },
         },
-        {
-          projection: {
-            score: { $meta: "textScore" },
-            _id: 1, title: 1, description: 1, location: 1,
-            skillsRequired: 1, workMode: 1, timeCommitment: 1,
-          },
-        }
+        { projection: { score: { $meta: "textScore" }, ...PROJECT_PROJECTION } }
       )
       .sort({ score: { $meta: "textScore" } })
       .limit(limit)
@@ -739,7 +1086,180 @@ async function textSearch(
 }
 
 /**
- * Strategy 2: Prefix + contains regex search (best for 1-2 char queries)
+ * Build regex conditions for user search (all fields)
+ */
+function buildUserRegexConditions(searchTerms: string[]): any[] {
+  const conditions: any[] = []
+
+  // Expand terms with synonyms/related concepts for broader matching
+  const expandedTerms = expandWithSynonyms(searchTerms)
+  // Use original terms for direct field matching, expanded for skills/causes/work mode
+  const allTerms = [...new Set([...searchTerms, ...expandedTerms])]
+
+  for (const term of searchTerms) {
+    const escaped = escapeRegex(term)
+    const prefixRegex = new RegExp(`^${escaped}`, "i")
+    const containsRegex = new RegExp(escaped, "i")
+
+    // Core identity fields (prefix match for names)
+    conditions.push({ name: prefixRegex })
+    conditions.push({ organizationName: prefixRegex })
+    conditions.push({ orgName: prefixRegex })
+    conditions.push({ contactPersonName: containsRegex })
+    conditions.push({ contactEmail: containsRegex })
+
+    // Content/description fields (contains match)
+    conditions.push({ headline: containsRegex })
+    conditions.push({ bio: containsRegex })
+    conditions.push({ description: containsRegex })
+    conditions.push({ mission: containsRegex })
+    conditions.push({ experience: containsRegex })
+
+    // Location fields
+    conditions.push({ location: containsRegex })
+    conditions.push({ city: containsRegex })
+    conditions.push({ country: containsRegex })
+    conditions.push({ address: containsRegex })
+
+    // Work mode / volunteer type / availability
+    conditions.push({ workMode: containsRegex })
+    conditions.push({ volunteerType: containsRegex })
+    conditions.push({ availability: containsRegex })
+
+    // Hours / rates / currency (string fields)
+    conditions.push({ hoursPerWeek: containsRegex })
+    conditions.push({ currency: containsRegex })
+
+    // Contact/links
+    conditions.push({ phone: containsRegex })
+    conditions.push({ linkedIn: containsRegex })
+    conditions.push({ portfolio: containsRegex })
+    conditions.push({ website: containsRegex })
+
+    // NGO metadata
+    conditions.push({ yearFounded: containsRegex })
+    conditions.push({ teamSize: containsRegex })
+    conditions.push({ registrationNumber: containsRegex })
+
+    // Skills (JSON strings - search raw text)
+    conditions.push({ skills: containsRegex })
+    // Causes (JSON strings)
+    conditions.push({ causes: containsRegex })
+    // Languages & interests (JSON strings)
+    conditions.push({ languages: containsRegex })
+    conditions.push({ interests: containsRegex })
+
+    // NGO typicalSkillsNeeded (array of objects - dot notation)
+    conditions.push({ "typicalSkillsNeeded.subskillId": containsRegex })
+    conditions.push({ "typicalSkillsNeeded.categoryId": containsRegex })
+  }
+
+  // Add expanded synonym terms for content + mode fields
+  // (so searching "ad campaign" also matches "ppc", "google ads" etc. in bio/description)
+  const synonymOnly = expandedTerms.filter(t => !searchTerms.includes(t))
+  for (const syn of synonymOnly) {
+    const synRegex = new RegExp(escapeRegex(syn), "i")
+    // Only search expanded synonyms in content-heavy & mode fields — not in name/phone/etc.
+    conditions.push({ headline: synRegex })
+    conditions.push({ bio: synRegex })
+    conditions.push({ description: synRegex })
+    conditions.push({ mission: synRegex })
+    conditions.push({ experience: synRegex })
+    conditions.push({ skills: synRegex })
+    conditions.push({ causes: synRegex })
+    conditions.push({ workMode: synRegex })
+    conditions.push({ volunteerType: synRegex })
+    conditions.push({ "typicalSkillsNeeded.subskillId": synRegex })
+    conditions.push({ "typicalSkillsNeeded.categoryId": synRegex })
+  }
+
+  // Add matched skill/cause IDs from human-readable terms
+  const matchedSkillIds = findMatchingSkillIds(searchTerms)
+  const matchedCauseIds = findMatchingCauseIds(searchTerms)
+
+  for (const skillId of matchedSkillIds) {
+    const skillRegex = new RegExp(escapeRegex(skillId), "i")
+    conditions.push({ skills: skillRegex })
+    conditions.push({ "typicalSkillsNeeded.subskillId": skillRegex })
+  }
+  for (const causeId of matchedCauseIds) {
+    conditions.push({ causes: new RegExp(escapeRegex(causeId), "i") })
+  }
+
+  // Add numeric field matching for extracted numbers
+  const extractedNums = extractNumbers(searchTerms)
+  for (const num of extractedNums) {
+    conditions.push({ freeHoursPerMonth: num })
+    conditions.push({ hourlyRate: num })
+    conditions.push({ discountedRate: num })
+    conditions.push({ rating: num })
+    conditions.push({ completedProjects: num })
+    conditions.push({ hoursContributed: num })
+    conditions.push({ activeProjects: num })
+  }
+
+  return conditions
+}
+
+/**
+ * Build regex conditions for project search (all fields)
+ */
+function buildProjectRegexConditions(searchTerms: string[]): any[] {
+  const conditions: any[] = []
+  const expandedTerms = expandWithSynonyms(searchTerms)
+
+  for (const term of searchTerms) {
+    const escaped = escapeRegex(term)
+    const prefixRegex = new RegExp(`^${escaped}`, "i")
+    const containsRegex = new RegExp(escaped, "i")
+
+    conditions.push({ title: prefixRegex })
+    conditions.push({ description: containsRegex })
+    conditions.push({ location: containsRegex })
+    conditions.push({ workMode: containsRegex })
+    conditions.push({ timeCommitment: containsRegex })
+    conditions.push({ duration: containsRegex })
+    conditions.push({ projectType: containsRegex })
+    conditions.push({ experienceLevel: containsRegex })
+
+    // skillsRequired is array of objects - dot notation
+    conditions.push({ "skillsRequired.subskillId": containsRegex })
+    conditions.push({ "skillsRequired.categoryId": containsRegex })
+
+    // causes is array of strings - regex matches any element
+    conditions.push({ causes: containsRegex })
+  }
+
+  // Add expanded synonym terms for project content fields
+  const synonymOnly = expandedTerms.filter(t => !searchTerms.includes(t))
+  for (const syn of synonymOnly) {
+    const synRegex = new RegExp(escapeRegex(syn), "i")
+    conditions.push({ title: synRegex })
+    conditions.push({ description: synRegex })
+    conditions.push({ workMode: synRegex })
+    conditions.push({ "skillsRequired.subskillId": synRegex })
+    conditions.push({ "skillsRequired.categoryId": synRegex })
+    conditions.push({ causes: synRegex })
+  }
+
+  // Add matched skill/cause IDs (already synonym-expanded inside these functions)
+  const matchedSkillIds = findMatchingSkillIds(searchTerms)
+  const matchedCauseIds = findMatchingCauseIds(searchTerms)
+
+  for (const skillId of matchedSkillIds) {
+    const skillRegex = new RegExp(escapeRegex(skillId), "i")
+    conditions.push({ "skillsRequired.subskillId": skillRegex })
+    conditions.push({ "skillsRequired.categoryId": skillRegex })
+  }
+  for (const causeId of matchedCauseIds) {
+    conditions.push({ causes: new RegExp(escapeRegex(causeId), "i") })
+  }
+
+  return conditions
+}
+
+/**
+ * Strategy 2: Prefix + contains regex search (works from 1 character)
  * This is what makes Amazon-like instant search possible
  */
 async function prefixRegexSearch(
@@ -751,45 +1271,8 @@ async function prefixRegexSearch(
 ): Promise<SearchResult[]> {
   const results: SearchResult[] = []
   const privacyFilter = buildPrivacyFilter()
-
-  // Build regex patterns for all searchable text fields
-  const regexConditions = searchTerms.flatMap(term => {
-    const escaped = escapeRegex(term)
-    const prefixRegex = new RegExp(`^${escaped}`, "i")
-    const containsRegex = new RegExp(escaped, "i")
-    return [
-      { name: prefixRegex },
-      { organizationName: prefixRegex },
-      { orgName: prefixRegex },
-      { headline: containsRegex },
-      { title: containsRegex },
-      { bio: containsRegex },
-      { description: containsRegex },
-      { mission: containsRegex },
-      { location: containsRegex },
-      { city: containsRegex },
-      { country: containsRegex },
-      { address: containsRegex },
-      { contactPersonName: containsRegex },
-      // Skills are JSON strings — search inside the raw string
-      // e.g. "email" will match '{"subskillId":"email-marketing"...}'
-      { skills: containsRegex },
-      // Causes are also JSON strings
-      { causes: containsRegex },
-    ]
-  })
-
-  // Also find matching skill/cause IDs from human-readable names
-  const matchedSkillIds = findMatchingSkillIds(searchTerms)
-  const matchedCauseIds = findMatchingCauseIds(searchTerms)
-
-  // Add skill ID conditions (e.g., "email" → search for "email-marketing" in skills JSON)
-  for (const skillId of matchedSkillIds) {
-    regexConditions.push({ skills: new RegExp(escapeRegex(skillId), "i") })
-  }
-  for (const causeId of matchedCauseIds) {
-    regexConditions.push({ causes: new RegExp(escapeRegex(causeId), "i") })
-  }
+  const userConditions = buildUserRegexConditions(searchTerms)
+  const projectConditions = buildProjectRegexConditions(searchTerms)
 
   if (types.includes("volunteer") || types.includes("ngo")) {
     const roleIn: string[] = []
@@ -801,7 +1284,7 @@ async function prefixRegexSearch(
         role: { $in: roleIn },
         isOnboarded: true,
         ...privacyFilter,
-        $or: regexConditions,
+        $or: userConditions,
       })
       .project(USER_PROJECTION)
       .limit(limit)
@@ -814,32 +1297,12 @@ async function prefixRegexSearch(
   }
 
   if (types.includes("opportunity")) {
-    const projectRegex: any[] = searchTerms.flatMap(term => {
-      const escaped = escapeRegex(term)
-      const prefixRegex = new RegExp(`^${escaped}`, "i")
-      const containsRegex = new RegExp(escaped, "i")
-      return [
-        { title: prefixRegex },
-        { description: containsRegex },
-        { location: containsRegex },
-        { skillsRequired: containsRegex },
-      ]
-    })
-
-    // Also match skill IDs in project skillsRequired
-    for (const skillId of matchedSkillIds) {
-      projectRegex.push({ skillsRequired: new RegExp(escapeRegex(skillId), "i") })
-    }
-
     const projects = await db.collection("projects")
       .find({
         status: { $in: ["open", "active"] },
-        $or: projectRegex,
+        $or: projectConditions,
       })
-      .project({
-        _id: 1, title: 1, description: 1, location: 1,
-        skillsRequired: 1, workMode: 1, timeCommitment: 1,
-      })
+      .project(PROJECT_PROJECTION)
       .limit(limit)
       .toArray()
 
@@ -853,8 +1316,189 @@ async function prefixRegexSearch(
 }
 
 /**
+ * Build fuzzy regex conditions for user search
+ */
+function buildUserFuzzyConditions(searchTerms: string[]): any[] {
+  const conditions: any[] = []
+  const expandedTerms = expandWithSynonyms(searchTerms)
+  const allTerms = [...new Set([...searchTerms, ...expandedTerms])]
+
+  const looseRegex = searchTerms.map(term => {
+    if (term.length < 2) return new RegExp(escapeRegex(term), "i")
+    const chars = term.split("")
+    const variants: string[] = []
+    // Allow a wildcard character at each position
+    for (let i = 0; i < chars.length; i++) {
+      const variant = [...chars]
+      variant[i] = "."
+      variants.push(variant.join(""))
+    }
+    variants.push(escapeRegex(term))
+    // Remove each char (deletion)
+    for (let i = 0; i < chars.length; i++) {
+      const variant = [...chars]
+      variant.splice(i, 1)
+      variants.push(variant.join(""))
+    }
+    return new RegExp(variants.join("|"), "i")
+  })
+
+  for (const regex of looseRegex) {
+    // Core fields
+    conditions.push({ name: regex })
+    conditions.push({ organizationName: regex })
+    conditions.push({ orgName: regex })
+    conditions.push({ contactPersonName: regex })
+    conditions.push({ contactEmail: regex })
+
+    // Content fields
+    conditions.push({ headline: regex })
+    conditions.push({ title: regex })
+    conditions.push({ bio: regex })
+    conditions.push({ description: regex })
+    conditions.push({ mission: regex })
+    conditions.push({ experience: regex })
+
+    // Location
+    conditions.push({ location: regex })
+    conditions.push({ city: regex })
+    conditions.push({ address: regex })
+    conditions.push({ country: regex })
+
+    // Work prefs
+    conditions.push({ workMode: regex })
+    conditions.push({ volunteerType: regex })
+    conditions.push({ availability: regex })
+    conditions.push({ hoursPerWeek: regex })
+    conditions.push({ currency: regex })
+
+    // Skills/causes JSON strings
+    conditions.push({ skills: regex })
+    conditions.push({ causes: regex })
+    conditions.push({ languages: regex })
+    conditions.push({ interests: regex })
+
+    // Links/meta
+    conditions.push({ phone: regex })
+    conditions.push({ linkedIn: regex })
+    conditions.push({ portfolio: regex })
+    conditions.push({ website: regex })
+    conditions.push({ yearFounded: regex })
+    conditions.push({ teamSize: regex })
+
+    // NGO object skills
+    conditions.push({ "typicalSkillsNeeded.subskillId": regex })
+    conditions.push({ "typicalSkillsNeeded.categoryId": regex })
+  }
+
+  // Add exact regex conditions for expanded synonym terms (no fuzzy on synonyms — they're already expansions)
+  const synonymOnly = expandedTerms.filter(t => !searchTerms.includes(t))
+  for (const syn of synonymOnly) {
+    const synRegex = new RegExp(escapeRegex(syn), "i")
+    conditions.push({ headline: synRegex })
+    conditions.push({ bio: synRegex })
+    conditions.push({ description: synRegex })
+    conditions.push({ mission: synRegex })
+    conditions.push({ skills: synRegex })
+    conditions.push({ causes: synRegex })
+    conditions.push({ workMode: synRegex })
+    conditions.push({ volunteerType: synRegex })
+    conditions.push({ "typicalSkillsNeeded.subskillId": synRegex })
+    conditions.push({ "typicalSkillsNeeded.categoryId": synRegex })
+  }
+
+  // Add fuzzy-matched skill/cause IDs
+  const matchedSkillIds = findMatchingSkillIds(searchTerms)
+  const matchedCauseIds = findMatchingCauseIds(searchTerms)
+  for (const skillId of matchedSkillIds) {
+    const r = new RegExp(escapeRegex(skillId), "i")
+    conditions.push({ skills: r })
+    conditions.push({ "typicalSkillsNeeded.subskillId": r })
+  }
+  for (const causeId of matchedCauseIds) {
+    conditions.push({ causes: new RegExp(escapeRegex(causeId), "i") })
+  }
+
+  // Numeric matches
+  const extractedNums = extractNumbers(searchTerms)
+  for (const num of extractedNums) {
+    conditions.push({ freeHoursPerMonth: num })
+    conditions.push({ hourlyRate: num })
+    conditions.push({ discountedRate: num })
+    conditions.push({ rating: num })
+    conditions.push({ completedProjects: num })
+  }
+
+  return conditions
+}
+
+/**
+ * Build fuzzy regex conditions for project search
+ */
+function buildProjectFuzzyConditions(searchTerms: string[]): any[] {
+  const conditions: any[] = []
+  const expandedTerms = expandWithSynonyms(searchTerms)
+
+  const looseRegex = searchTerms.map(term => {
+    if (term.length < 2) return new RegExp(escapeRegex(term), "i")
+    const chars = term.split("")
+    const variants: string[] = []
+    for (let i = 0; i < chars.length; i++) {
+      const variant = [...chars]
+      variant[i] = "."
+      variants.push(variant.join(""))
+    }
+    variants.push(escapeRegex(term))
+    for (let i = 0; i < chars.length; i++) {
+      const variant = [...chars]
+      variant.splice(i, 1)
+      variants.push(variant.join(""))
+    }
+    return new RegExp(variants.join("|"), "i")
+  })
+
+  for (const regex of looseRegex) {
+    conditions.push({ title: regex })
+    conditions.push({ description: regex })
+    conditions.push({ location: regex })
+    conditions.push({ workMode: regex })
+    conditions.push({ timeCommitment: regex })
+    conditions.push({ duration: regex })
+    conditions.push({ projectType: regex })
+    conditions.push({ experienceLevel: regex })
+    conditions.push({ "skillsRequired.subskillId": regex })
+    conditions.push({ "skillsRequired.categoryId": regex })
+    conditions.push({ causes: regex })
+  }
+
+  // Add synonym expansion conditions for project fields
+  const synonymOnly = expandedTerms.filter(t => !searchTerms.includes(t))
+  for (const syn of synonymOnly) {
+    const synRegex = new RegExp(escapeRegex(syn), "i")
+    conditions.push({ title: synRegex })
+    conditions.push({ description: synRegex })
+    conditions.push({ workMode: synRegex })
+    conditions.push({ "skillsRequired.subskillId": synRegex })
+    conditions.push({ "skillsRequired.categoryId": synRegex })
+    conditions.push({ causes: synRegex })
+  }
+
+  // Matched skill/cause IDs
+  const matchedSkillIds = findMatchingSkillIds(searchTerms)
+  const matchedCauseIds = findMatchingCauseIds(searchTerms)
+  for (const skillId of matchedSkillIds) {
+    const r = new RegExp(escapeRegex(skillId), "i")
+    conditions.push({ "skillsRequired.subskillId": r })
+  }
+  for (const causeId of matchedCauseIds) {
+    conditions.push({ causes: new RegExp(escapeRegex(causeId), "i") })
+  }
+
+  return conditions
+}
+
+/**
  * Strategy 3: Fuzzy search with Levenshtein tolerance (catches typos)
- * Used as final fallback to avoid "no results"
  */
 async function fuzzyFallbackSearch(
   db: any,
@@ -865,54 +1509,8 @@ async function fuzzyFallbackSearch(
 ): Promise<SearchResult[]> {
   const results: SearchResult[] = []
   const privacyFilter = buildPrivacyFilter()
-
-  // Build loose regex: allow any single char substitution
-  const looseRegex = searchTerms.map(term => {
-    if (term.length < 2) return new RegExp(escapeRegex(term), "i")
-    // For each position, allow a wildcard character
-    const chars = term.split("")
-    const variants: string[] = []
-    for (let i = 0; i < chars.length; i++) {
-      const variant = [...chars]
-      variant[i] = "."
-      variants.push(variant.join(""))
-    }
-    // Also add the original and remove each char
-    variants.push(escapeRegex(term))
-    for (let i = 0; i < chars.length; i++) {
-      const variant = [...chars]
-      variant.splice(i, 1)
-      variants.push(variant.join(""))
-    }
-    return new RegExp(variants.join("|"), "i")
-  })
-
-  const fuzzyConditions = looseRegex.flatMap(regex => [
-    { name: regex },
-    { organizationName: regex },
-    { orgName: regex },
-    { headline: regex },
-    { title: regex },
-    { bio: regex },
-    { description: regex },
-    { mission: regex },
-    { location: regex },
-    { city: regex },
-    { address: regex },
-    { skills: regex },      // JSON string — fuzzy inside raw text
-    { causes: regex },
-    { contactPersonName: regex },
-  ])
-
-  // Also add fuzzy-matched skill/cause IDs
-  const matchedSkillIds = findMatchingSkillIds(searchTerms)
-  const matchedCauseIds = findMatchingCauseIds(searchTerms)
-  for (const skillId of matchedSkillIds) {
-    fuzzyConditions.push({ skills: new RegExp(escapeRegex(skillId), "i") })
-  }
-  for (const causeId of matchedCauseIds) {
-    fuzzyConditions.push({ causes: new RegExp(escapeRegex(causeId), "i") })
-  }
+  const userConditions = buildUserFuzzyConditions(searchTerms)
+  const projectConditions = buildProjectFuzzyConditions(searchTerms)
 
   if (types.includes("volunteer") || types.includes("ngo")) {
     const roleIn: string[] = []
@@ -924,41 +1522,25 @@ async function fuzzyFallbackSearch(
         role: { $in: roleIn },
         isOnboarded: true,
         ...privacyFilter,
-        $or: fuzzyConditions,
+        $or: userConditions,
       })
       .project(USER_PROJECTION)
       .limit(limit)
       .toArray()
 
-    // Re-score with Levenshtein to rank properly
     for (const user of users) {
-      user.score = computeRelevanceScore(user, searchTerms) * 0.7 // Fuzzy results scored lower
+      user.score = computeRelevanceScore(user, searchTerms) * 0.7
       results.push(mapUserToResult(user, searchTerms))
     }
   }
 
   if (types.includes("opportunity")) {
-    const projectFuzzy: any[] = looseRegex.flatMap(regex => [
-      { title: regex },
-      { description: regex },
-      { location: regex },
-      { skillsRequired: regex },
-    ])
-
-    // Also add skill ID matches for projects
-    for (const skillId of matchedSkillIds) {
-      projectFuzzy.push({ skillsRequired: new RegExp(escapeRegex(skillId), "i") })
-    }
-
     const projects = await db.collection("projects")
       .find({
         status: { $in: ["open", "active"] },
-        $or: projectFuzzy,
+        $or: projectConditions,
       })
-      .project({
-        _id: 1, title: 1, description: 1, location: 1,
-        skillsRequired: 1, workMode: 1, timeCommitment: 1,
-      })
+      .project(PROJECT_PROJECTION)
       .limit(limit)
       .toArray()
 
@@ -981,14 +1563,16 @@ export async function unifiedSearch(params: UnifiedSearchParams): Promise<Search
   const trimmed = query?.trim()
   if (!trimmed || trimmed.length < 1) return []
 
-  // Ensure indexes exist (no-op after first call)
   await ensureSearchIndexes()
 
   await client.connect()
   const db = client.db(DB_NAME)
 
   const searchTerms = trimmed.toLowerCase().split(/\s+/).filter(Boolean)
-  const resultMap = new Map<string, SearchResult>() // Deduplicate by id
+  // Expand with synonyms for the $text search query
+  const expandedTerms = expandWithSynonyms(searchTerms)
+  const expandedQuery = expandedTerms.slice(0, 30).join(" ") // Cap at 30 terms for $text
+  const resultMap = new Map<string, SearchResult>()
 
   const addResults = (results: SearchResult[]) => {
     for (const result of results) {
@@ -1001,13 +1585,12 @@ export async function unifiedSearch(params: UnifiedSearchParams): Promise<Search
   }
 
   try {
-    // Strategy 1: For queries with 3+ chars, try $text search first (fastest, uses index)
+    // Strategy 1: $text search (fastest, uses index, needs 3+ chars)
     if (trimmed.length >= 3) {
       try {
-        const textResults = await textSearch(db, trimmed, types, limit, searchTerms)
+        const textResults = await textSearch(db, expandedQuery, types, limit, searchTerms)
         addResults(textResults)
       } catch (error: any) {
-        // Text index missing — that's fine, we'll use regex
         if (error.code !== 27 && !error.message?.includes("text index")) {
           console.error("[Search] Text search error:", error)
         }
@@ -1015,26 +1598,23 @@ export async function unifiedSearch(params: UnifiedSearchParams): Promise<Search
     }
 
     // Strategy 2: Prefix/regex search (works from 1 character)
-    // Always run this for short queries, or to supplement text search
     if (resultMap.size < limit) {
       const prefixResults = await prefixRegexSearch(db, trimmed, types, limit, searchTerms)
       addResults(prefixResults)
     }
 
-    // Strategy 3: Fuzzy fallback (only if we still have very few results)
+    // Strategy 3: Fuzzy fallback (only if very few results)
     if (resultMap.size < Math.min(3, limit) && trimmed.length >= 3) {
       const fuzzyResults = await fuzzyFallbackSearch(db, trimmed, types, limit, searchTerms)
       addResults(fuzzyResults)
     }
 
-    // Sort by score descending, then slice to limit
     const allResults = Array.from(resultMap.values())
     allResults.sort((a, b) => b.score - a.score)
 
     return allResults.slice(0, limit)
   } catch (error: any) {
     console.error("[Search] Unrecoverable error:", error)
-    // Last resort: try pure regex
     try {
       return await prefixRegexSearch(db, trimmed, types, limit, searchTerms)
     } catch {
@@ -1061,28 +1641,51 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
   const privacyFilter = buildPrivacyFilter()
   const suggestions: SearchSuggestion[] = []
 
-  // Find matching skills/causes for query (e.g., "email" → ["email-marketing", "email-copywriting"])
   const matchedSkillIds = findMatchingSkillIds([trimmed.toLowerCase()])
   const matchedCauseIds = findMatchingCauseIds([trimmed.toLowerCase()])
 
-  // Build user query: search in name, org, headline, skills, causes, location, city
+  // Build comprehensive user search conditions
   const userOrConditions: any[] = [
     { name: prefixRegex },
     { organizationName: prefixRegex },
     { orgName: prefixRegex },
     { headline: containsRegex },
     { bio: containsRegex },
+    { description: containsRegex },
+    { mission: containsRegex },
+    { experience: containsRegex },
     { location: containsRegex },
     { city: containsRegex },
+    { country: containsRegex },
+    { address: containsRegex },
+    { workMode: containsRegex },
+    { volunteerType: containsRegex },
+    { availability: containsRegex },
+    { hoursPerWeek: containsRegex },
     { skills: containsRegex },
     { causes: containsRegex },
-    { mission: containsRegex },
+    { languages: containsRegex },
+    { website: containsRegex },
+    { yearFounded: containsRegex },
+    { teamSize: containsRegex },
+    { "typicalSkillsNeeded.subskillId": containsRegex },
+    { "typicalSkillsNeeded.categoryId": containsRegex },
   ]
   for (const skillId of matchedSkillIds) {
-    userOrConditions.push({ skills: new RegExp(escapeRegex(skillId), "i") })
+    const r = new RegExp(escapeRegex(skillId), "i")
+    userOrConditions.push({ skills: r })
+    userOrConditions.push({ "typicalSkillsNeeded.subskillId": r })
   }
   for (const causeId of matchedCauseIds) {
     userOrConditions.push({ causes: new RegExp(escapeRegex(causeId), "i") })
+  }
+
+  // Numeric matching for suggestions
+  const nums = extractNumbers([trimmed.toLowerCase()])
+  for (const num of nums) {
+    userOrConditions.push({ freeHoursPerMonth: num })
+    userOrConditions.push({ hourlyRate: num })
+    userOrConditions.push({ rating: num })
   }
 
   const users = await db.collection("user")
@@ -1091,14 +1694,20 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
       ...privacyFilter,
       $or: userOrConditions,
     })
-    .project({ _id: 1, name: 1, role: 1, organizationName: 1, orgName: 1, headline: 1, skills: 1, causes: 1, location: 1, city: 1 })
+    .project({
+      _id: 1, name: 1, role: 1, organizationName: 1, orgName: 1,
+      headline: 1, skills: 1, causes: 1, location: 1, city: 1,
+      volunteerType: 1, workMode: 1, hoursPerWeek: 1,
+      freeHoursPerMonth: 1, hourlyRate: 1, bio: 1, description: 1,
+    })
     .limit(limit)
     .toArray()
 
   for (const user of users) {
     const isNgo = user.role === "ngo"
-    // Build a smart subtitle based on what matched
-    let subtitle = user.headline || (isNgo ? "Organization" : "Volunteer")
+    let subtitle = user.headline || user.bio?.slice(0, 60) || (isNgo ? "Organization" : "Volunteer")
+    if (isNgo) subtitle = user.description?.slice(0, 60) || "Organization"
+
     // If a skill matched, show it
     const skillsText = buildSkillsSearchText(user.skills)
     if (skillsText && skillsText.includes(trimmed.toLowerCase())) {
@@ -1115,6 +1724,13 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
         .filter(name => name.toLowerCase().includes(trimmed.toLowerCase()))
       if (matchedCauses.length > 0) subtitle = matchedCauses.join(", ")
     }
+    // Show work details if relevant
+    if (user.volunteerType && trimmed.toLowerCase().includes("free") && user.volunteerType === "free") {
+      subtitle = `Free volunteer · ${user.freeHoursPerMonth || "?"} hrs/month`
+    }
+    if (user.workMode && ["remote", "onsite", "hybrid"].includes(trimmed.toLowerCase())) {
+      subtitle = `${user.workMode} · ${subtitle}`
+    }
 
     suggestions.push({
       text: isNgo ? (user.organizationName || user.orgName || user.name) : user.name,
@@ -1124,13 +1740,12 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
     })
   }
 
-  // Add skill-name suggestions (e.g., typing "email" suggests "Email Marketing" as a search term)
+  // Add skill-name suggestions
   if (suggestions.length < limit) {
     for (const entry of ALL_SKILL_ENTRIES) {
       if (suggestions.length >= limit) break
       if (entry.subskillName.toLowerCase().includes(trimmed.toLowerCase()) ||
           entry.categoryName.toLowerCase().includes(trimmed.toLowerCase())) {
-        // Avoid duplicate text
         if (!suggestions.some(s => s.text === entry.subskillName)) {
           suggestions.push({
             text: entry.subskillName,
@@ -1143,27 +1758,63 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
     }
   }
 
-  // Get project suggestions (search title, description, location)
+  // Add cause suggestions
+  if (suggestions.length < limit) {
+    for (const cause of CAUSE_LIST) {
+      if (suggestions.length >= limit) break
+      const searchable = `${cause.name} ${cause.id.replace(/-/g, " ")}`.toLowerCase()
+      if (searchable.includes(trimmed.toLowerCase())) {
+        if (!suggestions.some(s => s.text === cause.name)) {
+          suggestions.push({
+            text: cause.name,
+            type: "ngo",
+            id: `cause:${cause.id}`,
+            subtitle: "Cause Area",
+          })
+        }
+      }
+    }
+  }
+
+  // Get project suggestions
+  const projectOrConditions: any[] = [
+    { title: prefixRegex },
+    { title: containsRegex },
+    { description: containsRegex },
+    { location: containsRegex },
+    { workMode: containsRegex },
+    { timeCommitment: containsRegex },
+    { duration: containsRegex },
+    { projectType: containsRegex },
+    { experienceLevel: containsRegex },
+    { "skillsRequired.subskillId": containsRegex },
+    { "skillsRequired.categoryId": containsRegex },
+    { causes: containsRegex },
+  ]
+  for (const skillId of matchedSkillIds) {
+    projectOrConditions.push({ "skillsRequired.subskillId": new RegExp(escapeRegex(skillId), "i") })
+  }
+  for (const causeId of matchedCauseIds) {
+    projectOrConditions.push({ causes: new RegExp(escapeRegex(causeId), "i") })
+  }
+
   const projects = await db.collection("projects")
     .find({
       status: { $in: ["open", "active"] },
-      $or: [
-        { title: prefixRegex },
-        { title: containsRegex },
-        { description: containsRegex },
-        { location: containsRegex },
-      ],
+      $or: projectOrConditions,
     })
-    .project({ _id: 1, title: 1, location: 1, workMode: 1 })
+    .project({ _id: 1, title: 1, location: 1, workMode: 1, timeCommitment: 1, duration: 1 })
     .limit(Math.max(2, limit - suggestions.length))
     .toArray()
 
   for (const project of projects) {
+    let subtitle = project.workMode === "remote" ? "Remote" : project.location
+    if (project.timeCommitment) subtitle += ` · ${project.timeCommitment}`
     suggestions.push({
       text: project.title,
       type: "opportunity",
       id: project._id.toString(),
-      subtitle: project.workMode === "remote" ? "Remote" : project.location,
+      subtitle,
     })
   }
 
