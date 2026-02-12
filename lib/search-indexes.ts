@@ -911,7 +911,7 @@ function mapUserToResult(user: any, searchTerms: string[]): SearchResult {
       subtitle = `Volunteer Type: ${user.volunteerType}` + (user.headline ? ` · ${user.headline}` : "")
     } else if (matchedField === "hoursPerWeek") {
       subtitle = `${user.hoursPerWeek} hrs/week` + (user.headline ? ` · ${user.headline}` : "")
-    } else if (matchedField === "freeHoursPerMonth") {
+    } else if (matchedField === "freeHoursPerMonth" && (user.volunteerType === "both")) {
       subtitle = `${user.freeHoursPerMonth} free hrs/month` + (user.headline ? ` · ${user.headline}` : "")
     } else if (matchedField === "hourlyRate") {
       subtitle = `Rate: ${user.currency || "INR"} ${user.hourlyRate}/hr` + (user.headline ? ` · ${user.headline}` : "")
@@ -1726,7 +1726,9 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
     }
     // Show work details if relevant
     if (user.volunteerType && trimmed.toLowerCase().includes("free") && user.volunteerType === "free") {
-      subtitle = `Free volunteer · ${user.freeHoursPerMonth || "?"} hrs/month`
+      subtitle = `Free volunteer (Pro Bono)`
+    } else if (user.volunteerType === "both" && trimmed.toLowerCase().includes("free")) {
+      subtitle = `Open to Both · ${user.freeHoursPerMonth || 0} free hrs/month`
     }
     if (user.workMode && ["remote", "onsite", "hybrid"].includes(trimmed.toLowerCase())) {
       subtitle = `${user.workMode} · ${subtitle}`

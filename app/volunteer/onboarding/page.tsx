@@ -925,8 +925,8 @@ export default function VolunteerOnboardingPage() {
           </RadioGroup>
         </div>
 
-        {/* Free Hours Section - Show for both and paid volunteer types */}
-        {(workPreferences.volunteerType === "paid" || workPreferences.volunteerType === "both") && (
+        {/* Free Hours Section - Only show for 'Open to Both' volunteer type */}
+        {workPreferences.volunteerType === "both" && (
           <>
             <Separator />
             <div className="space-y-4 p-4 border rounded-lg bg-green-50 dark:bg-green-950/20">
@@ -1226,12 +1226,14 @@ export default function VolunteerOnboardingPage() {
                 <h3 className="font-medium text-sm text-muted-foreground">Availability</h3>
                 <p className="text-foreground capitalize">{workPreferences.availability}</p>
               </div>
+              {workPreferences.volunteerType === "both" && (
+                <div>
+                  <h3 className="font-medium text-sm text-muted-foreground">Free Hours/Month</h3>
+                  <p className="text-foreground text-green-600">{workPreferences.freeHoursPerMonth || 0} hours</p>
+                </div>
+              )}
               {(workPreferences.volunteerType === "paid" || workPreferences.volunteerType === "both") && (
                 <>
-                  <div>
-                    <h3 className="font-medium text-sm text-muted-foreground">Free Hours/Month</h3>
-                    <p className="text-foreground text-green-600">{workPreferences.freeHoursPerMonth || 0} hours</p>
-                  </div>
                   <div>
                     <h3 className="font-medium text-sm text-muted-foreground">Hourly Rate</h3>
                     <p className="text-foreground">{workPreferences.currency === "USD" ? "$" : workPreferences.currency === "EUR" ? "€" : workPreferences.currency === "GBP" ? "£" : workPreferences.currency === "INR" ? "₹" : workPreferences.currency === "SGD" ? "S$" : workPreferences.currency === "AED" ? "د.إ" : "RM"}{workPreferences.hourlyRate || 0}/hr</p>

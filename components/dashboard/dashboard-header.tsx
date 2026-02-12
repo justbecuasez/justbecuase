@@ -3,7 +3,6 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,8 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Bell, Search, Menu, User, Settings, LogOut } from "lucide-react"
+import { Bell, Menu, User, Settings, LogOut } from "lucide-react"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { UnifiedSearchBar } from "@/components/unified-search-bar"
 import { useState, useEffect } from "react"
 import { useNotificationStore } from "@/lib/store"
 import { MessageNotificationBadge } from "@/components/messages/message-notification-badge"
@@ -82,10 +82,11 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
 
         {/* Search - Desktop */}
         <div className="hidden md:flex flex-1 max-w-md mx-8">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search opportunities, skills, or NGOs..." className="pl-10 bg-muted/50" />
-          </div>
+          <UnifiedSearchBar
+            variant="compact"
+            placeholder="Search opportunities, skills, or NGOs..."
+            className="w-full"
+          />
         </div>
 
         {/* Right side */}

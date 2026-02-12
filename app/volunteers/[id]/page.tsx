@@ -96,7 +96,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                     {volunteer.completedProjects} opportunities completed
                   </div>
                   {volunteer.volunteerType === "paid" && (
-                    <Badge variant="secondary">Pro Bono & Paid</Badge>
+                    <Badge variant="secondary">Paid</Badge>
                   )}
                   {volunteer.volunteerType === "free" && (
                     <Badge className="bg-green-100 text-green-800">Pro Bono</Badge>

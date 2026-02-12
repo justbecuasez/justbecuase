@@ -1,5 +1,4 @@
-import { Search } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { UnifiedSearchBar } from "@/components/unified-search-bar"
 
 export function VolunteersHero() {
   return (
@@ -13,27 +12,13 @@ export function VolunteersHero() {
             Connect with talented professionals ready to contribute their skills to your cause
           </p>
           
-          <div className="relative max-w-xl mx-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input
-              type="search"
+          <div className="max-w-xl mx-auto">
+            <UnifiedSearchBar
+              defaultType="volunteer"
+              variant="hero"
               placeholder="Search by skills, location, or name..."
-              className="pl-10 pr-4 py-6 text-base bg-background"
+              showPopularTags
             />
-          </div>
-
-          <div className="flex flex-wrap justify-center gap-2 mt-6">
-            <span className="text-sm text-muted-foreground">Popular:</span>
-            {["Marketing", "Web Development", "Graphic Design", "Content Writing", "Fundraising"].map(
-              (skill) => (
-                <button
-                  key={skill}
-                  className="text-sm px-3 py-1 rounded-full bg-background border hover:border-primary transition-colors"
-                >
-                  {skill}
-                </button>
-              )
-            )}
           </div>
         </div>
       </div>

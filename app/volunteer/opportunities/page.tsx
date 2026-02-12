@@ -8,12 +8,10 @@ import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { ApplyButton } from "@/app/projects/[id]/apply-button"
+import { OpportunitiesSearchCard } from "./opportunities-search"
 import Link from "next/link"
 import {
-  Search,
-  Filter,
   Clock,
   MapPin,
   Building2,
@@ -67,39 +65,8 @@ export default async function VolunteerOpportunitiesPage() {
             </p>
           </div>
 
-          {/* Search & Filters */}
-          <Card className="mb-8">
-            <CardContent className="p-4">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by title, skills, or cause..."
-                    className="pl-9"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <select className="border rounded-md px-3 py-2 text-sm bg-background">
-                    <option value="">All Work Modes</option>
-                    <option value="remote">Remote</option>
-                    <option value="onsite">On-site</option>
-                    <option value="hybrid">Hybrid</option>
-                  </select>
-                  <select className="border rounded-md px-3 py-2 text-sm bg-background">
-                    <option value="">All Types</option>
-                    <option value="short-term">Short-term</option>
-                    <option value="long-term">Long-term</option>
-                    <option value="consultation">Consultation</option>
-                    <option value="ongoing">Ongoing</option>
-                  </select>
-                  <Button variant="outline">
-                    <Filter className="h-4 w-4 mr-2" />
-                    More Filters
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Search */}
+          <OpportunitiesSearchCard />
 
           {/* Recommended Section */}
           <div className="mb-8">

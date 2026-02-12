@@ -242,7 +242,7 @@ export async function saveVolunteerOnboarding(data: {
       languages: [],
       interests: [],
       volunteerType: data.workPreferences.volunteerType as "free" | "paid" | "both",
-      freeHoursPerMonth: data.workPreferences.freeHoursPerMonth,
+      freeHoursPerMonth: data.workPreferences.volunteerType === "both" ? data.workPreferences.freeHoursPerMonth : undefined,
       hourlyRate: data.workPreferences.hourlyRate,
       discountedRate: data.workPreferences.discountedRate,
       currency: data.workPreferences.currency || "INR",
@@ -1115,7 +1115,7 @@ export async function getVolunteerProfileView(
     workMode: volunteerProfile.workMode,
     hoursPerWeek: volunteerProfile.hoursPerWeek,
     volunteerType: volunteerProfile.volunteerType,
-    freeHoursPerMonth: volunteerProfile.freeHoursPerMonth,
+    freeHoursPerMonth: volunteerProfile.volunteerType === "both" ? volunteerProfile.freeHoursPerMonth : undefined,
     completedProjects: volunteerProfile.completedProjects,
     hoursContributed: volunteerProfile.hoursContributed,
     rating: volunteerProfile.rating,
@@ -1249,8 +1249,8 @@ export async function getRecommendedVolunteersForNGO(): Promise<
       const matchingSkills = volunteerSkillIds.filter((id: string) => requiredSkillIds.has(id))
       const skillMatchScore = (matchingSkills.length / requiredSkillIds.size) * 100
       
-      // Bonus for free hours availability
-      const freeHoursBonus = (v.freeHoursPerMonth && v.freeHoursPerMonth > 0) ? 10 : 0
+      // Bonus for free hours availability (only for 'both' type volunteers)
+      const freeHoursBonus = (v.volunteerType === "both" && v.freeHoursPerMonth && v.freeHoursPerMonth > 0) ? 10 : 0
       
       return {
         volunteerId: v.userId,
@@ -1260,7 +1260,7 @@ export async function getRecommendedVolunteersForNGO(): Promise<
           headline: v.bio?.slice(0, 60),
           skills: v.skills?.slice(0, 4),
           avatar: v.avatar,
-          freeHoursPerMonth: v.freeHoursPerMonth,
+          freeHoursPerMonth: v.volunteerType === "both" ? v.freeHoursPerMonth : undefined,
         }
       }
     })

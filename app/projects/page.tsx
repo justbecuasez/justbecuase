@@ -6,14 +6,14 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { ProjectCard } from "@/components/project-card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { skillCategories } from "@/lib/skills-data"
-import { Search, SlidersHorizontal, Grid3X3, List, X, Loader2 } from "lucide-react"
+import { SlidersHorizontal, Grid3X3, List, X, Loader2 } from "lucide-react"
+import { UnifiedSearchBar } from "@/components/unified-search-bar"
 
 interface Project {
   _id?: { toString: () => string }
@@ -261,13 +261,14 @@ export default function ProjectsPage() {
         <div className="container mx-auto px-4 md:px-6 py-8">
           {/* Search and Controls */}
           <div className="flex flex-col md:flex-row gap-4 mb-8">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
+            <div className="flex-1">
+              <UnifiedSearchBar
+                defaultType="opportunity"
+                variant="default"
                 placeholder="Search opportunities, skills, or organizations..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                onSearchChange={setSearchQuery}
+                navigateOnSelect={false}
               />
             </div>
 
