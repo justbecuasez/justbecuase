@@ -31,6 +31,7 @@ export async function GET(request: NextRequest) {
     if (mode === "suggestions") {
       const suggestions = await getSearchSuggestions({
         query,
+        types,
         limit: Math.min(limit, 8),
       })
       return NextResponse.json({

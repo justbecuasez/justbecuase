@@ -1,11 +1,13 @@
 "use client"
 
 import { useState, useEffect, useMemo, useRef } from "react"
-import { ProjectCard } from "@/components/project-card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
+import { ApplyButton } from "@/app/projects/[id]/apply-button"
+import Link from "next/link"
 import {
   Select,
   SelectContent,
@@ -24,6 +26,10 @@ import {
   Loader2,
   SlidersHorizontal,
   ChevronDown,
+  MapPin,
+  Clock,
+  Calendar,
+  Users,
 } from "lucide-react"
 import { UnifiedSearchBar } from "@/components/unified-search-bar"
 
@@ -497,27 +503,75 @@ export function OpportunitiesBrowser() {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredProjects.map((project) => (
-            <ProjectCard
-              key={project._id?.toString() || project.id}
-              project={{
-                id: project._id?.toString() || project.id || "",
-                title: project.title,
-                description: project.description,
-                skills:
-                  project.skills || project.skillsRequired?.map((s) => s.subskillId) || [],
-                location:
-                  project.workMode === "remote" ? "Remote" : project.location || "On-site",
-                timeCommitment: project.timeCommitment,
-                applicants: project.applicantsCount || 0,
-                postedAt: project.createdAt
-                  ? new Date(project.createdAt).toLocaleDateString()
-                  : "Recently",
-                projectType: project.projectType,
-                ngo: project.ngo || { name: "NGO", verified: false },
-              }}
-            />
-          ))}
+          {filteredProjects.map((project) => {
+            const projectId = project._id?.toString() || project.id || ""
+            return (
+              <Card key={projectId} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <Badge variant="outline" className="text-xs">
+                      {project.projectType}
+                    </Badge>
+                  </div>
+
+                  <h3 className="font-semibold text-foreground mb-2 line-clamp-2">
+                    {project.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                    {project.description}
+                  </p>
+
+                  <div className="space-y-2 text-sm text-muted-foreground mb-4">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      {project.workMode === "remote" ? "Remote" : project.location || "On-site"}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      {project.timeCommitment}
+                    </div>
+                    {project.deadline && (
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Deadline: {new Date(project.deadline).toLocaleDateString()}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      {project.applicantsCount || 0} applicants
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {(project.skills || project.skillsRequired?.map((s) => s.subskillId) || []).slice(0, 3).map((skill: string, i: number) => (
+                      <Badge key={i} variant="secondary" className="text-xs">
+                        {skill}
+                      </Badge>
+                    ))}
+                    {(project.skillsRequired?.length || 0) > 3 && (
+                      <Badge variant="secondary" className="text-xs">
+                        +{(project.skillsRequired?.length || 0) - 3}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1" asChild>
+                      <Link href={`/projects/${projectId}`}>
+                        View Details
+                      </Link>
+                    </Button>
+                    <div className="flex-1">
+                      <ApplyButton
+                        projectId={projectId}
+                        projectTitle={project.title}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
     </div>

@@ -464,6 +464,7 @@ export interface UnifiedSearchParams {
 
 export interface SearchSuggestionsParams {
   query: string
+  types?: ("volunteer" | "ngo" | "opportunity")[]
   limit?: number
 }
 
@@ -1628,9 +1629,14 @@ export async function unifiedSearch(params: UnifiedSearchParams): Promise<Search
 // ============================================
 
 export async function getSearchSuggestions(params: SearchSuggestionsParams): Promise<SearchSuggestion[]> {
-  const { query, limit = 8 } = params
+  const { query, types, limit = 8 } = params
   const trimmed = query?.trim()
   if (!trimmed || trimmed.length < 1) return []
+
+  // Determine which collections to search
+  const searchVolunteers = !types || types.includes("volunteer")
+  const searchNgos = !types || types.includes("ngo")
+  const searchOpportunities = !types || types.includes("opportunity")
 
   await client.connect()
   const db = client.db(DB_NAME)
@@ -1688,20 +1694,26 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
     userOrConditions.push({ rating: num })
   }
 
-  const users = await db.collection("user")
-    .find({
-      isOnboarded: true,
-      ...privacyFilter,
-      $or: userOrConditions,
-    })
-    .project({
-      _id: 1, name: 1, role: 1, organizationName: 1, orgName: 1,
-      headline: 1, skills: 1, causes: 1, location: 1, city: 1,
-      volunteerType: 1, workMode: 1, hoursPerWeek: 1,
-      freeHoursPerMonth: 1, hourlyRate: 1, bio: 1, description: 1,
-    })
-    .limit(limit)
-    .toArray()
+  // Only search users if we need volunteers or NGOs
+  const users = (searchVolunteers || searchNgos)
+    ? await db.collection("user")
+      .find({
+        isOnboarded: true,
+        ...privacyFilter,
+        // If only one user type needed, filter by role
+        ...(searchVolunteers && !searchNgos ? { role: "volunteer" } : {}),
+        ...(!searchVolunteers && searchNgos ? { role: "ngo" } : {}),
+        $or: userOrConditions,
+      })
+      .project({
+        _id: 1, name: 1, role: 1, organizationName: 1, orgName: 1,
+        headline: 1, skills: 1, causes: 1, location: 1, city: 1,
+        volunteerType: 1, workMode: 1, hoursPerWeek: 1,
+        freeHoursPerMonth: 1, hourlyRate: 1, bio: 1, description: 1,
+      })
+      .limit(limit)
+      .toArray()
+    : []
 
   for (const user of users) {
     const isNgo = user.role === "ngo"
@@ -1742,8 +1754,8 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
     })
   }
 
-  // Add skill-name suggestions
-  if (suggestions.length < limit) {
+  // Add skill-name suggestions (relevant to volunteers and opportunities)
+  if (suggestions.length < limit && (searchVolunteers || searchOpportunities)) {
     for (const entry of ALL_SKILL_ENTRIES) {
       if (suggestions.length >= limit) break
       if (entry.subskillName.toLowerCase().includes(trimmed.toLowerCase()) ||
@@ -1751,7 +1763,7 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
         if (!suggestions.some(s => s.text === entry.subskillName)) {
           suggestions.push({
             text: entry.subskillName,
-            type: "volunteer",
+            type: searchOpportunities ? "opportunity" : "volunteer",
             id: `skill:${entry.subskillId}`,
             subtitle: entry.categoryName,
           })
@@ -1760,8 +1772,8 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
     }
   }
 
-  // Add cause suggestions
-  if (suggestions.length < limit) {
+  // Add cause suggestions (relevant to NGOs and opportunities)
+  if (suggestions.length < limit && (searchNgos || searchOpportunities)) {
     for (const cause of CAUSE_LIST) {
       if (suggestions.length >= limit) break
       const searchable = `${cause.name} ${cause.id.replace(/-/g, " ")}`.toLowerCase()
@@ -1769,7 +1781,7 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
         if (!suggestions.some(s => s.text === cause.name)) {
           suggestions.push({
             text: cause.name,
-            type: "ngo",
+            type: searchOpportunities ? "opportunity" : "ngo",
             id: `cause:${cause.id}`,
             subtitle: "Cause Area",
           })
@@ -1778,7 +1790,9 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
     }
   }
 
-  // Get project suggestions
+  // Get project suggestions (only if opportunities type is requested)
+  if (!searchOpportunities) return suggestions.slice(0, limit)
+
   const projectOrConditions: any[] = [
     { title: prefixRegex },
     { title: containsRegex },
