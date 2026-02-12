@@ -29,7 +29,8 @@ export function VolunteerCard({ volunteer }: VolunteerCardProps) {
   })
 
   const isFreeVolunteer = volunteer.volunteerType === "free"
-  const isLocked = !volunteer.isUnlocked && isFreeVolunteer
+  const isBothVolunteer = volunteer.volunteerType === "both"
+  const isLocked = !volunteer.isUnlocked
 
   return (
     <Card className="group hover:shadow-lg transition-all overflow-hidden">
@@ -40,7 +41,11 @@ export function VolunteerCard({ volunteer }: VolunteerCardProps) {
           <div className="absolute top-4 right-4">
             {isFreeVolunteer ? (
               <Badge className="bg-green-100 text-green-700 border-green-200">
-                Free Volunteer
+                Pro Bono
+              </Badge>
+            ) : isBothVolunteer ? (
+              <Badge className="bg-blue-100 text-blue-700 border-blue-200">
+                Free & Paid
               </Badge>
             ) : (
               <Badge variant="secondary" className="flex items-center gap-1">

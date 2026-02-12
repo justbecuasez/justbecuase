@@ -296,7 +296,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                     <span className="text-sm text-muted-foreground">Hours/Week</span>
                     <span className="text-sm font-medium">{volunteer.hoursPerWeek}</span>
                   </div>
-                  {volunteer.hourlyRate && !isLocked && (
+                  {volunteer.hourlyRate && !isLocked && volunteer.volunteerType !== "free" && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Hourly Rate</span>
                       <span className="text-sm font-medium">
@@ -304,7 +304,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                       </span>
                     </div>
                   )}
-                  {volunteer.discountedRate && !isLocked && (
+                  {volunteer.discountedRate && !isLocked && volunteer.volunteerType !== "free" && (
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">NGO Discounted Rate</span>
                       <span className="text-sm font-medium text-green-600">

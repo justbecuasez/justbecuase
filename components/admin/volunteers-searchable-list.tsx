@@ -205,9 +205,9 @@ export function VolunteersSearchableList({ volunteers, title }: VolunteersSearch
                         </td>
                         <td className="py-3 px-4">
                           <Badge
-                            variant={volunteer.volunteerType === "free" ? "default" : "secondary"}
+                            variant={volunteer.volunteerType === "free" ? "default" : volunteer.volunteerType === "both" ? "outline" : "secondary"}
                           >
-                            {volunteer.volunteerType || "free"}
+                            {volunteer.volunteerType === "free" ? "Pro Bono" : volunteer.volunteerType === "both" ? "Free & Paid" : volunteer.volunteerType === "paid" ? "Paid" : "Unknown"}
                           </Badge>
                         </td>
                         <td className="py-3 px-4">

@@ -500,9 +500,9 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
     hasFreeHours: false,
   })
 
-  // Separate volunteers by type
-  const paidVolunteers = volunteers.filter((v) => v.volunteerType === "paid")
-  const freeVolunteers = volunteers.filter((v) => v.volunteerType === "free")
+  // Separate volunteers by type ("both" appears in both tabs)
+  const paidVolunteers = volunteers.filter((v) => v.volunteerType === "paid" || v.volunteerType === "both")
+  const freeVolunteers = volunteers.filter((v) => v.volunteerType === "free" || v.volunteerType === "both")
 
   // Get unique locations
   const locations = useMemo(() => {
@@ -1158,9 +1158,15 @@ function VolunteerCard({
           <div className="flex flex-col items-end gap-1 shrink-0">
             {isBoth ? (
               <>
-                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400">
-                  {volunteer.freeHoursPerMonth || 0} hrs/mo free
-                </Badge>
+                {(volunteer.freeHoursPerMonth && volunteer.freeHoursPerMonth > 0) ? (
+                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400">
+                    {volunteer.freeHoursPerMonth} hrs/mo free
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400">
+                    Open to Both
+                  </Badge>
+                )}
                 <Badge variant="outline" className="text-xs">
                   {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.hourlyRate}/hr
                 </Badge>
