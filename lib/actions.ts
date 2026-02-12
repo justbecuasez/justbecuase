@@ -243,9 +243,9 @@ export async function saveVolunteerOnboarding(data: {
       interests: [],
       volunteerType: data.workPreferences.volunteerType as "free" | "paid" | "both",
       freeHoursPerMonth: data.workPreferences.volunteerType === "both" ? data.workPreferences.freeHoursPerMonth : undefined,
-      hourlyRate: data.workPreferences.hourlyRate,
-      discountedRate: data.workPreferences.discountedRate,
-      currency: data.workPreferences.currency || "INR",
+      hourlyRate: (data.workPreferences.volunteerType === "paid" || data.workPreferences.volunteerType === "both") ? data.workPreferences.hourlyRate : undefined,
+      discountedRate: (data.workPreferences.volunteerType === "paid" || data.workPreferences.volunteerType === "both") ? data.workPreferences.discountedRate : undefined,
+      currency: (data.workPreferences.volunteerType === "paid" || data.workPreferences.volunteerType === "both") ? (data.workPreferences.currency || "INR") : undefined,
       workMode: data.workPreferences.workMode as "remote" | "onsite" | "hybrid",
       hoursPerWeek: data.workPreferences.hoursPerWeek,
       availability: data.workPreferences.availability as "weekdays" | "weekends" | "evenings" | "flexible",
@@ -364,6 +364,16 @@ export async function updateVolunteerProfile(
       if (key in updates) {
         (filteredUpdates as Record<string, unknown>)[key] = (updates as Record<string, unknown>)[key]
       }
+    }
+    
+    // Sanitize fields based on volunteerType
+    if (filteredUpdates.volunteerType === "free") {
+      filteredUpdates.hourlyRate = undefined
+      filteredUpdates.discountedRate = undefined
+      filteredUpdates.freeHoursPerMonth = undefined
+      filteredUpdates.currency = undefined
+    } else if (filteredUpdates.volunteerType === "paid") {
+      filteredUpdates.freeHoursPerMonth = undefined
     }
     
     if (Object.keys(filteredUpdates).length === 0) {
@@ -831,7 +841,7 @@ export async function applyToProject(
       ngoId: project.ngoId,
       coverMessage,
       status: "pending",
-      isProfileUnlocked: volunteerProfile.volunteerType !== "free", // Auto-unlock for paid volunteers
+      isProfileUnlocked: volunteerProfile.volunteerType === "paid", // Auto-unlock for paid-only volunteers
       appliedAt: new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -1131,9 +1141,9 @@ export async function getVolunteerProfileView(
     linkedinUrl: isUnlocked ? volunteerProfile.linkedinUrl : null,
     portfolioUrl: isUnlocked ? volunteerProfile.portfolioUrl : null,
     resumeUrl: isUnlocked ? volunteerProfile.resumeUrl : null,
-    hourlyRate: isUnlocked ? volunteerProfile.hourlyRate : null,
-    discountedRate: isUnlocked ? volunteerProfile.discountedRate : null,
-    currency: isUnlocked ? volunteerProfile.currency : null,
+    hourlyRate: isUnlocked && volunteerProfile.volunteerType !== "free" ? volunteerProfile.hourlyRate : null,
+    discountedRate: isUnlocked && volunteerProfile.volunteerType !== "free" ? volunteerProfile.discountedRate : null,
+    currency: isUnlocked && volunteerProfile.volunteerType !== "free" ? volunteerProfile.currency : null,
   }
 
   return view
@@ -2058,7 +2068,7 @@ export async function browseVolunteers(filters?: {
   if (currentUser?.role === "ngo") {
     const ngoProfile = await ngoProfilesDb.findByUserId(currentUser.id)
     if (!ngoProfile || ngoProfile.subscriptionPlan !== "pro") {
-      filteredVolunteers = filteredVolunteers.filter(v => v.volunteerType === "paid")
+      filteredVolunteers = filteredVolunteers.filter(v => v.volunteerType === "paid" || v.volunteerType === "both")
     }
   }
 

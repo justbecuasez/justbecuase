@@ -35,6 +35,7 @@ import {
   Plus,
   Sparkles,
   BellRing,
+  Clock,
 } from "lucide-react"
 
 interface SkillWithName extends VolunteerSkill {
@@ -884,7 +885,17 @@ export default function VolunteerSettingsPage() {
                         ].map((type) => (
                           <div
                             key={type.value}
-                            onClick={() => setProfile({ ...profile, volunteerType: type.value })}
+                            onClick={() => {
+                              const updates: any = { ...profile, volunteerType: type.value }
+                              if (type.value === "free") {
+                                updates.hourlyRate = undefined
+                                updates.discountedRate = undefined
+                                updates.freeHoursPerMonth = undefined
+                              } else if (type.value === "paid") {
+                                updates.freeHoursPerMonth = undefined
+                              }
+                              setProfile(updates)
+                            }}
                             className={`flex flex-col items-center p-4 rounded-lg border-2 cursor-pointer transition-all ${
                               profile?.volunteerType === type.value
                                 ? "border-primary bg-primary/5"
@@ -898,6 +909,40 @@ export default function VolunteerSettingsPage() {
                         ))}
                       </div>
                     </div>
+
+                    {/* Free Hours - Only show for 'Open to Both' */}
+                    {profile?.volunteerType === "both" && (
+                      <div className="space-y-4 p-4 border rounded-lg bg-green-50 dark:bg-green-950/20">
+                        <h3 className="font-medium text-foreground flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-green-600" />
+                          Free Hours Contribution
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          How many free hours per month would you like to offer NGOs? After these hours, your paid rate applies.
+                        </p>
+                        <div className="space-y-2">
+                          <Label htmlFor="freeHoursPerMonth">Free Hours per Month</Label>
+                          <div className="flex items-center gap-4">
+                            <Input
+                              id="freeHoursPerMonth"
+                              type="number"
+                              min="0"
+                              max="40"
+                              placeholder="e.g. 5"
+                              className="w-32"
+                              value={profile?.freeHoursPerMonth || ""}
+                              onChange={(e) =>
+                                setProfile({
+                                  ...profile,
+                                  freeHoursPerMonth: parseInt(e.target.value) || 0,
+                                })
+                              }
+                            />
+                            <span className="text-sm text-muted-foreground">hours/month</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Pricing Fields - Only show when paid or both */}
                     {(profile?.volunteerType === "paid" || profile?.volunteerType === "both") && (
@@ -993,9 +1038,10 @@ export default function VolunteerSettingsPage() {
                         try {
                           const result = await updateVolunteerProfile({
                             volunteerType: profile?.volunteerType,
-                            hourlyRate: profile?.hourlyRate,
-                            discountedRate: profile?.discountedRate,
-                            currency: profile?.currency || "USD",
+                            freeHoursPerMonth: profile?.volunteerType === "both" ? (profile?.freeHoursPerMonth || 0) : undefined,
+                            hourlyRate: (profile?.volunteerType === "paid" || profile?.volunteerType === "both") ? profile?.hourlyRate : undefined,
+                            discountedRate: (profile?.volunteerType === "paid" || profile?.volunteerType === "both") ? profile?.discountedRate : undefined,
+                            currency: (profile?.volunteerType === "paid" || profile?.volunteerType === "both") ? (profile?.currency || "USD") : undefined,
                           })
                           if (result.success) {
                             toast.success("Pricing updated successfully")
