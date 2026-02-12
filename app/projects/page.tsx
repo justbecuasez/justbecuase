@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -48,6 +48,63 @@ export default function ProjectsPage() {
   const [selectedTimeCommitment, setSelectedTimeCommitment] = useState<string[]>([])
   const [selectedLocation, setSelectedLocation] = useState<string>("")
   const [sortBy, setSortBy] = useState("newest")
+
+  // ==========================================
+  // UNIFIED SEARCH API — drives project filtering
+  // When user types, calls the powerful unified search API
+  // (synonyms, multi-strategy, fuzzy, 30+ fields)
+  // and uses returned IDs to filter the local project list.
+  // ==========================================
+  const [unifiedMatchedIds, setUnifiedMatchedIds] = useState<string[] | null>(null)
+  const [unifiedRelevanceOrder, setUnifiedRelevanceOrder] = useState<Map<string, number>>(new Map())
+  const [isUnifiedSearching, setIsUnifiedSearching] = useState(false)
+  const unifiedAbortRef = useRef<AbortController | null>(null)
+
+  // Debounced unified search
+  useEffect(() => {
+    const trimmed = searchQuery.trim()
+    if (trimmed.length < 1) {
+      setUnifiedMatchedIds(null)
+      setUnifiedRelevanceOrder(new Map())
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      unifiedAbortRef.current?.abort()
+      const controller = new AbortController()
+      unifiedAbortRef.current = controller
+
+      setIsUnifiedSearching(true)
+      try {
+        const res = await fetch(
+          `/api/unified-search?q=${encodeURIComponent(trimmed)}&types=opportunity&limit=50`,
+          { signal: controller.signal }
+        )
+        const data = await res.json()
+        if (data.success && !controller.signal.aborted) {
+          const ids = (data.results || []).map((r: any) => r.id)
+          setUnifiedMatchedIds(ids)
+          const orderMap = new Map<string, number>()
+          ids.forEach((id: string, idx: number) => orderMap.set(id, ids.length - idx))
+          setUnifiedRelevanceOrder(orderMap)
+        }
+      } catch (err: any) {
+        if (err.name !== "AbortError") {
+          console.error("Unified search failed:", err)
+        }
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsUnifiedSearching(false)
+        }
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  useEffect(() => {
+    return () => { unifiedAbortRef.current?.abort() }
+  }, [])
 
   // Read initial search query from URL
   useEffect(() => {
@@ -98,19 +155,28 @@ export default function ProjectsPage() {
   const filteredProjects = useMemo(() => {
     let result = [...projects]
     
-    // Search filter
+    // Search filter — powered by unified search API
     if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase()
-      result = result.filter((project) => {
-        const titleMatch = project.title?.toLowerCase().includes(query)
-        const descMatch = project.description?.toLowerCase().includes(query)
-        const skillsMatch = project.skillsRequired?.some(s => 
-          s.categoryId?.toLowerCase().includes(query) || 
-          s.subskillId?.toLowerCase().includes(query)
-        )
-        const ngoMatch = project.ngo?.name?.toLowerCase().includes(query)
-        return titleMatch || descMatch || skillsMatch || ngoMatch
-      })
+      if (unifiedMatchedIds !== null) {
+        // API results ready — filter by matched IDs
+        result = result.filter((project) => {
+          const projectId = project._id?.toString() || project.id || ""
+          return unifiedMatchedIds.includes(projectId)
+        })
+      } else {
+        // API loading — basic client-side fallback so results don't flash empty
+        const query = searchQuery.toLowerCase()
+        result = result.filter((project) => {
+          const titleMatch = project.title?.toLowerCase().includes(query)
+          const descMatch = project.description?.toLowerCase().includes(query)
+          const skillsMatch = project.skillsRequired?.some(s => 
+            s.categoryId?.toLowerCase().includes(query) || 
+            s.subskillId?.toLowerCase().includes(query)
+          )
+          const ngoMatch = project.ngo?.name?.toLowerCase().includes(query)
+          return titleMatch || descMatch || skillsMatch || ngoMatch
+        })
+      }
     }
     
     // Skills filter (by category)
@@ -167,12 +233,19 @@ export default function ProjectsPage() {
         break
       case "relevant":
       default:
-        // Keep original order for relevance (could be enhanced with matching algorithm)
+        // When search is active and API results are available, sort by API relevance
+        if (searchQuery.trim() && unifiedMatchedIds !== null) {
+          result.sort((a, b) => {
+            const idA = a._id?.toString() || a.id || ""
+            const idB = b._id?.toString() || b.id || ""
+            return (unifiedRelevanceOrder.get(idB) || 0) - (unifiedRelevanceOrder.get(idA) || 0)
+          })
+        }
         break
     }
     
     return result
-  }, [projects, searchQuery, selectedSkills, selectedTimeCommitment, selectedLocation, sortBy])
+  }, [projects, searchQuery, selectedSkills, selectedTimeCommitment, selectedLocation, sortBy, unifiedMatchedIds, unifiedRelevanceOrder])
 
   const FilterContent = () => (
     <div className="space-y-6">
