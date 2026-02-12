@@ -2,22 +2,20 @@ import { Suspense } from "react"
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { getVolunteerProfile, getMatchedOpportunitiesForVolunteer, browseProjects, hasAppliedToProject } from "@/lib/actions"
+import { getVolunteerProfile, getMatchedOpportunitiesForVolunteer, hasAppliedToProject } from "@/lib/actions"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ApplyButton } from "@/app/projects/[id]/apply-button"
-import { OpportunitiesSearchCard } from "./opportunities-search"
+import { OpportunitiesBrowser } from "./opportunities-browser"
 import Link from "next/link"
 import {
   Clock,
   MapPin,
-  Building2,
   Calendar,
   Users,
-  ArrowRight,
   Sparkles,
 } from "lucide-react"
 
@@ -65,10 +63,7 @@ export default async function VolunteerOpportunitiesPage() {
             </p>
           </div>
 
-          {/* Search */}
-          <OpportunitiesSearchCard />
-
-          {/* Recommended Section */}
+          {/* Recommended Section — always visible, server-rendered */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="h-5 w-5 text-primary" />
@@ -79,12 +74,10 @@ export default async function VolunteerOpportunitiesPage() {
             </Suspense>
           </div>
 
-          {/* All Opportunities */}
+          {/* All Opportunities — client component with search + filters */}
           <div>
             <h2 className="text-lg font-semibold text-foreground mb-4">All Opportunities</h2>
-            <Suspense fallback={<OpportunitiesSkeleton />}>
-              <AllOpportunities />
-            </Suspense>
+            <OpportunitiesBrowser />
           </div>
         </main>
       </div>
@@ -118,32 +111,6 @@ async function RecommendedOpportunities() {
           project={match.project}
           matchScore={match.score}
         />
-      )))}
-    </div>
-  )
-}
-
-async function AllOpportunities() {
-  const projects = await browseProjects()
-
-  if (projects.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-12 text-center">
-          <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No opportunities available at the moment</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Check back later for new volunteer opportunities
-          </p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  return (
-    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {await Promise.all(projects.map(async (project) => (
-        <OpportunityCard key={project._id?.toString()} project={project} />
       )))}
     </div>
   )
