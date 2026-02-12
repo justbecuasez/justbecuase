@@ -58,7 +58,7 @@ async function DashboardContent() {
       {/* Key Metrics Row */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <MetricCard
-          title="Total Volunteers"
+          title="Total Impact Agents"
           value={analytics.totalVolunteers}
           icon={Users}
           subtext={`+${analytics.recentVolunteers} this month`}

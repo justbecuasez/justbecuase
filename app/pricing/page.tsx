@@ -98,21 +98,21 @@ export default function PricingPage() {
       icon: Building2,
       features: [
         `Post up to ${platformSettings?.ngoFreeProjectsPerMonth || 3} projects per month`,
-        "Browse volunteer profiles",
-        "View paid volunteer profiles",
-        "Basic volunteer matching",
+        "Browse impact agent profiles",
+        "View paid impact agent profiles",
+        "Basic impact agent matching",
         "Email support",
       ],
       limitations: [
-        "Cannot unlock FREE volunteer profiles",
-        "Upgrade to Pro to unlock volunteers",
+        "Cannot unlock FREE impact agent profiles",
+        "Upgrade to Pro to unlock impact agents",
       ],
       popular: false,
     },
     {
       id: "ngo-pro",
       name: "Pro",
-      description: "Unlock unlimited FREE volunteer profiles",
+      description: "Unlock unlimited FREE impact agent profiles",
       // Use Stripe Payment Link price for accurate display
       price: STRIPE_PAYMENT_LINKS["ngo-pro-monthly"].price,
       priceDisplay: `${STRIPE_PAYMENT_LINKS["ngo-pro-monthly"].currency === "USD" ? "$" : currencySymbol}${STRIPE_PAYMENT_LINKS["ngo-pro-monthly"].price}`,
@@ -120,8 +120,8 @@ export default function PricingPage() {
       icon: Zap,
       features: platformSettings?.ngoProFeatures || [
         "Unlimited opportunities",
-        "Unlock UNLIMITED free volunteer profiles",
-        "View all paid volunteer profiles",
+        "Unlock UNLIMITED free impact agent profiles",
+        "View all paid impact agent profiles",
         "Advanced AI-powered matching",
         "Priority support",
         "Opportunity analytics & reports",
@@ -136,7 +136,7 @@ export default function PricingPage() {
     {
       id: "volunteer-free",
       name: "Free",
-      description: "Start volunteering and make an impact",
+      description: "Start contributing and make an impact",
       price: 0,
       priceDisplay: `${currencySymbol}0`,
       period: "forever",
@@ -501,10 +501,10 @@ export default function PricingPage() {
             {user && forcedTab && (
               <div className="text-center mb-8 p-4 bg-muted/50 rounded-lg max-w-2xl mx-auto">
                 <p className="text-muted-foreground">
-                  You're logged in as {userRole === "ngo" ? "an NGO" : "a volunteer"}. 
+                  You're logged in as {userRole === "ngo" ? "an NGO" : "an impact agent"}. 
                   {userRole === "ngo" 
                     ? " Upgrade your NGO subscription below."
-                    : " Upgrade your volunteer subscription below."}
+                    : " Upgrade your impact agent subscription below."}
                 </p>
               </div>
             )}
@@ -520,7 +520,7 @@ export default function PricingPage() {
                     </TabsTrigger>
                     <TabsTrigger value="volunteer" className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      For Volunteers
+                      For Impact Agents
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -560,14 +560,14 @@ export default function PricingPage() {
               <div className="p-6 bg-background rounded-lg border">
                 <h3 className="font-semibold text-foreground mb-2">What is a profile unlock? (NGOs)</h3>
                 <p className="text-muted-foreground">
-                  When you find a FREE volunteer you&apos;d like to connect with, you need to unlock their profile 
-                  to view their contact information. NGO Pro subscribers can unlock <strong>unlimited</strong> free volunteer profiles.
+                  When you find a FREE impact agent you&apos;d like to connect with, you need to unlock their profile 
+                  to view their contact information. NGO Pro subscribers can unlock <strong>unlimited</strong> free impact agent profiles.
                   Free plan NGOs must upgrade to Pro to unlock any profiles.
                 </p>
               </div>
               
               <div className="p-6 bg-background rounded-lg border">
-                <h3 className="font-semibold text-foreground mb-2">What counts as an application? (Volunteers)</h3>
+                <h3 className="font-semibold text-foreground mb-2">What counts as an application? (Impact Agents)</h3>
                 <p className="text-muted-foreground">
                   Each time you apply to a project/opportunity, it counts as one application. 
                   Free plan includes {platformSettings?.volunteerFreeApplicationsPerMonth || 3} applications per month.

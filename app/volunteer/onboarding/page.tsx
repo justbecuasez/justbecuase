@@ -679,7 +679,7 @@ export default function VolunteerOnboardingPage() {
           <Label htmlFor="bio">Tell us about yourself</Label>
           <Textarea
             id="bio"
-            placeholder="Share your background, interests, and what drives you to volunteer..."
+            placeholder="Share your background, interests, and what drives you to make an impact..."
             value={profile.bio}
             onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
             rows={4}
@@ -868,7 +868,7 @@ export default function VolunteerOnboardingPage() {
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
-            Volunteer Type
+            Impact Agent Type
           </Label>
           <RadioGroup
             value={workPreferences.volunteerType}
@@ -889,7 +889,7 @@ export default function VolunteerOnboardingPage() {
               <Heart className="h-6 w-6 mb-2 text-primary" />
               <span className="font-medium">Pro-Bono Only</span>
               <span className="text-xs text-muted-foreground text-center mt-1">
-                Volunteer for free
+                Contribute for free
               </span>
             </Label>
             <Label

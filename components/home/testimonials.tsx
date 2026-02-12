@@ -15,7 +15,7 @@ export function Testimonials() {
             Trusted by the architects <br /> of social change.
           </h2>
           <p className="text-lg text-slate-500 font-light">
-            Real stories from professional volunteers and the NGOs they’ve helped scale.
+            Real stories from professional impact agents and the NGOs they&apos;ve helped scale.
           </p>
         </div>
 

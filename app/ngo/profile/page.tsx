@@ -313,7 +313,7 @@ export default function NGOProfilePage() {
                 <div>
                   <h3 className="font-semibold text-foreground">Profile Completion</h3>
                   <p className="text-sm text-muted-foreground">
-                    Complete your profile to attract more volunteers
+                    Complete your profile to attract more impact agents
                   </p>
                 </div>
                 <span className="text-2xl font-bold text-primary">{completion}%</span>
@@ -510,7 +510,7 @@ export default function NGOProfilePage() {
                       id="description"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Tell volunteers about your organization, what you do, and your impact..."
+                      placeholder="Tell impact agents about your organization, what you do, and your impact..."
                       rows={4}
                     />
                   </div>
@@ -686,7 +686,7 @@ export default function NGOProfilePage() {
                 <CardHeader>
                   <CardTitle>Skills You Typically Need</CardTitle>
                   <CardDescription>
-                    These skills were set during onboarding and help match you with volunteers
+                    These skills were set during onboarding and help match you with impact agents
                   </CardDescription>
                 </CardHeader>
                 <CardContent>

@@ -373,7 +373,7 @@ export default function AdminSettingsPage() {
           </TabsTrigger>
           <TabsTrigger value="volunteer-plans" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Volunteer Plans
+            Impact Agent Plans
           </TabsTrigger>
           <TabsTrigger value="ngo-plans" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
@@ -440,7 +440,7 @@ export default function AdminSettingsPage() {
                     setSettings({ ...settings, platformDescription: e.target.value })
                   }
                   rows={3}
-                  placeholder="Connecting NGOs with skilled volunteers..."
+                  placeholder="Connecting NGOs with skilled impact agents..."
                 />
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
@@ -951,25 +951,25 @@ export default function AdminSettingsPage() {
                   <div>
                     <p className="font-medium">NGO Pro Subscription</p>
                     <p className="text-sm text-muted-foreground">
-                      NGOs with Pro subscription can unlock <strong>unlimited FREE volunteer profiles</strong>.
-                      NGOs can view paid volunteer profiles without subscription.
+                      NGOs with Pro subscription can unlock <strong>unlimited FREE impact agent profiles</strong>.
+                      NGOs can view paid impact agent profiles without subscription.
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <Users className="h-5 w-5 text-primary mt-0.5" />
                   <div>
-                    <p className="font-medium">Volunteer Pro Subscription</p>
+                    <p className="font-medium">Impact Agent Pro Subscription</p>
                     <p className="text-sm text-muted-foreground">
-                      Volunteers with Pro subscription can apply to <strong>unlimited jobs</strong>.
-                      Free volunteers are limited to {settings?.volunteerFreeApplicationsPerMonth || 3} applications/month.
+                      Impact Agents with Pro subscription can apply to <strong>unlimited jobs</strong>.
+                      Free impact agents are limited to {settings?.volunteerFreeApplicationsPerMonth || 3} applications/month.
                     </p>
                   </div>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
                 Note: Individual profile unlock payments are not part of the business model. 
-                NGOs must upgrade to Pro to unlock volunteer profiles.
+                NGOs must upgrade to Pro to unlock impact agent profiles.
               </p>
             </CardContent>
           </Card>
@@ -981,10 +981,10 @@ export default function AdminSettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Badge variant="secondary">Free Plan</Badge>
-                Volunteer Free Plan Limits
+                Impact Agent Free Plan Limits
               </CardTitle>
               <CardDescription>
-                Configure limits for volunteers on the free plan
+                Configure limits for impact agents on the free plan
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -1016,7 +1016,7 @@ export default function AdminSettingsPage() {
                   <div>
                     <Label>Profile Visibility</Label>
                     <p className="text-xs text-muted-foreground">
-                      Allow free plan volunteers to be visible in search
+                      Allow free plan impact agents to be visible in search
                     </p>
                   </div>
                 </div>
@@ -1028,10 +1028,10 @@ export default function AdminSettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Badge className="bg-primary">Pro Plan</Badge>
-                Volunteer Pro Plan
+                Impact Agent Pro Plan
               </CardTitle>
               <CardDescription>
-                Configure pricing and features for the volunteer pro plan
+                Configure pricing and features for the impact agent pro plan
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -1597,7 +1597,7 @@ export default function AdminSettingsPage() {
                 <div>
                   <p className="font-medium">Require Phone Verification</p>
                   <p className="text-sm text-muted-foreground">
-                    Require volunteers to verify their phone number during onboarding
+                    Require impact agents to verify their phone number during onboarding
                   </p>
                 </div>
                 <Switch

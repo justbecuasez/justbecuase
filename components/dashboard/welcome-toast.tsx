@@ -13,7 +13,7 @@ export function WelcomeToast() {
     if (welcomeName) {
       // Show welcome toast with the volunteer's name
       toast.success(`Welcome to JustBeCause, ${decodeURIComponent(welcomeName)}!`, {
-        description: "Your profile has been set up successfully. Start exploring volunteer opportunities!",
+        description: "Your profile has been set up successfully. Start exploring impact opportunities!",
         duration: 5000,
       })
       

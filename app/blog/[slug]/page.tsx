@@ -17,16 +17,16 @@ const blogPosts: Record<string, {
   content: string
 }> = {
   "launch-announcement": {
-    title: "Introducing JustBeCause Network - Skills-Based Volunteering",
+    title: "Introducing JustBeCause Network - Skills-Based Impact Platform",
     excerpt: "We're excited to launch JustBeCause Network, a platform connecting skilled professionals with NGOs that need their expertise.",
     date: "December 6, 2025",
     author: "JustBeCause Team",
     category: "Announcement",
     readTime: "3 min read",
     content: `
-## A New Era of Meaningful Volunteering
+## A New Era of Meaningful Impact
 
-Today marks the beginning of something special. After months of development and countless conversations with NGOs and volunteers, we're thrilled to officially launch JustBeCause Network.
+Today marks the beginning of something special. After months of development and countless conversations with NGOs and impact agents, we're thrilled to officially launch JustBeCause Network.
 
 ### The Problem We're Solving
 
@@ -52,8 +52,8 @@ JustBeCause Network bridges this gap by creating a marketplace where:
 
 Unlike traditional volunteering platforms, we focus exclusively on **skills-based contributions**. This means:
 
-- Higher impact per volunteer hour
-- More fulfilling experience for volunteers
+- Higher impact per contribution hour
+- More fulfilling experience for impact agents
 - Sustainable support for NGOs
 - Measurable outcomes for everyone
 
@@ -69,8 +69,8 @@ Together, we can create lasting change worldwide - one project at a time.
     `,
   },
   "why-skills-based-volunteering": {
-    title: "Why Skills-Based Volunteering Matters More Than Ever",
-    excerpt: "Traditional volunteering is valuable, but skills-based volunteering can multiply an NGO's impact by 10x. Here's why.",
+    title: "Why Skills-Based Impact Matters More Than Ever",
+    excerpt: "Traditional volunteering is valuable, but skills-based contributions can multiply an NGO's impact by 10x. Here's why.",
     date: "December 5, 2025",
     author: "Akash Mahlaz",
     category: "Impact",
@@ -78,19 +78,19 @@ Together, we can create lasting change worldwide - one project at a time.
     content: `
 ## The Multiplier Effect
 
-When a professional marketer volunteers 10 hours to develop a fundraising strategy for an NGO, the impact can be worth thousands of dollars in revenue generated over years. That's the power of skills-based volunteering.
+When a professional marketer contributes 10 hours to develop a fundraising strategy for an NGO, the impact can be worth thousands of dollars in revenue generated over years. That's the power of skills-based impact.
 
 ### The Numbers Don't Lie
 
 Studies have shown that:
 
-- **Skills-based volunteers** contribute an average of **$195 per hour** in value
+- **Skills-based impact agents** contribute an average of **$195 per hour** in value
 - Traditional volunteers contribute approximately **$29 per hour**
 - That's a **6.7x multiplier** on impact
 
 ### Beyond the Numbers
 
-But it's not just about money. Skills-based volunteering creates:
+But it's not just about money. Skills-based contributions create:
 
 #### 1. Sustainable Solutions
 
@@ -98,11 +98,11 @@ When you teach an NGO how to run their own social media campaigns, you're not ju
 
 #### 2. Professional Development
 
-Volunteers gain real-world experience in new contexts. A corporate lawyer helping with nonprofit governance learns about social impact. A tech manager building a database for a charity learns about resource constraints.
+Impact agents gain real-world experience in new contexts. A corporate lawyer helping with nonprofit governance learns about social impact. A tech manager building a database for a charity learns about resource constraints.
 
 #### 3. Deeper Engagement
 
-Skills-based volunteers report higher satisfaction because they see the direct impact of their specific expertise. It's the difference between "I packed boxes" and "I designed a system that will help them serve 10,000 more families."
+Skills-based impact agents report higher satisfaction because they see the direct impact of their specific expertise. It's the difference between "I packed boxes" and "I designed a system that will help them serve 10,000 more families."
 
 ### The Asia Opportunity
 
@@ -126,7 +126,7 @@ The world needs what you know. Let's put it to work.
   },
   "getting-started-ngos": {
     title: "Getting Started: A Guide for NGOs",
-    excerpt: "Learn how to post your first project, attract the right volunteers, and maximize the value of skills-based partnerships.",
+    excerpt: "Learn how to post your first project, attract the right impact agents, and maximize the value of skills-based partnerships.",
     date: "December 4, 2025",
     author: "JustBeCause Team",
     category: "Guide",
@@ -134,15 +134,15 @@ The world needs what you know. Let's put it to work.
     content: `
 ## Welcome to JustBeCause Network
 
-This guide will help you get the most out of our platform and connect with skilled volunteers who can help your organization grow.
+This guide will help you get the most out of our platform and connect with skilled impact agents who can help your organization grow.
 
 ### Step 1: Complete Your Profile
 
-Your organization profile is often the first thing volunteers see. Make it count:
+Your organization profile is often the first thing impact agents see. Make it count:
 
 - **Add a compelling logo** - First impressions matter
 - **Write a clear mission statement** - What change are you trying to create?
-- **List your focus areas** - Help volunteers find you
+- **List your focus areas** - Help impact agents find you
 - **Add verification documents** - Verified NGOs get 3x more applications
 
 ### Step 2: Post Effective Projects

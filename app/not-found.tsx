@@ -49,7 +49,7 @@ export default function NotFound() {
                 Contact Support
               </Link>
               <Link href="/for-volunteers" className="text-primary hover:underline">
-                For Volunteers
+                For Impact Agents
               </Link>
               <Link href="/for-ngos" className="text-primary hover:underline">
                 For NGOs

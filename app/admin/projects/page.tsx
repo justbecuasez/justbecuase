@@ -13,7 +13,7 @@ export default async function AdminProjectsPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground mb-2">Manage Opportunities</h1>
         <p className="text-muted-foreground">
-          View and manage all volunteer opportunities
+          View and manage all impact agent opportunities
         </p>
       </div>
 

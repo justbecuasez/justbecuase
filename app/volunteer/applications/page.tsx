@@ -48,7 +48,7 @@ export default async function VolunteerApplicationsPage() {
     <div className="min-h-screen bg-background">
       <DashboardHeader
         userType="volunteer"
-        userName={session.user.name || "Volunteer"}
+        userName={session.user.name || "Impact Agent"}
         userAvatar={session.user.image || undefined}
       />
 
@@ -59,7 +59,7 @@ export default async function VolunteerApplicationsPage() {
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">My Applications</h1>
             <p className="text-muted-foreground">
-              Track the status of your volunteer applications
+              Track the status of your impact agent applications
             </p>
           </div>
 

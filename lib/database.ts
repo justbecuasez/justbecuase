@@ -837,7 +837,7 @@ export const adminSettingsDb = {
           "Priority support",
           "Project analytics & reports",
           "Featured NGO badge",
-          "Bulk volunteer outreach",
+          "Bulk impact agent outreach",
         ],
         
         // Features Toggle
@@ -856,8 +856,8 @@ export const adminSettingsDb = {
         maintenanceMode: false,
         
         // SEO
-        metaTitle: "JustBeCause Network - Connect NGOs with Volunteers",
-        metaDescription: "Platform connecting NGOs with skilled volunteers for social impact",
+        metaTitle: "JustBeCause Network - Connect NGOs with Impact Agents",
+        metaDescription: "Platform connecting NGOs with skilled impact agents for social impact",
         
         updatedAt: new Date(),
         updatedBy: adminUserId,

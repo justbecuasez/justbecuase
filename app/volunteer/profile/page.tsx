@@ -292,7 +292,7 @@ export default function VolunteerProfileEditPage() {
   }
 
   const profileCompletion = calculateCompletion()
-  const userName = formData.name || session.user.name || "Volunteer"
+  const userName = formData.name || session.user.name || "Impact Agent"
   const userAvatar = profile?.avatar || session.user.image || undefined
 
   return (
@@ -445,7 +445,7 @@ export default function VolunteerProfileEditPage() {
                           value={formData.bio}
                           onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                           rows={4}
-                          placeholder="Tell NGOs about yourself, your experience, and why you volunteer..."
+                          placeholder="Tell NGOs about yourself, your experience, and why you contribute..."
                         />
                       </div>
 
@@ -597,7 +597,7 @@ export default function VolunteerProfileEditPage() {
                 <TabsContent value="preferences">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Volunteering Preferences</CardTitle>
+                      <CardTitle>Impact Preferences</CardTitle>
                       <CardDescription>Set your availability and preferences</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
@@ -642,7 +642,7 @@ export default function VolunteerProfileEditPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Volunteer Type</Label>
+                        <Label>Impact Agent Type</Label>
                         <Badge variant="secondary" className="capitalize">
                           {profile?.volunteerType === "free" ? "Pro-Bono Only" : 
                            profile?.volunteerType === "paid" ? "Paid Only" : 

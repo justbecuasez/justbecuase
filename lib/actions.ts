@@ -1,4 +1,4 @@
-"use server"
+﻿"use server"
 
 // ============================================
 // Server Actions for JustBecause Network
@@ -683,7 +683,7 @@ export async function createProject(data: {
               to: volUser.email,
               subject: `New opportunity matching your skills: ${sanitizedTitle}`,
               html: getNewOpportunityEmailHtml(
-                vol.name || volUser.name || "Volunteer",
+                vol.name || volUser.name || "Impact Agent",
                 sanitizedTitle,
                 ngoProfile.organizationName || "An NGO",
                 projectId
@@ -878,7 +878,7 @@ export async function applyToProject(
         userId: project.ngoId,
         type: "new_application",
         title: "New Application Received",
-        message: `A volunteer has applied to "${project.title}"`,
+        message: `An impact agent has applied to "${project.title}"`,
         referenceId: applicationId,
         referenceType: "application",
         isRead: false,
@@ -916,7 +916,7 @@ export async function toggleSaveProject(projectId: string): Promise<ApiResponse<
 
     const profile = await volunteerProfilesDb.findByUserId(user.id)
     if (!profile) {
-      return { success: false, error: "Volunteer profile not found" }
+      return { success: false, error: "Impact agent profile not found" }
     }
 
     const savedProjects = profile.savedProjects || []
@@ -1106,15 +1106,15 @@ export async function getVolunteerProfileView(
   else if (currentUser?.role === "admin") {
     isUnlocked = true
   }
-  // NGO with Pro subscription → can see free/both profiles
+  // NGO with Pro subscription â†’ can see free/both profiles
   else if (currentUser && currentUser.role === "ngo") {
     const ngoProfile = await ngoProfilesDb.findByUserId(currentUser.id)
     isUnlocked = ngoProfile?.subscriptionPlan === "pro"
   }
-  // Everyone else (non-logged-in, volunteers, free NGOs) → locked for free/both
+  // Everyone else (non-logged-in, volunteers, free NGOs) â†’ locked for free/both
 
   // Get the best name available
-  const displayName = volunteerProfile.name || volunteerUser?.name || "Volunteer"
+  const displayName = volunteerProfile.name || volunteerUser?.name || "Impact Agent"
 
   // Build the view based on unlock status
   const view: VolunteerProfileView = {
@@ -1537,7 +1537,7 @@ export async function getAdminAnalytics() {
       .toArray()
       .then(docs => docs.map(d => ({ 
         type: "payment" as const,
-        text: `Payment received: ₹${d.amount}`,
+        text: `Payment received: â‚¹${d.amount}`,
         createdAt: d.createdAt 
       }))),
   ])
@@ -2669,7 +2669,7 @@ export async function followNgo(ngoId: string): Promise<ApiResponse<void>> {
     
     const volunteerProfile = await volunteerProfilesDb.findByUserId(user.id)
     if (!volunteerProfile) {
-      return { success: false, error: "Volunteer profile not found" }
+      return { success: false, error: "Impact agent profile not found" }
     }
 
     const followedNgos = volunteerProfile.followedNgos || []
@@ -2695,7 +2695,7 @@ export async function unfollowNgo(ngoId: string): Promise<ApiResponse<void>> {
     
     const volunteerProfile = await volunteerProfilesDb.findByUserId(user.id)
     if (!volunteerProfile) {
-      return { success: false, error: "Volunteer profile not found" }
+      return { success: false, error: "Impact agent profile not found" }
     }
 
     const followedNgos = volunteerProfile.followedNgos || []

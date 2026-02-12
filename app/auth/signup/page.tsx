@@ -296,7 +296,7 @@ export default function SignUpPage() {
               <User className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-foreground mb-1">I'm a Volunteer</h3>
+              <h3 className="font-semibold text-foreground mb-1">I'm an Impact Agent</h3>
               <p className="text-sm text-muted-foreground">
                 I want to contribute my skills and expertise to help NGOs and nonprofits.
               </p>
@@ -322,7 +322,7 @@ export default function SignUpPage() {
             <div className="flex-1">
               <h3 className="font-semibold text-foreground mb-1">I'm an NGO / Nonprofit</h3>
               <p className="text-sm text-muted-foreground">
-                I want to find skilled volunteers to help with opportunities and grow our capacity.
+                I want to find skilled impact agents to help with opportunities and grow our capacity.
               </p>
             </div>
             <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-secondary transition-colors" />
@@ -340,7 +340,7 @@ export default function SignUpPage() {
         </Button>
         <div>
           <h2 className="font-semibold text-foreground">
-            {accountType === "volunteer" ? "Create your volunteer account" : "Register your organization"}
+            {accountType === "volunteer" ? "Create your impact agent account" : "Register your organization"}
           </h2>
           <p className="text-sm text-muted-foreground">Enter your details to get started</p>
         </div>
@@ -587,7 +587,7 @@ export default function SignUpPage() {
           <Card className="border-0 shadow-lg">
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl">Create an account</CardTitle>
-              <CardDescription>Join thousands of volunteers and NGOs making an impact</CardDescription>
+              <CardDescription>Join thousands of impact agents and NGOs making an impact</CardDescription>
             </CardHeader>
             <CardContent>
               {/* Email Verification Message */}
@@ -718,7 +718,7 @@ export default function SignUpPage() {
           <div className="grid grid-cols-2 gap-6">
             <div className="text-center">
               <p className="text-4xl font-bold mb-1">2,847</p>
-              <p className="text-sm text-primary-foreground/80">Volunteers</p>
+              <p className="text-sm text-primary-foreground/80">Impact Agents</p>
             </div>
             <div className="text-center">
               <p className="text-4xl font-bold mb-1">456</p>

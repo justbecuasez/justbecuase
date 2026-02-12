@@ -90,7 +90,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                   </div>
                   <div className="flex items-center gap-1 text-foreground">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    {ngo.volunteersEngaged} volunteers engaged
+                    {ngo.volunteersEngaged} impact agents engaged
                   </div>
                 </div>
 
@@ -238,7 +238,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 rounded-lg bg-muted/50">
                       <p className="text-xl font-bold text-foreground">{ngo.volunteersEngaged}</p>
-                      <p className="text-xs text-muted-foreground">Volunteers</p>
+                      <p className="text-xs text-muted-foreground">Impact Agents</p>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-muted/50">
                       <p className="text-xl font-bold text-foreground">

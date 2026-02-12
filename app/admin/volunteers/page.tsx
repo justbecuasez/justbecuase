@@ -19,9 +19,9 @@ export default async function AdminVolunteersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Manage Volunteers</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-2">Manage Impact Agents</h1>
         <p className="text-muted-foreground">
-          View and manage all volunteer profiles
+          View and manage all impact agent profiles
         </p>
       </div>
 
@@ -34,7 +34,7 @@ export default async function AdminVolunteersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{total}</p>
-              <p className="text-sm text-muted-foreground">Total Volunteers</p>
+              <p className="text-sm text-muted-foreground">Total Impact Agents</p>
             </div>
           </CardContent>
         </Card>
@@ -76,7 +76,7 @@ export default async function AdminVolunteersPage() {
       {/* Searchable Volunteers List */}
       <VolunteersSearchableList 
         volunteers={volunteers} 
-        title="All Volunteers"
+        title="All Impact Agents"
       />
     </div>
   )

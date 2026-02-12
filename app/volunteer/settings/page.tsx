@@ -311,7 +311,7 @@ export default function VolunteerSettingsPage() {
     <div className="min-h-screen bg-background">
       <DashboardHeader
         userType="volunteer"
-        userName={profile?.name || session.user.name || "Volunteer"}
+        userName={profile?.name || session.user.name || "Impact Agent"}
         userAvatar={profile?.avatar || session.user.image || undefined}
       />
 
@@ -750,7 +750,7 @@ export default function VolunteerSettingsPage() {
                       <div>
                         <p className="font-medium">Show in Search Results</p>
                         <p className="text-sm text-muted-foreground">
-                          Allow your profile to appear in volunteer searches
+                          Allow your profile to appear in impact agent searches
                         </p>
                       </div>
                       <Switch
@@ -867,19 +867,19 @@ export default function VolunteerSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <CreditCard className="h-5 w-5" />
-                      Your Pricing & Volunteer Type
+                      Your Pricing & Impact Agent Type
                     </CardTitle>
                     <CardDescription>
-                      Set your volunteer type and rates for NGOs
+                      Set your impact agent type and rates for NGOs
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Volunteer Type Selection */}
                     <div className="space-y-3">
-                      <Label className="text-base font-medium">Volunteer Type</Label>
+                      <Label className="text-base font-medium">Impact Agent Type</Label>
                       <div className="grid sm:grid-cols-3 gap-3">
                         {[
-                          { value: "free", label: "Pro-Bono Only", desc: "Volunteer for free", icon: "❤️" },
+                          { value: "free", label: "Pro-Bono Only", desc: "Contribute for free", icon: "❤️" },
                           { value: "paid", label: "Paid Only", desc: "Charge for your time", icon: "💰" },
                           { value: "both", label: "Open to Both", desc: "Flexible based on opportunity", icon: "💡" },
                         ].map((type) => (

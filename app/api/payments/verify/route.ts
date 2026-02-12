@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     } = body
 
     if (!volunteerId) {
-      return NextResponse.json({ error: "Volunteer ID required" }, { status: 400 })
+      return NextResponse.json({ error: "Impact agent ID required" }, { status: 400 })
     }
 
     let paymentVerification: { success: boolean; paymentId: string }

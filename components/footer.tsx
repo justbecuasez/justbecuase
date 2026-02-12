@@ -54,7 +54,7 @@ export function Footer() {
 
           {/* For Volunteers */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">For Volunteers</h4>
+            <h4 className="font-semibold text-foreground mb-4">For Impact Agents</h4>
             <ul className="space-y-3">
               <li>
                 <Link href="/projects" className="text-muted-foreground hover:text-foreground transition-colors">

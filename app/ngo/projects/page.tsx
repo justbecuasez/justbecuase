@@ -70,7 +70,7 @@ export default async function NGOProjectsPage() {
             <div>
               <h1 className="text-2xl font-bold text-foreground mb-2">My Requirements</h1>
               <p className="text-muted-foreground">
-                Manage your volunteer opportunities
+                Manage your impact agent opportunities
               </p>
             </div>
             <Button asChild>

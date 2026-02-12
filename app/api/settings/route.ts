@@ -36,12 +36,12 @@ export async function GET() {
             "Priority support",
             "Project analytics & reports",
             "Featured NGO badge",
-            "Bulk volunteer outreach",
+            "Bulk impact agent outreach",
           ],
           enablePayments: true,
           enableMessaging: true,
-          metaTitle: "JustBeCause Network - Connect NGOs with Volunteers",
-          metaDescription: "Platform connecting NGOs with skilled volunteers for social impact",
+          metaTitle: "JustBeCause Network - Connect NGOs with Impact Agents",
+          metaDescription: "Platform connecting NGOs with skilled impact agents for social impact",
         }
       })
     }

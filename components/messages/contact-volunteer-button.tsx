@@ -73,14 +73,14 @@ export function ContactVolunteerButton({
       <DialogTrigger asChild>
         <Button variant={variant} className={className}>
           <MessageSquare className="h-4 w-4 mr-2" />
-          Contact Volunteer
+          Contact Impact Agent
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Message {volunteerName}</DialogTitle>
           <DialogDescription>
-            Send a message to start a conversation with this volunteer.
+            Send a message to start a conversation with this impact agent.
           </DialogDescription>
         </DialogHeader>
         
@@ -93,7 +93,7 @@ export function ContactVolunteerButton({
             className="resize-none"
           />
           <p className="text-xs text-muted-foreground">
-            Be specific about what you're looking for and how this volunteer can help.
+            Be specific about what you're looking for and how this impact agent can help.
           </p>
         </div>
 

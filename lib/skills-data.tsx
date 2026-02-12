@@ -149,7 +149,7 @@ export const workModes = [
 ] as const;
 
 export const volunteerTypes = [
-  { id: "free", name: "Pro-Bono", description: "Volunteer for free" },
+  { id: "free", name: "Pro-Bono", description: "Contribute for free" },
   { id: "paid", name: "Paid", description: "Charge for your time" },
   { id: "both", name: "Both", description: "Flexible based on opportunity" },
 ] as const;

@@ -75,14 +75,14 @@ export function Navbar() {
   // ⭐ Role-based nav
   const baseLinks = [
     { href: "/projects", label: "Browse Opportunities" },
-    { href: "/for-volunteers", label: "For Volunteers" },
+    { href: "/for-volunteers", label: "For Impact Agents" },
     { href: "/for-ngos", label: "For NGOs" },
     { href: "/about", label: "About Us" },
   ]
 
   const adminLinks = [{ href: "/admin", label: "Admin Panel" }]
   const ngoLinks = [{ href: "/ngo/dashboard", label: "NGO Dashboard" }]
-  const volunteerLinks = [{ href: "/volunteer/dashboard", label: "Volunteer Dashboard" }]
+  const volunteerLinks = [{ href: "/volunteer/dashboard", label: "Impact Agent Dashboard" }]
 
   const roleLinks =
     user?.role === "admin"

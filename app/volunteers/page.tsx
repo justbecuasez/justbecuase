@@ -231,7 +231,7 @@ export default function VolunteersPage() {
     <div className="space-y-6">
       {/* Volunteer Type */}
       <div>
-        <Label className="text-sm font-semibold text-foreground mb-3 block">Volunteer Type</Label>
+        <Label className="text-sm font-semibold text-foreground mb-3 block">Impact Agent Type</Label>
         <RadioGroup
           value={selectedVolunteerType || "all"}
           onValueChange={(value) => setSelectedVolunteerType(value === "all" ? "" : value)}
@@ -239,7 +239,7 @@ export default function VolunteersPage() {
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="all" id="type-all" />
             <Label htmlFor="type-all" className="text-sm font-normal cursor-pointer">
-              All Volunteers
+              All Impact Agents
             </Label>
           </div>
           <div className="flex items-center space-x-2">
@@ -366,7 +366,7 @@ export default function VolunteersPage() {
           <div className="container mx-auto px-4 md:px-6">
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                Find Skilled Volunteers
+                Find Skilled Impact Agents
               </h1>
               <p className="text-lg text-muted-foreground mb-8">
                 Connect with talented professionals ready to contribute their skills to your cause
@@ -498,7 +498,7 @@ export default function VolunteersPage() {
                 <p className="text-muted-foreground">
                   Showing{" "}
                   <span className="font-medium text-foreground">{filteredVolunteers.length}</span>{" "}
-                  of {volunteers.length} volunteers
+                  of {volunteers.length} impact agents
                   {isUnifiedSearching && (
                     <Loader2 className="inline h-4 w-4 animate-spin ml-2" />
                   )}
@@ -513,11 +513,11 @@ export default function VolunteersPage() {
                 </div>
               ) : filteredVolunteers.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">No volunteers found</p>
+                  <p className="text-muted-foreground">No impact agents found</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     {hasActiveFilters || searchQuery
                       ? "Try adjusting your filters or search terms"
-                      : "Check back later for new volunteers"}
+                      : "Check back later for new impact agents"}
                   </p>
                   {(hasActiveFilters || searchQuery) && (
                     <Button variant="outline" className="mt-4" onClick={clearFilters}>

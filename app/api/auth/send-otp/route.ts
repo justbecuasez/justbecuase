@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
             <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
-            <p style="color: #666; margin-top: 5px;">Skills-Based Volunteering Platform</p>
+            <p style="color: #666; margin-top: 5px;">Skills-Based Impact Platform</p>
           </div>
           
           <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px; text-align: center;">

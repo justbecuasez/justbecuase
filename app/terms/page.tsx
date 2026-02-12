@@ -38,7 +38,7 @@ export default function TermsPage() {
                   credentials.
                 </p>
                 <p>
-                  <strong>2.2 Account Types:</strong> The Platform offers two types of accounts: Volunteer
+                  <strong>2.2 Account Types:</strong> The Platform offers two types of accounts: Impact Agent
                   accounts and NGO/Nonprofit accounts. You may only create one account per entity.
                 </p>
                 <p>
@@ -56,10 +56,10 @@ export default function TermsPage() {
                 <p>Users agree to:</p>
                 <ul className="list-disc pl-6 space-y-2">
                   <li>Provide truthful and accurate information</li>
-                  <li>Use the Platform for its intended purpose of skills-based volunteering</li>
+                  <li>Use the Platform for its intended purpose of skills-based contributions</li>
                   <li>Respect intellectual property rights</li>
                   <li>Not engage in harassment, discrimination, or abusive behavior</li>
-                  <li>Not use the Platform for commercial solicitation unrelated to volunteering</li>
+                  <li>Not use the Platform for commercial solicitation unrelated to impact work</li>
                   <li>Not impersonate others or create fake accounts</li>
                 </ul>
               </CardContent>
@@ -67,20 +67,20 @@ export default function TermsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>4. Volunteer Services</CardTitle>
+                <CardTitle>4. Impact Agent Services</CardTitle>
               </CardHeader>
               <CardContent className="prose prose-sm max-w-none">
                 <p>
-                  <strong>4.1 Pro-Bono Services:</strong> The Platform primarily facilitates pro-bono volunteer
+                  <strong>4.1 Pro-Bono Services:</strong> The Platform primarily facilitates pro-bono impact agent
                   services. Any paid arrangements must be clearly disclosed and agreed upon between parties.
                 </p>
                 <p>
                   <strong>4.2 No Employment Relationship:</strong> JustBeCause Network does not create an employment
-                  relationship between volunteers and NGOs. Users are responsible for their own tax and legal
+                  relationship between impact agents and NGOs. Users are responsible for their own tax and legal
                   obligations.
                 </p>
                 <p>
-                  <strong>4.3 Quality of Work:</strong> While we encourage high-quality volunteer work, we do not
+                  <strong>4.3 Quality of Work:</strong> While we encourage high-quality impact agent work, we do not
                   guarantee the quality, completeness, or timeliness of services provided through the Platform.
                 </p>
               </CardContent>
@@ -101,7 +101,7 @@ export default function TermsPage() {
                 </p>
                 <p>
                   <strong>5.3 Work Product:</strong> Intellectual property rights for work created through
-                  volunteer projects should be agreed upon between volunteers and NGOs before project commencement.
+                  volunteer projects should be agreed upon between impact agents and NGOs before project commencement.
                 </p>
               </CardContent>
             </Card>
@@ -112,10 +112,10 @@ export default function TermsPage() {
               </CardHeader>
               <CardContent className="prose prose-sm max-w-none">
                 <p>
-                  JustBeCause Network is a platform connecting volunteers with NGOs. We are not responsible for:
+                  JustBeCause Network is a platform connecting impact agents with NGOs. We are not responsible for:
                 </p>
                 <ul className="list-disc pl-6 space-y-2">
-                  <li>The quality or outcome of volunteer work</li>
+                  <li>The quality or outcome of impact agent work</li>
                   <li>Disputes between users</li>
                   <li>Loss or damage resulting from use of the Platform</li>
                   <li>Actions or omissions of users</li>

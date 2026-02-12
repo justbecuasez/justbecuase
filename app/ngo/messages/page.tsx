@@ -56,7 +56,7 @@ export default async function NGOMessagesPage() {
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">Messages</h1>
             <p className="text-muted-foreground">
-              Communicate with volunteers about your projects
+              Communicate with impact agents about your projects
             </p>
           </div>
 
@@ -93,7 +93,7 @@ export default async function NGOMessagesPage() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{conversations.filter((c: any) => c.volunteerName).length}</p>
-                  <p className="text-xs text-muted-foreground">Active Volunteers</p>
+                  <p className="text-xs text-muted-foreground">Active Impact Agents</p>
                 </div>
               </CardContent>
             </Card>
@@ -121,7 +121,7 @@ export default async function NGOMessagesPage() {
                       Select a conversation
                     </h3>
                     <p className="text-sm text-muted-foreground">
-                      Choose a conversation from the list to view messages and continue chatting with volunteers about your projects
+                      Choose a conversation from the list to view messages and continue chatting with impact agents about your projects
                     </p>
                   </div>
                 </CardContent>

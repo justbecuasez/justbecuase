@@ -950,7 +950,7 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
                 {aiSearchIntent ? (
                   <>AI: <em>{aiSearchIntent}</em></>
                 ) : (
-                  <>AI matched: <strong>{aiSkillFilters.join(", ") || "all volunteers"}</strong></>
+                  <>AI matched: <strong>{aiSkillFilters.join(", ") || "all impact agents"}</strong></>
                 )}
                 {aiLocationFilter && <> in <strong>{aiLocationFilter}</strong></>}
                 {aiMatchedIds.length > 0 && <> ({aiMatchedIds.length} found)</>}
@@ -972,7 +972,7 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
                     Searching...
                   </span>
                 ) : (
-                  <>Showing {filteredAll.length} of {volunteers.length} volunteers</>
+                  <>Showing {filteredAll.length} of {volunteers.length} impact agents</>
                 )}
               </span>
               {searchQuery.trim() && !aiSearchApplied && (
@@ -1011,8 +1011,8 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
             <div>
               <h3 className="font-medium text-foreground mb-1">Profile Visibility</h3>
               <p className="text-sm text-muted-foreground">
-                <strong>Paid volunteers</strong> have fully visible profiles.{" "}
-                <strong>Free volunteers</strong> are available to Pro subscribers.
+                <strong>Paid impact agents</strong> have fully visible profiles.{" "}
+                <strong>Free impact agents</strong> are available to Pro subscribers.
               </p>
             </div>
           </div>
@@ -1027,7 +1027,7 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
               <div className="flex-1">
                 <p className="font-medium text-foreground">Upgrade to Pro</p>
                 <p className="text-sm text-muted-foreground">
-                  You&apos;re viewing paid volunteers only. Subscribe to Pro to discover free and pro-bono volunteers too.
+                  You&apos;re viewing paid impact agents only. Subscribe to Pro to discover free and pro-bono impact agents too.
                 </p>
               </div>
               <Button asChild size="sm">
@@ -1043,7 +1043,7 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
       <Tabs defaultValue="all">
         <TabsList className="mb-6 flex-wrap">
           <TabsTrigger value="all">
-            All Volunteers
+            All Impact Agents
             <Badge variant="secondary" className="ml-2">{filteredAll.length}</Badge>
           </TabsTrigger>
           <TabsTrigger value="paid">
@@ -1099,7 +1099,7 @@ function VolunteerGrid({
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">No volunteers found</p>
+          <p className="text-muted-foreground">No impact agents found</p>
           <p className="text-sm text-muted-foreground mt-1">Try adjusting your search or filters</p>
         </CardContent>
       </Card>
@@ -1137,7 +1137,7 @@ function VolunteerCard({
               {volunteer.avatar ? (
                 <img
                   src={volunteer.avatar}
-                  alt={volunteer.name || "Volunteer"}
+                  alt={volunteer.name || "Impact Agent"}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -1149,10 +1149,10 @@ function VolunteerCard({
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-foreground truncate text-sm sm:text-base">
-              {volunteer.name || "Volunteer"}
+              {volunteer.name || "Impact Agent"}
             </h3>
             <p className="text-xs sm:text-sm text-muted-foreground truncate">
-              {volunteer.headline || "Skilled Volunteer"}
+              {volunteer.headline || "Skilled Impact Agent"}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1 shrink-0">
@@ -1247,7 +1247,7 @@ function RecommendedVolunteers({
   return (
     <div>
       <p className="text-muted-foreground mb-4">
-        Volunteers recommended based on your active opportunities and hiring history
+        Impact agents recommended based on your active opportunities and hiring history
       </p>
       <VolunteerGrid
         volunteers={volunteers}

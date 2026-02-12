@@ -48,7 +48,7 @@ export default async function VolunteerOpportunitiesPage() {
     <div className="min-h-screen bg-background">
       <DashboardHeader
         userType="volunteer"
-        userName={session.user.name || "Volunteer"}
+        userName={session.user.name || "Impact Agent"}
         userAvatar={session.user.image || undefined}
       />
 
@@ -59,7 +59,7 @@ export default async function VolunteerOpportunitiesPage() {
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">Browse Opportunities</h1>
             <p className="text-muted-foreground">
-              Find volunteer opportunities that match your skills
+              Find impact agent opportunities that match your skills
             </p>
           </div>
 

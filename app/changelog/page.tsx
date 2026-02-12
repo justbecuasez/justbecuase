@@ -12,7 +12,7 @@ const changelogEntries = [
       {
         type: "feature",
         title: "Platform Launch",
-        description: "Initial release of JustBeCause Network with core features for volunteers and NGOs.",
+        description: "Initial release of JustBeCause Network with core features for impact agents and NGOs.",
       },
       {
         type: "feature",
@@ -22,7 +22,7 @@ const changelogEntries = [
       {
         type: "feature",
         title: "Onboarding Flows",
-        description: "Comprehensive onboarding for both volunteers and NGOs with skills matching.",
+        description: "Comprehensive onboarding for both impact agents and NGOs with skills matching.",
       },
       {
         type: "feature",
@@ -44,7 +44,7 @@ const changelogEntries = [
       {
         type: "feature",
         title: "Beta Testing Phase",
-        description: "Closed beta with select NGOs and volunteers for platform testing.",
+        description: "Closed beta with select NGOs and impact agents for platform testing.",
       },
       {
         type: "improvement",
@@ -66,7 +66,7 @@ const changelogEntries = [
       {
         type: "feature",
         title: "Dashboard Prototypes",
-        description: "Initial dashboards for volunteers and NGOs.",
+        description: "Initial dashboards for impact agents and NGOs.",
       },
     ],
   },

@@ -48,7 +48,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                 {volunteer.avatar && !isLocked ? (
                   <img
                     src={volunteer.avatar}
-                    alt={volunteer.name || "Volunteer"}
+                    alt={volunteer.name || "Impact Agent"}
                     className="w-32 h-32 rounded-full object-cover border-4 border-background shadow-xl"
                   />
                 ) : (
@@ -71,7 +71,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                       Profile Locked
                     </span>
                   ) : (
-                    volunteer.name || "Volunteer"
+                    volunteer.name || "Impact Agent"
                   )}
                 </h1>
                 
@@ -134,14 +134,14 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                 ) : volunteer.canMessage ? (
                   <ContactVolunteerButton
                     volunteerId={volunteer.id}
-                    volunteerName={volunteer.name || "Volunteer"}
+                    volunteerName={volunteer.name || "Impact Agent"}
                     className="bg-primary hover:bg-primary/90"
                   />
                 ) : null}
                 <ShareButton
                   url={`/volunteers/${id}`}
-                  title={isLocked ? "Skilled Volunteer on JustBeCause" : `${volunteer.name} - Volunteer Profile`}
-                  description={`Discover this talented volunteer with ${volunteer.completedProjects} completed projects and a ${volunteer.rating.toFixed(1)} rating.`}
+                  title={isLocked ? "Skilled Impact Agent on JustBeCause" : `${volunteer.name} - Impact Agent Profile`}
+                  description={`Discover this talented impact agent with ${volunteer.completedProjects} completed projects and a ${volunteer.rating.toFixed(1)} rating.`}
                   variant="outline"
                 />
               </div>
@@ -164,7 +164,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                           Pro Subscription Required
                         </h3>
                         <p className="text-muted-foreground mb-4">
-                          This is a free volunteer. Subscribe to our Pro plan to view their full profile,
+                          This is a free impact agent. Subscribe to our Pro plan to view their full profile,
                           contact details, portfolio, and connect with them directly.
                         </p>
                         <Button asChild>
@@ -342,7 +342,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                       </div>
                       <div>
                         <p className="font-medium text-foreground">100+ Hours</p>
-                        <p className="text-xs text-muted-foreground">Volunteer milestone</p>
+                        <p className="text-xs text-muted-foreground">Impact Agent milestone</p>
                       </div>
                     </div>
                   )}

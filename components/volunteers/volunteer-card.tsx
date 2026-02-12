@@ -74,7 +74,7 @@ export function VolunteerCard({ volunteer }: VolunteerCardProps) {
 
             <div className="flex-1 min-w-0">
               <h3 className={`font-semibold text-foreground truncate ${isLocked ? "blur-sm" : ""}`}>
-                {volunteer.name || "Volunteer Profile"}
+                {volunteer.name || "Impact Agent Profile"}
               </h3>
               <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
                 <MapPin className="h-3 w-3" />

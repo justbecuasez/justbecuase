@@ -134,7 +134,7 @@ export async function GET(request: NextRequest) {
               paymentId: checkoutSessionId || `stripe_link_${Date.now()}`,
               status: "completed",
               paymentStatus: "completed",
-              description: "Volunteer Pro Subscription via Stripe Payment Link",
+              description: "Impact Agent Pro Subscription via Stripe Payment Link",
               createdAt: new Date(),
             })
             console.log("✅ Transaction record created")

@@ -66,7 +66,7 @@ export default async function VolunteerDashboard() {
       </Suspense>
       <DashboardHeader 
         userType="volunteer" 
-        userName={session.user.name || "Volunteer"} 
+        userName={session.user.name || "Impact Agent"} 
         userAvatar={session.user.image || undefined} 
       />
 
@@ -77,9 +77,9 @@ export default async function VolunteerDashboard() {
           {/* Welcome Section */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              Welcome back, {session.user.name?.split(" ")[0] || "Volunteer"}!
+              Welcome back, {session.user.name?.split(" ")[0] || "Impact Agent"}!
             </h1>
-            <p className="text-muted-foreground">Here's what's happening with your volunteering journey.</p>
+            <p className="text-muted-foreground">Here's what's happening with your impact journey.</p>
           </div>
 
           {/* Stats Cards */}

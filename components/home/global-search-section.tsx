@@ -60,8 +60,8 @@ const POPULAR_SEARCHES = [
 const TYPE_CONFIG = {
   volunteer: {
     icon: Users,
-    label: "Volunteer",
-    pluralLabel: "Volunteers",
+    label: "Impact Agent",
+    pluralLabel: "Impact Agents",
     badgeClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     viewAllPath: "/volunteers",
   },
@@ -460,7 +460,7 @@ export function GlobalSearchSection() {
               Find What You&apos;re Looking For
             </h2>
             <p className="text-muted-foreground text-sm md:text-base">
-              Search across opportunities, skilled volunteers, and NGOs — instantly
+              Search across opportunities, skilled impact agents, and NGOs — instantly
             </p>
           </div>
 
@@ -775,7 +775,7 @@ export function GlobalSearchSection() {
                         <Link href="/projects">Browse Opportunities</Link>
                       </Button>
                       <Button asChild variant="outline" size="sm">
-                        <Link href="/volunteers">Browse Volunteers</Link>
+                        <Link href="/volunteers">Browse Impact Agents</Link>
                       </Button>
                       <Button asChild variant="outline" size="sm">
                         <Link href="/ngos">Browse NGOs</Link>

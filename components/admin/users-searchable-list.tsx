@@ -123,7 +123,7 @@ export function UsersSearchableList({
                   onChange={(e) => setRoleFilter(e.target.value as any)}
                 >
                   <option value="all">All Roles</option>
-                  <option value="volunteer">Volunteers</option>
+                  <option value="volunteer">Impact Agents</option>
                   <option value="ngo">NGOs</option>
                 </select>
               )}

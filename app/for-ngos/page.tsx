@@ -16,7 +16,7 @@ const benefits = [
   {
     icon: Database,
     title: "Pro Bono & Low Bono Database",
-    description: "Access our vetted directory of Skilled Volunteers. Filter by skills and availability to find experts offering services at zero cost (Pro Bono) or significantly reduced rates (Low Bono).",
+    description: "Access our vetted directory of Skilled Impact Agents. Filter by skills and availability to find experts offering services at zero cost (Pro Bono) or significantly reduced rates (Low Bono).",
   },
   {
     icon: Target,
@@ -25,18 +25,18 @@ const benefits = [
   },
   {
     icon: Shield,
-    title: "Vetted Volunteers",
-    description: "All volunteers are verified professionals with proven track records and ratings from other NGOs.",
+    title: "Vetted Impact Agents",
+    description: "All impact agents are verified professionals with proven track records and ratings from other NGOs.",
   },
   {
     icon: FileText,
     title: "Opportunity Templates",
-    description: "Use our pre-built templates to quickly post common opportunity types and attract the right volunteers.",
+    description: "Use our pre-built templates to quickly post common opportunity types and attract the right impact agents.",
   },
   {
     icon: MessageSquare,
     title: "Built-in Communication",
-    description: "Communicate directly with volunteers through our platform. No need for external tools.",
+    description: "Communicate directly with impact agents through our platform. No need for external tools.",
   },
 ]
 
@@ -56,14 +56,14 @@ const faqs = [
       "After creating your NGO account, click 'Post New Opportunity' from your dashboard. You can choose from our opportunity templates or create a custom opportunity. It takes about 5 minutes to post an opportunity.",
   },
   {
-    question: "How are volunteers matched to our opportunities?",
+    question: "How are impact agents matched to our opportunities?",
     answer:
-      "Volunteers browse opportunities based on their skills and interests. They apply to opportunities that match their expertise, and you review their profiles and past work before accepting an application.",
+      "Impact agents browse opportunities based on their skills and interests. They apply to opportunities that match their expertise, and you review their profiles and past work before accepting an application.",
   },
   {
     question: "What's the difference between Pro Bono and Low Bono?",
     answer:
-      "Pro Bono means volunteers donate their services entirely for free. Low Bono means they offer services at significantly reduced rates (typically 50-80% below market rates). Both options help NGOs access professional talent within their budgets.",
+      "Pro Bono means impact agents donate their services entirely for free. Low Bono means they offer services at significantly reduced rates (typically 50-80% below market rates). Both options help NGOs access professional talent within their budgets.",
   },
   {
     question: "How do we verify our organization?",
@@ -71,14 +71,14 @@ const faqs = [
       "During signup, you'll provide your organization's registration details. We verify all NGOs to ensure they are legitimate nonprofits. Verified organizations receive a badge on their profile.",
   },
   {
-    question: "What if a volunteer doesn't complete the opportunity?",
+    question: "What if an impact agent doesn't complete the opportunity?",
     answer:
-      "We encourage clear communication and milestone-setting. If issues arise, you can reopen the opportunity to find a new volunteer. Our support team is also available to help mediate any challenges.",
+      "We encourage clear communication and milestone-setting. If issues arise, you can reopen the opportunity to find a new impact agent. Our support team is also available to help mediate any challenges.",
   },
   {
-    question: "Can we work with multiple volunteers?",
+    question: "Can we work with multiple impact agents?",
     answer:
-      "Yes! You can post multiple opportunities simultaneously and work with different volunteers on each. Some larger opportunities can also be split into smaller pieces for multiple volunteers.",
+      "Yes! You can post multiple opportunities simultaneously and work with different impact agents on each. Some larger opportunities can also be split into smaller pieces for multiple impact agents.",
   },
 ]
 
@@ -165,7 +165,7 @@ export default function ForNGOsPage() {
                   </div>
                   <h3 className="font-semibold text-foreground mb-2">Pro Bono & Low Bono Database</h3>
                   <p className="text-sm text-muted-foreground">
-                    Access our vetted directory of Skilled Volunteers. Filter by skills and availability to find experts offering services at zero cost (Pro Bono) or significantly reduced rates (Low Bono).
+                    Access our vetted directory of Skilled Impact Agents. Filter by skills and availability to find experts offering services at zero cost (Pro Bono) or significantly reduced rates (Low Bono).
                   </p>
                 </CardContent>
               </Card>
@@ -198,7 +198,7 @@ export default function ForNGOsPage() {
               </div>
               <div>
                 <p className="text-4xl font-bold text-primary mb-2">{impactMetrics.volunteers.toLocaleString()}</p>
-                <p className="text-muted-foreground">Skilled Volunteers</p>
+                <p className="text-muted-foreground">Skilled Impact Agents</p>
               </div>
               <div>
                 <p className="text-4xl font-bold text-secondary mb-2">
@@ -283,9 +283,9 @@ export default function ForNGOsPage() {
         {/* Final CTA */}
         <section className="py-16 bg-primary text-primary-foreground">
           <div className="container mx-auto px-4 md:px-6 text-center">
-            <h2 className="text-3xl font-bold mb-4">Ready to Find Your Volunteers?</h2>
+            <h2 className="text-3xl font-bold mb-4">Ready to Find Your Impact Agents?</h2>
             <p className="text-xl mb-8 text-primary-foreground/90 max-w-2xl mx-auto">
-              Join hundreds of NGOs already benefiting from skills-based volunteering
+              Join hundreds of NGOs already benefiting from skills-based contributions
             </p>
             <Button size="lg" variant="secondary" asChild>
               <Link href="/auth/signup">

@@ -90,7 +90,7 @@ export default async function NGOMessageThreadPage({ params }: Props) {
               currentUserId={session.user.id}
               otherParticipant={{
                 id: otherParticipantId,
-                name: volunteerInfo?.name || "Volunteer",
+                name: volunteerInfo?.name || "Impact Agent",
                 avatar: volunteerInfo?.image,
                 type: "volunteer",
               }}

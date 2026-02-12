@@ -70,7 +70,7 @@ export default async function NGONotificationsPage() {
             <div>
               <h1 className="text-2xl font-bold text-foreground mb-2">Notifications</h1>
               <p className="text-muted-foreground">
-                Stay updated on applications and volunteer activity
+                Stay updated on applications and impact agent activity
               </p>
             </div>
             <div className="flex items-center gap-2">

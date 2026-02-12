@@ -60,7 +60,7 @@ export function MissionSection() {
             >
               <Link href="/auth/signup?role=volunteer" className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Register as Volunteer
+                Register as Impact Agent
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -88,7 +88,7 @@ export function MissionSection() {
             <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto">
               <div className="text-center">
                 <div className="text-2xl md:text-3xl font-bold text-primary">100%</div>
-                <div className="text-sm text-muted-foreground">Free for Volunteers</div>
+                <div className="text-sm text-muted-foreground">Free for Impact Agents</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl md:text-3xl font-bold text-primary">24/7</div>

@@ -43,7 +43,7 @@ export default async function VolunteerMessagesPage() {
     <div className="min-h-screen bg-background">
       <DashboardHeader
         userType="volunteer"
-        userName={session.user.name || "Volunteer"}
+        userName={session.user.name || "Impact Agent"}
         userAvatar={session.user.image || undefined}
       />
 

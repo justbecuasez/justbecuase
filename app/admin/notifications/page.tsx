@@ -107,7 +107,7 @@ export default function AdminNotificationsPage() {
       <div>
         <h1 className="text-2xl font-bold text-foreground mb-2">Send Notifications</h1>
         <p className="text-muted-foreground">
-          Send notifications to users, volunteers, or NGOs
+          Send notifications to users, impact agents, or NGOs
         </p>
       </div>
 
@@ -141,7 +141,7 @@ export default function AdminNotificationsPage() {
                   <SelectItem value="volunteers">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      All Volunteers
+                      All Impact Agents
                     </div>
                   </SelectItem>
                   <SelectItem value="ngos">

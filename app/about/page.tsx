@@ -20,17 +20,17 @@ const values = [
   {
     icon: Users,
     title: "Community Driven",
-    description: "We believe in the power of collective action and building strong volunteer communities.",
+    description: "We believe in the power of collective action and building strong impact agent communities.",
   },
   {
     icon: Target,
     title: "Excellence",
-    description: "We strive to match the highest quality volunteers with NGOs for maximum effectiveness.",
+    description: "We strive to match the highest quality impact agents with NGOs for maximum effectiveness.",
   },
   {
     icon: Globe,
     title: "Accessibility",
-    description: "Making skills-based volunteering accessible to everyone, regardless of location or background.",
+    description: "Making skills-based contributions accessible to everyone, regardless of location or background.",
   },
 ]
 
@@ -182,7 +182,7 @@ export default async function AboutPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="p-6 rounded-2xl bg-primary/10 text-center">
                 <p className="text-4xl font-bold text-primary mb-2">{impactMetrics.volunteers.toLocaleString()}</p>
-                <p className="text-sm text-muted-foreground">Active Volunteers</p>
+                <p className="text-sm text-muted-foreground">Active Impact Agents</p>
               </div>
               <div className="p-6 rounded-2xl bg-secondary/10 text-center">
                 <p className="text-4xl font-bold text-secondary mb-2">{impactMetrics.projectsCompleted}</p>

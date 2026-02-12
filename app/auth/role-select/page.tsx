@@ -120,7 +120,7 @@ function RoleSelectContent() {
               <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Heart className="h-10 w-10 text-primary" />
               </div>
-              <CardTitle className="text-xl">I'm a Volunteer</CardTitle>
+              <CardTitle className="text-xl">I'm an Impact Agent</CardTitle>
               <CardDescription>
                 Share your skills and make an impact
               </CardDescription>
@@ -128,7 +128,7 @@ function RoleSelectContent() {
             <CardContent className="text-center">
               <ul className="text-sm text-muted-foreground space-y-2 mb-6">
                 <li>✓ Create your skills-based profile</li>
-                <li>✓ Browse volunteer opportunities</li>
+                <li>✓ Browse impact agent opportunities</li>
                 <li>✓ Connect with NGOs</li>
                 <li>✓ Track your social impact</li>
               </ul>
@@ -143,7 +143,7 @@ function RoleSelectContent() {
                     Setting up...
                   </>
                 ) : (
-                  "Continue as Volunteer"
+                  "Continue as Impact Agent"
                 )}
               </Button>
             </CardContent>
@@ -162,14 +162,14 @@ function RoleSelectContent() {
               </div>
               <CardTitle className="text-xl">I'm an NGO</CardTitle>
               <CardDescription>
-                Find skilled volunteers for your cause
+                Find skilled impact agents for your cause
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
               <ul className="text-sm text-muted-foreground space-y-2 mb-6">
                 <li>✓ Create your organization profile</li>
-                <li>✓ Post volunteer opportunities</li>
-                <li>✓ Browse skilled volunteers</li>
+                <li>✓ Post impact agent opportunities</li>
+                <li>✓ Browse skilled impact agents</li>
                 <li>✓ Manage applications</li>
               </ul>
               <Button

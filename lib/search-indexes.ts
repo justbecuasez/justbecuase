@@ -909,7 +909,7 @@ function mapUserToResult(user: any, searchTerms: string[]): SearchResult {
       const causeIds = parseCauses(user.causes)
       subtitle = causeIds.map(getCauseDisplayName).join(", ") || subtitle
     } else if (matchedField === "volunteerType") {
-      subtitle = `Volunteer Type: ${user.volunteerType}` + (user.headline ? ` · ${user.headline}` : "")
+      subtitle = `Impact Agent Type: ${user.volunteerType}` + (user.headline ? ` · ${user.headline}` : "")
     } else if (matchedField === "hoursPerWeek") {
       subtitle = `${user.hoursPerWeek} hrs/week` + (user.headline ? ` · ${user.headline}` : "")
     } else if (matchedField === "freeHoursPerMonth" && (user.volunteerType === "both")) {
@@ -924,7 +924,7 @@ function mapUserToResult(user: any, searchTerms: string[]): SearchResult {
     return {
       type: "volunteer",
       id: user._id.toString(),
-      title: user.name || "Volunteer",
+      title: user.name || "Impact Agent",
       subtitle,
       location: user.location || user.city,
       skills: parseSkillDisplayNames(user.skills),
@@ -1717,7 +1717,7 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
 
   for (const user of users) {
     const isNgo = user.role === "ngo"
-    let subtitle = user.headline || user.bio?.slice(0, 60) || (isNgo ? "Organization" : "Volunteer")
+    let subtitle = user.headline || user.bio?.slice(0, 60) || (isNgo ? "Organization" : "Impact Agent")
     if (isNgo) subtitle = user.description?.slice(0, 60) || "Organization"
 
     // If a skill matched, show it
@@ -1738,7 +1738,7 @@ export async function getSearchSuggestions(params: SearchSuggestionsParams): Pro
     }
     // Show work details if relevant
     if (user.volunteerType && trimmed.toLowerCase().includes("free") && user.volunteerType === "free") {
-      subtitle = `Free volunteer (Pro Bono)`
+      subtitle = `Free impact agent (Pro Bono)`
     } else if (user.volunteerType === "both" && trimmed.toLowerCase().includes("free")) {
       subtitle = `Open to Both · ${user.freeHoursPerMonth || 0} free hrs/month`
     }

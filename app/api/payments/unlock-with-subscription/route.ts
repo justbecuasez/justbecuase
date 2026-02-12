@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const { volunteerId } = body
 
     if (!volunteerId) {
-      return NextResponse.json({ error: "Volunteer ID required" }, { status: 400 })
+      return NextResponse.json({ error: "Impact agent ID required" }, { status: 400 })
     }
 
     // Get NGO profile to check subscription
@@ -41,14 +41,14 @@ export async function POST(request: NextRequest) {
     // Check if volunteer exists
     const volunteerProfile = await volunteerProfilesDb.findByUserId(volunteerId)
     if (!volunteerProfile) {
-      return NextResponse.json({ error: "Volunteer not found" }, { status: 404 })
+      return NextResponse.json({ error: "Impact agent not found" }, { status: 404 })
     }
 
     // If volunteer is paid type, no unlock needed
     if (volunteerProfile.volunteerType === "paid") {
       return NextResponse.json({ 
         success: true, 
-        message: "Profile is already accessible (paid volunteer)" 
+        message: "Profile is already accessible (paid impact agent)" 
       })
     }
 

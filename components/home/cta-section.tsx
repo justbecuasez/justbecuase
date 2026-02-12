@@ -29,7 +29,7 @@ export function CTASection() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
                   <Link href="/auth/signup" className="flex items-center gap-2">
-                    Join as a Volunteer
+                    Join as an Impact Agent
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
@@ -48,7 +48,7 @@ export function CTASection() {
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { value: "1 min", label: "To sign up" },
-                  { value: "100%", label: "Free for volunteers" },
+                  { value: "100%", label: "Free for impact agents" },
                   { value: "24/7", label: "Support available" },
                   { value: "120+", label: "Partner NGOs" },
                 ].map((stat) => (

@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
       // Update Volunteer profile
       const profile = await volunteerProfilesDb.findByUserId(userId)
       if (!profile) {
-        return NextResponse.json({ error: "Volunteer profile not found" }, { status: 404 })
+        return NextResponse.json({ error: "Impact agent profile not found" }, { status: 404 })
       }
 
       await volunteerProfilesDb.update(userId, {

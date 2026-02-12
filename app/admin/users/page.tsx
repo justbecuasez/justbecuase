@@ -18,7 +18,7 @@ export default async function AdminUsersPage() {
   const allUsers = [
     ...volunteersData.data.map(v => ({
       id: v.userId,
-      name: v.name || "Unnamed Volunteer",
+      name: v.name || "Unnamed Impact Agent",
       email: v.phone || "No email",
       role: "volunteer" as const,
       avatar: v.avatar,
@@ -75,7 +75,7 @@ export default async function AdminUsersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{stats.totalVolunteers}</p>
-              <p className="text-sm text-muted-foreground">Volunteers</p>
+              <p className="text-sm text-muted-foreground">Impact Agents</p>
             </div>
           </CardContent>
         </Card>

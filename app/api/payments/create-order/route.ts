@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
   return NextResponse.json({ 
-    error: "Individual profile unlock payments are no longer available. Please upgrade to NGO Pro subscription to unlock unlimited volunteer profiles.",
+    error: "Individual profile unlock payments are no longer available. Please upgrade to NGO Pro subscription to unlock unlimited impact agent profiles.",
     upgradeUrl: "/pricing"
   }, { status: 400 })
 }

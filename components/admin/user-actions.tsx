@@ -255,7 +255,7 @@ export function UserActions({
                 disabled={currentRole === "volunteer"}
               >
                 <Heart className="h-4 w-4" />
-                Volunteer
+                Impact Agent
                 {currentRole === "volunteer" && <CheckCircle className="h-3 w-3 ml-auto text-green-600" />}
               </DropdownMenuItem>
               <DropdownMenuItem 

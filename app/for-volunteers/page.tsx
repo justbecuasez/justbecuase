@@ -25,13 +25,13 @@ const benefits = [
   },
   {
     icon: Globe,
-    title: "Flexible Volunteering",
+    title: "Flexible Contributions",
     description: "Choose from virtual opportunities or local opportunities that fit your schedule and lifestyle.",
   },
   {
     icon: Award,
     title: "Get Recognized",
-    description: "Earn badges, testimonials, and track your impact with our comprehensive volunteer profiles.",
+    description: "Earn badges, testimonials, and track your impact with our comprehensive impact agent profiles.",
   },
   {
     icon: Clock,
@@ -44,7 +44,7 @@ const exchangeOptions = [
   {
     icon: Gift,
     title: "Pro Bono (Free)",
-    description: "Donate your expertise entirely. This is pure-contribution volunteering for those who want to use their \"time currency\" to power a cause they love.",
+    description: "Donate your expertise entirely. This is pure-contribution work for those who want to use their \"time currency\" to power a cause they love.",
   },
   {
     icon: DollarSign,
@@ -54,7 +54,7 @@ const exchangeOptions = [
   {
     icon: Sparkles,
     title: "Pro Bono + Low Bono",
-    description: "The option to do both? Yes. Combine pure volunteering with discounted work based on your preference and the NGO's needs.",
+    description: "The option to do both? Yes. Combine pure contributions with discounted work based on your preference and the NGO's needs.",
   },
 ]
 
@@ -95,7 +95,7 @@ const faqs = [
   {
     question: "Are the opportunities remote or in-person?",
     answer:
-      "Most opportunities are remote/virtual, allowing you to volunteer from anywhere. Some NGOs offer in-person opportunities for volunteers in specific locations. You can filter by location when browsing opportunities.",
+      "Most opportunities are remote/virtual, allowing you to contribute from anywhere. Some NGOs offer in-person opportunities for impact agents in specific locations. You can filter by location when browsing opportunities.",
   },
   {
     question: "How are NGOs vetted?",
@@ -110,7 +110,7 @@ const faqs = [
   {
     question: "How do I track my impact?",
     answer:
-      "Your volunteer dashboard shows your hours contributed, opportunities completed, skills used, and estimated value of your contributions. You can also collect testimonials from NGOs you've worked with.",
+      "Your impact agent dashboard shows your hours contributed, opportunities completed, skills used, and estimated value of your contributions. You can also collect testimonials from NGOs you've worked with.",
   },
 ]
 
@@ -138,7 +138,7 @@ export default function ForVolunteersPage() {
                 <div className="flex flex-wrap gap-4">
                   <Button asChild size="lg" className="bg-primary hover:bg-primary/90">
                     <Link href="/auth/signup">
-                      Volunteers – Register Now
+                      Impact Agents – Register Now
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -150,7 +150,7 @@ export default function ForVolunteersPage() {
               <div className="relative">
                 <img
                   src="/diverse-professionals-volunteering-laptop-teamwork.png"
-                  alt="Volunteers collaborating"
+                  alt="Impact agents collaborating"
                   className="rounded-2xl shadow-2xl" />
                 <div className="absolute -bottom-6 -left-6 bg-card p-4 rounded-xl shadow-lg border border-border">
                   <div className="flex items-center gap-3">
@@ -158,7 +158,7 @@ export default function ForVolunteersPage() {
                       <CheckCircle className="h-6 w-6 text-success" />
                     </div>
                     <div>
-                      <p className="font-semibold text-foreground">2,847 Volunteers</p>
+                      <p className="font-semibold text-foreground">2,847 Impact Agents</p>
                       <p className="text-sm text-muted-foreground">Making an impact</p>
                     </div>
                   </div>
@@ -174,7 +174,7 @@ export default function ForVolunteersPage() {
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold text-foreground mb-4">The Global Purpose-Driven Exchange</h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Volunteers (Professionals): Your <span className="font-semibold text-primary">"Time"</span> is the new currency.
+                Impact Agents (Professionals): Your <span className="font-semibold text-primary">"Time"</span> is the new currency.
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-6">
@@ -197,9 +197,9 @@ export default function ForVolunteersPage() {
         <section className="py-16">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-foreground mb-4">Why Volunteer With Us?</h2>
+              <h2 className="text-3xl font-bold text-foreground mb-4">Why Become an Impact Agent?</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Skills-based volunteering offers unique benefits that traditional volunteering can't match
+                Skills-based contributions offer unique benefits that traditional volunteering can't match
               </p>
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -246,9 +246,9 @@ export default function ForVolunteersPage() {
       <section className="py-16">
         <div className="container mx-auto px-4 md:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-foreground mb-4">Volunteer Stories</h2>
+            <h2 className="text-3xl font-bold text-foreground mb-4">Impact Agent Stories</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Hear from volunteers who have made a difference through our platform
+              Hear from impact agents who have made a difference through our platform
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
@@ -281,7 +281,7 @@ export default function ForVolunteersPage() {
         <div className="container mx-auto px-4 md:px-6 max-w-3xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-foreground mb-4">Frequently Asked Questions</h2>
-            <p className="text-muted-foreground">Everything you need to know about volunteering with us</p>
+            <p className="text-muted-foreground">Everything you need to know about becoming an impact agent</p>
           </div>
           <Accordion type="single" collapsible className="w-full">
             {faqs.map((faq, index) => (
@@ -299,7 +299,7 @@ export default function ForVolunteersPage() {
         <div className="container mx-auto px-4 md:px-6 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to Start Making an Impact?</h2>
           <p className="text-lg opacity-90 max-w-2xl mx-auto mb-8">
-            Join our community of skilled volunteers and start contributing to causes you care about today.
+            Join our community of skilled impact agents and start contributing to causes you care about today.
           </p>
           <Button asChild size="lg" variant="secondary">
             <Link href="/auth/signup">

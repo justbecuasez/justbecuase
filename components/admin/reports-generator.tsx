@@ -27,7 +27,7 @@ export function ReportsGenerator({ volunteers, ngos, projects, analytics }: Repo
           // Generate user registration report
           const allUsers = [
             ...volunteers.map(v => ({
-              type: "Volunteer",
+              type: "Impact Agent",
               name: v.name || v.bio?.slice(0, 30) || "Unnamed",
               contact: v.phone || "N/A",
               location: `${v.city || ""}, ${v.country || ""}`,

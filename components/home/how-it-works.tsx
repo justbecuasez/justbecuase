@@ -35,12 +35,12 @@ export function HowItWorks() {
     {
       icon: Users,
       title: "Review Applications",
-      description: "Browse volunteer profiles, check ratings, and find the perfect match for your opportunity.",
+      description: "Browse impact agent profiles, check ratings, and find the perfect match for your opportunity.",
     },
     {
       icon: CheckCircle,
       title: "Get Expert Help",
-      description: "Collaborate with skilled volunteers and receive professional-quality deliverables.",
+      description: "Collaborate with skilled impact agents and receive professional-quality deliverables.",
     },
   ];
 
@@ -96,7 +96,7 @@ export function HowItWorks() {
                 value="volunteers" 
                 className="px-8 py-2.5 rounded-full text-sm font-semibold transition-all data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md"
               >
-                For Volunteers
+                For Impact Agents
               </TabsTrigger>
               <TabsTrigger 
                 value="ngos" 
@@ -149,7 +149,7 @@ export function HowItWorks() {
               className="mt-16 text-center"
             >
               <Button asChild size="lg" className="h-12 px-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 rounded-full transition-all hover:scale-105 active:scale-95">
-                <Link href="/for-volunteers">Join as a Volunteer</Link>
+                <Link href="/for-volunteers">Join as an Impact Agent</Link>
               </Button>
             </motion.div>
           </TabsContent>

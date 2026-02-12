@@ -68,7 +68,7 @@ export default async function NGOFindTalentPage() {
           <div className="mb-6 sm:mb-8">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Find Talent</h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Browse skilled volunteers to help with your opportunities
+              Browse skilled impact agents to help with your opportunities
             </p>
           </div>
 

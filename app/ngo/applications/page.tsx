@@ -55,7 +55,7 @@ export default async function ApplicationsPage() {
         <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">Applications</h1>
-            <p className="text-muted-foreground">Review and manage volunteer applications for your opportunities</p>
+            <p className="text-muted-foreground">Review and manage impact agent applications for your opportunities</p>
           </div>
 
           <Suspense fallback={<ApplicationsSkeleton />}>
@@ -82,7 +82,7 @@ async function ApplicationsList() {
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground mb-2">No applications yet</p>
           <p className="text-sm text-muted-foreground">
-            When volunteers apply to your opportunities, they will appear here.
+            When impact agents apply to your opportunities, they will appear here.
           </p>
           <Button variant="link" asChild className="mt-2">
             <Link href="/ngo/post-project">Post an Opportunity</Link>
@@ -122,14 +122,14 @@ async function ApplicationsList() {
                     <div className="flex flex-col sm:flex-row gap-4">
                       <img
                         src={application.volunteerProfile?.avatar || "/placeholder.svg?height=64&width=64"}
-                        alt="Volunteer"
+                        alt="Impact Agent"
                         className="w-16 h-16 rounded-full object-cover"
                       />
                       <div className="flex-1">
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2">
                           <div>
                             <h3 className="font-semibold text-foreground">
-                              {application.volunteerProfile?.name || "Volunteer"}
+                              {application.volunteerProfile?.name || "Impact Agent"}
                             </h3>
                             <p className="text-sm text-muted-foreground">
                               {application.volunteerProfile?.location || "Location not specified"}

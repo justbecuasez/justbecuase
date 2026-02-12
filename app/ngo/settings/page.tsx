@@ -493,7 +493,7 @@ export default function NGOSettingsPage() {
                       Skills You Need
                     </CardTitle>
                     <CardDescription>
-                      Select skills your organization typically needs from volunteers
+                      Select skills your organization typically needs from impact agents
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -527,7 +527,7 @@ export default function NGOSettingsPage() {
                   <CardHeader>
                     <CardTitle>Causes You Focus On</CardTitle>
                     <CardDescription>
-                      Select causes to get matched with relevant volunteers
+                      Select causes to get matched with relevant impact agents
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -714,7 +714,7 @@ export default function NGOSettingsPage() {
                       <div>
                         <p className="font-medium">Public Profile</p>
                         <p className="text-sm text-muted-foreground">
-                          Allow volunteers to see your organization profile
+                          Allow impact agents to see your organization profile
                         </p>
                       </div>
                       <Switch

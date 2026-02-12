@@ -64,7 +64,7 @@ export default async function NGODashboard() {
               <h1 className="text-2xl font-bold text-foreground mb-2">
                 Welcome, {ngoProfile?.organizationName || session.user.name}
               </h1>
-              <p className="text-muted-foreground">Manage your opportunities and connect with skilled volunteers.</p>
+              <p className="text-muted-foreground">Manage your opportunities and connect with skilled impact agents.</p>
             </div>
             <Button asChild className="bg-primary hover:bg-primary/90">
               <Link href="/ngo/post-project" className="flex items-center gap-2">
@@ -253,7 +253,7 @@ export default async function NGODashboard() {
                   {recommendedVolunteers.length === 0 ? (
                     <div className="text-center py-6">
                       <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-sm text-muted-foreground">No matching volunteers yet</p>
+                      <p className="text-sm text-muted-foreground">No matching impact agents yet</p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Post an opportunity to get matched
                       </p>
@@ -280,7 +280,7 @@ export default async function NGODashboard() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">
-                              {match.volunteer.name || "Volunteer"}
+                              {match.volunteer.name || "Impact Agent"}
                             </p>
                             <p className="text-xs text-muted-foreground truncate">
                               {match.volunteer.headline || "Skilled professional"}
@@ -319,7 +319,7 @@ export default async function NGODashboard() {
                   <Button asChild variant="outline" className="w-full justify-start">
                     <Link href="/ngo/find-talent">
                       <Users className="h-4 w-4 mr-2" />
-                      Browse Volunteers
+                      Browse Impact Agents
                     </Link>
                   </Button>
                   <Button asChild variant="outline" className="w-full justify-start">
@@ -356,7 +356,7 @@ export default async function NGODashboard() {
                           <span className="text-sm font-medium">Free Plan - No Unlocks</span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Upgrade to Pro to unlock volunteer profiles
+                          Upgrade to Pro to unlock impact agent profiles
                         </p>
                       </div>
                       <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
@@ -364,7 +364,7 @@ export default async function NGODashboard() {
                           Upgrade to Pro for unlimited unlocks
                         </p>
                         <p className="text-xs text-muted-foreground mb-3">
-                          View contact details of any volunteer
+                          View contact details of any impact agent
                         </p>
                         <Button asChild size="sm" className="w-full">
                           <Link href="/pricing">
@@ -381,7 +381,7 @@ export default async function NGODashboard() {
                         <span className="font-medium text-foreground">Pro Plan Active</span>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Unlimited volunteer profile unlocks
+                        Unlimited impact agent profile unlocks
                       </p>
                       {subscriptionStatus?.expiryDate && (
                         <p className="text-xs text-muted-foreground mt-2">

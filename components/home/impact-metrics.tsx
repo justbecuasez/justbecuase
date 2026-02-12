@@ -34,7 +34,7 @@ const Counter = ({ value, prefix = "", suffix = "" }: { value: number; prefix?: 
 
 export function ImpactMetrics({ impactMetrics }: { impactMetrics: any }) {
   const metrics = [
-    { icon: Users, value: impactMetrics.volunteers, label: "Skilled Volunteers" },
+    { icon: Users, value: impactMetrics.volunteers, label: "Skilled Impact Agents" },
     { icon: CheckCircle2, value: impactMetrics.projectsCompleted, label: "Opportunities Completed" },
     { icon: Building2, value: impactMetrics.ngosSupported, label: "NGOs Supported" },
     { icon: Clock, value: impactMetrics.hoursContributed, label: "Hours Contributed", suffix: "+" },

@@ -1,4 +1,4 @@
-// Email sending utility for JustBecause Network
+﻿// Email sending utility for JustBecause Network
 // Configure RESEND_API_KEY in your environment variables
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || process.env.RESEND_AKASH
@@ -14,7 +14,7 @@ interface EmailOptions {
 export async function sendEmail({ to, subject, html, text }: EmailOptions): Promise<boolean> {
   // If no API key, log and return (for development)
   if (!RESEND_API_KEY) {
-    console.log("📧 Email would be sent (RESEND_API_KEY not configured):")
+    console.log("ðŸ“§ Email would be sent (RESEND_API_KEY not configured):")
     console.log(`  To: ${to}`)
     console.log(`  Subject: ${subject}`)
     console.log(`  Content: ${text || html}`)
@@ -65,7 +65,7 @@ export function getVerificationEmailHtml(url: string, userName?: string): string
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
-        <p style="color: #666; margin-top: 5px;">Skills-Based Volunteering Platform</p>
+        <p style="color: #666; margin-top: 5px;">Skills-Based Impact Platform</p>
       </div>
       
       <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
@@ -83,7 +83,7 @@ export function getVerificationEmailHtml(url: string, userName?: string): string
       </div>
       
       <div style="text-align: center; color: #999; font-size: 12px;">
-        <p>© ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+        <p>Â© ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
       </div>
     </body>
     </html>
@@ -101,7 +101,7 @@ export function getPasswordResetEmailHtml(url: string, userName?: string): strin
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
-        <p style="color: #666; margin-top: 5px;">Skills-Based Volunteering Platform</p>
+        <p style="color: #666; margin-top: 5px;">Skills-Based Impact Platform</p>
       </div>
       
       <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
@@ -119,7 +119,7 @@ export function getPasswordResetEmailHtml(url: string, userName?: string): strin
       </div>
       
       <div style="text-align: center; color: #999; font-size: 12px;">
-        <p>© ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+        <p>Â© ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
       </div>
     </body>
     </html>
@@ -137,7 +137,7 @@ export function getPasswordResetCodeEmailHtml(code: string, url?: string, userNa
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
-        <p style="color: #666; margin-top: 5px;">Skills-Based Volunteering Platform</p>
+        <p style="color: #666; margin-top: 5px;">Skills-Based Impact Platform</p>
       </div>
       
       <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
@@ -157,7 +157,7 @@ export function getPasswordResetCodeEmailHtml(code: string, url?: string, userNa
       </div>
       
       <div style="text-align: center; color: #999; font-size: 12px;">
-        <p>© ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+        <p>Â© ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
       </div>
     </body>
     </html>
@@ -177,20 +177,20 @@ export function getWelcomeEmailHtml(userName: string, userRole: string): string 
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
-        <p style="color: #666; margin-top: 5px;">Skills-Based Volunteering Platform</p>
+        <p style="color: #666; margin-top: 5px;">Skills-Based Impact Platform</p>
       </div>
       
       <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
-        <h2 style="margin-top: 0;">Welcome to JustBeCause Network! 🎉</h2>
+        <h2 style="margin-top: 0;">Welcome to JustBeCause Network! ðŸŽ‰</h2>
         <p>Hi ${userName},</p>
-        <p>Thank you for joining our community of ${userRole === 'ngo' ? 'organizations making a difference' : 'skilled volunteers'}!</p>
+        <p>Thank you for joining our community of ${userRole === 'ngo' ? 'organizations making a difference' : 'skilled impact agents'}!</p>
         
         ${userRole === 'ngo' ? `
         <p>Here's what you can do next:</p>
         <ul>
           <li>Complete your organization profile</li>
           <li>Post your first project</li>
-          <li>Browse talented volunteers</li>
+          <li>Browse talented impact agents</li>
         </ul>
         ` : `
         <p>Here's what you can do next:</p>
@@ -209,7 +209,7 @@ export function getWelcomeEmailHtml(userName: string, userRole: string): string 
       </div>
       
       <div style="text-align: center; color: #999; font-size: 12px;">
-        <p>© ${new Date().getFullYear()} JustBecause Network. All rights reserved.</p>
+        <p>Â© ${new Date().getFullYear()} JustBecause Network. All rights reserved.</p>
       </div>
     </body>
     </html>
@@ -232,11 +232,11 @@ export function getNewOpportunityEmailHtml(
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
-        <p style="color: #666; margin-top: 5px;">Skills-Based Volunteering Platform</p>
+        <p style="color: #666; margin-top: 5px;">Skills-Based Impact Platform</p>
       </div>
       
       <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
-        <h2 style="margin-top: 0;">New Opportunity Matching Your Skills! 🎯</h2>
+        <h2 style="margin-top: 0;">New Opportunity Matching Your Skills! ðŸŽ¯</h2>
         <p>Hi ${volunteerName},</p>
         <p><strong>${ngoName}</strong> just posted a new opportunity that matches your skills:</p>
         
@@ -277,11 +277,11 @@ export function getNGOConnectionEmailHtml(
     <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="text-align: center; margin-bottom: 30px;">
         <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
-        <p style="color: #666; margin-top: 5px;">Skills-Based Volunteering Platform</p>
+        <p style="color: #666; margin-top: 5px;">Skills-Based Impact Platform</p>
       </div>
       
       <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
-        <h2 style="margin-top: 0;">An NGO Wants to Connect! 🤝</h2>
+        <h2 style="margin-top: 0;">An NGO Wants to Connect! ðŸ¤</h2>
         <p>Hi ${volunteerName},</p>
         <p><strong>${ngoName}</strong> has reached out to you on JustBeCause Network.</p>
         
