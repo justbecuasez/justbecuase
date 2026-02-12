@@ -61,18 +61,21 @@ const TYPE_CONFIG = {
   volunteer: {
     icon: Users,
     label: "Volunteer",
+    pluralLabel: "Volunteers",
     badgeClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
     viewAllPath: "/volunteers",
   },
   ngo: {
     icon: Building2,
     label: "NGO",
+    pluralLabel: "NGOs",
     badgeClass: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
     viewAllPath: "/ngos",
   },
   opportunity: {
     icon: Briefcase,
     label: "Opportunity",
+    pluralLabel: "Opportunities",
     badgeClass: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
     viewAllPath: "/projects",
   },
@@ -478,7 +481,7 @@ export function GlobalSearchSection() {
                   }`}
                 >
                   {Icon && <Icon className="h-3.5 w-3.5" />}
-                  {type === "all" ? "All" : config?.label ? `${config.label}s` : type}
+                  {type === "all" ? "All" : config?.pluralLabel || type}
                 </button>
               )
             })}
@@ -795,7 +798,7 @@ export function GlobalSearchSection() {
                             const config = TYPE_CONFIG[type as keyof typeof TYPE_CONFIG]
                             return (
                               <Badge key={type} variant="secondary" className={`text-xs ${config.badgeClass}`}>
-                                {config.label}s: {items.length}
+                                {config.pluralLabel}: {items.length}
                               </Badge>
                             )
                           })}
