@@ -245,7 +245,7 @@ export async function saveVolunteerOnboarding(data: {
       freeHoursPerMonth: data.workPreferences.volunteerType === "both" ? data.workPreferences.freeHoursPerMonth : undefined,
       hourlyRate: (data.workPreferences.volunteerType === "paid" || data.workPreferences.volunteerType === "both") ? data.workPreferences.hourlyRate : undefined,
       discountedRate: (data.workPreferences.volunteerType === "paid" || data.workPreferences.volunteerType === "both") ? data.workPreferences.discountedRate : undefined,
-      currency: (data.workPreferences.volunteerType === "paid" || data.workPreferences.volunteerType === "both") ? (data.workPreferences.currency || "INR") : undefined,
+      currency: (data.workPreferences.volunteerType === "paid" || data.workPreferences.volunteerType === "both") ? (data.workPreferences.currency || "USD") : undefined,
       workMode: data.workPreferences.workMode as "remote" | "onsite" | "hybrid",
       hoursPerWeek: data.workPreferences.hoursPerWeek,
       availability: data.workPreferences.availability as "weekdays" | "weekends" | "evenings" | "flexible",
@@ -1334,7 +1334,7 @@ export async function getPublicSettings(): Promise<Partial<AdminSettings> | null
       platformName: "JustBeCause Network",
       platformDescription: "Connecting Skills with Purpose",
       supportEmail: "support@justbecausenetwork.com",
-      currency: "INR",
+      currency: "USD",
       volunteerFreeApplicationsPerMonth: 3,
       volunteerProPrice: 1, // TEST PRICE (use 999 for production)
       ngoFreeProjectsPerMonth: 3,

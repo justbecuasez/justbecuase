@@ -276,7 +276,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                   <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10">
                     <span className="text-sm text-primary">Estimated Value</span>
                     <span className="font-semibold text-primary">
-                      ₹{(volunteer.hoursContributed * 2000).toLocaleString()}
+                      ${(volunteer.hoursContributed * 2000).toLocaleString()}
                     </span>
                   </div>
                 </CardContent>

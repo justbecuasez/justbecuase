@@ -76,8 +76,8 @@ export default function PricingPage() {
   const currentVolunteerPlan = volunteerSubscription?.plan || "free"
 
   // Get currency symbol
-  const currency = (platformSettings?.currency || "INR") as SupportedCurrency
-  const currencySymbol = CURRENCY_SYMBOLS[currency] || "₹"
+  const currency = (platformSettings?.currency || "USD") as SupportedCurrency
+  const currencySymbol = CURRENCY_SYMBOLS[currency] || "$"
   
   // Show only the plans relevant to the user's role
   // If user is logged in as volunteer, they can only see/buy volunteer plans

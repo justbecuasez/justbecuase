@@ -870,7 +870,7 @@ export default function AdminSettingsPage() {
                   variant="outline"
                   onClick={async () => {
                     try {
-                      const amount = Math.max(1, parseInt(testAmount) || 1) * 100; // Convert to paise
+                      const amount = Math.max(1, parseInt(testAmount) || 1) * 100; // Convert to cents
                       const response = await fetch("/api/admin/test-payment", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },

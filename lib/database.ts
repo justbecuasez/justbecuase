@@ -803,7 +803,7 @@ export const adminSettingsDb = {
         supportEmail: "support@justbecausenetwork.com",
         
         // Payment Settings
-        currency: "INR",
+        currency: "USD",
         
         // Volunteer Free Plan
         volunteerFreeApplicationsPerMonth: 3,
@@ -910,7 +910,7 @@ export const subscriptionPlansDb = {
           tier: "free",
           priceMonthly: 0,
           priceYearly: 0,
-          currency: "INR",
+          currency: "USD",
           profileUnlocksPerMonth: 0,
           projectsPerMonth: 2,
           featuredListings: false,
@@ -925,7 +925,7 @@ export const subscriptionPlansDb = {
           tier: "basic",
           priceMonthly: 999,
           priceYearly: 9990,
-          currency: "INR",
+          currency: "USD",
           profileUnlocksPerMonth: 10,
           projectsPerMonth: 10,
           featuredListings: false,
@@ -940,7 +940,7 @@ export const subscriptionPlansDb = {
           tier: "premium",
           priceMonthly: 2499,
           priceYearly: 24990,
-          currency: "INR",
+          currency: "USD",
           profileUnlocksPerMonth: 50,
           projectsPerMonth: -1, // Unlimited
           featuredListings: true,
@@ -955,7 +955,7 @@ export const subscriptionPlansDb = {
           tier: "enterprise",
           priceMonthly: 4999,
           priceYearly: 49990,
-          currency: "INR",
+          currency: "USD",
           profileUnlocksPerMonth: -1, // Unlimited
           projectsPerMonth: -1, // Unlimited
           featuredListings: true,

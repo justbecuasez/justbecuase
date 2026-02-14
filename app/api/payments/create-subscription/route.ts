@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     // Get admin settings for dynamic pricing
     const settings = await adminSettingsDb.get()
-    const currency = settings?.currency || "INR"
+    const currency = settings?.currency || "USD"
     
     console.log("💰 Settings loaded:", {
       ngoProPrice: settings?.ngoProPrice,

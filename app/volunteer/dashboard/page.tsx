@@ -280,7 +280,7 @@ export default async function VolunteerDashboard() {
                   <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                     <div>
                       <p className="text-2xl font-bold text-foreground">
-                        ₹{(hoursContributed * 500).toLocaleString()}
+                        ${(hoursContributed * 500).toLocaleString()}
                       </p>
                       <p className="text-sm text-muted-foreground">Estimated value contributed</p>
                     </div>
@@ -329,7 +329,7 @@ export default async function VolunteerDashboard() {
                         <Button asChild size="sm" className="w-full">
                           <Link href="/pricing">
                             <Zap className="h-4 w-4 mr-2" />
-                            Upgrade to Pro - ₹999/month
+                            Upgrade to Pro - $9.99/month
                           </Link>
                         </Button>
                       </div>

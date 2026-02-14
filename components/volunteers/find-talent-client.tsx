@@ -30,7 +30,7 @@ import {
   Clock,
   Star,
   Crown,
-  IndianRupee,
+  DollarSign,
   Heart,
   MessageSquare,
   Sparkles,
@@ -1006,7 +1006,7 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
         <CardContent className="p-4">
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-              <IndianRupee className="h-5 w-5 text-primary" />
+              <DollarSign className="h-5 w-5 text-primary" />
             </div>
             <div>
               <h3 className="font-medium text-foreground mb-1">Profile Visibility</h3>
@@ -1047,7 +1047,7 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
             <Badge variant="secondary" className="ml-2">{filteredAll.length}</Badge>
           </TabsTrigger>
           <TabsTrigger value="paid">
-            <IndianRupee className="h-3 w-3 mr-1" />
+            <DollarSign className="h-3 w-3 mr-1" />
             Paid
             <Badge variant="secondary" className="ml-2">{filteredPaid.length}</Badge>
           </TabsTrigger>

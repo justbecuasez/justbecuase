@@ -17,7 +17,7 @@ async function checkPaymentSetup() {
       console.log("  - Platform:", settings.platformName)
       console.log("  - NGO Pro Price:", settings.ngoProPrice || 1, "(test price)")
       console.log("  - Volunteer Pro Price:", settings.volunteerProPrice || 1, "(test price)")
-      console.log("  - Currency:", settings.currency || "INR")
+      console.log("  - Currency:", settings.currency || "USD")
       console.log("  - Payments Enabled:", settings.enablePayments !== false)
     } else {
       console.log("  ⚠️ No admin settings found - will use defaults")
@@ -57,7 +57,7 @@ async function checkPaymentSetup() {
     const unlocks = await db.collection("profileUnlocks").find({}).limit(5).toArray()
     console.log(`  Found ${unlocks.length} unlock(s)`)
     for (const unlock of unlocks) {
-      console.log(`  - NGO ${unlock.ngoId} unlocked volunteer ${unlock.volunteerId} for ${unlock.amountPaid} ${unlock.currency || "INR"}`)
+      console.log(`  - NGO ${unlock.ngoId} unlocked volunteer ${unlock.volunteerId} for ${unlock.amountPaid} ${unlock.currency || "USD"}`)
     }
     
     // Check Transactions

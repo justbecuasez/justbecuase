@@ -96,7 +96,7 @@ export async function getRazorpayClient() {
 
 // Create a payment order (unified interface)
 export interface CreateOrderParams {
-  amount: number // in smallest currency unit (paise/cents)
+  amount: number // in smallest currency unit (cents)
   currency: string
   receipt: string
   notes?: Record<string, string>

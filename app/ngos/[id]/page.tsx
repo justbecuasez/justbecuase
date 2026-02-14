@@ -242,7 +242,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                     </div>
                     <div className="text-center p-3 rounded-lg bg-muted/50">
                       <p className="text-xl font-bold text-foreground">
-                        ₹{((ngo.volunteersEngaged || 0) * 50000).toLocaleString()}
+                        ${((ngo.volunteersEngaged || 0) * 50000).toLocaleString()}
                       </p>
                       <p className="text-xs text-muted-foreground">Value Created</p>
                     </div>

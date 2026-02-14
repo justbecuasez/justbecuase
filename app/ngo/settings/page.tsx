@@ -593,7 +593,7 @@ export default function NGOSettingsPage() {
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="font-medium">₹{tx.amount}</p>
+                              <p className="font-medium">${tx.amount}</p>
                               <Badge
                                 variant={tx.status === "completed" ? "default" : "secondary"}
                               >

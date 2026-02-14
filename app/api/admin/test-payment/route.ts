@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { amount = 100, currency = "INR" } = body // Default 1 rupee (100 paise)
+    const { amount = 100, currency = "USD" } = body // Default $1 (100 cents)
 
     // Check if any payment gateway is configured
     const creds = await getPaymentCredentials()
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     // Create test payment order
     const order = await createPaymentOrder({
-      amount: amount, // Already in smallest unit (paise/cents)
+      amount: amount, // Already in smallest unit (cents)
       currency,
       receipt: `test_${Date.now()}`.slice(0, 40),
       description: "Test payment from admin panel",

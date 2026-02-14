@@ -915,7 +915,7 @@ function mapUserToResult(user: any, searchTerms: string[]): SearchResult {
     } else if (matchedField === "freeHoursPerMonth" && (user.volunteerType === "both")) {
       subtitle = `${user.freeHoursPerMonth} free hrs/month` + (user.headline ? ` · ${user.headline}` : "")
     } else if (matchedField === "hourlyRate") {
-      subtitle = `Rate: ${user.currency || "INR"} ${user.hourlyRate}/hr` + (user.headline ? ` · ${user.headline}` : "")
+      subtitle = `Rate: ${user.currency || "USD"} ${user.hourlyRate}/hr` + (user.headline ? ` · ${user.headline}` : "")
     } else if (matchedField === "workMode") {
       subtitle = `Work Mode: ${user.workMode}` + (user.headline ? ` · ${user.headline}` : "")
     } else if (matchedField === "languages") {
