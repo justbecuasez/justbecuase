@@ -15,23 +15,35 @@ import type {
 // WEIGHTS FOR SCORING
 // ============================================
 const VOLUNTEER_MATCH_WEIGHTS = {
-  skillMatch: 0.35,      // 35% - Most important
-  locationMatch: 0.12,   // 12%
-  hoursMatch: 0.13,      // 13%
+  skillMatch: 0.45,      // 45% - Most important (increased from 35%)
+  locationMatch: 0.10,   // 10%
+  hoursMatch: 0.10,      // 10%
   causeMatch: 0.12,      // 12%
-  experienceMatch: 0.10, // 10%
-  availabilityMatch: 0.08, // 8% - NEW: Volunteer availability
-  verificationBonus: 0.05, // 5% - NEW: Verified profiles get bonus
-  activityScore: 0.05,   // 5% - NEW: Recent activity
+  experienceMatch: 0.08, // 8%
+  availabilityMatch: 0.06, // 6%
+  verificationBonus: 0.04, // 4%
+  activityScore: 0.05,   // 5%
 }
 
 const OPPORTUNITY_MATCH_WEIGHTS = {
-  skillMatch: 0.35,      // 35%
-  workModeMatch: 0.18,   // 18%
-  hoursMatch: 0.17,      // 17%
-  causeMatch: 0.15,      // 15%
-  urgencyBonus: 0.08,    // 8% - NEW: Urgent projects get highlighted
-  ngoVerification: 0.07, // 7% - NEW: Verified NGOs rank higher
+  skillMatch: 0.45,      // 45% (increased from 35%)
+  workModeMatch: 0.14,   // 14%
+  hoursMatch: 0.13,      // 13%
+  causeMatch: 0.13,      // 13%
+  urgencyBonus: 0.08,    // 8%
+  ngoVerification: 0.07, // 7%
+}
+
+/**
+ * Apply a penalty when skill match is very low.
+ * Without this, non-skill factors alone can inflate scores to 50%+
+ * even when skills are completely irrelevant.
+ */
+function applySkillRelevancePenalty(rawScore: number, skillMatchPercent: number): number {
+  if (skillMatchPercent >= 30) return rawScore // No penalty if reasonable skill match
+  if (skillMatchPercent >= 15) return rawScore * 0.7 // Mild penalty for weak skill match
+  if (skillMatchPercent > 0) return rawScore * 0.5 // Moderate penalty for very weak match
+  return rawScore * 0.3 // Heavy penalty when skills don't match at all
 }
 
 // ============================================
@@ -321,7 +333,7 @@ export function matchVolunteersToProject(
       activityScore: calculateActivityScore((volunteer as any).lastActive || (volunteer as any).updatedAt),
     }
 
-    const score =
+    const rawScore =
       breakdown.skillMatch * VOLUNTEER_MATCH_WEIGHTS.skillMatch +
       breakdown.locationMatch * VOLUNTEER_MATCH_WEIGHTS.locationMatch +
       breakdown.hoursMatch * VOLUNTEER_MATCH_WEIGHTS.hoursMatch +
@@ -330,6 +342,9 @@ export function matchVolunteersToProject(
       breakdown.availabilityMatch * VOLUNTEER_MATCH_WEIGHTS.availabilityMatch +
       breakdown.verificationBonus * VOLUNTEER_MATCH_WEIGHTS.verificationBonus +
       breakdown.activityScore * VOLUNTEER_MATCH_WEIGHTS.activityScore
+
+    // Penalize score when skills are irrelevant to prevent inflated matches
+    const score = applySkillRelevancePenalty(rawScore, breakdown.skillMatch)
 
     scores.push({
       volunteerId: volunteer.userId,
@@ -371,13 +386,16 @@ export function matchOpportunitiesToVolunteer(
       ngoVerification: calculateVerificationBonus((project as any).ngo?.isVerified || false),
     }
 
-    const score =
+    const rawScore =
       breakdown.skillMatch * OPPORTUNITY_MATCH_WEIGHTS.skillMatch +
       breakdown.workModeMatch * OPPORTUNITY_MATCH_WEIGHTS.workModeMatch +
       breakdown.hoursMatch * OPPORTUNITY_MATCH_WEIGHTS.hoursMatch +
       breakdown.causeMatch * OPPORTUNITY_MATCH_WEIGHTS.causeMatch +
       breakdown.urgencyBonus * OPPORTUNITY_MATCH_WEIGHTS.urgencyBonus +
       breakdown.ngoVerification * OPPORTUNITY_MATCH_WEIGHTS.ngoVerification
+
+    // Penalize score when skills are irrelevant to prevent inflated matches
+    const score = applySkillRelevancePenalty(rawScore, breakdown.skillMatch)
 
     scores.push({
       projectId: project._id?.toString() || "",
@@ -414,9 +432,12 @@ export function getRecommendedVolunteers(
       experienceMatch: 100, // Not experience-specific
     }
 
-    const score =
+    const rawScore =
       breakdown.skillMatch * 0.6 +
       breakdown.causeMatch * 0.4
+
+    // Penalize score when skills are irrelevant
+    const score = applySkillRelevancePenalty(rawScore, breakdown.skillMatch)
 
     scores.push({
       volunteerId: volunteer.userId,
