@@ -34,6 +34,8 @@ interface SearchSuggestion {
 export interface UnifiedSearchBarProps {
   /** Pre-filter suggestions by type */
   defaultType?: "all" | "opportunity" | "volunteer" | "ngo"
+  /** Restrict search to only these types (overrides defaultType when set) */
+  allowedTypes?: ("opportunity" | "volunteer" | "ngo")[]
   /** Visual variant */
   variant?: "default" | "compact" | "hero"
   /** Custom placeholder */
@@ -149,6 +151,7 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
 
 export function UnifiedSearchBar({
   defaultType = "all",
+  allowedTypes,
   variant = "default",
   placeholder,
   onSearchChange,
@@ -205,7 +208,13 @@ export function UnifiedSearchBar({
 
     setIsSuggestionsLoading(true)
     try {
-      const typeParam = defaultType !== "all" ? `&types=${defaultType}` : ""
+      // allowedTypes takes priority over defaultType
+      let typeParam = ""
+      if (allowedTypes && allowedTypes.length > 0) {
+        typeParam = `&types=${allowedTypes.join(",")}`
+      } else if (defaultType !== "all") {
+        typeParam = `&types=${defaultType}`
+      }
       const res = await fetch(
         `/api/unified-search?q=${encodeURIComponent(query)}&mode=suggestions&limit=6${typeParam}`,
         { signal: controller.signal }
@@ -223,7 +232,7 @@ export function UnifiedSearchBar({
         setIsSuggestionsLoading(false)
       }
     }
-  }, [defaultType])
+  }, [defaultType, allowedTypes])
 
   // ============================================
   // EFFECTS

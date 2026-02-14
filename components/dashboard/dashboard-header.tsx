@@ -84,7 +84,12 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
         <div className="hidden md:flex flex-1 max-w-md mx-8">
           <UnifiedSearchBar
             variant="compact"
-            placeholder="Search opportunities, skills, or NGOs..."
+            placeholder={userType === "volunteer" 
+              ? "Search opportunities or NGOs..." 
+              : "Search impact agents, skills, or projects..."}
+            allowedTypes={userType === "volunteer" 
+              ? ["opportunity", "ngo"] 
+              : ["volunteer", "opportunity"]}
             className="w-full"
           />
         </div>
