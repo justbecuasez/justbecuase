@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useTransition, useCallback } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { UserPlus, UserCheck, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { followUser, unfollowUser } from "@/lib/actions"
 
 interface FollowButtonProps {
   /** The user ID to follow/unfollow */
@@ -36,42 +38,40 @@ export function FollowButton({
   const [followersCount, setFollowersCount] = useState(initialCount)
   const [isHovering, setIsHovering] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   const handleToggle = useCallback(() => {
     startTransition(async () => {
       try {
-        const response = await fetch("/api/follow", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            targetId,
-            action: isFollowing ? "unfollow" : "follow",
-          }),
-        })
+        const result = isFollowing
+          ? await unfollowUser(targetId)
+          : await followUser(targetId)
 
-        const data = await response.json()
-
-        if (!response.ok) {
-          toast.error(data.error || "Failed to update follow status")
+        if (!result.success) {
+          toast.error(result.error || "Failed to update follow status")
           return
         }
 
-        setIsFollowing(data.isFollowing)
-        setFollowersCount(data.followersCount)
+        const newIsFollowing = !isFollowing
+        setIsFollowing(newIsFollowing)
+        setFollowersCount(result.data?.followersCount ?? followersCount)
 
         toast.success(
-          data.isFollowing
+          newIsFollowing
             ? `You are now following ${targetName}`
             : `Unfollowed ${targetName}`,
           {
-            icon: data.isFollowing ? "👥" : undefined,
+            icon: newIsFollowing ? "👥" : undefined,
           }
         )
+
+        // Refresh server data so FollowStatsDisplay updates
+        router.refresh()
       } catch {
         toast.error("Something went wrong. Please try again.")
       }
     })
-  }, [targetId, targetName, isFollowing])
+  }, [targetId, targetName, isFollowing, followersCount, router])
 
   // Format large numbers
   const formatCount = (count: number): string => {

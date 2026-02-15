@@ -42,8 +42,17 @@ export function FollowStatsDisplay({
 }: FollowStatsDisplayProps) {
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<"followers" | "following">("followers")
-  const [followersCount] = useState(initialFollowersCount)
-  const [followingCount] = useState(initialFollowingCount)
+  const [followersCount, setFollowersCount] = useState(initialFollowersCount)
+  const [followingCount, setFollowingCount] = useState(initialFollowingCount)
+
+  // Sync state when server data changes (e.g. after router.refresh())
+  useEffect(() => {
+    setFollowersCount(initialFollowersCount)
+  }, [initialFollowersCount])
+
+  useEffect(() => {
+    setFollowingCount(initialFollowingCount)
+  }, [initialFollowingCount])
 
   const formatCount = (count: number): string => {
     if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M`
