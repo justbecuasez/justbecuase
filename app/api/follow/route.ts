@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { followsDb } from "@/lib/database"
+import { followsDb, userIdQuery } from "@/lib/database"
 
 /**
  * POST /api/follow
@@ -29,10 +29,10 @@ export async function POST(request: NextRequest) {
     const followerRole = (session.user as any).role || "volunteer"
 
     if (action === "follow") {
-      // Look up target user role
+      // Look up target user role (handles both ObjectId and string IDs)
       const { getDb } = await import("@/lib/database")
       const db = await getDb()
-      const targetUser = await db.collection("user").findOne({ id: targetId })
+      const targetUser = await db.collection("user").findOne(userIdQuery(targetId))
       if (!targetUser) {
         return NextResponse.json({ error: "User not found" }, { status: 404 })
       }

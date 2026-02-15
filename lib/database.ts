@@ -71,13 +71,35 @@ function safeJsonParse<T>(value: any, fallback: T): T {
 }
 
 // Helper: build user ID query (avoids full collection scan from $expr/$toString)
-function userIdQuery(userId: string): Record<string, any> {
+export function userIdQuery(userId: string): Record<string, any> {
   try {
     return { _id: new ObjectId(userId) }
   } catch {
     // If userId is not a valid ObjectId, fall back to string id field
     return { id: userId }
   }
+}
+
+/**
+ * Build a query to find multiple users by an array of IDs.
+ * Handles mixed ObjectId hex strings and Better Auth string IDs.
+ */
+export function userIdBatchQuery(userIds: string[]): Record<string, any> {
+  const objectIds: ObjectId[] = []
+  const stringIds: string[] = []
+  for (const uid of userIds) {
+    try {
+      objectIds.push(new ObjectId(uid))
+    } catch {
+      stringIds.push(uid)
+    }
+  }
+  const conditions: Record<string, any>[] = []
+  if (objectIds.length > 0) conditions.push({ _id: { $in: objectIds } })
+  if (stringIds.length > 0) conditions.push({ id: { $in: stringIds } })
+  if (conditions.length === 0) return { _id: null } // match nothing
+  if (conditions.length === 1) return conditions[0]
+  return { $or: conditions }
 }
 
 // ============================================

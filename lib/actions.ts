@@ -24,6 +24,8 @@ import {
   teamMembersDb,
   followsDb,
   getDb,
+  userIdQuery,
+  userIdBatchQuery,
 } from "./database"
 import { getUserInfo, getUsersInfo } from "./user-utils"
 import {
@@ -2684,9 +2686,9 @@ export async function followUser(targetId: string): Promise<ApiResponse<{ follow
 
     const followerRole = (session.user as any).role || "volunteer"
 
-    // Look up the target user to get their role
+    // Look up the target user to get their role (handles both ObjectId and Better Auth ID)
     const db = await getDb()
-    const targetUser = await db.collection("user").findOne({ id: targetId })
+    const targetUser = await db.collection("user").findOne(userIdQuery(targetId))
     if (!targetUser) {
       return { success: false, error: "User not found" }
     }
@@ -2817,15 +2819,19 @@ export async function getFollowersList(userId: string, page: number = 1, limit: 
       return { success: true, data: { users: [], total: 0, page, totalPages: 0 } }
     }
 
-    // Batch fetch user details
+    // Batch fetch user details (handles both ObjectId and string IDs)
     const db = await getDb()
     const followerIds = followers.map(f => f.followerId)
     const users = await db.collection("user")
-      .find({ id: { $in: followerIds } })
-      .project({ id: 1, name: 1, image: 1, role: 1, bio: 1, orgName: 1, avatar: 1 })
+      .find(userIdBatchQuery(followerIds))
+      .project({ _id: 1, id: 1, name: 1, image: 1, role: 1, bio: 1, orgName: 1, avatar: 1 })
       .toArray()
 
-    const userMap = new Map(users.map(u => [u.id, u]))
+    const userMap = new Map<string, any>()
+    for (const u of users) {
+      if (u.id) userMap.set(u.id, u)
+      if (u._id) userMap.set(u._id.toString(), u)
+    }
 
     const enrichedUsers = followers.map(f => {
       const user = userMap.get(f.followerId)
@@ -2861,15 +2867,19 @@ export async function getFollowingList(userId: string, page: number = 1, limit: 
       return { success: true, data: { users: [], total: 0, page, totalPages: 0 } }
     }
 
-    // Batch fetch user details
+    // Batch fetch user details (handles both ObjectId and string IDs)
     const db = await getDb()
     const followingIds = following.map(f => f.followingId)
     const users = await db.collection("user")
-      .find({ id: { $in: followingIds } })
-      .project({ id: 1, name: 1, image: 1, role: 1, bio: 1, orgName: 1, avatar: 1 })
+      .find(userIdBatchQuery(followingIds))
+      .project({ _id: 1, id: 1, name: 1, image: 1, role: 1, bio: 1, orgName: 1, avatar: 1 })
       .toArray()
 
-    const userMap = new Map(users.map(u => [u.id, u]))
+    const userMap = new Map<string, any>()
+    for (const u of users) {
+      if (u.id) userMap.set(u.id, u)
+      if (u._id) userMap.set(u._id.toString(), u)
+    }
 
     const enrichedUsers = following.map(f => {
       const user = userMap.get(f.followingId)

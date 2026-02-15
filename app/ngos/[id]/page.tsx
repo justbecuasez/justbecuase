@@ -13,7 +13,6 @@ import { skillCategories } from "@/lib/skills-data"
 import { 
   MapPin, 
   CheckCircle, 
-  Users, 
   FolderKanban, 
   ExternalLink, 
   Globe, 
@@ -59,7 +58,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
         <div className="bg-linear-to-r from-secondary/10 to-primary/10 py-12">
           <div className="container mx-auto px-4 md:px-6">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-              <div className="w-32 h-32 rounded-2xl border-4 border-background shadow-xl bg-muted flex items-center justify-center overflow-hidden">
+              <div className="w-32 h-32 rounded-2xl border-4 border-background shadow-xl bg-muted flex items-center justify-center overflow-hidden flex-shrink-0">
                 {ngo.logo ? (
                   <img
                     src={ngo.logo}
@@ -71,10 +70,37 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                 )}
               </div>
               <div className="flex-1 text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                  <h1 className="text-3xl font-bold text-foreground">{ngo.orgName}</h1>
-                  {ngo.isVerified && <CheckCircle className="h-6 w-6 text-primary" />}
+                <div className="flex flex-col md:flex-row md:items-center justify-center md:justify-between gap-3 mb-3">
+                  <div className="flex items-center justify-center md:justify-start gap-2">
+                    <h1 className="text-3xl font-bold text-foreground">{ngo.orgName}</h1>
+                    {ngo.isVerified && <CheckCircle className="h-6 w-6 text-primary" />}
+                  </div>
+                  <div className="flex items-center justify-center md:justify-end gap-2">
+                    <FollowButton 
+                      targetId={id} 
+                      targetName={ngo.orgName}
+                      isFollowing={followStats.isFollowing}
+                      followersCount={followStats.followersCount}
+                      showCount={false}
+                      size="sm"
+                    />
+                    <ShareButton
+                      url={`/ngos/${id}`}
+                      title={ngo.orgName}
+                      description={ngo.description || `Discover ${ngo.orgName} and their impactful projects on JustBeCause.`}
+                      variant="outline"
+                    />
+                    {ngo.website && (
+                      <Button asChild variant="outline" size="sm" className="bg-transparent">
+                        <Link href={ngo.website} target="_blank">
+                          <Globe className="h-4 w-4 mr-1.5" />
+                          Website
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
                 </div>
+
                 {ngo.description && (
                   <p className="text-lg text-muted-foreground mb-4 line-clamp-2">{ngo.description}</p>
                 )}
@@ -90,10 +116,11 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                     <FolderKanban className="h-4 w-4 text-muted-foreground" />
                     {ngo.projectsPosted} projects posted
                   </div>
-                  <div className="flex items-center gap-1 text-foreground">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    {followStats.followersCount} followers
-                  </div>
+                  <FollowStatsDisplay
+                    userId={id}
+                    followersCount={followStats.followersCount}
+                    followingCount={followStats.followingCount}
+                  />
                 </div>
 
                 <div className="flex flex-wrap justify-center md:justify-start gap-2">
@@ -103,34 +130,6 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                     </Badge>
                   ))}
                 </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <FollowButton 
-                  targetId={id} 
-                  targetName={ngo.orgName}
-                  isFollowing={followStats.isFollowing}
-                  followersCount={followStats.followersCount}
-                  showCount={false}
-                />
-                <FollowStatsDisplay
-                  userId={id}
-                  followersCount={followStats.followersCount}
-                  followingCount={followStats.followingCount}
-                />
-                <ShareButton
-                  url={`/ngos/${id}`}
-                  title={ngo.orgName}
-                  description={ngo.description || `Discover ${ngo.orgName} and their impactful projects on JustBeCause.`}
-                  variant="outline"
-                />
-                {ngo.website && (
-                  <Button asChild variant="outline" className="bg-transparent">
-                    <Link href={ngo.website} target="_blank">
-                      <Globe className="h-4 w-4 mr-2" />
-                      Visit Website
-                    </Link>
-                  </Button>
-                )}
               </div>
             </div>
           </div>
