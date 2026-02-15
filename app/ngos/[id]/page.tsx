@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShareButton } from "@/components/share-button"
-import { FollowButton } from "@/components/ngos/follow-button"
-import { getNGOById, getActiveProjects, isFollowingNgo } from "@/lib/actions"
+import { FollowButton } from "@/components/follow-button"
+import { FollowStatsDisplay } from "@/components/follow-stats-display"
+import { getNGOById, getActiveProjects, getFollowStats } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
 import { 
   MapPin, 
@@ -45,8 +46,9 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
   const allProjects = await getActiveProjects(20)
   const ngoProjects = allProjects.filter(p => p.ngoId === id)
   
-  // Check if current user is following this NGO
-  const isFollowing = await isFollowingNgo(id)
+  // Check if current user is following this NGO + get stats
+  const followStatsResult = await getFollowStats(id)
+  const followStats = followStatsResult.success ? followStatsResult.data! : { followersCount: 0, followingCount: 0, isFollowing: false }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -90,7 +92,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                   </div>
                   <div className="flex items-center gap-1 text-foreground">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    {ngo.volunteersEngaged} impact agents engaged
+                    {followStats.followersCount} followers
                   </div>
                 </div>
 
@@ -104,9 +106,16 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
               </div>
               <div className="flex flex-col gap-2">
                 <FollowButton 
-                  ngoId={id} 
-                  ngoName={ngo.orgName}
-                  isFollowing={isFollowing}
+                  targetId={id} 
+                  targetName={ngo.orgName}
+                  isFollowing={followStats.isFollowing}
+                  followersCount={followStats.followersCount}
+                  showCount={false}
+                />
+                <FollowStatsDisplay
+                  userId={id}
+                  followersCount={followStats.followersCount}
+                  followingCount={followStats.followingCount}
                 />
                 <ShareButton
                   url={`/ngos/${id}`}

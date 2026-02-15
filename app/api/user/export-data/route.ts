@@ -72,7 +72,7 @@ export async function GET() {
 
       // Get messages
       const conversations = await db.collection("conversations")
-        .find({ participantIds: userId })
+        .find({ participants: userId })
         .toArray()
       const conversationIds = conversations.map((c: any) => c._id?.toString())
       const messages = await db.collection("messages")
@@ -148,7 +148,7 @@ export async function GET() {
 
       // Get messages
       const conversations = await db.collection("conversations")
-        .find({ participantIds: userId })
+        .find({ participants: userId })
         .toArray()
       const conversationIds = conversations.map((c: any) => c._id?.toString())
       const messages = await db.collection("messages")

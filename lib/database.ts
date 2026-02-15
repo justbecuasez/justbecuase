@@ -18,6 +18,8 @@ import type {
   SubscriptionPlan,
   TeamMember,
   BanRecord,
+  Follow,
+  FollowStats,
 } from "./types"
 
 // ============================================
@@ -54,7 +56,29 @@ export const COLLECTIONS = {
   PASSWORD_RESET_CODES: "passwordResetCodes",
   TEAM_MEMBERS: "teamMembers",
   BAN_RECORDS: "banRecords",
+  FOLLOWS: "follows",
 } as const
+
+// Helper: safely parse JSON with fallback
+function safeJsonParse<T>(value: any, fallback: T): T {
+  if (!value) return fallback
+  if (typeof value !== 'string') return value as T
+  try {
+    return JSON.parse(value) as T
+  } catch {
+    return fallback
+  }
+}
+
+// Helper: build user ID query (avoids full collection scan from $expr/$toString)
+function userIdQuery(userId: string): Record<string, any> {
+  try {
+    return { _id: new ObjectId(userId) }
+  } catch {
+    // If userId is not a valid ObjectId, fall back to string id field
+    return { id: userId }
+  }
+}
 
 // ============================================
 // VOLUNTEER PROFILES
@@ -78,7 +102,7 @@ export const volunteerProfilesDb = {
     if (dataAny.coordinates) processedData.coordinates = JSON.stringify(dataAny.coordinates)
     
     await collection.updateOne(
-      { $expr: { $eq: [{ $toString: "$_id" }, userId] } },
+      userIdQuery(userId),
       { $set: { ...processedData, updatedAt: new Date() } }
     )
     return userId
@@ -86,19 +110,19 @@ export const volunteerProfilesDb = {
 
   async findByUserId(userId: string): Promise<VolunteerProfile | null> {
     const collection = await getCollection<any>("user")
-    const user = await collection.findOne({ $expr: { $eq: [{ $toString: "$_id" }, userId] } })
+    const user = await collection.findOne(userIdQuery(userId))
     
     if (!user || user.role !== "volunteer") return null
     
-    // Parse JSON strings back to arrays and objects
+    // Parse JSON strings back to arrays and objects (safe parsing)
     return {
       ...user,
       userId: user._id.toString(),
-      skills: user.skills ? JSON.parse(user.skills) : [],
-      languages: user.languages ? JSON.parse(user.languages) : [],
-      interests: user.interests ? JSON.parse(user.interests) : [],
-      causes: user.causes ? JSON.parse(user.causes) : [], // Parse causes array
-      coordinates: user.coordinates ? JSON.parse(user.coordinates) : undefined, // Parse coordinates object
+      skills: safeJsonParse(user.skills, []),
+      languages: safeJsonParse(user.languages, []),
+      interests: safeJsonParse(user.interests, []),
+      causes: safeJsonParse(user.causes, []),
+      coordinates: safeJsonParse(user.coordinates, undefined),
     } as VolunteerProfile
   },
 
@@ -119,7 +143,7 @@ export const volunteerProfilesDb = {
     if (updatesAny.coordinates) processedUpdates.coordinates = JSON.stringify(updatesAny.coordinates)
     
     const result = await collection.updateOne(
-      { $expr: { $eq: [{ $toString: "$_id" }, userId] } },
+      userIdQuery(userId),
       { $set: { ...processedUpdates, updatedAt: new Date() } }
     )
     return result.modifiedCount > 0
@@ -136,11 +160,11 @@ export const volunteerProfilesDb = {
     return users.map((u: any) => ({
       ...u,
       userId: u._id.toString(),
-      skills: u.skills ? JSON.parse(u.skills) : [],
-      languages: u.languages ? JSON.parse(u.languages) : [],
-      interests: u.interests ? JSON.parse(u.interests) : [],
-      causes: u.causes ? JSON.parse(u.causes) : [], // Parse causes array
-      coordinates: u.coordinates ? JSON.parse(u.coordinates) : undefined, // Parse coordinates object
+      skills: safeJsonParse(u.skills, []),
+      languages: safeJsonParse(u.languages, []),
+      interests: safeJsonParse(u.interests, []),
+      causes: safeJsonParse(u.causes, []),
+      coordinates: safeJsonParse(u.coordinates, undefined),
     }))
   },
 
@@ -151,7 +175,7 @@ export const volunteerProfilesDb = {
 
   async delete(userId: string): Promise<boolean> {
     const collection = await getCollection<any>("user")
-    const result = await collection.deleteOne({ $expr: { $eq: [{ $toString: "$_id" }, userId] } })
+    const result = await collection.deleteOne(userIdQuery(userId))
     return result.deletedCount > 0
   },
 
@@ -159,7 +183,7 @@ export const volunteerProfilesDb = {
   async incrementApplicationCount(userId: string): Promise<boolean> {
     const collection = await getCollection<any>("user")
     const result = await collection.updateOne(
-      { $expr: { $eq: [{ $toString: "$_id" }, userId] } },
+      userIdQuery(userId),
       { 
         $inc: { completedProjects: 1 }, 
         $set: { updatedAt: new Date() } 
@@ -211,7 +235,7 @@ export const ngoProfilesDb = {
     if (data.causes) processedData.causes = JSON.stringify(data.causes)
     
     await collection.updateOne(
-      { $expr: { $eq: [{ $toString: "$_id" }, userId] } },
+      userIdQuery(userId),
       { $set: { ...processedData, updatedAt: new Date() } }
     )
     return userId
@@ -219,15 +243,15 @@ export const ngoProfilesDb = {
 
   async findByUserId(userId: string): Promise<NGOProfile | null> {
     const collection = await getCollection<any>("user")
-    const user = await collection.findOne({ $expr: { $eq: [{ $toString: "$_id" }, userId] } })
+    const user = await collection.findOne(userIdQuery(userId))
     
     if (!user || user.role !== "ngo") return null
     
-    // Parse JSON strings back to arrays
+    // Parse JSON strings back to arrays (safe parsing)
     return {
       ...user,
       userId: user._id.toString(),
-      causes: user.causes ? JSON.parse(user.causes) : [],
+      causes: safeJsonParse(user.causes, []),
     } as NGOProfile
   },
 
@@ -243,7 +267,7 @@ export const ngoProfilesDb = {
     if (updates.causes) processedUpdates.causes = JSON.stringify(updates.causes)
     
     const result = await collection.updateOne(
-      { $expr: { $eq: [{ $toString: "$_id" }, userId] } },
+      userIdQuery(userId),
       { $set: { ...processedUpdates, updatedAt: new Date() } }
     )
     return result.modifiedCount > 0
@@ -260,7 +284,7 @@ export const ngoProfilesDb = {
     return users.map((u: any) => ({
       ...u,
       userId: u._id.toString(),
-      causes: u.causes ? JSON.parse(u.causes) : [],
+      causes: safeJsonParse(u.causes, []),
     }))
   },
 
@@ -272,7 +296,7 @@ export const ngoProfilesDb = {
   async incrementStat(userId: string, field: keyof Pick<NGOProfile, "projectsPosted" | "projectsCompleted" | "volunteersEngaged">, amount: number = 1): Promise<boolean> {
     const collection = await getCollection<any>("user")
     const result = await collection.updateOne(
-      { $expr: { $eq: [{ $toString: "$_id" }, userId] } },
+      userIdQuery(userId),
       { $inc: { [field]: amount }, $set: { updatedAt: new Date() } }
     )
     return result.modifiedCount > 0
@@ -281,7 +305,7 @@ export const ngoProfilesDb = {
   async decrementUnlocks(userId: string): Promise<boolean> {
     const collection = await getCollection<any>("user")
     const result = await collection.updateOne(
-      { $expr: { $eq: [{ $toString: "$_id" }, userId] }, profileUnlocksRemaining: { $gt: 0 } },
+      { ...userIdQuery(userId), profileUnlocksRemaining: { $gt: 0 } },
       { $inc: { profileUnlocksRemaining: -1 }, $set: { updatedAt: new Date() } }
     )
     return result.modifiedCount > 0
@@ -291,7 +315,7 @@ export const ngoProfilesDb = {
   async incrementMonthlyUnlocks(userId: string): Promise<boolean> {
     const collection = await getCollection<any>("user")
     const result = await collection.updateOne(
-      { $expr: { $eq: [{ $toString: "$_id" }, userId] } },
+      userIdQuery(userId),
       { 
         $inc: { monthlyUnlocksUsed: 1 }, 
         $set: { updatedAt: new Date() } 
@@ -633,21 +657,25 @@ export const conversationsDb = {
     const collection = await getCollection<Conversation>(COLLECTIONS.CONVERSATIONS)
     const sortedParticipants = [...participants].sort()
     
-    let conversation = await collection.findOne({
+    // Use findOneAndUpdate with upsert to avoid race condition
+    // where two concurrent requests both see no conversation and both insert
+    const filter: any = {
       participants: { $all: sortedParticipants, $size: sortedParticipants.length },
-      ...(projectId && { projectId })
-    })
-
-    if (!conversation) {
-      const result = await collection.insertOne({
-        participants: sortedParticipants,
-        projectId,
-        isUnlocked: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as Conversation)
-      conversation = await collection.findOne({ _id: result.insertedId })
+      ...(projectId && { projectId }),
     }
+    const conversation = await collection.findOneAndUpdate(
+      filter,
+      {
+        $setOnInsert: {
+          participants: sortedParticipants,
+          projectId,
+          isUnlocked: false,
+          createdAt: new Date(),
+        },
+        $set: { updatedAt: new Date() },
+      },
+      { upsert: true, returnDocument: "after" }
+    )
 
     return conversation!
   },
@@ -768,6 +796,161 @@ export const notificationsDb = {
 }
 
 // ============================================
+// FOLLOW SYSTEM
+// ============================================
+export const followsDb = {
+  /**
+   * Follow a user. Returns true if new follow created, false if already following.
+   */
+  async follow(followerId: string, followerRole: string, followingId: string, followingRole: string): Promise<boolean> {
+    const collection = await getCollection<Follow>(COLLECTIONS.FOLLOWS)
+    
+    // Prevent self-follow
+    if (followerId === followingId) return false
+    
+    // Use upsert to prevent duplicates atomically
+    const result = await collection.updateOne(
+      { followerId, followingId },
+      {
+        $setOnInsert: {
+          followerId,
+          followerRole,
+          followingId,
+          followingRole,
+          createdAt: new Date(),
+        } as any,
+      },
+      { upsert: true }
+    )
+    
+    return result.upsertedCount > 0
+  },
+
+  /**
+   * Unfollow a user. Returns true if unfollowed, false if wasn't following.
+   */
+  async unfollow(followerId: string, followingId: string): Promise<boolean> {
+    const collection = await getCollection<Follow>(COLLECTIONS.FOLLOWS)
+    const result = await collection.deleteOne({ followerId, followingId })
+    return result.deletedCount > 0
+  },
+
+  /**
+   * Check if user A follows user B
+   */
+  async isFollowing(followerId: string, followingId: string): Promise<boolean> {
+    const collection = await getCollection<Follow>(COLLECTIONS.FOLLOWS)
+    const doc = await collection.findOne({ followerId, followingId })
+    return !!doc
+  },
+
+  /**
+   * Get complete follow stats for a profile, including whether the viewer follows them.
+   */
+  async getStats(profileId: string, viewerId?: string): Promise<FollowStats> {
+    const collection = await getCollection<Follow>(COLLECTIONS.FOLLOWS)
+    
+    const [followersCount, followingCount, isFollowing] = await Promise.all([
+      collection.countDocuments({ followingId: profileId }),
+      collection.countDocuments({ followerId: profileId }),
+      viewerId ? collection.findOne({ followerId: viewerId, followingId: profileId }).then(d => !!d) : Promise.resolve(false),
+    ])
+    
+    return { followersCount, followingCount, isFollowing }
+  },
+
+  /**
+   * Get follower count for a user
+   */
+  async getFollowersCount(userId: string): Promise<number> {
+    const collection = await getCollection<Follow>(COLLECTIONS.FOLLOWS)
+    return collection.countDocuments({ followingId: userId })
+  },
+
+  /**
+   * Get following count for a user
+   */
+  async getFollowingCount(userId: string): Promise<number> {
+    const collection = await getCollection<Follow>(COLLECTIONS.FOLLOWS)
+    return collection.countDocuments({ followerId: userId })
+  },
+
+  /**
+   * Get paginated list of followers (users who follow the given user)
+   */
+  async getFollowers(userId: string, page: number = 1, limit: number = 20): Promise<{
+    followers: Follow[]
+    total: number
+    page: number
+    totalPages: number
+  }> {
+    const collection = await getCollection<Follow>(COLLECTIONS.FOLLOWS)
+    const skip = (page - 1) * limit
+    
+    const [followers, total] = await Promise.all([
+      collection.find({ followingId: userId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray(),
+      collection.countDocuments({ followingId: userId }),
+    ])
+    
+    return { followers, total, page, totalPages: Math.ceil(total / limit) }
+  },
+
+  /**
+   * Get paginated list of users this user follows
+   */
+  async getFollowing(userId: string, page: number = 1, limit: number = 20): Promise<{
+    following: Follow[]
+    total: number
+    page: number
+    totalPages: number
+  }> {
+    const collection = await getCollection<Follow>(COLLECTIONS.FOLLOWS)
+    const skip = (page - 1) * limit
+    
+    const [following, total] = await Promise.all([
+      collection.find({ followerId: userId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .toArray(),
+      collection.countDocuments({ followerId: userId }),
+    ])
+    
+    return { following, total, page, totalPages: Math.ceil(total / limit) }
+  },
+
+  /**
+   * Check follow status for multiple profiles at once (batch)
+   */
+  async getFollowStatusBatch(viewerId: string, profileIds: string[]): Promise<Map<string, boolean>> {
+    const collection = await getCollection<Follow>(COLLECTIONS.FOLLOWS)
+    const follows = await collection.find({
+      followerId: viewerId,
+      followingId: { $in: profileIds },
+    }).toArray()
+    
+    const statusMap = new Map<string, boolean>()
+    profileIds.forEach(id => statusMap.set(id, false))
+    follows.forEach(f => statusMap.set(f.followingId, true))
+    return statusMap
+  },
+
+  /**
+   * Ensure proper indexes exist for the follows collection
+   */
+  async ensureIndexes(): Promise<void> {
+    const collection = await getCollection<Follow>(COLLECTIONS.FOLLOWS)
+    await collection.createIndex({ followerId: 1, followingId: 1 }, { unique: true })
+    await collection.createIndex({ followingId: 1, createdAt: -1 })
+    await collection.createIndex({ followerId: 1, createdAt: -1 })
+  },
+}
+
+// ============================================
 // ADMIN SETTINGS
 // ============================================
 export const adminSettingsDb = {
@@ -809,8 +992,8 @@ export const adminSettingsDb = {
         volunteerFreeApplicationsPerMonth: 3,
         volunteerFreeProfileVisibility: true,
         
-        // Volunteer Pro Plan - TEST PRICE (use 999 for production)
-        volunteerProPrice: 1,
+        // Volunteer Pro Plan - Production price
+        volunteerProPrice: 999,
         volunteerProApplicationsUnlimited: true,
         volunteerProFeatures: [
           "Unlimited job applications",
@@ -826,8 +1009,8 @@ export const adminSettingsDb = {
         ngoFreeProjectsPerMonth: 3,
         ngoFreeProfileUnlocksPerMonth: 0,
         
-        // NGO Pro Plan - TEST PRICE (use 2999 for production)
-        ngoProPrice: 1,
+        // NGO Pro Plan - Production price
+        ngoProPrice: 2999,
         ngoProProjectsUnlimited: true,
         ngoProUnlocksUnlimited: true,
         ngoProFeatures: [

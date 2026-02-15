@@ -9,7 +9,7 @@ interface User {
   email: string;
   name: string;
   image?: string;
-  role: "volunteer" | "ngo";
+  role: "volunteer" | "ngo" | "admin";
   isOnboarded: boolean;
 }
 

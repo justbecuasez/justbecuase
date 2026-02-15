@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getDb } from "@/lib/database"
+import { randomInt } from "crypto"
 
-// Generate a 6-digit OTP
+// Generate a cryptographically secure 6-digit OTP
 function generateOTP(): string {
-  return Math.floor(100000 + Math.random() * 900000).toString()
+  return randomInt(100000, 999999).toString()
 }
 
 // Format phone number to E.164 format

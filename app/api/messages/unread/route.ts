@@ -55,21 +55,18 @@ export async function GET(request: NextRequest) {
 
     const senderNames = new Map<string, string>()
     
-    for (const senderId of senderIds) {
-      let name = "Someone"
-      
-      // Check user collection - all user data is now consolidated here
-      const user = await userCollection.findOne({ id: senderId })
-      if (user) {
-        // For NGOs, prefer orgName/organizationName, otherwise use name
+    // Batch lookup all senders in one query instead of N+1 loop
+    if (senderIds.length > 0) {
+      const senders = await userCollection.find({ id: { $in: senderIds } }).toArray()
+      for (const user of senders) {
+        let name = "Someone"
         if (user.role === "ngo") {
           name = user.orgName || user.organizationName || user.name || name
         } else {
           name = user.name || name
         }
+        senderNames.set(user.id, name)
       }
-      
-      senderNames.set(senderId, name)
     }
 
     // Format response

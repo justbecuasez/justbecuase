@@ -17,6 +17,7 @@ import { UnifiedSearchBar } from "@/components/unified-search-bar"
 import { useState, useEffect } from "react"
 import { useNotificationStore } from "@/lib/store"
 import { MessageNotificationBadge } from "@/components/messages/message-notification-badge"
+import { signOut } from "@/lib/auth-client"
 
 interface DashboardHeaderProps {
   userType: "volunteer" | "ngo"
@@ -138,11 +139,15 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/auth/signin" className="text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Sign Out
-                </Link>
+              <DropdownMenuItem
+                onClick={async () => {
+                  await signOut()
+                  window.location.href = "/auth/signin"
+                }}
+                className="text-destructive cursor-pointer"
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Sign Out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

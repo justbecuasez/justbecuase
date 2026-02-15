@@ -3,6 +3,7 @@ import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { ngoProfilesDb, volunteerProfilesDb, transactionsDb } from "@/lib/database"
 import { STRIPE_PAYMENT_LINKS } from "@/lib/stripe-payment-links"
+import Stripe from "stripe"
 
 // This endpoint handles the redirect back from Stripe Payment Links
 // Configure this URL in your Payment Link settings: "After payment" → "Redirect to website"
@@ -55,8 +56,31 @@ export async function GET(request: NextRequest) {
 
     const userId = clientReferenceId || session.user.id
     const userRole = session.user.role as string
-    
-    console.log("👤 User info:", { userId, userRole })
+
+    // SECURITY: Verify the Stripe checkout session actually had a successful payment
+    if (checkoutSessionId) {
+      const stripeKey = process.env.STRIPE_SECRET_KEY
+      if (!stripeKey) {
+        console.error("❌ STRIPE_SECRET_KEY not configured")
+        return NextResponse.redirect(new URL("/pricing?payment=error", request.url))
+      }
+      const stripe = new Stripe(stripeKey)
+      try {
+        const stripeSession = await stripe.checkout.sessions.retrieve(checkoutSessionId)
+        if (stripeSession.payment_status !== "paid") {
+          console.error("❌ Payment not completed. Status:", stripeSession.payment_status)
+          return NextResponse.redirect(new URL("/pricing?payment=failed", request.url))
+        }
+        console.log("✅ Stripe payment verified, status:", stripeSession.payment_status)
+      } catch (stripeError) {
+        console.error("❌ Failed to verify Stripe session:", stripeError)
+        return NextResponse.redirect(new URL("/pricing?payment=error", request.url))
+      }
+    } else {
+      // No checkout session ID means no payment was made - reject
+      console.error("❌ No checkout session ID provided - cannot verify payment")
+      return NextResponse.redirect(new URL("/pricing?payment=error", request.url))
+    }
 
     // Handle based on payment type
     if (paymentType === "subscription") {

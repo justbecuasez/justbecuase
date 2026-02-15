@@ -62,6 +62,10 @@ export function ShareButton({
 
   const handleCopyLink = async () => {
     try {
+      if (!navigator.clipboard) {
+        toast.error("Clipboard not available (requires HTTPS)")
+        return
+      }
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
       toast.success("Link copied to clipboard!")

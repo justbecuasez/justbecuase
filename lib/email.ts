@@ -262,6 +262,75 @@ export function getNewOpportunityEmailHtml(
   `
 }
 
+export function getNewFollowerEmailHtml(
+  recipientName: string,
+  followerName: string,
+  followerRole: string,
+  followerProfileUrl: string,
+  recipientProfileUrl: string,
+  followerCount: number
+): string {
+  const roleLabel = followerRole === "ngo" ? "NGO" : "Impact Agent"
+  const followerCountText = followerCount === 1 ? "1 follower" : `${followerCount.toLocaleString()} followers`
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f3f4f6;">
+      <div style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.07);">
+        <!-- Header -->
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 32px 30px; text-align: center;">
+          <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">JustBeCause Network</h1>
+          <p style="color: #d1fae5; margin: 6px 0 0; font-size: 14px;">Skills-Based Impact Platform</p>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 36px 30px;">
+          <div style="text-align: center; margin-bottom: 28px;">
+            <div style="display: inline-block; background: #ecfdf5; border-radius: 50%; width: 64px; height: 64px; line-height: 64px; font-size: 28px; margin-bottom: 12px;">\uD83D\uDC65</div>
+            <h2 style="margin: 0; color: #111827; font-size: 22px;">You Have a New Follower!</h2>
+          </div>
+
+          <p style="color: #374151; font-size: 16px;">Hi ${recipientName},</p>
+          <p style="color: #374151; font-size: 16px;">Great news! <strong>${followerName}</strong> (${roleLabel}) just started following you on JustBeCause Network.</p>
+
+          <!-- Follower Card -->
+          <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; margin: 24px 0; text-align: center;">
+            <div style="font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 4px;">${followerName}</div>
+            <div style="display: inline-block; background: #dbeafe; color: #1e40af; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 20px; margin-bottom: 12px;">${roleLabel}</div>
+            <div style="margin-top: 8px;">
+              <a href="https://justbecausenetwork.com${followerProfileUrl}" style="display: inline-block; background: #10b981; color: #ffffff; padding: 10px 24px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">View Their Profile</a>
+            </div>
+          </div>
+
+          <!-- Stats -->
+          <div style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0;">
+            <p style="margin: 0; color: #065f46; font-size: 14px;">You now have</p>
+            <p style="margin: 4px 0; color: #047857; font-size: 28px; font-weight: 800;">${followerCountText}</p>
+            <p style="margin: 0; color: #065f46; font-size: 14px;">Keep up the amazing work!</p>
+          </div>
+
+          <div style="text-align: center; margin: 28px 0;">
+            <a href="https://justbecausenetwork.com${recipientProfileUrl}" style="display: inline-block; background: #111827; color: #ffffff; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px;">View Your Profile</a>
+          </div>
+
+          <p style="color: #9ca3af; font-size: 13px; text-align: center;">You received this because someone followed you on JustBeCause Network. Manage your notification preferences in your dashboard settings.</p>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #f9fafb; padding: 20px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
+          <p style="color: #9ca3af; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
 export function getNGOConnectionEmailHtml(
   volunteerName: string,
   ngoName: string,

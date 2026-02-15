@@ -29,8 +29,9 @@ export const auth = betterAuth({
     requireEmailVerification: false, // Disabled for easier signup flow
     sendResetPassword: async ({ user, url, token }) => {
       try {
-        // Generate a short numeric code and store mapping to the reset token
-        const code = Math.floor(100000 + Math.random() * 900000).toString()
+        // Generate a cryptographically secure short numeric code and store mapping to the reset token
+        const { randomInt } = require("crypto")
+        const code = randomInt(100000, 999999).toString()
         const expiresAt = new Date(Date.now() + 1000 * 60 * 60) // 1 hour
         console.log(`[Reset] ========================================`)
         console.log(`[Reset] User email: ${user.email}`)
@@ -68,15 +69,19 @@ export const auth = betterAuth({
   },
   // Social Login Providers
   socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID as string,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
-      prompt: "select_account", // Always ask user to select account
-    },
-    linkedin: {
-      clientId: process.env.LINKEDIN_CLIENT_ID as string,
-      clientSecret: process.env.LINKEDIN_CLIENT_SECRET as string,
-    },
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? {
+      google: {
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        prompt: "select_account",
+      },
+    } : {}),
+    ...(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET ? {
+      linkedin: {
+        clientId: process.env.LINKEDIN_CLIENT_ID,
+        clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+      },
+    } : {}),
   },
   // Email verification disabled for easier signup flow
   // emailVerification: {

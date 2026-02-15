@@ -193,12 +193,12 @@ export function MessageThread({
                 </div>
 
                 {/* Messages for this date */}
-                {group.messages.map((message) => {
+                {group.messages.map((message, msgIndex) => {
                   const isOwn = message.senderId === currentUserId
 
                   return (
                     <div
-                      key={message._id?.toString() || Math.random()}
+                      key={message._id?.toString() || `msg-${msgIndex}`}
                       className={`flex ${isOwn ? "justify-end" : "justify-start"} mb-3`}
                     >
                       <div

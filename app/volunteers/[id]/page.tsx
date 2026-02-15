@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShareButton } from "@/components/share-button"
-import { getVolunteerProfileView, getNGOSubscriptionStatus } from "@/lib/actions"
+import { FollowButton } from "@/components/follow-button"
+import { FollowStatsDisplay } from "@/components/follow-stats-display"
+import { getVolunteerProfileView, getNGOSubscriptionStatus, getFollowStats } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
 import { Star, MapPin, Clock, CheckCircle, ExternalLink, Award, TrendingUp, Lock, Crown, User } from "lucide-react"
 import { ContactVolunteerButton } from "@/components/messages/contact-volunteer-button"
@@ -27,6 +29,10 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
   
   // Get NGO subscription status if viewing as NGO
   const ngoSubscription = await getNGOSubscriptionStatus()
+
+  // Get follow stats for this volunteer
+  const followStatsResult = await getFollowStats(id)
+  const followStats = followStatsResult.success ? followStatsResult.data! : { followersCount: 0, followingCount: 0, isFollowing: false }
 
   if (!volunteer) {
     notFound()
@@ -124,6 +130,23 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
               
               {/* Action Button */}
               <div className="flex flex-col gap-2">
+                {!isLocked && (
+                  <FollowButton
+                    targetId={id}
+                    targetName={volunteer.name || "Impact Agent"}
+                    isFollowing={followStats.isFollowing}
+                    followersCount={followStats.followersCount}
+                    showCount={false}
+                    size="default"
+                  />
+                )}
+                {!isLocked && (
+                  <FollowStatsDisplay
+                    userId={id}
+                    followersCount={followStats.followersCount}
+                    followingCount={followStats.followingCount}
+                  />
+                )}
                 {isLocked ? (
                   <Button asChild>
                     <Link href="/pricing">

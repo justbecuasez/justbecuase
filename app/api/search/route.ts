@@ -252,14 +252,15 @@ async function searchVolunteersInDB(
       mongoFilter.$and = conditions
     }
 
+    // All volunteer data is in the "user" collection now
     const volunteers = await db
-      .collection("volunteer_profiles")
-      .find(mongoFilter)
-      .project({ userId: 1, _id: 0 })
+      .collection("user")
+      .find({ ...mongoFilter, role: "volunteer" })
+      .project({ _id: 1 })
       .limit(50)
       .toArray()
 
-    return volunteers.map(v => v.userId).filter(Boolean)
+    return volunteers.map(v => v._id.toString()).filter(Boolean)
   } catch (err) {
     console.error("[AI Search] DB search failed:", err)
     return []

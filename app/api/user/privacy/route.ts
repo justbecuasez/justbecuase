@@ -61,6 +61,19 @@ export async function PUT(request: NextRequest) {
     }
 
     const { privacy } = await request.json()
+
+    // Validate privacy fields - only allow known boolean fields
+    const allowedFields = [
+      'showProfile', 'showInSearch', 'emailNotifications',
+      'applicationNotifications', 'messageNotifications', 'opportunityDigest'
+    ]
+    const sanitizedPrivacy: Record<string, boolean> = {}
+    for (const key of allowedFields) {
+      if (key in privacy && typeof privacy[key] === 'boolean') {
+        sanitizedPrivacy[key] = privacy[key]
+      }
+    }
+
     const db = await getDb()
     const userId = session.user.id
 
@@ -69,7 +82,7 @@ export async function PUT(request: NextRequest) {
       { id: userId },
       { 
         $set: { 
-          privacy,
+          privacy: sanitizedPrivacy,
           updatedAt: new Date() 
         } 
       }

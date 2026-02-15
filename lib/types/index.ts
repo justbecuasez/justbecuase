@@ -417,6 +417,7 @@ export type NotificationType =
   | "profile_viewed"
   | "profile_unlocked"
   | "project_match"
+  | "new_follower"
   | "system"
 
 export interface Notification {
@@ -566,6 +567,24 @@ export interface TeamMember {
   isActive: boolean
   createdAt: Date
   updatedAt: Date
+}
+
+// ============================================
+// FOLLOW SYSTEM
+// ============================================
+export interface Follow {
+  _id?: ObjectId
+  followerId: string   // The user who is following
+  followerRole: UserRole
+  followingId: string  // The user being followed
+  followingRole: UserRole
+  createdAt: Date
+}
+
+export interface FollowStats {
+  followersCount: number
+  followingCount: number
+  isFollowing: boolean  // Whether the current user follows this profile
 }
 
 // ============================================

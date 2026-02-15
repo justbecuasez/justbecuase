@@ -34,14 +34,14 @@ export function ProjectCard({ project }: { project: Project }) {
       {/* NGO Info */}
       <div className="flex items-center gap-3 mb-4">
         <img
-          src={project.ngo.logo || "/placeholder.svg"}
-          alt={project.ngo.name}
+          src={project.ngo?.logo || "/placeholder.svg"}
+          alt={project.ngo?.name || "Organization"}
           className="w-10 h-10 rounded-lg object-cover bg-muted"
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-medium text-foreground truncate">{project.ngo.name}</p>
-            {project.ngo.verified && <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />}
+            <p className="text-sm font-medium text-foreground truncate">{project.ngo?.name || "Unknown"}</p>
+            {project.ngo?.verified && <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />}
           </div>
         </div>
       </div>
@@ -54,12 +54,12 @@ export function ProjectCard({ project }: { project: Project }) {
 
       {/* Skills */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {project.skills.slice(0, 3).map((skill) => (
+        {(project.skills || []).slice(0, 3).map((skill) => (
           <Badge key={skill} variant="secondary" className="text-xs bg-accent text-accent-foreground">
             {skill}
           </Badge>
         ))}
-        {project.skills.length > 3 && (
+        {(project.skills || []).length > 3 && (
           <Badge variant="outline" className="text-xs">
             +{project.skills.length - 3}
           </Badge>
@@ -68,14 +68,18 @@ export function ProjectCard({ project }: { project: Project }) {
 
       {/* Meta Info */}
       <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-        <div className="flex items-center gap-1">
-          <Clock className="h-4 w-4" />
-          <span>{project.timeCommitment}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <MapPin className="h-4 w-4" />
-          <span>{project.location}</span>
-        </div>
+        {project.timeCommitment && (
+          <div className="flex items-center gap-1">
+            <Clock className="h-4 w-4" />
+            <span>{project.timeCommitment}</span>
+          </div>
+        )}
+        {project.location && (
+          <div className="flex items-center gap-1">
+            <MapPin className="h-4 w-4" />
+            <span>{project.location}</span>
+          </div>
+        )}
       </div>
 
       {/* Footer */}

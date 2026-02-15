@@ -16,7 +16,7 @@ export async function GET() {
           supportEmail: "support@justbecausenetwork.com",
           currency: "INR",
           volunteerFreeApplicationsPerMonth: 3,
-          volunteerProPrice: 1, // TEST PRICE (use 999 for production)
+          volunteerProPrice: 999, // Production price in INR
           volunteerProFeatures: [
             "Unlimited job applications",
             "Featured profile badge",
@@ -28,7 +28,7 @@ export async function GET() {
           ],
           ngoFreeProjectsPerMonth: 3,
           ngoFreeProfileUnlocksPerMonth: 0,
-          ngoProPrice: 1, // TEST PRICE (use 2999 for production)
+          ngoProPrice: 2999, // Production price in INR
           ngoProFeatures: [
             "Unlimited projects",
             "Unlimited profile unlocks",

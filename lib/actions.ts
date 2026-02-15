@@ -22,6 +22,7 @@ import {
   messagesDb,
   banRecordsDb,
   teamMembersDb,
+  followsDb,
   getDb,
 } from "./database"
 import { getUserInfo, getUsersInfo } from "./user-utils"
@@ -2663,69 +2664,248 @@ export async function initializePlatform(): Promise<void> {
 // NGO FOLLOW/UNFOLLOW
 // ============================================
 
-export async function followNgo(ngoId: string): Promise<ApiResponse<void>> {
+// ============================================
+// FOLLOW SYSTEM (Professional)
+// ============================================
+
+/**
+ * Follow any user (NGO or Impact Agent). Works for all authenticated users.
+ */
+export async function followUser(targetId: string): Promise<ApiResponse<{ followersCount: number }>> {
   try {
-    const user = await requireRole(["volunteer"])
-    
-    const volunteerProfile = await volunteerProfilesDb.findByUserId(user.id)
-    if (!volunteerProfile) {
-      return { success: false, error: "Impact agent profile not found" }
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) {
+      return { success: false, error: "You must be logged in to follow" }
     }
 
-    const followedNgos = volunteerProfile.followedNgos || []
-    if (followedNgos.includes(ngoId)) {
-      return { success: false, error: "Already following this organization" }
+    if (session.user.id === targetId) {
+      return { success: false, error: "You cannot follow yourself" }
     }
 
-    await volunteerProfilesDb.update(user.id, {
-      followedNgos: [...followedNgos, ngoId],
+    const followerRole = (session.user as any).role || "volunteer"
+
+    // Look up the target user to get their role
+    const db = await getDb()
+    const targetUser = await db.collection("user").findOne({ id: targetId })
+    if (!targetUser) {
+      return { success: false, error: "User not found" }
+    }
+
+    const created = await followsDb.follow(
+      session.user.id,
+      followerRole,
+      targetId,
+      targetUser.role || "volunteer"
+    )
+
+    if (!created) {
+      return { success: false, error: "Already following this user" }
+    }
+
+    // Get updated follower count
+    const followersCount = await followsDb.getFollowersCount(targetId)
+
+    // Create notification for the person being followed
+    const followerName = session.user.name || "Someone"
+    const followerProfilePath = followerRole === "ngo" ? `/ngos/${session.user.id}` : `/volunteers/${session.user.id}`
+    const targetRole = targetUser.role || "volunteer"
+    const targetProfilePath = targetRole === "ngo" ? `/ngos/${targetId}` : `/volunteers/${targetId}`
+    const targetName = targetRole === "ngo" ? (targetUser.orgName || targetUser.name || "there") : (targetUser.name || "there")
+    await notificationsDb.create({
+      userId: targetId,
+      type: "new_follower",
+      title: "New Follower",
+      message: `${followerName} started following you`,
+      referenceId: session.user.id,
+      referenceType: "user",
+      link: followerProfilePath,
+      isRead: false,
+      createdAt: new Date(),
     })
 
-    revalidatePath(`/ngos/${ngoId}`)
-    return { success: true, data: undefined }
+    // Send email notification to the person being followed (fire-and-forget)
+    if (targetUser.email) {
+      import("@/lib/email").then(({ sendEmail, getNewFollowerEmailHtml }) => {
+        const html = getNewFollowerEmailHtml(
+          targetName,
+          followerName,
+          followerRole,
+          followerProfilePath,
+          targetProfilePath,
+          followersCount
+        )
+        sendEmail({
+          to: targetUser.email,
+          subject: `${followerName} is now following you on JustBeCause!`,
+          html,
+          text: `Hi ${targetName}, ${followerName} just started following you on JustBeCause Network. You now have ${followersCount} follower${followersCount === 1 ? "" : "s"}. Visit your profile to see more.`,
+        }).catch(err => console.error("Failed to send follow email:", err))
+      }).catch(err => console.error("Failed to import email module:", err))
+    }
+
+    revalidatePath(`/ngos/${targetId}`)
+    revalidatePath(`/volunteers/${targetId}`)
+    return { success: true, data: { followersCount } }
   } catch (error) {
-    console.error("Failed to follow NGO:", error)
-    return { success: false, error: "Failed to follow organization" }
+    console.error("Failed to follow user:", error)
+    return { success: false, error: "Failed to follow" }
   }
 }
 
-export async function unfollowNgo(ngoId: string): Promise<ApiResponse<void>> {
+/**
+ * Unfollow any user.
+ */
+export async function unfollowUser(targetId: string): Promise<ApiResponse<{ followersCount: number }>> {
   try {
-    const user = await requireRole(["volunteer"])
-    
-    const volunteerProfile = await volunteerProfilesDb.findByUserId(user.id)
-    if (!volunteerProfile) {
-      return { success: false, error: "Impact agent profile not found" }
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) {
+      return { success: false, error: "You must be logged in" }
     }
 
-    const followedNgos = volunteerProfile.followedNgos || []
-    await volunteerProfilesDb.update(user.id, {
-      followedNgos: followedNgos.filter((id) => id !== ngoId),
+    const removed = await followsDb.unfollow(session.user.id, targetId)
+    if (!removed) {
+      return { success: false, error: "You are not following this user" }
+    }
+
+    const followersCount = await followsDb.getFollowersCount(targetId)
+
+    revalidatePath(`/ngos/${targetId}`)
+    revalidatePath(`/volunteers/${targetId}`)
+    return { success: true, data: { followersCount } }
+  } catch (error) {
+    console.error("Failed to unfollow user:", error)
+    return { success: false, error: "Failed to unfollow" }
+  }
+}
+
+/**
+ * Get follow stats for a user (follower count, following count, isFollowing status).
+ */
+export async function getFollowStats(targetId: string): Promise<ApiResponse<{ followersCount: number; followingCount: number; isFollowing: boolean }>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    const viewerId = session?.user?.id
+    const stats = await followsDb.getStats(targetId, viewerId)
+    
+    return {
+      success: true,
+      data: {
+        followersCount: stats.followersCount,
+        followingCount: stats.followingCount,
+        isFollowing: stats.isFollowing,
+      },
+    }
+  } catch (error) {
+    console.error("Failed to get follow stats:", error)
+    return { success: false, error: "Failed to get follow stats" }
+  }
+}
+
+/**
+ * Get paginated followers list with user details
+ */
+export async function getFollowersList(userId: string, page: number = 1, limit: number = 20): Promise<ApiResponse<{
+  users: Array<{ id: string; name: string; avatar?: string; role: string; headline?: string }>
+  total: number
+  page: number
+  totalPages: number
+}>> {
+  try {
+    const { followers, total, totalPages } = await followsDb.getFollowers(userId, page, limit)
+    
+    if (followers.length === 0) {
+      return { success: true, data: { users: [], total: 0, page, totalPages: 0 } }
+    }
+
+    // Batch fetch user details
+    const db = await getDb()
+    const followerIds = followers.map(f => f.followerId)
+    const users = await db.collection("user")
+      .find({ id: { $in: followerIds } })
+      .project({ id: 1, name: 1, image: 1, role: 1, bio: 1, orgName: 1, avatar: 1 })
+      .toArray()
+
+    const userMap = new Map(users.map(u => [u.id, u]))
+
+    const enrichedUsers = followers.map(f => {
+      const user = userMap.get(f.followerId)
+      return {
+        id: f.followerId,
+        name: user?.role === "ngo" ? (user?.orgName || user?.name || "Unknown") : (user?.name || "Unknown"),
+        avatar: user?.avatar || user?.image,
+        role: f.followerRole,
+        headline: user?.bio?.split("\n")[0]?.substring(0, 100),
+      }
     })
 
-    revalidatePath(`/ngos/${ngoId}`)
-    return { success: true, data: undefined }
+    return { success: true, data: { users: enrichedUsers, total, page, totalPages } }
   } catch (error) {
-    console.error("Failed to unfollow NGO:", error)
-    return { success: false, error: "Failed to unfollow organization" }
+    console.error("Failed to get followers:", error)
+    return { success: false, error: "Failed to get followers" }
   }
+}
+
+/**
+ * Get paginated following list with user details
+ */
+export async function getFollowingList(userId: string, page: number = 1, limit: number = 20): Promise<ApiResponse<{
+  users: Array<{ id: string; name: string; avatar?: string; role: string; headline?: string }>
+  total: number
+  page: number
+  totalPages: number
+}>> {
+  try {
+    const { following, total, totalPages } = await followsDb.getFollowing(userId, page, limit)
+    
+    if (following.length === 0) {
+      return { success: true, data: { users: [], total: 0, page, totalPages: 0 } }
+    }
+
+    // Batch fetch user details
+    const db = await getDb()
+    const followingIds = following.map(f => f.followingId)
+    const users = await db.collection("user")
+      .find({ id: { $in: followingIds } })
+      .project({ id: 1, name: 1, image: 1, role: 1, bio: 1, orgName: 1, avatar: 1 })
+      .toArray()
+
+    const userMap = new Map(users.map(u => [u.id, u]))
+
+    const enrichedUsers = following.map(f => {
+      const user = userMap.get(f.followingId)
+      return {
+        id: f.followingId,
+        name: user?.role === "ngo" ? (user?.orgName || user?.name || "Unknown") : (user?.name || "Unknown"),
+        avatar: user?.avatar || user?.image,
+        role: f.followingRole,
+        headline: user?.bio?.split("\n")[0]?.substring(0, 100),
+      }
+    })
+
+    return { success: true, data: { users: enrichedUsers, total, page, totalPages } }
+  } catch (error) {
+    console.error("Failed to get following:", error)
+    return { success: false, error: "Failed to get following" }
+  }
+}
+
+// Legacy wrappers — keep backward compatibility
+export async function followNgo(ngoId: string): Promise<ApiResponse<void>> {
+  const result = await followUser(ngoId)
+  return { success: result.success, error: result.error, data: undefined }
+}
+
+export async function unfollowNgo(ngoId: string): Promise<ApiResponse<void>> {
+  const result = await unfollowUser(ngoId)
+  return { success: result.success, error: result.error, data: undefined }
 }
 
 export async function isFollowingNgo(ngoId: string): Promise<boolean> {
   try {
     const session = await auth.api.getSession({ headers: await headers() })
-    if (!session?.user || session.user.role !== "volunteer") {
-      return false
-    }
-
-    const volunteerProfile = await volunteerProfilesDb.findByUserId(session.user.id)
-    if (!volunteerProfile) {
-      return false
-    }
-
-    const followedNgos = volunteerProfile.followedNgos || []
-    return followedNgos.includes(ngoId)
-  } catch (error) {
+    if (!session?.user) return false
+    return followsDb.isFollowing(session.user.id, ngoId)
+  } catch {
     return false
   }
 }

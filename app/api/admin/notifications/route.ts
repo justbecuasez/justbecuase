@@ -14,10 +14,9 @@ async function checkAdmin() {
     return null
   }
   
-  const db = await getDb()
-  const adminRecord = await db.collection("admins").findOne({ email: session.user.email })
-  
-  if (!adminRecord) {
+  // Use role-based check for consistency across all admin endpoints
+  const userRole = (session.user as any).role
+  if (userRole !== "admin") {
     return null
   }
   
@@ -111,29 +110,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create notifications for all target users
-    const createdNotifications: string[] = []
-    for (const userId of targetUserIds) {
+    // Create notifications in batch for all target users
+    const now = new Date()
+    const notificationDocs = targetUserIds.map((userId) => ({
+      userId,
+      type: type as any,
+      title,
+      message,
+      link,
+      isRead: false,
+      createdAt: now,
+    }))
+
+    let insertedCount = 0
+    if (notificationDocs.length > 0) {
       try {
-        const notificationId = await notificationsDb.create({
-          userId,
-          type: type as any,
-          title,
-          message,
-          link,
-          isRead: false,
-          createdAt: new Date(),
-        })
-        createdNotifications.push(notificationId)
+        const db = await getDb()
+        const result = await db.collection("notifications").insertMany(notificationDocs)
+        insertedCount = result.insertedCount
       } catch (e) {
-        console.error(`Failed to create notification for user ${userId}:`, e)
+        console.error("Failed to batch insert notifications:", e)
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: `Sent ${createdNotifications.length} notifications`,
-      count: createdNotifications.length,
+      message: `Sent ${insertedCount} notifications`,
+      count: insertedCount,
     })
   } catch (error) {
     console.error("Failed to send notifications:", error)
