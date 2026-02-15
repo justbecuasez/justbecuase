@@ -69,51 +69,16 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
               </div>
               
               <div className="flex-1 text-center md:text-left">
-                {/* Name + Actions row */}
-                <div className="flex flex-col md:flex-row md:items-center justify-center md:justify-between gap-3 mb-3">
-                  <h1 className="text-3xl font-bold text-foreground">
-                    {isLocked ? (
-                      <span className="flex items-center gap-2 justify-center md:justify-start">
-                        <Lock className="h-5 w-5" />
-                        Profile Locked
-                      </span>
-                    ) : (
-                      volunteer.name || "Impact Agent"
-                    )}
-                  </h1>
-                  <div className="flex items-center justify-center md:justify-end gap-2">
-                    {!isLocked && (
-                      <FollowButton
-                        targetId={id}
-                        targetName={volunteer.name || "Impact Agent"}
-                        isFollowing={followStats.isFollowing}
-                        followersCount={followStats.followersCount}
-                        showCount={false}
-                        size="sm"
-                      />
-                    )}
-                    {isLocked ? (
-                      <Button asChild size="sm">
-                        <Link href="/pricing">
-                          <Crown className="h-4 w-4 mr-1.5" />
-                          Subscribe to View
-                        </Link>
-                      </Button>
-                    ) : volunteer.canMessage ? (
-                      <ContactVolunteerButton
-                        volunteerId={volunteer.id}
-                        volunteerName={volunteer.name || "Impact Agent"}
-                        className="bg-primary hover:bg-primary/90"
-                      />
-                    ) : null}
-                    <ShareButton
-                      url={`/volunteers/${id}`}
-                      title={isLocked ? "Skilled Impact Agent on JustBeCause" : `${volunteer.name} - Impact Agent Profile`}
-                      description={`Discover this talented impact agent with ${volunteer.completedProjects} completed projects and a ${volunteer.rating.toFixed(1)} rating.`}
-                      variant="outline"
-                    />
-                  </div>
-                </div>
+                <h1 className="text-3xl font-bold text-foreground mb-2">
+                  {isLocked ? (
+                    <span className="flex items-center gap-2 justify-center md:justify-start">
+                      <Lock className="h-5 w-5" />
+                      Profile Locked
+                    </span>
+                  ) : (
+                    volunteer.name || "Impact Agent"
+                  )}
+                </h1>
 
                 {/* Bio as headline if available */}
                 {volunteer.bio && !isLocked && (
@@ -135,13 +100,6 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                     <CheckCircle className="h-4 w-4 text-success" />
                     {volunteer.completedProjects} opportunities completed
                   </div>
-                  {!isLocked && (
-                    <FollowStatsDisplay
-                      userId={id}
-                      followersCount={followStats.followersCount}
-                      followingCount={followStats.followingCount}
-                    />
-                  )}
                   {volunteer.volunteerType === "paid" && (
                     <Badge variant="secondary">Paid</Badge>
                   )}
@@ -167,6 +125,48 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                     <Badge variant="outline">+{volunteer.skills.length - 6} more</Badge>
                   )}
                 </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col gap-2 min-w-[170px] w-full md:w-auto">
+                {!isLocked && (
+                  <FollowButton
+                    targetId={id}
+                    targetName={volunteer.name || "Impact Agent"}
+                    isFollowing={followStats.isFollowing}
+                    followersCount={followStats.followersCount}
+                    showCount={false}
+                  />
+                )}
+                {!isLocked && (
+                  <FollowStatsDisplay
+                    userId={id}
+                    followersCount={followStats.followersCount}
+                    followingCount={followStats.followingCount}
+                    className="justify-center"
+                  />
+                )}
+                {isLocked ? (
+                  <Button asChild className="w-full">
+                    <Link href="/pricing">
+                      <Crown className="h-4 w-4 mr-2" />
+                      Subscribe to View
+                    </Link>
+                  </Button>
+                ) : volunteer.canMessage ? (
+                  <ContactVolunteerButton
+                    volunteerId={volunteer.id}
+                    volunteerName={volunteer.name || "Impact Agent"}
+                    className="w-full bg-primary hover:bg-primary/90"
+                  />
+                ) : null}
+                <ShareButton
+                  url={`/volunteers/${id}`}
+                  title={isLocked ? "Skilled Impact Agent on JustBeCause" : `${volunteer.name} - Impact Agent Profile`}
+                  description={`Discover this talented impact agent with ${volunteer.completedProjects} completed projects and a ${volunteer.rating.toFixed(1)} rating.`}
+                  variant="outline"
+                  className="w-full"
+                />
               </div>
             </div>
           </div>

@@ -70,37 +70,10 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                 )}
               </div>
               <div className="flex-1 text-center md:text-left">
-                <div className="flex flex-col md:flex-row md:items-center justify-center md:justify-between gap-3 mb-3">
-                  <div className="flex items-center justify-center md:justify-start gap-2">
-                    <h1 className="text-3xl font-bold text-foreground">{ngo.orgName}</h1>
-                    {ngo.isVerified && <CheckCircle className="h-6 w-6 text-primary" />}
-                  </div>
-                  <div className="flex items-center justify-center md:justify-end gap-2">
-                    <FollowButton 
-                      targetId={id} 
-                      targetName={ngo.orgName}
-                      isFollowing={followStats.isFollowing}
-                      followersCount={followStats.followersCount}
-                      showCount={false}
-                      size="sm"
-                    />
-                    <ShareButton
-                      url={`/ngos/${id}`}
-                      title={ngo.orgName}
-                      description={ngo.description || `Discover ${ngo.orgName} and their impactful projects on JustBeCause.`}
-                      variant="outline"
-                    />
-                    {ngo.website && (
-                      <Button asChild variant="outline" size="sm" className="bg-transparent">
-                        <Link href={ngo.website} target="_blank">
-                          <Globe className="h-4 w-4 mr-1.5" />
-                          Website
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
+                <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                  <h1 className="text-3xl font-bold text-foreground">{ngo.orgName}</h1>
+                  {ngo.isVerified && <CheckCircle className="h-6 w-6 text-primary" />}
                 </div>
-
                 {ngo.description && (
                   <p className="text-lg text-muted-foreground mb-4 line-clamp-2">{ngo.description}</p>
                 )}
@@ -116,11 +89,6 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                     <FolderKanban className="h-4 w-4 text-muted-foreground" />
                     {ngo.projectsPosted} projects posted
                   </div>
-                  <FollowStatsDisplay
-                    userId={id}
-                    followersCount={followStats.followersCount}
-                    followingCount={followStats.followingCount}
-                  />
                 </div>
 
                 <div className="flex flex-wrap justify-center md:justify-start gap-2">
@@ -130,6 +98,36 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                     </Badge>
                   ))}
                 </div>
+              </div>
+              <div className="flex flex-col gap-2 min-w-[170px] w-full md:w-auto">
+                <FollowButton 
+                  targetId={id} 
+                  targetName={ngo.orgName}
+                  isFollowing={followStats.isFollowing}
+                  followersCount={followStats.followersCount}
+                  showCount={false}
+                />
+                <FollowStatsDisplay
+                  userId={id}
+                  followersCount={followStats.followersCount}
+                  followingCount={followStats.followingCount}
+                  className="justify-center"
+                />
+                <ShareButton
+                  url={`/ngos/${id}`}
+                  title={ngo.orgName}
+                  description={ngo.description || `Discover ${ngo.orgName} and their impactful projects on JustBeCause.`}
+                  variant="outline"
+                  className="w-full"
+                />
+                {ngo.website && (
+                  <Button asChild variant="outline" className="w-full bg-transparent">
+                    <Link href={ngo.website} target="_blank">
+                      <Globe className="h-4 w-4 mr-2" />
+                      Visit Website
+                    </Link>
+                  </Button>
+                )}
               </div>
             </div>
           </div>

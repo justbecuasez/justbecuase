@@ -98,7 +98,7 @@ export function FollowButton({
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
         className={cn(
-          "min-w-[110px] transition-all duration-200 font-medium",
+          "min-w-[110px] w-full transition-all duration-200 font-medium",
           isFollowing && !isHovering && "border-primary/30 text-primary",
           size === "sm" && "min-w-[90px]"
         )}
