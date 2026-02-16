@@ -680,7 +680,7 @@ export async function createProject(data: {
       const database = await db
       for (const vol of matchingVolunteers.slice(0, 20)) {
         try {
-          const volUser = await database.collection("user").findOne({ id: vol.userId })
+          const volUser = await database.collection("user").findOne(userIdQuery(vol.userId))
           if (volUser?.email) {
             await sendEmail({
               to: volUser.email,
@@ -891,6 +891,29 @@ export async function applyToProject(
       console.error("Failed to create notification:", e)
     }
 
+    // Best effort: Email NGO about new application
+    try {
+      const ngoUserInfo = await getUserInfo(project.ngoId)
+      if (ngoUserInfo?.email) {
+        const { sendEmail, getNewApplicationEmailHtml } = await import("@/lib/email")
+        const volunteerName = (await getUserInfo(user.id))?.name || "An Impact Agent"
+        const html = getNewApplicationEmailHtml(
+          ngoUserInfo.name,
+          volunteerName,
+          project.title,
+          coverMessage
+        )
+        await sendEmail({
+          to: ngoUserInfo.email,
+          subject: `New application for "${project.title}" on JustBeCause`,
+          html,
+          text: `Hi ${ngoUserInfo.name}, ${volunteerName} has applied to your project "${project.title}" on JustBeCause Network. Log in to review the application.`,
+        })
+      }
+    } catch (emailErr) {
+      console.error("[applyToProject] Failed to send application email:", emailErr)
+    }
+
     revalidatePath("/volunteer/applications")
     revalidatePath("/ngo/applications")
     return { success: true, data: applicationId }
@@ -1068,6 +1091,37 @@ export async function updateApplicationStatus(
       createdAt: new Date(),
     })
 
+    // Best effort: Email volunteer about status change
+    if (status === "accepted" || status === "rejected" || status === "shortlisted") {
+      try {
+        const volunteerInfo = await getUserInfo(application.volunteerId)
+        if (volunteerInfo?.email) {
+          const project = await projectsDb.findById(application.projectId)
+          const ngoInfo = await getUserInfo(application.ngoId)
+          const { sendEmail, getApplicationStatusEmailHtml } = await import("@/lib/email")
+          const html = getApplicationStatusEmailHtml(
+            volunteerInfo.name,
+            project?.title || "a project",
+            ngoInfo?.name || "An NGO",
+            status as "accepted" | "rejected" | "shortlisted",
+            notes
+          )
+          await sendEmail({
+            to: volunteerInfo.email,
+            subject: status === "accepted"
+              ? `Your application has been accepted on JustBeCause!`
+              : status === "shortlisted"
+                ? `You've been shortlisted on JustBeCause!`
+                : `Application update on JustBeCause`,
+            html,
+            text: `Hi ${volunteerInfo.name}, your application for "${project?.title || "a project"}" has been ${status}. Log in for more details.`,
+          })
+        }
+      } catch (emailErr) {
+        console.error("[updateApplicationStatus] Failed to send status email:", emailErr)
+      }
+    }
+
     revalidatePath("/ngo/applications")
     return { success: true, data: result }
   } catch (error) {
@@ -1092,7 +1146,7 @@ export async function getVolunteerProfileView(
   
   // Also get user info for name fallback
   const db = await import("@/lib/database").then(m => m.getDb())
-  const volunteerUser = await (await db).collection("user").findOne({ id: volunteerId })
+  const volunteerUser = await (await db).collection("user").findOne(userIdQuery(volunteerId))
 
   // Determine if profile should be unlocked
   let isUnlocked = false
@@ -2365,6 +2419,29 @@ export async function sendMessage(
     } catch (e) {
       console.error("Failed to create notification:", e)
     }
+
+    // Send email notification to receiver
+    try {
+      if (receiverInfo?.email) {
+        const senderRole = senderInfo?.type || "volunteer"
+        const { sendEmail, getNewMessageEmailHtml } = await import("@/lib/email")
+        const html = getNewMessageEmailHtml(
+          receiverInfo.name,
+          senderName,
+          senderRole,
+          content.trim(),
+          messageLink
+        )
+        await sendEmail({
+          to: receiverInfo.email,
+          subject: `New message from ${senderName} on JustBeCause`,
+          html,
+          text: `Hi ${receiverInfo.name}, ${senderName} sent you a message on JustBeCause Network: "${content.trim().substring(0, 100)}..." Log in to reply.`,
+        })
+      }
+    } catch (emailErr) {
+      console.error("[sendMessage] Failed to send email notification:", emailErr)
+    }
     
     // Revalidate message pages for both sender and receiver
     revalidatePath("/volunteer/messages")
@@ -2416,26 +2493,29 @@ export async function startConversation(
       }
     }
 
-    // Best effort: Email the volunteer about the new connection
+    // Best effort: Email the recipient about the new connection
     try {
-      if (user.role === "ngo") {
-        const { sendEmail, getNGOConnectionEmailHtml } = await import("@/lib/email")
-        const ngoProfile = await ngoProfilesDb.findByUserId(user.id)
-        const db = await import("@/lib/database").then(m => m.getDb())
-        const database = await db
-        const receiverUser = await database.collection("user").findOne({ id: receiverId })
-        
-        if (receiverUser?.email) {
-          await sendEmail({
-            to: receiverUser.email,
-            subject: `${ngoProfile?.organizationName || "An NGO"} wants to connect with you on JustBeCause`,
-            html: getNGOConnectionEmailHtml(
-              receiverUser.name || "Volunteer",
-              ngoProfile?.organizationName || "An NGO",
-              initialMessage
-            ),
-          })
-        }
+      const { sendEmail, getContactEmailHtml } = await import("@/lib/email")
+      const db = await getDb()
+      const senderUser = await db.collection("user").findOne(userIdQuery(user.id))
+      const receiverUser = await db.collection("user").findOne(userIdQuery(receiverId))
+
+      if (receiverUser?.email) {
+        const senderName = senderUser?.orgName || senderUser?.name || "Someone"
+        const senderRole = user.role || "volunteer"
+        const receiverName = receiverUser.orgName || receiverUser.name || "there"
+        const html = getContactEmailHtml(
+          receiverName,
+          senderName,
+          senderRole,
+          initialMessage
+        )
+        await sendEmail({
+          to: receiverUser.email,
+          subject: `${senderName} wants to connect with you on JustBeCause`,
+          html,
+          text: `Hi ${receiverName}, ${senderName} has reached out to you on JustBeCause Network.${initialMessage ? ` Message: "${initialMessage}"` : ""} Log in to reply.`,
+        })
       }
     } catch (emailError) {
       console.error("[startConversation] Failed to send connection email:", emailError)
@@ -2725,9 +2805,10 @@ export async function followUser(targetId: string): Promise<ApiResponse<{ follow
       createdAt: new Date(),
     })
 
-    // Send email notification to the person being followed (fire-and-forget)
+    // Send email notification to the person being followed
     if (targetUser.email) {
-      import("@/lib/email").then(({ sendEmail, getNewFollowerEmailHtml }) => {
+      try {
+        const { sendEmail, getNewFollowerEmailHtml } = await import("@/lib/email")
         const html = getNewFollowerEmailHtml(
           targetName,
           followerName,
@@ -2736,13 +2817,15 @@ export async function followUser(targetId: string): Promise<ApiResponse<{ follow
           targetProfilePath,
           followersCount
         )
-        sendEmail({
+        await sendEmail({
           to: targetUser.email,
           subject: `${followerName} is now following you on JustBeCause!`,
           html,
           text: `Hi ${targetName}, ${followerName} just started following you on JustBeCause Network. You now have ${followersCount} follower${followersCount === 1 ? "" : "s"}. Visit your profile to see more.`,
-        }).catch(err => console.error("Failed to send follow email:", err))
-      }).catch(err => console.error("Failed to import email module:", err))
+        })
+      } catch (err) {
+        console.error("Failed to send follow email:", err)
+      }
     }
 
     revalidatePath(`/ngos/${targetId}`)

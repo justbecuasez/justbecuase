@@ -376,3 +376,170 @@ export function getNGOConnectionEmailHtml(
     </html>
   `
 }
+
+/**
+ * Email template when someone sends a new message
+ */
+export function getNewMessageEmailHtml(
+  recipientName: string,
+  senderName: string,
+  senderRole: string,
+  messagePreview: string,
+  messagesUrl: string
+): string {
+  const roleLabel = senderRole === "ngo" ? "NGO" : "Impact Agent"
+  const truncated = messagePreview.length > 120 ? messagePreview.substring(0, 120) + "..." : messagePreview
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
+        <p style="color: #666; margin-top: 5px;">Skills-Based Impact Platform</p>
+      </div>
+      
+      <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
+        <h2 style="margin-top: 0;">New Message from ${senderName} &#x1F4AC;</h2>
+        <p>Hi ${recipientName},</p>
+        <p><strong>${senderName}</strong> (${roleLabel}) sent you a message on JustBeCause Network:</p>
+        
+        <div style="background: white; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+          <p style="color: #666; font-style: italic; margin: 0;">&ldquo;${truncated}&rdquo;</p>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="https://justbecausenetwork.com${messagesUrl}" style="display: inline-block; background: #10b981; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            Reply to Message
+          </a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px;">Don't leave them waiting! Log in to reply and keep the conversation going.</p>
+      </div>
+      
+      <div style="text-align: center; color: #999; font-size: 12px;">
+        <p>&copy; ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+/**
+ * Email template when a volunteer applies to a project
+ */
+export function getNewApplicationEmailHtml(
+  ngoName: string,
+  volunteerName: string,
+  projectTitle: string,
+  coverMessage?: string
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
+        <p style="color: #666; margin-top: 5px;">Skills-Based Impact Platform</p>
+      </div>
+      
+      <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
+        <h2 style="margin-top: 0;">New Application Received! &#x1F4CB;</h2>
+        <p>Hi ${ngoName},</p>
+        <p><strong>${volunteerName}</strong> has applied to your project <strong>&ldquo;${projectTitle}&rdquo;</strong> on JustBeCause Network.</p>
+        
+        ${coverMessage ? `
+        <div style="background: white; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+          <p style="color: #888; font-size: 12px; margin: 0 0 8px; text-transform: uppercase; font-weight: 600;">Cover Message</p>
+          <p style="color: #666; font-style: italic; margin: 0;">&ldquo;${coverMessage}&rdquo;</p>
+        </div>
+        ` : ''}
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="https://justbecausenetwork.com/ngo/applications" style="display: inline-block; background: #10b981; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            Review Applications
+          </a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px;">Review and respond to this application quickly to find the best talent for your project.</p>
+      </div>
+      
+      <div style="text-align: center; color: #999; font-size: 12px;">
+        <p>&copy; ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+/**
+ * Email template when application status is updated (accepted/rejected)
+ */
+export function getApplicationStatusEmailHtml(
+  volunteerName: string,
+  projectTitle: string,
+  ngoName: string,
+  status: "accepted" | "rejected" | "shortlisted",
+  notes?: string
+): string {
+  const statusConfig = {
+    accepted: { emoji: "&#x1F389;", color: "#10b981", title: "Application Accepted!", message: "Great news! Your application has been accepted." },
+    shortlisted: { emoji: "&#x2B50;", color: "#f59e0b", title: "You've Been Shortlisted!", message: "Your application has been shortlisted for further review." },
+    rejected: { emoji: "", color: "#6b7280", title: "Application Update", message: "Unfortunately, your application was not selected this time." },
+  }
+  const config = statusConfig[status] || statusConfig.rejected
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
+        <p style="color: #666; margin-top: 5px;">Skills-Based Impact Platform</p>
+      </div>
+      
+      <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
+        <h2 style="margin-top: 0;">${config.title} ${config.emoji}</h2>
+        <p>Hi ${volunteerName},</p>
+        <p>${config.message}</p>
+        
+        <div style="background: white; border: 1px solid #e5e7eb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <h3 style="color: ${config.color}; margin-top: 0;">${projectTitle}</h3>
+          <p style="color: #666; margin-bottom: 0;">by ${ngoName}</p>
+        </div>
+        
+        ${notes ? `
+        <div style="background: white; border-left: 4px solid ${config.color}; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+          <p style="color: #888; font-size: 12px; margin: 0 0 8px; text-transform: uppercase; font-weight: 600;">Note from ${ngoName}</p>
+          <p style="color: #666; margin: 0;">${notes}</p>
+        </div>
+        ` : ''}
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="https://justbecausenetwork.com/volunteer/applications" style="display: inline-block; background: #10b981; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            View My Applications
+          </a>
+        </div>
+        
+        ${status === "rejected" ? '<p style="color: #666; font-size: 14px;">Don\'t be discouraged! There are many more opportunities waiting for you on JustBeCause Network.</p>' : '<p style="color: #666; font-size: 14px;">Log in to your dashboard for more details.</p>'}
+      </div>
+      
+      <div style="text-align: center; color: #999; font-size: 12px;">
+        <p>&copy; ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+      </div>
+    </body>
+    </html>
+  `
+}
