@@ -41,6 +41,15 @@ export default function ReferralPage() {
     }
 
     if (!isPending && session?.user) {
+      const user = session.user as any
+      if (user.role !== "volunteer") {
+        router.push(user.role === "ngo" ? "/ngo/dashboard" : "/auth/role-select")
+        return
+      }
+      if (!user.isOnboarded) {
+        router.push("/volunteer/onboarding")
+        return
+      }
       loadData()
     } else if (!isPending && !session?.user) {
       router.push("/auth/signin")

@@ -22,16 +22,22 @@ export default async function ImpactDashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session?.user) redirect("/auth/signin")
 
-  const user = session.user as any
-  if (user.role !== "volunteer") redirect("/ngo/dashboard")
-  if (!user.onboarded) redirect("/volunteer/onboarding")
+  // Role verification
+  if (session.user.role !== "volunteer") {
+    if (session.user.role === "ngo") redirect("/ngo/dashboard")
+    else if (session.user.role === "admin") redirect("/admin")
+    else redirect("/auth/role-select")
+  }
+
+  // Redirect to onboarding if not completed
+  if (!session.user.isOnboarded) redirect("/volunteer/onboarding")
 
   const profile = await getVolunteerProfile()
   if (!profile) redirect("/volunteer/onboarding")
 
   const [badgesResult, reviewsResult] = await Promise.all([
-    getUserBadges(user.id),
-    getReviewsForUser(user.id),
+    getUserBadges(session.user.id),
+    getReviewsForUser(session.user.id),
   ])
 
   const badges = badgesResult.success ? badgesResult.data || [] : []
@@ -48,7 +54,7 @@ export default async function ImpactDashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader userType="volunteer" userName={profile.name || user.name} userAvatar={profile.avatar || user.image} />
+      <DashboardHeader userType="volunteer" userName={profile.name || session.user.name} userAvatar={profile.avatar || session.user.image || undefined} />
       <div className="flex">
         <VolunteerSidebar />
         <main className="flex-1 p-6 lg:p-8">
@@ -232,7 +238,7 @@ export default async function ImpactDashboardPage() {
                     Your verified impact certificate is ready.
                   </p>
                   <Badge className="text-sm px-4 py-1">
-                    Certificate ID: JBC-{user.id.slice(-8).toUpperCase()}
+                    Certificate ID: JBC-{session.user.id.slice(-8).toUpperCase()}
                   </Badge>
                 </CardContent>
               </Card>
