@@ -543,3 +543,55 @@ export function getApplicationStatusEmailHtml(
     </html>
   `
 }
+
+/**
+ * Email template when any user contacts/connects with another user (generic)
+ */
+export function getContactEmailHtml(
+  recipientName: string,
+  senderName: string,
+  senderRole: string,
+  message?: string
+): string {
+  const roleLabel = senderRole === "ngo" ? "NGO" : "Impact Agent"
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="text-align: center; margin-bottom: 30px;">
+        <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
+        <p style="color: #666; margin-top: 5px;">Skills-Based Impact Platform</p>
+      </div>
+      
+      <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
+        <h2 style="margin-top: 0;">Someone wants to connect! &#x1F91D;</h2>
+        <p>Hi ${recipientName},</p>
+        <p><strong>${senderName}</strong> (${roleLabel}) has reached out to you on JustBeCause Network.</p>
+        
+        ${message ? `
+        <div style="background: white; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+          <p style="color: #666; font-style: italic; margin: 0;">&ldquo;${message}&rdquo;</p>
+        </div>
+        ` : ''}
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="https://justbecausenetwork.com/volunteer/messages" style="display: inline-block; background: #10b981; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+            View Messages
+          </a>
+        </div>
+        
+        <p style="color: #666; font-size: 14px;">Don't miss this connection opportunity! Log in to reply and start collaborating.</p>
+      </div>
+      
+      <div style="text-align: center; color: #999; font-size: 12px;">
+        <p>&copy; ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+      </div>
+    </body>
+    </html>
+  `
+}

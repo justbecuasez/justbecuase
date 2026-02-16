@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { getDb } from "@/lib/database"
+import { getDb, userIdQuery } from "@/lib/database"
 import { ObjectId } from "mongodb"
 
 // GET /api/messages/[conversationId] - Get messages for a conversation with real-time polling support
@@ -182,19 +182,24 @@ export async function POST(
     const userCollection = db.collection("user")
     
     let senderName = "Someone"
-    const senderUser = await userCollection.findOne({ id: session.user.id })
+    let senderRole = "volunteer"
+    const senderUser = await userCollection.findOne(userIdQuery(session.user.id))
     if (senderUser) {
       // For NGOs, prefer orgName/organizationName
       if (senderUser.role === "ngo") {
         senderName = senderUser.orgName || senderUser.organizationName || senderUser.name || senderName
+        senderRole = "ngo"
       } else {
         senderName = senderUser.name || senderName
       }
     }
 
     // Determine link based on receiver type
-    const receiverUser = await userCollection.findOne({ id: receiverId })
+    const receiverUser = await userCollection.findOne(userIdQuery(receiverId))
     const receiverType = receiverUser?.role || "volunteer"
+    const receiverName = receiverType === "ngo" 
+      ? (receiverUser?.orgName || receiverUser?.name || "there")
+      : (receiverUser?.name || "there")
     const messageLink = receiverType === "ngo"
       ? `/ngo/messages/${conversationId}`
       : `/volunteer/messages/${conversationId}`
@@ -211,6 +216,28 @@ export async function POST(
       isRead: false,
       createdAt: new Date(),
     })
+
+    // Send email notification to receiver
+    if (receiverUser?.email) {
+      try {
+        const { sendEmail, getNewMessageEmailHtml } = await import("@/lib/email")
+        const html = getNewMessageEmailHtml(
+          receiverName,
+          senderName,
+          senderRole,
+          content?.trim() || "Sent an attachment",
+          messageLink
+        )
+        await sendEmail({
+          to: receiverUser.email,
+          subject: `New message from ${senderName} on JustBeCause`,
+          html,
+          text: `Hi ${receiverName}, ${senderName} sent you a message on JustBeCause Network. Log in to reply.`,
+        })
+      } catch (emailErr) {
+        console.error("[POST /api/messages] Failed to send email:", emailErr)
+      }
+    }
 
     return NextResponse.json({
       success: true,

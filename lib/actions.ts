@@ -2485,7 +2485,7 @@ export async function startConversation(
     
     console.log(`[startConversation] Conversation created/found: ${conversation._id}`)
     
-    // If initial message provided, send it
+    // If initial message provided, send it (sendMessage handles email + notification)
     if (initialMessage?.trim()) {
       const msgResult = await sendMessage(receiverId, initialMessage, projectId)
       if (!msgResult.success) {
@@ -2493,32 +2493,34 @@ export async function startConversation(
       }
     }
 
-    // Best effort: Email the recipient about the new connection
-    try {
-      const { sendEmail, getContactEmailHtml } = await import("@/lib/email")
-      const db = await getDb()
-      const senderUser = await db.collection("user").findOne(userIdQuery(user.id))
-      const receiverUser = await db.collection("user").findOne(userIdQuery(receiverId))
+    // Only send contact email if there's no initial message
+    // (when there IS an initial message, sendMessage already sends the email)
+    if (!initialMessage?.trim()) {
+      try {
+        const { sendEmail, getContactEmailHtml } = await import("@/lib/email")
+        const db = await getDb()
+        const senderUser = await db.collection("user").findOne(userIdQuery(user.id))
+        const receiverUser = await db.collection("user").findOne(userIdQuery(receiverId))
 
-      if (receiverUser?.email) {
-        const senderName = senderUser?.orgName || senderUser?.name || "Someone"
-        const senderRole = user.role || "volunteer"
-        const receiverName = receiverUser.orgName || receiverUser.name || "there"
-        const html = getContactEmailHtml(
-          receiverName,
-          senderName,
-          senderRole,
-          initialMessage
-        )
-        await sendEmail({
-          to: receiverUser.email,
-          subject: `${senderName} wants to connect with you on JustBeCause`,
-          html,
-          text: `Hi ${receiverName}, ${senderName} has reached out to you on JustBeCause Network.${initialMessage ? ` Message: "${initialMessage}"` : ""} Log in to reply.`,
-        })
+        if (receiverUser?.email) {
+          const senderName = senderUser?.orgName || senderUser?.name || "Someone"
+          const senderRole = user.role || "volunteer"
+          const receiverName = receiverUser.orgName || receiverUser.name || "there"
+          const html = getContactEmailHtml(
+            receiverName,
+            senderName,
+            senderRole
+          )
+          await sendEmail({
+            to: receiverUser.email,
+            subject: `${senderName} wants to connect with you on JustBeCause`,
+            html,
+            text: `Hi ${receiverName}, ${senderName} has reached out to you on JustBeCause Network. Log in to reply.`,
+          })
+        }
+      } catch (emailError) {
+        console.error("[startConversation] Failed to send connection email:", emailError)
       }
-    } catch (emailError) {
-      console.error("[startConversation] Failed to send connection email:", emailError)
     }
     
     return { success: true, data: conversation._id!.toString() }

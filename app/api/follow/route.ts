@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { followsDb, userIdQuery } from "@/lib/database"
+import { followsDb, userIdQuery, getDb } from "@/lib/database"
 
 /**
  * POST /api/follow
@@ -30,7 +30,6 @@ export async function POST(request: NextRequest) {
 
     if (action === "follow") {
       // Look up target user role (handles both ObjectId and string IDs)
-      const { getDb } = await import("@/lib/database")
       const db = await getDb()
       const targetUser = await db.collection("user").findOne(userIdQuery(targetId))
       if (!targetUser) {
@@ -47,6 +46,62 @@ export async function POST(request: NextRequest) {
       if (!created) {
         return NextResponse.json({ error: "Already following" }, { status: 409 })
       }
+
+      // Get updated count
+      const followersCount = await followsDb.getFollowersCount(targetId)
+
+      // Create notification for the person being followed
+      const followerName = session.user.name || "Someone"
+      const followerProfilePath = followerRole === "ngo" ? `/ngos/${session.user.id}` : `/volunteers/${session.user.id}`
+      const targetRole = targetUser.role || "volunteer"
+      const targetProfilePath = targetRole === "ngo" ? `/ngos/${targetId}` : `/volunteers/${targetId}`
+      const targetName = targetRole === "ngo" ? (targetUser.orgName || targetUser.name || "there") : (targetUser.name || "there")
+
+      try {
+        const notificationsCollection = db.collection("notifications")
+        await notificationsCollection.insertOne({
+          userId: targetId,
+          type: "new_follower",
+          title: "New Follower",
+          message: `${followerName} started following you`,
+          referenceId: session.user.id,
+          referenceType: "user",
+          link: followerProfilePath,
+          isRead: false,
+          createdAt: new Date(),
+        })
+      } catch (e) {
+        console.error("[Follow API] Failed to create notification:", e)
+      }
+
+      // Send email notification
+      if (targetUser.email) {
+        try {
+          const { sendEmail, getNewFollowerEmailHtml } = await import("@/lib/email")
+          const html = getNewFollowerEmailHtml(
+            targetName,
+            followerName,
+            followerRole,
+            followerProfilePath,
+            targetProfilePath,
+            followersCount
+          )
+          await sendEmail({
+            to: targetUser.email,
+            subject: `${followerName} is now following you on JustBeCause!`,
+            html,
+            text: `Hi ${targetName}, ${followerName} just started following you on JustBeCause Network. You now have ${followersCount} follower${followersCount === 1 ? "" : "s"}.`,
+          })
+        } catch (emailErr) {
+          console.error("[Follow API] Failed to send email:", emailErr)
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        followersCount,
+        isFollowing: true,
+      })
     } else {
       const removed = await followsDb.unfollow(session.user.id, targetId)
       if (!removed) {
@@ -59,7 +114,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       followersCount,
-      isFollowing: action === "follow",
+      isFollowing: false,
     })
   } catch (error) {
     console.error("Follow API error:", error)
