@@ -29,7 +29,7 @@ export function AIMatchExplanation({
     explanation: string
     strengths: string[]
     gaps: string[]
-    compatibilityScore: number
+    compatibilityScore: string
   } | null>(null)
 
   async function handleExplain() {
@@ -90,7 +90,26 @@ export function AIMatchExplanation({
       </Button>
 
       {result && expanded && (
-        <div className="mt-2 rounded-lg bg-primary/5 border border-primary/20 p-3 space-y-2 text-xs animate-in slide-in-from-top-2">
+        <div className={`mt-2 rounded-lg border p-3 space-y-2 text-xs animate-in slide-in-from-top-2 ${
+          result.compatibilityScore === "Poor" || result.compatibilityScore === "Weak"
+            ? "bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800"
+            : result.compatibilityScore === "Fair"
+            ? "bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-800"
+            : "bg-primary/5 border-primary/20"
+        }`}>
+          {result.compatibilityScore && (
+            <span className={`inline-block text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded ${
+              result.compatibilityScore === "Poor" || result.compatibilityScore === "Weak"
+                ? "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                : result.compatibilityScore === "Fair"
+                ? "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300"
+                : result.compatibilityScore === "Good"
+                ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                : "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+            }`}>
+              {result.compatibilityScore}
+            </span>
+          )}
           <p className="text-foreground leading-relaxed">{result.explanation}</p>
 
           {result.strengths.length > 0 && (

@@ -150,12 +150,12 @@ export async function findNGOs(filter: any = {}) {
 }
 
 /**
- * Increment application count for volunteer
+ * Increment monthly application count for volunteer (for free plan limits)
  */
 export async function incrementVolunteerApplicationCount(userId: string) {
   const db = await getDb()
   await db.collection("user").updateOne(
     { $expr: { $eq: [{ $toString: "$_id" }, userId] } },
-    { $inc: { completedProjects: 1 }, $set: { updatedAt: new Date() } }
+    { $inc: { monthlyApplicationsUsed: 1 }, $set: { updatedAt: new Date() } }
   )
 }

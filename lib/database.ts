@@ -213,8 +213,21 @@ export const volunteerProfilesDb = {
     return result.deletedCount > 0
   },
 
-  // Increment monthly application count
+  // Increment monthly application count (for free plan limits)
   async incrementApplicationCount(userId: string): Promise<boolean> {
+    const collection = await getCollection<any>("user")
+    const result = await collection.updateOne(
+      userIdQuery(userId),
+      { 
+        $inc: { monthlyApplicationsUsed: 1 }, 
+        $set: { updatedAt: new Date() } 
+      }
+    )
+    return result.modifiedCount > 0
+  },
+
+  // Increment completed projects count (called when a project is marked completed)
+  async incrementCompletedProjects(userId: string): Promise<boolean> {
     const collection = await getCollection<any>("user")
     const result = await collection.updateOne(
       userIdQuery(userId),

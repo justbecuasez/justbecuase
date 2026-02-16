@@ -54,7 +54,7 @@ export default async function ImpactDashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader userType="volunteer" userName={profile.name || session.user.name} userAvatar={profile.avatar || session.user.image || undefined} />
+      <DashboardHeader userType="volunteer" userName={profile.name || session.user.name} userAvatar={profile.avatar ?? session.user.image ?? undefined} />
       <div className="flex">
         <VolunteerSidebar />
         <main className="flex-1 p-6 lg:p-8">

@@ -132,17 +132,16 @@ export async function selectRole(role: "volunteer" | "ngo"): Promise<ApiResponse
       return { success: false, error: "Admin users cannot change their role" }
     }
     
-    // Update role in the database
+    // Update role in the database (Better Auth stores _id as ObjectId)
     const db = await getDb()
     const usersCollection = db.collection("user")
     
-    // Try to update by 'id' field (better-auth default)
     let result = await usersCollection.updateOne(
-      { id: user.id },
+      userIdQuery(user.id),
       { $set: { role: role, updatedAt: new Date() } }
     )
     
-    // If not found by 'id', try by email as fallback
+    // If not found, try by email as fallback
     if (result.matchedCount === 0 && user.email) {
       result = await usersCollection.updateOne(
         { email: user.email },
@@ -172,13 +171,13 @@ export async function completeOnboarding(): Promise<ApiResponse<boolean>> {
     const db = await getDb()
     const usersCollection = db.collection("user")
     
-    // Try to update by 'id' field (better-auth default)
+    // Update using userIdQuery (Better Auth stores _id as ObjectId)
     let result = await usersCollection.updateOne(
-      { id: user.id },
+      userIdQuery(user.id),
       { $set: { isOnboarded: true, updatedAt: new Date() } }
     )
     
-    // If not found by 'id', try by email as fallback
+    // If not found, try by email as fallback
     if (result.matchedCount === 0 && user.email) {
       result = await usersCollection.updateOne(
         { email: user.email },
@@ -189,6 +188,28 @@ export async function completeOnboarding(): Promise<ApiResponse<boolean>> {
     if (result.matchedCount === 0) {
       console.error("User not found in database:", { userId: user.id, email: user.email })
       return { success: false, error: "User not found" }
+    }
+
+    // Complete referral if this user was referred
+    try {
+      const referral = await referralsDb.findByReferredUserId(user.id)
+      if (referral && referral.status === "signed_up") {
+        await referralsDb.updateStatus(referral.referralCode, "completed")
+        // Notify the referrer that their referral completed onboarding
+        await notificationsDb.create({
+          userId: referral.referrerId,
+          type: "referral_completed",
+          title: "Referral Completed!",
+          message: `Someone you referred has completed their onboarding! Keep sharing to earn more rewards.`,
+          referenceId: referral.referralCode,
+          referenceType: "referral",
+          link: "/volunteer/referrals",
+          isRead: false,
+          createdAt: new Date(),
+        })
+      }
+    } catch (refErr) {
+      console.error("Failed to complete referral:", refErr)
     }
     
     revalidatePath("/")
@@ -905,7 +926,7 @@ export async function updateProject(
             try {
               const volUserId = app.volunteerId
               // Increment completed projects count & check milestones
-              await volunteerProfilesDb.incrementApplicationCount(volUserId)
+              await volunteerProfilesDb.incrementCompletedProjects(volUserId)
               const updatedProfile = await volunteerProfilesDb.findByUserId(volUserId)
               if (updatedProfile) {
                 await checkAndCelebrateMilestones(volUserId, "projects", updatedProfile.completedProjects || 0)
@@ -1543,7 +1564,7 @@ export async function getRecommendedVolunteersForNGO(): Promise<
         }
       }
     })
-    .filter(v => v.score > 0)
+    .filter(v => v.score >= 20) // Only show genuinely relevant matches
     .sort((a, b) => b.score - a.score)
     .slice(0, 10)
 
@@ -2880,8 +2901,8 @@ export async function deleteAccount(): Promise<ApiResponse<boolean>> {
       }),
       // Delete user's transactions
       db.collection("transactions").deleteMany({ userId: user.id }),
-      // Finally, delete the user account
-      db.collection("user").deleteOne({ id: user.id }),
+      // Finally, delete the user account (Better Auth stores _id as ObjectId)
+      db.collection("user").deleteOne(userIdQuery(user.id)),
       db.collection("session").deleteMany({ userId: user.id }),
       db.collection("account").deleteMany({ userId: user.id }),
     ])
@@ -3595,7 +3616,7 @@ export async function generateReferralCode(): Promise<ApiResponse<string>> {
 
     // Check if user already has a referral code
     const existing = await referralsDb.findByReferrerId(session.user.id)
-    const existingCode = existing.find((r) => r.status === "pending" && !r.referredEmail)
+    const existingCode = existing.find((r) => r.status === "pending" && !r.referredUserId)
     if (existingCode) return { success: true, data: existingCode.referralCode }
 
     const code = await referralsDb.generateUniqueCode()
@@ -3622,7 +3643,7 @@ export async function getReferralStats(): Promise<ApiResponse<any>> {
     const referrals = await referralsDb.findByReferrerId(session.user.id)
     const signedUp = referrals.filter((r) => r.status === "signed_up" || r.status === "completed").length
     const completed = referrals.filter((r) => r.status === "completed").length
-    const codes = referrals.filter((r) => !r.referredEmail).map((r) => r.referralCode)
+    const codes = referrals.filter((r) => r.status === "pending").map((r) => r.referralCode)
 
     return {
       success: true,
@@ -3824,7 +3845,7 @@ export async function getPlatformAnalytics(): Promise<ApiResponse<any>> {
       userCollection.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }),
       userCollection.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
       reviewsDb.findAll().then((r) => r.length),
-      referralsDb.findByReferrerId("__all__").catch(() => []).then((r) => r.length),
+      getDb().then((db) => db.collection("referrals").countDocuments()),
       0, // Will be calculated below
     ])
 

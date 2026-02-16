@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { Mail, Lock, User, Building2, Loader2, ArrowRight, ArrowLeft, CheckCircle, MailCheck, ShieldCheck } from "lucide-react"
 import { signUp, signIn, getSession } from "@/lib/auth-client"
-import { selectRole } from "@/lib/actions"
+import { selectRole, applyReferralCode } from "@/lib/actions"
 
 // Helper to wait for session with retry
 async function waitForSession(maxRetries = 5, delay = 500): Promise<boolean> {
@@ -30,6 +30,8 @@ type AccountType = "volunteer" | "ngo" | null
 
 export default function SignUpPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const referralCode = searchParams.get("ref") || ""
   const [step, setStep] = useState(1) // 1: account type, 2: email/name, 3: OTP verification, 4: password
   const [accountType, setAccountType] = useState<AccountType>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -263,6 +265,15 @@ export default function SignUpPage() {
         })
       } catch (e) {
         console.error("Failed to send welcome email", e)
+      }
+
+      // Apply referral code if present in URL
+      if (referralCode) {
+        try {
+          await applyReferralCode(referralCode)
+        } catch (e) {
+          console.error("Failed to apply referral code:", e)
+        }
       }
 
       // Redirect to onboarding

@@ -12,6 +12,7 @@ interface AICoverLetterProps {
   volunteerName: string
   volunteerSkills: string[]
   volunteerBio: string
+  matchScore?: number
   onGenerated?: (coverLetter: string) => void
 }
 
@@ -22,6 +23,7 @@ export function AICoverLetterButton({
   volunteerName,
   volunteerSkills,
   volunteerBio,
+  matchScore,
   onGenerated,
 }: AICoverLetterProps) {
   const [isGenerating, setIsGenerating] = useState(false)
@@ -45,6 +47,7 @@ export function AICoverLetterButton({
           volunteerName,
           volunteerSkills,
           volunteerBio,
+          matchScore,
         }),
       })
 

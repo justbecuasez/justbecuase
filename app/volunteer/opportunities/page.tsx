@@ -139,8 +139,10 @@ async function OpportunityCard({
                 matchScore >= 70
                   ? "bg-green-100 text-green-700"
                   : matchScore >= 50
+                  ? "bg-blue-100 text-blue-700"
+                  : matchScore >= 35
                   ? "bg-yellow-100 text-yellow-700"
-                  : "bg-gray-100 text-gray-700"
+                  : "bg-orange-100 text-orange-700"
               }
             >
               {Math.round(matchScore)}% match
