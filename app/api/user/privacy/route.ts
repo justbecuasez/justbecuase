@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
 import { headers } from "next/headers"
-import { getDb } from "@/lib/database"
+import { getDb, userIdQuery } from "@/lib/database"
 
 export async function GET() {
   try {
@@ -16,8 +16,8 @@ export async function GET() {
     const db = await getDb()
     const userId = session.user.id
 
-    // Get user from user collection
-    const user = await db.collection("user").findOne({ id: userId })
+    // Get user from user collection (Better Auth stores _id as ObjectId, no 'id' field)
+    const user = await db.collection("user").findOne(userIdQuery(userId))
     const role = session.user.role as string
 
     if (role === "volunteer") {
@@ -77,9 +77,9 @@ export async function PUT(request: NextRequest) {
     const db = await getDb()
     const userId = session.user.id
 
-    // Update privacy in user collection
+    // Update privacy in user collection (Better Auth stores _id as ObjectId, no 'id' field)
     await db.collection("user").updateOne(
-      { id: userId },
+      userIdQuery(userId),
       { 
         $set: { 
           privacy: sanitizedPrivacy,

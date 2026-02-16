@@ -1908,9 +1908,9 @@ export async function adminChangeUserRole(
     
     const db = await getDb()
     
-    // Update user role in auth system
+    // Update user role in auth system (Better Auth stores _id as ObjectId)
     const result = await db.collection("user").updateOne(
-      { id: userId },
+      userIdQuery(userId),
       { $set: { role: newRole, updatedAt: new Date() } }
     )
     
@@ -2040,15 +2040,6 @@ export async function adminDeleteUser(
     await requireRole(["admin"])
     
     const db = await getDb()
-    const { ObjectId } = await import("mongodb")
-    
-    // Try to create ObjectId - user might be stored with ObjectId or string
-    let userObjectId: import("mongodb").ObjectId | null = null
-    try {
-      userObjectId = new ObjectId(userId)
-    } catch (e) {
-      // userId is not a valid ObjectId, will use string matching
-    }
     
     // Delete user data based on type - data is stored in user collection directly now
     // But we still need to clean up applications and projects
@@ -2077,12 +2068,8 @@ export async function adminDeleteUser(
       db.collection("account").deleteMany({ userId }),
     ])
     
-    // Delete user account - try both ObjectId and string id
-    if (userObjectId) {
-      await db.collection("user").deleteOne({ _id: userObjectId })
-    } else {
-      await db.collection("user").deleteOne({ id: userId })
-    }
+    // Delete user account - use ObjectId query (Better Auth stores _id as ObjectId)
+    await db.collection("user").deleteOne(userIdQuery(userId))
     
     revalidatePath("/admin/users")
     revalidatePath("/admin/volunteers")
