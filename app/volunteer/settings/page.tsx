@@ -18,6 +18,7 @@ import { skillCategories, causes as causesList } from "@/lib/skills-data"
 import type { VolunteerSkill, ExperienceLevel } from "@/lib/types"
 import { toast } from "sonner"
 import { NotificationPermissionButton } from "@/components/notifications/notification-listener"
+import { AISkillSuggestions } from "@/components/ai/skill-suggestions"
 import {
   User,
   Bell,
@@ -481,6 +482,41 @@ export default function VolunteerSettingsPage() {
                         Add Skill
                       </Button>
                     )}
+                  </CardContent>
+                </Card>
+
+                {/* AI Skill Suggestions */}
+                <Card>
+                  <CardContent className="pt-6">
+                    <AISkillSuggestions
+                      currentSkills={skills.map((s) => {
+                        const cat = skillCategories.find((c) => c.id === s.categoryId)
+                        const sub = cat?.subskills.find((ss) => ss.id === s.subskillId)
+                        return sub?.name || s.subskillId
+                      })}
+                      causes={causes}
+                      bio={profile?.bio}
+                      completedProjects={profile?.completedProjects}
+                      onAddSkill={(skillName) => {
+                        // Try to find matching skill in categories
+                        for (const cat of skillCategories) {
+                          const sub = cat.subskills.find(
+                            (s) => s.name.toLowerCase() === skillName.toLowerCase()
+                          )
+                          if (sub) {
+                            const newS: SkillWithName = {
+                              categoryId: cat.id,
+                              subskillId: sub.id,
+                              level: "intermediate" as ExperienceLevel,
+                              name: sub.name,
+                            }
+                            setSkills((prev) => [...prev, newS])
+                            return
+                          }
+                        }
+                        toast.info(`"${skillName}" isn't in our skill catalog yet, but noted!`)
+                      }}
+                    />
                   </CardContent>
                 </Card>
 

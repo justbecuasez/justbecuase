@@ -21,6 +21,7 @@ import { getVolunteerProfile, updateVolunteerProfile } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
 import { uploadToCloudinary, validateImageFile, uploadDocumentToCloudinary, validateDocumentFile } from "@/lib/upload"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { AIBioGenerator } from "@/components/ai/bio-generator"
 
 export default function VolunteerProfileEditPage() {
   const router = useRouter()
@@ -446,6 +447,16 @@ export default function VolunteerProfileEditPage() {
                           onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                           rows={4}
                           placeholder="Tell NGOs about yourself, your experience, and why you contribute..."
+                        />
+                        <AIBioGenerator
+                          name={formData.name}
+                          skills={profile?.skills || []}
+                          causes={profile?.causes || []}
+                          completedProjects={profile?.completedProjects}
+                          hoursContributed={profile?.hoursContributed}
+                          location={formData.location}
+                          currentBio={formData.bio}
+                          onGenerated={(bio) => setFormData({ ...formData, bio })}
                         />
                       </div>
 

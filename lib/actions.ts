@@ -23,6 +23,12 @@ import {
   banRecordsDb,
   teamMembersDb,
   followsDb,
+  reviewsDb,
+  endorsementsDb,
+  badgesDb,
+  userBadgesDb,
+  referralsDb,
+  blogPostsDb,
   getDb,
   userIdQuery,
   userIdBatchQuery,
@@ -44,6 +50,9 @@ import type {
   AdminSettings,
   BanRecord,
   TeamMember,
+  Review,
+  Endorsement,
+  BlogPost,
 } from "./types"
 
 // ============================================
@@ -888,6 +897,25 @@ export async function updateProject(
           }
         }
         console.log(`[updateProject] Notified ${Math.min(applications.length, 50)} applicants about status change to ${statusLabel}`)
+
+        // When project completes, trigger milestone checks for accepted volunteers
+        if (updates.status === "completed") {
+          const acceptedApps = applications.filter((a) => a.status === "accepted")
+          for (const app of acceptedApps) {
+            try {
+              const volUserId = app.volunteerId
+              // Increment completed projects count & check milestones
+              await volunteerProfilesDb.incrementApplicationCount(volUserId)
+              const updatedProfile = await volunteerProfilesDb.findByUserId(volUserId)
+              if (updatedProfile) {
+                await checkAndCelebrateMilestones(volUserId, "projects", updatedProfile.completedProjects || 0)
+                await checkAndAwardBadges(volUserId, "projects_completed")
+              }
+            } catch (milestoneErr) {
+              console.error(`[updateProject] Milestone check failed for ${app.volunteerId}:`, milestoneErr)
+            }
+          }
+        }
       } catch (notifErr) {
         console.error("[updateProject] Failed to send status change notifications:", notifErr)
       }
@@ -3194,3 +3222,731 @@ export async function isFollowingNgo(ngoId: string): Promise<boolean> {
   }
 }
 
+// ============================================
+// REVIEW & RATING SYSTEM
+// ============================================
+
+export async function submitReview(data: {
+  revieweeId: string
+  projectId: string
+  overallRating: number
+  communicationRating: number
+  qualityRating: number
+  timelinessRating: number
+  title?: string
+  comment: string
+}): Promise<ApiResponse<any>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) return { success: false, error: "Not authenticated" }
+
+    const reviewerId = session.user.id
+
+    // Check if already reviewed
+    const existing = await reviewsDb.findExisting(reviewerId, data.revieweeId, data.projectId)
+    if (existing) return { success: false, error: "You have already reviewed this user for this project" }
+
+    // Verify the project exists and is completed
+    const project = await projectsDb.findById(data.projectId)
+    if (!project) return { success: false, error: "Project not found" }
+
+    // Determine review type
+    const reviewerProfile = await volunteerProfilesDb.findByUserId(reviewerId)
+    const reviewType = reviewerProfile ? "volunteer_to_ngo" : "ngo_to_volunteer"
+
+    const reviewId = await reviewsDb.create({
+      reviewerId,
+      revieweeId: data.revieweeId,
+      reviewType,
+      projectId: data.projectId,
+      overallRating: data.overallRating,
+      communicationRating: data.communicationRating,
+      qualityRating: data.qualityRating,
+      timelinessRating: data.timelinessRating,
+      title: data.title,
+      comment: data.comment,
+      isPublic: true,
+      isReported: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+
+    // Update the reviewee's average rating
+    const { average, count } = await reviewsDb.getAverageRating(data.revieweeId)
+    if (reviewType === "ngo_to_volunteer") {
+      await volunteerProfilesDb.update(data.revieweeId, { rating: average, totalRatings: count })
+    }
+
+    // Notify the reviewee
+    await notificationsDb.create({
+      userId: data.revieweeId,
+      type: "new_review",
+      title: "New Review Received",
+      message: `You received a ${data.overallRating}-star review for "${project.title}"`,
+      referenceId: data.projectId,
+      referenceType: "project",
+      link: `/projects/${data.projectId}`,
+      isRead: false,
+      createdAt: new Date(),
+    })
+
+    // Check badge: reviews_given
+    await checkAndAwardBadges(reviewerId, "reviews_given")
+
+    return { success: true, data: { reviewId } }
+  } catch (error) {
+    console.error("Failed to submit review:", error)
+    return { success: false, error: "Failed to submit review" }
+  }
+}
+
+export async function getReviewsForUser(userId: string): Promise<ApiResponse<any[]>> {
+  try {
+    const reviews = await reviewsDb.findByReviewee(userId)
+    return { success: true, data: serializeDocuments(reviews) }
+  } catch (error) {
+    console.error("Failed to get reviews:", error)
+    return { success: false, error: "Failed to get reviews" }
+  }
+}
+
+export async function getReviewsForProject(projectId: string): Promise<ApiResponse<any[]>> {
+  try {
+    const reviews = await reviewsDb.findByProject(projectId)
+    return { success: true, data: serializeDocuments(reviews) }
+  } catch (error) {
+    console.error("Failed to get reviews:", error)
+    return { success: false, error: "Failed to get reviews" }
+  }
+}
+
+// ============================================
+// ENDORSEMENT SYSTEM
+// ============================================
+
+export async function endorseSkill(data: {
+  endorseeId: string
+  skillCategoryId: string
+  skillSubskillId: string
+}): Promise<ApiResponse<void>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) return { success: false, error: "Not authenticated" }
+
+    if (session.user.id === data.endorseeId) {
+      return { success: false, error: "You cannot endorse your own skills" }
+    }
+
+    // Check if already endorsed this skill
+    const existing = await endorsementsDb.findExisting(
+      session.user.id, data.endorseeId, data.skillCategoryId, data.skillSubskillId
+    )
+    if (existing) return { success: false, error: "You have already endorsed this skill" }
+
+    const userRole = (session.user as any).role || "volunteer"
+
+    await endorsementsDb.create({
+      endorserId: session.user.id,
+      endorserName: session.user.name,
+      endorserRole: userRole,
+      endorseeId: data.endorseeId,
+      skillCategoryId: data.skillCategoryId,
+      skillSubskillId: data.skillSubskillId,
+      createdAt: new Date(),
+    })
+
+    // Notify
+    await notificationsDb.create({
+      userId: data.endorseeId,
+      type: "new_endorsement",
+      title: "Skill Endorsed!",
+      message: `${session.user.name} endorsed your skill`,
+      isRead: false,
+      createdAt: new Date(),
+    })
+
+    // Check badge: endorsements_received
+    await checkAndAwardBadges(data.endorseeId, "endorsements_received")
+
+    return { success: true }
+  } catch (error) {
+    console.error("Failed to endorse skill:", error)
+    return { success: false, error: "Failed to endorse skill" }
+  }
+}
+
+export async function removeEndorsement(data: {
+  endorseeId: string
+  skillCategoryId: string
+  skillSubskillId: string
+}): Promise<ApiResponse<void>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) return { success: false, error: "Not authenticated" }
+
+    await endorsementsDb.delete(session.user.id, data.endorseeId, data.skillCategoryId, data.skillSubskillId)
+    return { success: true }
+  } catch (error) {
+    console.error("Failed to remove endorsement:", error)
+    return { success: false, error: "Failed to remove endorsement" }
+  }
+}
+
+export async function getEndorsementsForUser(userId: string): Promise<ApiResponse<Record<string, number>>> {
+  try {
+    const counts = await endorsementsDb.getSkillEndorsementCounts(userId)
+    return { success: true, data: counts }
+  } catch (error) {
+    console.error("Failed to get endorsements:", error)
+    return { success: false, error: "Failed to get endorsements" }
+  }
+}
+
+export async function getEndorsementDetailsForUser(endorseeId: string): Promise<ApiResponse<{ counts: Record<string, number>, myEndorsedKeys: string[] }>> {
+  try {
+    const counts = await endorsementsDb.getSkillEndorsementCounts(endorseeId)
+    const myEndorsedKeys: string[] = []
+
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (session?.user) {
+      const db = await getDb()
+      const col = db.collection("endorsements")
+      const myEndorsements = await col.find({ endorserId: session.user.id, endorseeId }).toArray()
+      for (const e of myEndorsements) {
+        myEndorsedKeys.push(`${(e as any).skillCategoryId}:${(e as any).skillSubskillId}`)
+      }
+    }
+
+    return { success: true, data: { counts, myEndorsedKeys } }
+  } catch (error) {
+    console.error("Failed to get endorsement details:", error)
+    return { success: false, error: "Failed to get endorsement details" }
+  }
+}
+
+// ============================================
+// GAMIFICATION: BADGE SYSTEM
+// ============================================
+
+export async function initializeBadges(): Promise<void> {
+  await badgesDb.initializeDefaults()
+}
+
+export async function getUserBadges(userId: string): Promise<ApiResponse<any[]>> {
+  try {
+    const userBadges = await userBadgesDb.findByUserId(userId)
+    const allBadges = await badgesDb.findAll()
+
+    // Merge badge info with user's earned status
+    const result = allBadges.map((badge) => {
+      const earned = userBadges.find((ub) => ub.badgeId === badge.badgeId)
+      return {
+        ...serializeDocument(badge),
+        earned: !!earned,
+        earnedAt: earned?.earnedAt || null,
+      }
+    })
+
+    return { success: true, data: result }
+  } catch (error) {
+    console.error("Failed to get user badges:", error)
+    return { success: false, error: "Failed to get badges" }
+  }
+}
+
+export async function checkAndAwardBadges(userId: string, triggerType: string): Promise<void> {
+  try {
+    const allBadges = await badgesDb.findAll()
+    const relevantBadges = allBadges.filter((b) => b.criteria.type === triggerType)
+
+    for (const badge of relevantBadges) {
+      const alreadyEarned = await userBadgesDb.hasBadge(userId, badge.badgeId)
+      if (alreadyEarned) continue
+
+      let currentValue = 0
+
+      switch (triggerType) {
+        case "projects_completed": {
+          const profile = await volunteerProfilesDb.findByUserId(userId)
+          currentValue = profile?.completedProjects || 0
+          break
+        }
+        case "hours_contributed": {
+          const profile = await volunteerProfilesDb.findByUserId(userId)
+          currentValue = profile?.hoursContributed || 0
+          break
+        }
+        case "skills_count": {
+          const profile = await volunteerProfilesDb.findByUserId(userId)
+          currentValue = profile?.skills?.length || 0
+          break
+        }
+        case "reviews_given": {
+          const reviews = await reviewsDb.findByReviewer(userId)
+          currentValue = reviews.length
+          break
+        }
+        case "endorsements_received": {
+          const endorsements = await endorsementsDb.findByEndorsee(userId)
+          currentValue = endorsements.length
+          break
+        }
+        case "referrals_completed": {
+          currentValue = await referralsDb.countCompletedByReferrer(userId)
+          break
+        }
+        case "average_rating": {
+          const { average } = await reviewsDb.getAverageRating(userId)
+          currentValue = average
+          break
+        }
+      }
+
+      if (currentValue >= badge.criteria.threshold) {
+        await userBadgesDb.create({
+          userId,
+          badgeId: badge.badgeId,
+          earnedAt: new Date(),
+          triggerValue: currentValue,
+        })
+
+        // Notify user
+        await notificationsDb.create({
+          userId,
+          type: "badge_earned",
+          title: `Badge Earned: ${badge.name}!`,
+          message: `${badge.icon} ${badge.description}`,
+          isRead: false,
+          createdAt: new Date(),
+        })
+      }
+    }
+  } catch (error) {
+    console.error("Failed to check badges:", error)
+  }
+}
+
+// ============================================
+// MILESTONE CELEBRATIONS
+// ============================================
+
+const MILESTONES = {
+  projects: [1, 5, 10, 25, 50, 100],
+  hours: [10, 50, 100, 250, 500, 1000],
+} as const
+
+export async function checkAndCelebrateMilestones(
+  userId: string,
+  type: "projects" | "hours",
+  currentValue: number
+): Promise<void> {
+  try {
+    const thresholds = MILESTONES[type]
+    const milestone = thresholds.find((t) => t === currentValue)
+    if (!milestone) return
+
+    const profile = await volunteerProfilesDb.findByUserId(userId)
+    if (!profile) return
+
+    const label =
+      type === "projects"
+        ? `Projects Completed`
+        : `Volunteer Hours Contributed`
+    const nextMilestone = thresholds.find((t) => t > milestone)
+
+    // Create notification
+    await notificationsDb.create({
+      userId,
+      type: "milestone",
+      title: `🎉 Milestone: ${milestone} ${type === "projects" ? "Projects" : "Hours"}!`,
+      message: `You've reached ${milestone} ${label.toLowerCase()}! Keep up the amazing work.`,
+      isRead: false,
+      createdAt: new Date(),
+    })
+
+    // Send celebration email
+    const { getMilestoneCelebrationEmailHtml } = await import("@/lib/email")
+    const html = getMilestoneCelebrationEmailHtml(profile.name || "Volunteer", {
+      type,
+      value: milestone,
+      label,
+      nextMilestone,
+    })
+
+    await (await import("@/lib/email")).sendEmail({
+      to: (profile as any).email || (await (await getDb()).collection("user").findOne(userIdQuery(userId)))?.email,
+      subject: `🎉 Milestone Reached: ${milestone} ${type === "projects" ? "Projects" : "Hours"}!`,
+      html,
+    })
+  } catch (error) {
+    console.error("Failed to celebrate milestone:", error)
+  }
+}
+
+// ============================================
+// REFERRAL SYSTEM
+// ============================================
+
+export async function generateReferralCode(): Promise<ApiResponse<string>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) return { success: false, error: "Not authenticated" }
+
+    // Check if user already has a referral code
+    const existing = await referralsDb.findByReferrerId(session.user.id)
+    const existingCode = existing.find((r) => r.status === "pending" && !r.referredEmail)
+    if (existingCode) return { success: true, data: existingCode.referralCode }
+
+    const code = await referralsDb.generateUniqueCode()
+    await referralsDb.create({
+      referrerId: session.user.id,
+      referralCode: code,
+      status: "pending",
+      rewardGranted: false,
+      createdAt: new Date(),
+    })
+
+    return { success: true, data: code }
+  } catch (error) {
+    console.error("Failed to generate referral code:", error)
+    return { success: false, error: "Failed to generate referral code" }
+  }
+}
+
+export async function getReferralStats(): Promise<ApiResponse<any>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) return { success: false, error: "Not authenticated" }
+
+    const referrals = await referralsDb.findByReferrerId(session.user.id)
+    const signedUp = referrals.filter((r) => r.status === "signed_up" || r.status === "completed").length
+    const completed = referrals.filter((r) => r.status === "completed").length
+    const codes = referrals.filter((r) => !r.referredEmail).map((r) => r.referralCode)
+
+    return {
+      success: true,
+      data: {
+        totalReferrals: referrals.length,
+        signedUp,
+        completed,
+        codes,
+        referrals: serializeDocuments(referrals),
+      },
+    }
+  } catch (error) {
+    console.error("Failed to get referral stats:", error)
+    return { success: false, error: "Failed to get referral stats" }
+  }
+}
+
+export async function applyReferralCode(code: string): Promise<ApiResponse<void>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) return { success: false, error: "Not authenticated" }
+
+    const referral = await referralsDb.findByCode(code)
+    if (!referral) return { success: false, error: "Invalid referral code" }
+    if (referral.referrerId === session.user.id) return { success: false, error: "Cannot use your own referral code" }
+
+    // Check if user was already referred
+    const existingRef = await referralsDb.findByReferredUserId(session.user.id)
+    if (existingRef) return { success: false, error: "You have already used a referral code" }
+
+    await referralsDb.updateStatus(code, "signed_up", session.user.id)
+
+    // Notify referrer
+    await notificationsDb.create({
+      userId: referral.referrerId,
+      type: "referral_signup",
+      title: "Referral Signed Up!",
+      message: `Someone signed up using your referral code ${code}`,
+      isRead: false,
+      createdAt: new Date(),
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error("Failed to apply referral code:", error)
+    return { success: false, error: "Failed to apply referral code" }
+  }
+}
+
+// ============================================
+// BLOG CMS
+// ============================================
+
+export async function createBlogPost(data: {
+  title: string
+  slug: string
+  excerpt: string
+  content: string
+  coverImage?: string
+  tags: string[]
+  category: string
+  status: "draft" | "published"
+}): Promise<ApiResponse<any>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) return { success: false, error: "Not authenticated" }
+    if ((session.user as any).role !== "admin") return { success: false, error: "Admin only" }
+
+    // Check slug uniqueness
+    const existing = await blogPostsDb.findBySlug(data.slug)
+    if (existing) return { success: false, error: "A post with this slug already exists" }
+
+    const postId = await blogPostsDb.create({
+      ...data,
+      authorId: session.user.id,
+      authorName: session.user.name,
+      publishedAt: data.status === "published" ? new Date() : undefined,
+      viewCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    })
+
+    return { success: true, data: { postId } }
+  } catch (error) {
+    console.error("Failed to create blog post:", error)
+    return { success: false, error: "Failed to create blog post" }
+  }
+}
+
+export async function updateBlogPost(id: string, data: Partial<BlogPost>): Promise<ApiResponse<void>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) return { success: false, error: "Not authenticated" }
+    if ((session.user as any).role !== "admin") return { success: false, error: "Admin only" }
+
+    if (data.status === "published" && !data.publishedAt) {
+      data.publishedAt = new Date()
+    }
+
+    await blogPostsDb.update(id, data)
+    return { success: true }
+  } catch (error) {
+    console.error("Failed to update blog post:", error)
+    return { success: false, error: "Failed to update blog post" }
+  }
+}
+
+export async function deleteBlogPost(id: string): Promise<ApiResponse<void>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) return { success: false, error: "Not authenticated" }
+    if ((session.user as any).role !== "admin") return { success: false, error: "Admin only" }
+
+    await blogPostsDb.delete(id)
+    return { success: true }
+  } catch (error) {
+    console.error("Failed to delete blog post:", error)
+    return { success: false, error: "Failed to delete blog post" }
+  }
+}
+
+export async function getPublishedBlogPosts(limit = 20, skip = 0): Promise<ApiResponse<any[]>> {
+  try {
+    const posts = await blogPostsDb.findPublished(limit, skip)
+    return { success: true, data: serializeDocuments(posts) }
+  } catch (error) {
+    console.error("Failed to get blog posts:", error)
+    return { success: false, error: "Failed to get blog posts" }
+  }
+}
+
+export async function getBlogPostBySlug(slug: string): Promise<ApiResponse<any>> {
+  try {
+    const post = await blogPostsDb.findBySlug(slug)
+    if (!post) return { success: false, error: "Post not found" }
+    // Increment views
+    await blogPostsDb.incrementViews(slug)
+    return { success: true, data: serializeDocument(post) }
+  } catch (error) {
+    console.error("Failed to get blog post:", error)
+    return { success: false, error: "Failed to get blog post" }
+  }
+}
+
+export async function getAllBlogPosts(): Promise<ApiResponse<any[]>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) return { success: false, error: "Not authenticated" }
+    if ((session.user as any).role !== "admin") return { success: false, error: "Admin only" }
+
+    const posts = await blogPostsDb.findAll()
+    return { success: true, data: serializeDocuments(posts) }
+  } catch (error) {
+    console.error("Failed to get all blog posts:", error)
+    return { success: false, error: "Failed to get all blog posts" }
+  }
+}
+
+// ============================================
+// ANALYTICS & PMF METRICS
+// ============================================
+
+export async function getPlatformAnalytics(): Promise<ApiResponse<any>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) return { success: false, error: "Not authenticated" }
+    if ((session.user as any).role !== "admin") return { success: false, error: "Admin only" }
+
+    const db = await getDb()
+    const userCollection = db.collection("user")
+
+    const now = new Date()
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+
+    const [
+      totalUsers,
+      totalVolunteers,
+      totalNGOs,
+      totalProjects,
+      activeProjects,
+      completedProjects,
+      totalApplications,
+      acceptedApplications,
+      newUsersLast30Days,
+      newUsersLast7Days,
+      totalReviews,
+      totalReferrals,
+      completedReferrals,
+    ] = await Promise.all([
+      userCollection.countDocuments(),
+      userCollection.countDocuments({ role: "volunteer" }),
+      userCollection.countDocuments({ role: "ngo" }),
+      projectsDb.count({}),
+      projectsDb.count({ status: "active" }),
+      projectsDb.count({ status: "completed" }),
+      applicationsDb.count({}),
+      applicationsDb.count({ status: "accepted" }),
+      userCollection.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }),
+      userCollection.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
+      reviewsDb.findAll().then((r) => r.length),
+      referralsDb.findByReferrerId("__all__").catch(() => []).then((r) => r.length),
+      0, // Will be calculated below
+    ])
+
+    const acceptanceRate = totalApplications > 0 ? (acceptedApplications / totalApplications * 100).toFixed(1) : "0"
+
+    return {
+      success: true,
+      data: {
+        users: { total: totalUsers, volunteers: totalVolunteers, ngos: totalNGOs },
+        growth: { last7Days: newUsersLast7Days, last30Days: newUsersLast30Days },
+        projects: { total: totalProjects, active: activeProjects, completed: completedProjects },
+        applications: { total: totalApplications, accepted: acceptedApplications, acceptanceRate },
+        engagement: { reviews: totalReviews, referrals: totalReferrals },
+      },
+    }
+  } catch (error) {
+    console.error("Failed to get platform analytics:", error)
+    return { success: false, error: "Failed to get platform analytics" }
+  }
+}
+
+// ============================================
+// PROJECT LIFECYCLE — MILESTONES & TIME LOGGING
+// ============================================
+
+export async function addProjectMilestone(
+  projectId: string,
+  milestone: { title: string; description?: string; dueDate?: string }
+): Promise<ApiResponse<boolean>> {
+  try {
+    const user = await requireRole(["ngo", "admin"])
+    const project = await projectsDb.findById(projectId)
+    if (!project || (project.ngoId !== user.id && user.role !== "admin")) {
+      return { success: false, error: "Not authorized" }
+    }
+
+    const milestones = project.milestones || []
+    milestones.push({
+      id: `ms_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      title: milestone.title,
+      description: milestone.description,
+      dueDate: milestone.dueDate ? new Date(milestone.dueDate) : undefined,
+      status: "pending",
+    })
+
+    await projectsDb.update(projectId, { milestones } as any)
+    revalidatePath(`/projects/${projectId}`)
+    return { success: true, data: true }
+  } catch (error) {
+    return { success: false, error: "Failed to add milestone" }
+  }
+}
+
+export async function updateProjectMilestone(
+  projectId: string,
+  milestoneId: string,
+  updates: { status?: "pending" | "in_progress" | "completed"; title?: string; description?: string }
+): Promise<ApiResponse<boolean>> {
+  try {
+    const user = await requireRole(["ngo", "admin"])
+    const project = await projectsDb.findById(projectId)
+    if (!project || (project.ngoId !== user.id && user.role !== "admin")) {
+      return { success: false, error: "Not authorized" }
+    }
+
+    const milestones = (project.milestones || []).map((m: any) => {
+      if (m.id === milestoneId) {
+        return {
+          ...m,
+          ...updates,
+          completedAt: updates.status === "completed" ? new Date() : m.completedAt,
+        }
+      }
+      return m
+    })
+
+    await projectsDb.update(projectId, { milestones } as any)
+    revalidatePath(`/projects/${projectId}`)
+    return { success: true, data: true }
+  } catch (error) {
+    return { success: false, error: "Failed to update milestone" }
+  }
+}
+
+export async function logProjectHours(
+  projectId: string,
+  hours: number,
+  description?: string
+): Promise<ApiResponse<boolean>> {
+  try {
+    const session = await auth.api.getSession({ headers: await headers() })
+    if (!session?.user) return { success: false, error: "Not authenticated" }
+
+    const project = await projectsDb.findById(projectId)
+    if (!project) return { success: false, error: "Project not found" }
+
+    // Only accepted volunteers or the NGO owner can log hours
+    const isNGO = project.ngoId === session.user.id
+    if (!isNGO) {
+      const volunteerApps = await applicationsDb.findByVolunteerId(session.user.id)
+      const acceptedApp = volunteerApps.find(a => a.projectId === projectId && a.status === "accepted")
+      if (!acceptedApp) {
+        return { success: false, error: "Only accepted volunteers can log hours" }
+      }
+    }
+
+    const currentHours = (project as any).totalHoursLogged || 0
+    await projectsDb.update(projectId, { totalHoursLogged: currentHours + hours } as any)
+
+    // Also update volunteer's total hours
+    if (!isNGO) {
+      const profile = await volunteerProfilesDb.findByUserId(session.user.id)
+      if (profile) {
+        const newTotal = (profile.hoursContributed || 0) + hours
+        await volunteerProfilesDb.update(session.user.id, { hoursContributed: newTotal } as any)
+        await checkAndCelebrateMilestones(session.user.id, "hours", newTotal)
+        await checkAndAwardBadges(session.user.id, "hours_contributed")
+      }
+    }
+
+    revalidatePath(`/projects/${projectId}`)
+    return { success: true, data: true }
+  } catch (error) {
+    return { success: false, error: "Failed to log hours" }
+  }
+}

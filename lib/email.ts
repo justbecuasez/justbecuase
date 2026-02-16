@@ -669,3 +669,159 @@ export function getProfileNudgeEmailHtml(
     </html>
   `
 }
+
+// ============================================
+// WEEKLY DIGEST EMAIL
+// ============================================
+export function getWeeklyDigestEmailHtml(
+  userName: string,
+  data: {
+    newProjects: number
+    matchingProjects: { title: string; id: string }[]
+    profileViews: number
+    newBadges: string[]
+  }
+): string {
+  const projectLinks = data.matchingProjects.slice(0, 5).map(
+    (p) => `<li style="margin-bottom: 8px;"><a href="${process.env.NEXT_PUBLIC_APP_URL || "https://justbecausenetwork.com"}/projects/${p.id}" style="color: #6366f1; text-decoration: none; font-weight: 500;">${p.title}</a></li>`
+  ).join("")
+
+  const badgesList = data.newBadges.length > 0
+    ? `<div style="background: #fef3c7; padding: 12px 16px; border-radius: 8px; margin: 16px 0;"><strong>🏆 New Badges Earned:</strong> ${data.newBadges.join(", ")}</div>`
+    : ""
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f3f4f6;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 32px 24px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 22px;">📊 Your Weekly Impact Digest</h1>
+        </div>
+        <div style="padding: 24px;">
+          <p style="color: #374151; font-size: 16px;">Hi ${userName},</p>
+          <p style="color: #6b7280;">Here's what happened on JustBeCause this week:</p>
+          
+          <div style="display: flex; gap: 12px; margin: 20px 0;">
+            <div style="flex: 1; background: #eff6ff; padding: 16px; border-radius: 8px; text-align: center;">
+              <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${data.newProjects}</div>
+              <div style="font-size: 12px; color: #6b7280;">New Opportunities</div>
+            </div>
+            <div style="flex: 1; background: #f0fdf4; padding: 16px; border-radius: 8px; text-align: center;">
+              <div style="font-size: 24px; font-weight: bold; color: #22c55e;">${data.profileViews}</div>
+              <div style="font-size: 12px; color: #6b7280;">Profile Views</div>
+            </div>
+          </div>
+
+          ${badgesList}
+
+          ${data.matchingProjects.length > 0 ? `
+          <h3 style="color: #374151; margin-top: 24px;">🎯 Opportunities Matching Your Skills</h3>
+          <ul style="padding-left: 20px; color: #4b5563;">${projectLinks}</ul>
+          ` : ""}
+
+          <div style="text-align: center; margin-top: 24px;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://justbecausenetwork.com"}/projects" style="display: inline-block; background: #6366f1; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 500;">Browse All Opportunities</a>
+          </div>
+        </div>
+        <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+          <p style="color: #9ca3af; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} JustBeCause Network</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+// ============================================
+// RE-ENGAGEMENT EMAIL
+// ============================================
+export function getReEngagementEmailHtml(
+  userName: string,
+  data: {
+    daysSinceLastLogin: number
+    newProjectsSince: number
+    missedMatches: number
+  }
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f3f4f6;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <div style="background: linear-gradient(135deg, #f59e0b, #ef4444); padding: 32px 24px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 22px;">👋 We Miss You, ${userName}!</h1>
+        </div>
+        <div style="padding: 24px;">
+          <p style="color: #374151; font-size: 16px;">It's been <strong>${data.daysSinceLastLogin} days</strong> since your last visit.</p>
+          <p style="color: #6b7280;">While you were away, a lot has been happening:</p>
+          
+          <div style="background: #fef3c7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0 0 8px 0; color: #92400e;"><strong>📋 ${data.newProjectsSince}</strong> new opportunities were posted</p>
+            <p style="margin: 0; color: #92400e;"><strong>🎯 ${data.missedMatches}</strong> projects matched your skills</p>
+          </div>
+
+          <p style="color: #6b7280;">NGOs are actively looking for professionals like you. Your skills can make a real difference — come back and explore what's new!</p>
+
+          <div style="text-align: center; margin-top: 24px;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://justbecausenetwork.com"}/projects" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">See What You're Missing</a>
+          </div>
+        </div>
+        <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+          <p style="color: #9ca3af; font-size: 12px; margin: 0;">Don't want these emails? Update your <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://justbecausenetwork.com"}/volunteer/settings" style="color: #6366f1;">notification preferences</a>.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+// ============================================
+// MILESTONE CELEBRATION EMAIL
+// ============================================
+export function getMilestoneCelebrationEmailHtml(
+  userName: string,
+  milestone: {
+    type: string
+    value: number
+    label: string
+    nextMilestone?: number
+  }
+): string {
+  return `
+    <!DOCTYPE html>
+    <html>
+    <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f3f4f6;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; margin-top: 20px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <div style="background: linear-gradient(135deg, #10b981, #059669); padding: 40px 24px; text-align: center;">
+          <div style="font-size: 48px; margin-bottom: 12px;">🎉</div>
+          <h1 style="color: white; margin: 0; font-size: 24px;">Milestone Reached!</h1>
+        </div>
+        <div style="padding: 24px; text-align: center;">
+          <p style="color: #374151; font-size: 18px;">Congratulations, <strong>${userName}</strong>!</p>
+          
+          <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); padding: 24px; border-radius: 12px; margin: 20px 0;">
+            <div style="font-size: 40px; font-weight: bold; color: #059669;">${milestone.value}</div>
+            <div style="font-size: 16px; color: #374151; font-weight: 500;">${milestone.label}</div>
+          </div>
+
+          <p style="color: #6b7280;">Your dedication to social impact is truly inspiring. Every project, every hour — it all adds up to meaningful change.</p>
+
+          ${milestone.nextMilestone ? `
+          <div style="background: #eff6ff; padding: 12px 16px; border-radius: 8px; margin: 16px 0;">
+            <p style="margin: 0; color: #3b82f6; font-size: 14px;">🎯 Next milestone: <strong>${milestone.nextMilestone} ${milestone.type === "projects" ? "projects" : "hours"}</strong></p>
+          </div>
+          ` : ""}
+
+          <div style="margin-top: 24px;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL || "https://justbecausenetwork.com"}/volunteer/dashboard" style="display: inline-block; background: #10b981; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 500;">View Your Impact Dashboard</a>
+          </div>
+        </div>
+        <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+          <p style="color: #9ca3af; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} JustBeCause Network</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}

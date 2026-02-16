@@ -5,7 +5,7 @@ import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { getProject, getNGOById, getActiveProjects, hasAppliedToProject, isProjectSaved } from "@/lib/actions"
+import { getProject, getNGOById, getActiveProjects, hasAppliedToProject, isProjectSaved, getVolunteerProfile } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
 import { ApplyButton } from "./apply-button"
 import { SaveButton } from "./save-button"
@@ -57,6 +57,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
   
   // Check if user has saved this project
   const isSaved = await isProjectSaved(id)
+
+  // Get volunteer profile for AI features (may be null if not logged in or not a volunteer)
+  const volunteerProfile = await getVolunteerProfile().catch(() => null)
   
   // Get similar projects (same cause or skills)
   const allProjects = await getActiveProjects(10)
@@ -357,6 +360,11 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                       projectId={project._id?.toString() || id} 
                       projectTitle={project.title} 
                       hasApplied={hasApplied}
+                      projectDescription={project.description}
+                      projectSkills={project.skillsRequired?.map((s: any) => getSkillName(s.categoryId, s.subskillId)) || []}
+                      volunteerName={volunteerProfile?.name || ""}
+                      volunteerSkills={volunteerProfile?.skills?.map((s: any) => s.subskillId || s.categoryId || "") || []}
+                      volunteerBio={volunteerProfile?.bio || ""}
                     />
                   ) : (
                     <Button className="w-full" disabled>

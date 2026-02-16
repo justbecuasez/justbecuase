@@ -4,8 +4,7 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { impactMetrics } from "@/lib/data"
-import { getActiveTeamMembers } from "@/lib/actions"
+import { getActiveTeamMembers, getImpactMetrics } from "@/lib/actions"
 
 // Render at request time (needs MongoDB connection)
 export const dynamic = "force-dynamic"
@@ -42,8 +41,11 @@ const skills = [
 ]
 
 export default async function AboutPage() {
-  // Fetch team members from database
-  const teamResult = await getActiveTeamMembers()
+  // Fetch team members and real impact metrics from database
+  const [teamResult, impactMetrics] = await Promise.all([
+    getActiveTeamMembers(),
+    getImpactMetrics(),
+  ])
   const teamMembers = teamResult.success && teamResult.data ? teamResult.data : []
 
   return (

@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { getVolunteerProfile, getMyApplications, getMatchedOpportunitiesForVolunteer, getVolunteerSubscriptionStatus } from "@/lib/actions"
 import { Clock, CheckCircle2, FolderKanban, TrendingUp, Star, ArrowRight, Edit, Briefcase, CreditCard, Zap } from "lucide-react"
+import { AIMatchExplanation } from "@/components/ai/match-explanation"
 import Link from "next/link"
 
 export default async function VolunteerDashboard() {
@@ -168,36 +169,49 @@ export default async function VolunteerDashboard() {
                   ) : (
                     <div className="space-y-4">
                       {matchedOpportunities.slice(0, 4).map((match) => (
-                        <Link
+                        <div
                           key={match.projectId}
-                          href={`/projects/${match.projectId}`}
-                          className="block p-4 border rounded-lg hover:border-primary/50 hover:bg-muted/50 transition-colors"
+                          className="p-4 border rounded-lg hover:border-primary/50 hover:bg-muted/50 transition-colors"
                         >
-                          <div className="flex items-start justify-between mb-2">
-                            <h3 className="font-medium text-foreground line-clamp-1">
-                              {match.project.title}
-                            </h3>
-                            <Badge
-                              className={
-                                match.score >= 70
-                                  ? "bg-green-100 text-green-700"
-                                  : match.score >= 50
-                                  ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-gray-100 text-gray-700"
-                              }
-                            >
-                              {Math.round(match.score)}% match
-                            </Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-                            {match.project.description}
-                          </p>
-                          <div className="flex gap-2 text-xs text-muted-foreground">
-                            <span className="capitalize">{match.project.workMode}</span>
-                            <span>•</span>
-                            <span>{match.project.timeCommitment}</span>
-                          </div>
-                        </Link>
+                          <Link
+                            href={`/projects/${match.projectId}`}
+                            className="block"
+                          >
+                            <div className="flex items-start justify-between mb-2">
+                              <h3 className="font-medium text-foreground line-clamp-1">
+                                {match.project.title}
+                              </h3>
+                              <Badge
+                                className={
+                                  match.score >= 70
+                                    ? "bg-green-100 text-green-700"
+                                    : match.score >= 50
+                                    ? "bg-yellow-100 text-yellow-700"
+                                    : "bg-gray-100 text-gray-700"
+                                }
+                              >
+                                {Math.round(match.score)}% match
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
+                              {match.project.description}
+                            </p>
+                            <div className="flex gap-2 text-xs text-muted-foreground">
+                              <span className="capitalize">{match.project.workMode}</span>
+                              <span>•</span>
+                              <span>{match.project.timeCommitment}</span>
+                            </div>
+                          </Link>
+                          <AIMatchExplanation
+                            volunteerSkills={profile?.skills?.map((s: any) => s.name || s.subskillId) || []}
+                            volunteerBio={profile?.bio}
+                            volunteerLocation={profile?.location}
+                            projectTitle={match.project.title}
+                            projectDescription={match.project.description}
+                            projectSkills={match.project.skillsRequired?.map((s: any) => s.subskillId) || []}
+                            matchScore={match.score}
+                          />
+                        </div>
                       ))}
                     </div>
                   )}

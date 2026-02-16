@@ -253,10 +253,25 @@ export interface Project {
   // Stats
   applicantsCount: number
   viewsCount: number
+
+  // Project lifecycle
+  milestones?: ProjectMilestone[]
+  totalHoursLogged?: number
+  completedAt?: Date
+  reviewsRequested?: boolean
   
   // Timestamps
   createdAt: Date
   updatedAt: Date
+}
+
+export interface ProjectMilestone {
+  id: string
+  title: string
+  description?: string
+  dueDate?: Date
+  completedAt?: Date
+  status: "pending" | "in_progress" | "completed"
 }
 
 // ============================================
@@ -423,6 +438,12 @@ export type NotificationType =
   | "application_limit_warning"
   | "application_limit_reached"
   | "subscription_activated"
+  | "new_review"
+  | "new_endorsement"
+  | "badge_earned"
+  | "referral_signup"
+  | "referral_completed"
+  | "milestone"
   | "system"
 
 export interface Notification {
@@ -605,6 +626,140 @@ export interface BanRecord {
   unbannedAt?: Date
   unbannedBy?: string
   isActive: boolean
+}
+
+// ============================================
+// REVIEW & RATING SYSTEM
+// ============================================
+export type ReviewType = "ngo_to_volunteer" | "volunteer_to_ngo"
+
+export interface Review {
+  _id?: ObjectId
+  reviewerId: string       // User ID of reviewer
+  revieweeId: string       // User ID of person being reviewed
+  reviewType: ReviewType
+  projectId: string        // The project this review is for
+  
+  // Ratings (1-5 stars)
+  overallRating: number
+  communicationRating: number
+  qualityRating: number
+  timelinessRating: number
+  
+  // Written review
+  title?: string
+  comment: string
+  
+  // Moderation
+  isPublic: boolean
+  isReported: boolean
+  reportReason?: string
+  
+  createdAt: Date
+  updatedAt: Date
+}
+
+// ============================================
+// ENDORSEMENT SYSTEM (LinkedIn-style)
+// ============================================
+export interface Endorsement {
+  _id?: ObjectId
+  endorserId: string      // User who endorsed
+  endorserName?: string
+  endorserRole?: UserRole
+  endorseeId: string      // Volunteer being endorsed
+  skillCategoryId: string  // Which skill is being endorsed
+  skillSubskillId: string
+  
+  createdAt: Date
+}
+
+// ============================================
+// GAMIFICATION: BADGES & ACHIEVEMENTS
+// ============================================
+export type BadgeCategory = "projects" | "hours" | "skills" | "community" | "streak" | "special"
+export type BadgeLevel = "bronze" | "silver" | "gold" | "platinum"
+
+export interface Badge {
+  _id?: ObjectId
+  badgeId: string          // Unique identifier like "first_project", "100_hours"
+  name: string
+  description: string
+  icon: string             // Icon name or emoji
+  category: BadgeCategory
+  level: BadgeLevel
+  
+  // Criteria
+  criteria: {
+    type: string           // "projects_completed" | "hours_contributed" | "skills_count" | "reviews_given" etc.
+    threshold: number      // e.g., 5 for "complete 5 projects"
+  }
+  
+  isActive: boolean
+  createdAt: Date
+}
+
+export interface UserBadge {
+  _id?: ObjectId
+  userId: string
+  badgeId: string          // References Badge.badgeId
+  earnedAt: Date
+  
+  // Snapshot of what triggered it
+  triggerValue: number     // e.g., 5 (completed 5th project)
+}
+
+// ============================================
+// REFERRAL SYSTEM
+// ============================================
+export interface Referral {
+  _id?: ObjectId
+  referrerId: string       // User who referred
+  referralCode: string     // Unique code like "SARAH2025"
+  referredEmail?: string   // Email of referred person (before signup)
+  referredUserId?: string  // User ID after signup
+  
+  status: "pending" | "signed_up" | "completed"  // completed = referree completed onboarding
+  
+  // Rewards
+  rewardGranted: boolean
+  rewardType?: string      // "badge" | "pro_trial" | "feature_unlock"
+  
+  createdAt: Date
+  completedAt?: Date
+}
+
+// ============================================
+// BLOG CMS
+// ============================================
+export type BlogPostStatus = "draft" | "published" | "archived"
+
+export interface BlogPost {
+  _id?: ObjectId
+  slug: string
+  title: string
+  excerpt: string
+  content: string          // Markdown or HTML
+  coverImage?: string
+  
+  authorId: string
+  authorName: string
+  
+  tags: string[]
+  category: string
+  
+  status: BlogPostStatus
+  publishedAt?: Date
+  
+  // SEO
+  metaTitle?: string
+  metaDescription?: string
+  
+  // Stats
+  viewCount: number
+  
+  createdAt: Date
+  updatedAt: Date
 }
 
 // ============================================

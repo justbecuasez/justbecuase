@@ -8,10 +8,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ShareButton } from "@/components/share-button"
 import { FollowButton } from "@/components/follow-button"
 import { FollowStatsDisplay } from "@/components/follow-stats-display"
-import { getVolunteerProfileView, getNGOSubscriptionStatus, getFollowStats } from "@/lib/actions"
+import { getVolunteerProfileView, getNGOSubscriptionStatus, getFollowStats, getCurrentUser, getReviewsForUser } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
-import { Star, MapPin, Clock, CheckCircle, ExternalLink, Award, TrendingUp, Lock, Crown, User } from "lucide-react"
+import { Star, MapPin, Clock, CheckCircle, ExternalLink, Award, TrendingUp, Lock, Crown, User, MessageSquare } from "lucide-react"
 import { ContactVolunteerButton } from "@/components/messages/contact-volunteer-button"
+import { SkillEndorsements } from "@/components/endorsements/skill-endorsements"
+import { ReviewsList } from "@/components/reviews/review-form"
 
 // Helper function to get skill name from ID
 function getSkillName(categoryId: string, subskillId: string): string {
@@ -33,6 +35,14 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
   // Get follow stats for this volunteer
   const followStatsResult = await getFollowStats(id)
   const followStats = followStatsResult.success ? followStatsResult.data! : { followersCount: 0, followingCount: 0, isFollowing: false }
+
+  // Get current user for endorsements
+  const currentUser = await getCurrentUser()
+  const currentUserId = currentUser?.id || ""
+
+  // Get reviews for this volunteer
+  const reviewsResult = await getReviewsForUser(id)
+  const reviews = reviewsResult.success ? reviewsResult.data || [] : []
 
   if (!volunteer) {
     notFound()
@@ -229,7 +239,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                 </CardContent>
               </Card>
 
-              {/* Skills & Expertise */}
+              {/* Skills & Expertise with Endorsements */}
               <Card>
                 <CardHeader>
                   <CardTitle>Skills & Expertise</CardTitle>
@@ -252,8 +262,37 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                       </p>
                     )}
                   </div>
+                  {/* Skill Endorsements */}
+                  {volunteer.skills.length > 0 && (
+                    <div className="mt-6 pt-6 border-t">
+                      <SkillEndorsements
+                        userId={id}
+                        skills={volunteer.skills.map(s => ({
+                          categoryId: s.categoryId,
+                          subskillId: s.subskillId,
+                          name: getSkillName(s.categoryId, s.subskillId),
+                        }))}
+                        currentUserId={currentUserId}
+                      />
+                    </div>
+                  )}
                 </CardContent>
               </Card>
+
+              {/* Reviews & Ratings */}
+              {reviews.length > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5 text-primary" />
+                      Reviews & Ratings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ReviewsList reviews={reviews} />
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Causes */}
               <Card>

@@ -17,15 +17,30 @@ import {
 } from "@/components/ui/dialog"
 import { CheckCircle, Zap } from "lucide-react"
 import { applyToProject } from "@/lib/actions"
+import { AICoverLetterButton } from "@/components/ai/cover-letter-button"
 import Link from "next/link"
 
 interface ApplyButtonProps {
   projectId: string
   projectTitle: string
   hasApplied?: boolean
+  projectDescription?: string
+  projectSkills?: string[]
+  volunteerName?: string
+  volunteerSkills?: string[]
+  volunteerBio?: string
 }
 
-export function ApplyButton({ projectId, projectTitle, hasApplied = false }: ApplyButtonProps) {
+export function ApplyButton({ 
+  projectId, 
+  projectTitle, 
+  hasApplied = false,
+  projectDescription = "",
+  projectSkills = [],
+  volunteerName = "",
+  volunteerSkills = [],
+  volunteerBio = "",
+}: ApplyButtonProps) {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -119,6 +134,24 @@ export function ApplyButton({ projectId, projectTitle, hasApplied = false }: App
                 )}
               </div>
             )}
+
+            {/* AI Cover Letter Generator */}
+            {volunteerName && (
+              <AICoverLetterButton
+                projectTitle={projectTitle}
+                projectDescription={projectDescription}
+                projectSkills={projectSkills}
+                volunteerName={volunteerName}
+                volunteerSkills={volunteerSkills}
+                volunteerBio={volunteerBio}
+                onGenerated={(letter) => {
+                  // Auto-fill the interest field with the generated letter
+                  const interestField = document.getElementById("interest") as HTMLTextAreaElement
+                  if (interestField) interestField.value = letter
+                }}
+              />
+            )}
+
             <div>
               <Label htmlFor="interest">Why are you interested in this opportunity?</Label>
               <Textarea

@@ -1,40 +1,66 @@
 import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Calendar, User, ArrowRight } from "lucide-react"
+import { getPublishedBlogPosts } from "@/lib/actions"
 
-const blogPosts = [
+// Fallback posts shown when no DB posts exist
+const fallbackPosts = [
   {
-    id: "launch-announcement",
+    slug: "launch-announcement",
     title: "Introducing JustBeCause Network - Skills-Based Volunteering",
     excerpt: "We're excited to launch JustBeCause Network, a platform connecting skilled professionals with NGOs that need their expertise.",
     date: "December 6, 2025",
     author: "JustBeCause Team",
-    category: "Announcement",
+    tags: ["Announcement"],
     readTime: "3 min read",
   },
   {
-    id: "why-skills-based-volunteering",
+    slug: "why-skills-based-volunteering",
     title: "Why Skills-Based Volunteering Matters More Than Ever",
     excerpt: "Traditional volunteering is valuable, but skills-based volunteering can multiply an NGO's impact by 10x. Here's why.",
     date: "December 5, 2025",
     author: "Akash Mahlaz",
-    category: "Impact",
+    tags: ["Impact"],
     readTime: "5 min read",
   },
   {
-    id: "getting-started-ngos",
+    slug: "getting-started-ngos",
     title: "Getting Started: A Guide for NGOs",
     excerpt: "Learn how to post your first opportunity, attract the right volunteers, and maximize the value of skills-based partnerships.",
     date: "December 4, 2025",
     author: "JustBeCause Team",
-    category: "Guide",
+    tags: ["Guide"],
     readTime: "7 min read",
   },
 ]
 
-export default function BlogPage() {
+export const revalidate = 300
+
+export default async function BlogPage() {
+  const result = await getPublishedBlogPosts(50)
+  const dbPosts = result.success ? (result.data || []) : []
+
+  // Merge DB posts with fallbacks (DB posts take priority)
+  const posts = dbPosts.length > 0
+    ? dbPosts.map((p: any) => ({
+        slug: p.slug,
+        title: p.title,
+        excerpt: p.excerpt || p.content?.slice(0, 150) + "...",
+        date: new Date(p.publishedAt || p.createdAt).toLocaleDateString("en-IN", {
+          month: "long",
+          day: "numeric",
+          year: "numeric",
+        }),
+        author: p.authorName || "JustBeCause Team",
+        tags: p.tags || [],
+        readTime: `${Math.max(1, Math.ceil((p.content?.length || 0) / 1500))} min read`,
+        viewCount: p.viewCount || 0,
+      }))
+    : fallbackPosts
+
   return (
     <>
       <Navbar />
@@ -52,12 +78,14 @@ export default function BlogPage() {
 
           {/* Blog Posts Grid */}
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {blogPosts.map((post) => (
-              <Link key={post.id} href={`/blog/${post.id}`}>
+            {posts.map((post: any) => (
+              <Link key={post.slug} href={`/blog/${post.slug}`}>
                 <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
                   <CardHeader>
                     <div className="flex items-center gap-2 mb-3">
-                      <Badge variant="secondary">{post.category}</Badge>
+                      {post.tags?.slice(0, 2).map((tag: string) => (
+                        <Badge key={tag} variant="secondary">{tag}</Badge>
+                      ))}
                       <span className="text-sm text-muted-foreground">{post.readTime}</span>
                     </div>
                     <CardTitle className="text-xl hover:text-primary transition-colors">
@@ -92,7 +120,7 @@ export default function BlogPage() {
                   More Content Coming Soon
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  We're working on publishing more stories, guides, and insights. Subscribe to stay updated.
+                  We&apos;re working on publishing more stories, guides, and insights. Subscribe to stay updated.
                 </p>
                 <Link 
                   href="/auth/signup" 
@@ -106,6 +134,7 @@ export default function BlogPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </>
   )
 }

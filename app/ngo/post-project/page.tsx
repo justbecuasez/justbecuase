@@ -17,6 +17,7 @@ import { useAuth } from "@/lib/auth-context"
 import { getNGOProfile, createProject } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
 import type { NGOProfile } from "@/lib/types"
+import { AIProjectDescriptionHelper } from "@/components/ai/project-description-helper"
 import {
   ArrowLeft,
   ArrowRight,
@@ -329,6 +330,22 @@ export default function PostProjectPage() {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={5}
                     required
+                  />
+                  <AIProjectDescriptionHelper
+                    basicTitle={formData.title}
+                    basicDescription={formData.description}
+                    orgName={ngoProfile?.organizationName || ""}
+                    orgMission={ngoProfile?.mission}
+                    causes={ngoProfile?.causes || []}
+                    onApply={(data) => {
+                      setFormData((prev: any) => ({
+                        ...prev,
+                        title: data.title || prev.title,
+                        description: data.description || prev.description,
+                        duration: data.suggestedDuration || prev.duration,
+                        timeCommitment: data.suggestedTimeCommitment || prev.timeCommitment,
+                      }))
+                    }}
                   />
                 </div>
 

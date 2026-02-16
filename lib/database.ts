@@ -20,6 +20,12 @@ import type {
   BanRecord,
   Follow,
   FollowStats,
+  Review,
+  Endorsement,
+  Badge,
+  UserBadge,
+  Referral,
+  BlogPost,
 } from "./types"
 
 // ============================================
@@ -57,6 +63,12 @@ export const COLLECTIONS = {
   TEAM_MEMBERS: "teamMembers",
   BAN_RECORDS: "banRecords",
   FOLLOWS: "follows",
+  REVIEWS: "reviews",
+  ENDORSEMENTS: "endorsements",
+  BADGES: "badges",
+  USER_BADGES: "userBadges",
+  REFERRALS: "referrals",
+  BLOG_POSTS: "blogPosts",
 } as const
 
 // Helper: safely parse JSON with fallback
@@ -679,27 +691,29 @@ export const conversationsDb = {
     const collection = await getCollection<Conversation>(COLLECTIONS.CONVERSATIONS)
     const sortedParticipants = [...participants].sort()
     
-    // Use findOneAndUpdate with upsert to avoid race condition
-    // where two concurrent requests both see no conversation and both insert
+    // First try to find existing conversation
     const filter: any = {
       participants: { $all: sortedParticipants, $size: sortedParticipants.length },
       ...(projectId && { projectId }),
     }
-    const conversation = await collection.findOneAndUpdate(
-      filter,
-      {
-        $setOnInsert: {
-          participants: sortedParticipants,
-          projectId,
-          isUnlocked: false,
-          createdAt: new Date(),
-        },
-        $set: { updatedAt: new Date() },
-      },
-      { upsert: true, returnDocument: "after" }
-    )
-
-    return conversation!
+    
+    const existing = await collection.findOne(filter)
+    if (existing) {
+      await collection.updateOne({ _id: existing._id }, { $set: { updatedAt: new Date() } })
+      return existing
+    }
+    
+    // Not found — insert new conversation
+    const newConversation: Omit<Conversation, "_id"> = {
+      participants: sortedParticipants,
+      projectId,
+      isUnlocked: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+    
+    const result = await collection.insertOne(newConversation as any)
+    return { ...newConversation, _id: result.insertedId } as Conversation
   },
 
   async findByUserId(userId: string): Promise<Conversation[]> {
@@ -1280,5 +1294,305 @@ export const banRecordsDb = {
   async findById(id: string): Promise<BanRecord | null> {
     const collection = await getCollection<BanRecord>(COLLECTIONS.BAN_RECORDS)
     return collection.findOne({ _id: new ObjectId(id) })
+  },
+}
+
+// ============================================
+// REVIEWS
+// ============================================
+export const reviewsDb = {
+  async create(review: Omit<Review, "_id">): Promise<string> {
+    const collection = await getCollection<Review>(COLLECTIONS.REVIEWS)
+    const result = await collection.insertOne({
+      ...review,
+      isPublic: true,
+      isReported: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as Review)
+    return result.insertedId.toString()
+  },
+
+  async findByReviewee(revieweeId: string): Promise<Review[]> {
+    const collection = await getCollection<Review>(COLLECTIONS.REVIEWS)
+    return collection.find({ revieweeId, isPublic: true }).sort({ createdAt: -1 }).toArray()
+  },
+
+  async findByProject(projectId: string): Promise<Review[]> {
+    const collection = await getCollection<Review>(COLLECTIONS.REVIEWS)
+    return collection.find({ projectId }).sort({ createdAt: -1 }).toArray()
+  },
+
+  async findByReviewer(reviewerId: string): Promise<Review[]> {
+    const collection = await getCollection<Review>(COLLECTIONS.REVIEWS)
+    return collection.find({ reviewerId }).sort({ createdAt: -1 }).toArray()
+  },
+
+  async findExisting(reviewerId: string, revieweeId: string, projectId: string): Promise<Review | null> {
+    const collection = await getCollection<Review>(COLLECTIONS.REVIEWS)
+    return collection.findOne({ reviewerId, revieweeId, projectId })
+  },
+
+  async getAverageRating(revieweeId: string): Promise<{ average: number; count: number }> {
+    const collection = await getCollection<Review>(COLLECTIONS.REVIEWS)
+    const reviews = await collection.find({ revieweeId, isPublic: true }).toArray()
+    if (reviews.length === 0) return { average: 0, count: 0 }
+    const total = reviews.reduce((sum, r) => sum + r.overallRating, 0)
+    return { average: total / reviews.length, count: reviews.length }
+  },
+
+  async findAll(): Promise<Review[]> {
+    const collection = await getCollection<Review>(COLLECTIONS.REVIEWS)
+    return collection.find({}).sort({ createdAt: -1 }).toArray()
+  },
+}
+
+// ============================================
+// ENDORSEMENTS
+// ============================================
+export const endorsementsDb = {
+  async create(endorsement: Omit<Endorsement, "_id">): Promise<string> {
+    const collection = await getCollection<Endorsement>(COLLECTIONS.ENDORSEMENTS)
+    const result = await collection.insertOne({
+      ...endorsement,
+      createdAt: new Date(),
+    } as Endorsement)
+    return result.insertedId.toString()
+  },
+
+  async findByEndorsee(endorseeId: string): Promise<Endorsement[]> {
+    const collection = await getCollection<Endorsement>(COLLECTIONS.ENDORSEMENTS)
+    return collection.find({ endorseeId }).sort({ createdAt: -1 }).toArray()
+  },
+
+  async findExisting(endorserId: string, endorseeId: string, skillCategoryId: string, skillSubskillId: string): Promise<Endorsement | null> {
+    const collection = await getCollection<Endorsement>(COLLECTIONS.ENDORSEMENTS)
+    return collection.findOne({ endorserId, endorseeId, skillCategoryId, skillSubskillId })
+  },
+
+  async countBySkill(endorseeId: string, skillCategoryId: string, skillSubskillId: string): Promise<number> {
+    const collection = await getCollection<Endorsement>(COLLECTIONS.ENDORSEMENTS)
+    return collection.countDocuments({ endorseeId, skillCategoryId, skillSubskillId })
+  },
+
+  async getSkillEndorsementCounts(endorseeId: string): Promise<Record<string, number>> {
+    const collection = await getCollection<Endorsement>(COLLECTIONS.ENDORSEMENTS)
+    const endorsements = await collection.find({ endorseeId }).toArray()
+    const counts: Record<string, number> = {}
+    for (const e of endorsements) {
+      const key = `${e.skillCategoryId}:${e.skillSubskillId}`
+      counts[key] = (counts[key] || 0) + 1
+    }
+    return counts
+  },
+
+  async delete(endorserId: string, endorseeId: string, skillCategoryId: string, skillSubskillId: string): Promise<boolean> {
+    const collection = await getCollection<Endorsement>(COLLECTIONS.ENDORSEMENTS)
+    const result = await collection.deleteOne({ endorserId, endorseeId, skillCategoryId, skillSubskillId })
+    return result.deletedCount > 0
+  },
+}
+
+// ============================================
+// BADGES
+// ============================================
+export const badgesDb = {
+  async create(badge: Omit<Badge, "_id">): Promise<string> {
+    const collection = await getCollection<Badge>(COLLECTIONS.BADGES)
+    const result = await collection.insertOne({
+      ...badge,
+      isActive: true,
+      createdAt: new Date(),
+    } as Badge)
+    return result.insertedId.toString()
+  },
+
+  async findAll(): Promise<Badge[]> {
+    const collection = await getCollection<Badge>(COLLECTIONS.BADGES)
+    return collection.find({ isActive: true }).toArray()
+  },
+
+  async findByBadgeId(badgeId: string): Promise<Badge | null> {
+    const collection = await getCollection<Badge>(COLLECTIONS.BADGES)
+    return collection.findOne({ badgeId, isActive: true })
+  },
+
+  async initializeDefaults(): Promise<void> {
+    const collection = await getCollection<Badge>(COLLECTIONS.BADGES)
+    const existing = await collection.countDocuments()
+    if (existing > 0) return
+
+    const defaultBadges: Omit<Badge, "_id">[] = [
+      // Project badges
+      { badgeId: "first_project", name: "First Step", description: "Completed your first project", icon: "🎯", category: "projects", level: "bronze", criteria: { type: "projects_completed", threshold: 1 }, isActive: true, createdAt: new Date() },
+      { badgeId: "five_projects", name: "Rising Star", description: "Completed 5 projects", icon: "⭐", category: "projects", level: "silver", criteria: { type: "projects_completed", threshold: 5 }, isActive: true, createdAt: new Date() },
+      { badgeId: "ten_projects", name: "Impact Maker", description: "Completed 10 projects", icon: "🏆", category: "projects", level: "gold", criteria: { type: "projects_completed", threshold: 10 }, isActive: true, createdAt: new Date() },
+      { badgeId: "twentyfive_projects", name: "Legend", description: "Completed 25 projects", icon: "👑", category: "projects", level: "platinum", criteria: { type: "projects_completed", threshold: 25 }, isActive: true, createdAt: new Date() },
+      // Hours badges
+      { badgeId: "ten_hours", name: "Getting Started", description: "Contributed 10 hours", icon: "⏰", category: "hours", level: "bronze", criteria: { type: "hours_contributed", threshold: 10 }, isActive: true, createdAt: new Date() },
+      { badgeId: "fifty_hours", name: "Dedicated", description: "Contributed 50 hours", icon: "💪", category: "hours", level: "silver", criteria: { type: "hours_contributed", threshold: 50 }, isActive: true, createdAt: new Date() },
+      { badgeId: "hundred_hours", name: "Centurion", description: "Contributed 100 hours", icon: "🔥", category: "hours", level: "gold", criteria: { type: "hours_contributed", threshold: 100 }, isActive: true, createdAt: new Date() },
+      { badgeId: "fivehundred_hours", name: "Time Lord", description: "Contributed 500 hours", icon: "🌟", category: "hours", level: "platinum", criteria: { type: "hours_contributed", threshold: 500 }, isActive: true, createdAt: new Date() },
+      // Skill badges
+      { badgeId: "three_skills", name: "Multi-Talented", description: "Added 3 skills to your profile", icon: "🎨", category: "skills", level: "bronze", criteria: { type: "skills_count", threshold: 3 }, isActive: true, createdAt: new Date() },
+      { badgeId: "five_skills", name: "Swiss Army Knife", description: "Added 5 skills to your profile", icon: "🛠️", category: "skills", level: "silver", criteria: { type: "skills_count", threshold: 5 }, isActive: true, createdAt: new Date() },
+      // Community badges
+      { badgeId: "first_review", name: "Reviewer", description: "Wrote your first review", icon: "📝", category: "community", level: "bronze", criteria: { type: "reviews_given", threshold: 1 }, isActive: true, createdAt: new Date() },
+      { badgeId: "five_reviews", name: "Critic", description: "Wrote 5 reviews", icon: "🎭", category: "community", level: "silver", criteria: { type: "reviews_given", threshold: 5 }, isActive: true, createdAt: new Date() },
+      { badgeId: "first_referral", name: "Connector", description: "Referred your first friend", icon: "🤝", category: "community", level: "bronze", criteria: { type: "referrals_completed", threshold: 1 }, isActive: true, createdAt: new Date() },
+      { badgeId: "five_endorsements", name: "Well Endorsed", description: "Received 5 skill endorsements", icon: "👍", category: "community", level: "silver", criteria: { type: "endorsements_received", threshold: 5 }, isActive: true, createdAt: new Date() },
+      // Special
+      { badgeId: "top_rated", name: "Top Rated", description: "Maintained 4.8+ average rating", icon: "💎", category: "special", level: "gold", criteria: { type: "average_rating", threshold: 4.8 }, isActive: true, createdAt: new Date() },
+      { badgeId: "early_adopter", name: "Early Adopter", description: "Joined within the first 100 users", icon: "🚀", category: "special", level: "gold", criteria: { type: "early_user", threshold: 100 }, isActive: true, createdAt: new Date() },
+    ]
+
+    await collection.insertMany(defaultBadges as Badge[])
+  },
+}
+
+// ============================================
+// USER BADGES
+// ============================================
+export const userBadgesDb = {
+  async create(userBadge: Omit<UserBadge, "_id">): Promise<string> {
+    const collection = await getCollection<UserBadge>(COLLECTIONS.USER_BADGES)
+    const result = await collection.insertOne({
+      ...userBadge,
+      earnedAt: new Date(),
+    } as UserBadge)
+    return result.insertedId.toString()
+  },
+
+  async findByUserId(userId: string): Promise<UserBadge[]> {
+    const collection = await getCollection<UserBadge>(COLLECTIONS.USER_BADGES)
+    return collection.find({ userId }).sort({ earnedAt: -1 }).toArray()
+  },
+
+  async hasBadge(userId: string, badgeId: string): Promise<boolean> {
+    const collection = await getCollection<UserBadge>(COLLECTIONS.USER_BADGES)
+    const existing = await collection.findOne({ userId, badgeId })
+    return !!existing
+  },
+
+  async countByUserId(userId: string): Promise<number> {
+    const collection = await getCollection<UserBadge>(COLLECTIONS.USER_BADGES)
+    return collection.countDocuments({ userId })
+  },
+}
+
+// ============================================
+// REFERRALS
+// ============================================
+export const referralsDb = {
+  async create(referral: Omit<Referral, "_id">): Promise<string> {
+    const collection = await getCollection<Referral>(COLLECTIONS.REFERRALS)
+    const result = await collection.insertOne({
+      ...referral,
+      status: "pending",
+      rewardGranted: false,
+      createdAt: new Date(),
+    } as Referral)
+    return result.insertedId.toString()
+  },
+
+  async findByReferrerId(referrerId: string): Promise<Referral[]> {
+    const collection = await getCollection<Referral>(COLLECTIONS.REFERRALS)
+    return collection.find({ referrerId }).sort({ createdAt: -1 }).toArray()
+  },
+
+  async findByCode(referralCode: string): Promise<Referral | null> {
+    const collection = await getCollection<Referral>(COLLECTIONS.REFERRALS)
+    return collection.findOne({ referralCode })
+  },
+
+  async findByReferredUserId(referredUserId: string): Promise<Referral | null> {
+    const collection = await getCollection<Referral>(COLLECTIONS.REFERRALS)
+    return collection.findOne({ referredUserId })
+  },
+
+  async updateStatus(referralCode: string, status: string, referredUserId?: string): Promise<boolean> {
+    const collection = await getCollection<Referral>(COLLECTIONS.REFERRALS)
+    const update: any = { status }
+    if (referredUserId) update.referredUserId = referredUserId
+    if (status === "completed") update.completedAt = new Date()
+    const result = await collection.updateOne({ referralCode }, { $set: update })
+    return result.modifiedCount > 0
+  },
+
+  async countCompletedByReferrer(referrerId: string): Promise<number> {
+    const collection = await getCollection<Referral>(COLLECTIONS.REFERRALS)
+    return collection.countDocuments({ referrerId, status: "completed" })
+  },
+
+  async generateUniqueCode(): Promise<string> {
+    const collection = await getCollection<Referral>(COLLECTIONS.REFERRALS)
+    let code: string
+    let exists: Referral | null
+    do {
+      code = "JBC" + Math.random().toString(36).substring(2, 8).toUpperCase()
+      exists = await collection.findOne({ referralCode: code })
+    } while (exists)
+    return code
+  },
+}
+
+// ============================================
+// BLOG POSTS
+// ============================================
+export const blogPostsDb = {
+  async create(post: Omit<BlogPost, "_id">): Promise<string> {
+    const collection = await getCollection<BlogPost>(COLLECTIONS.BLOG_POSTS)
+    const result = await collection.insertOne({
+      ...post,
+      viewCount: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    } as BlogPost)
+    return result.insertedId.toString()
+  },
+
+  async findBySlug(slug: string): Promise<BlogPost | null> {
+    const collection = await getCollection<BlogPost>(COLLECTIONS.BLOG_POSTS)
+    return collection.findOne({ slug })
+  },
+
+  async findById(id: string): Promise<BlogPost | null> {
+    const collection = await getCollection<BlogPost>(COLLECTIONS.BLOG_POSTS)
+    return collection.findOne({ _id: new ObjectId(id) })
+  },
+
+  async findPublished(limit = 20, skip = 0): Promise<BlogPost[]> {
+    const collection = await getCollection<BlogPost>(COLLECTIONS.BLOG_POSTS)
+    return collection.find({ status: "published" }).sort({ publishedAt: -1 }).skip(skip).limit(limit).toArray()
+  },
+
+  async findAll(): Promise<BlogPost[]> {
+    const collection = await getCollection<BlogPost>(COLLECTIONS.BLOG_POSTS)
+    return collection.find({}).sort({ createdAt: -1 }).toArray()
+  },
+
+  async update(id: string, updates: Partial<BlogPost>): Promise<boolean> {
+    const collection = await getCollection<BlogPost>(COLLECTIONS.BLOG_POSTS)
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { ...updates, updatedAt: new Date() } }
+    )
+    return result.modifiedCount > 0
+  },
+
+  async delete(id: string): Promise<boolean> {
+    const collection = await getCollection<BlogPost>(COLLECTIONS.BLOG_POSTS)
+    const result = await collection.deleteOne({ _id: new ObjectId(id) })
+    return result.deletedCount > 0
+  },
+
+  async incrementViews(slug: string): Promise<void> {
+    const collection = await getCollection<BlogPost>(COLLECTIONS.BLOG_POSTS)
+    await collection.updateOne({ slug }, { $inc: { viewCount: 1 } })
+  },
+
+  async countPublished(): Promise<number> {
+    const collection = await getCollection<BlogPost>(COLLECTIONS.BLOG_POSTS)
+    return collection.countDocuments({ status: "published" })
   },
 }

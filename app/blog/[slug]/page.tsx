@@ -1,10 +1,12 @@
 import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Calendar, User, ArrowLeft, Share2, Facebook, Twitter, Linkedin } from "lucide-react"
 import { notFound } from "next/navigation"
+import { getBlogPostBySlug } from "@/lib/actions"
 
 // Blog posts content
 const blogPosts: Record<string, {
@@ -210,7 +212,27 @@ Our support team is here to help you succeed. Reach out anytime through the Help
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const post = blogPosts[slug]
+
+  // Try DB first, then hardcoded fallback
+  let post: any = null
+  const dbResult = await getBlogPostBySlug(slug)
+  if (dbResult.success && dbResult.data) {
+    const p = dbResult.data
+    post = {
+      title: p.title,
+      excerpt: p.excerpt || "",
+      date: new Date(p.publishedAt || p.createdAt).toLocaleDateString("en-IN", {
+        month: "long", day: "numeric", year: "numeric",
+      }),
+      author: p.authorName || "JustBeCause Team",
+      category: p.tags?.[0] || "Blog",
+      readTime: `${Math.max(1, Math.ceil((p.content?.length || 0) / 1500))} min read`,
+      content: p.content || "",
+    }
+  } else {
+    // Fallback to hardcoded posts
+    post = blogPosts[slug]
+  }
 
   if (!post) {
     notFound()
@@ -395,6 +417,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </div>
         </article>
       </div>
+      <Footer />
     </>
   )
 }
