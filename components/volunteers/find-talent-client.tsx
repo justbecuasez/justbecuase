@@ -500,8 +500,8 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
     hasFreeHours: false,
   })
 
-  // Separate volunteers by type ("both" appears in both tabs)
-  const paidVolunteers = volunteers.filter((v) => v.volunteerType === "paid" || v.volunteerType === "both")
+  // Separate volunteers by type
+  const paidVolunteers = volunteers.filter((v) => v.volunteerType === "paid")
   const freeVolunteers = volunteers.filter((v) => v.volunteerType === "free" || v.volunteerType === "both")
 
   // Get unique locations

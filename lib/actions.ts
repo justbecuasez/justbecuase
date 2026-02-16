@@ -1233,7 +1233,17 @@ export async function getMatchedVolunteersForProject(
   if (!project) return []
 
   const volunteers = await volunteerProfilesDb.findMany({ isActive: true })
-  const matches = matchVolunteersToProject(project, volunteers)
+  
+  // Subscription-based visibility: non-Pro NGOs can only see paid volunteers
+  let visibleVolunteers = volunteers
+  if (user.role === "ngo") {
+    const ngoProfile = await ngoProfilesDb.findByUserId(user.id)
+    if (!ngoProfile || ngoProfile.subscriptionPlan !== "pro") {
+      visibleVolunteers = volunteers.filter(v => v.volunteerType === "paid")
+    }
+  }
+  
+  const matches = matchVolunteersToProject(project, visibleVolunteers)
 
   // Convert to profile views
   const results = await Promise.all(
@@ -1309,8 +1319,15 @@ export async function getRecommendedVolunteersForNGO(): Promise<
   // Get all active volunteers
   const volunteers = await volunteerProfilesDb.findMany({ isActive: true })
   
+  // Subscription-based visibility: non-Pro NGOs can only see paid volunteers
+  const ngoProfile = await ngoProfilesDb.findByUserId(user.id)
+  const isPro = ngoProfile?.subscriptionPlan === "pro"
+  const visibleVolunteers = isPro
+    ? volunteers
+    : volunteers.filter(v => v.volunteerType === "paid")
+  
   // Score volunteers based on skill match
-  const scoredVolunteers = volunteers
+  const scoredVolunteers = visibleVolunteers
     .map(v => {
       const volunteerSkillIds = v.skills?.map((s: any) => s.subskillId) || []
       const matchingSkills = volunteerSkillIds.filter((id: string) => requiredSkillIds.has(id))
@@ -1323,10 +1340,10 @@ export async function getRecommendedVolunteersForNGO(): Promise<
         volunteerId: v.userId,
         score: Math.round(skillMatchScore + freeHoursBonus),
         volunteer: {
-          name: v.name,
-          headline: v.bio?.slice(0, 60),
+          name: isPro ? v.name : (v.volunteerType === "paid" ? v.name : undefined),
+          headline: isPro ? v.bio?.slice(0, 60) : (v.volunteerType === "paid" ? v.bio?.slice(0, 60) : undefined),
           skills: v.skills?.slice(0, 4),
-          avatar: v.avatar,
+          avatar: isPro ? v.avatar : (v.volunteerType === "paid" ? v.avatar : undefined),
           freeHoursPerMonth: v.volunteerType === "both" ? v.freeHoursPerMonth : undefined,
         }
       }
@@ -2125,7 +2142,7 @@ export async function browseVolunteers(filters?: {
   if (currentUser?.role === "ngo") {
     const ngoProfile = await ngoProfilesDb.findByUserId(currentUser.id)
     if (!ngoProfile || ngoProfile.subscriptionPlan !== "pro") {
-      filteredVolunteers = filteredVolunteers.filter(v => v.volunteerType === "paid" || v.volunteerType === "both")
+      filteredVolunteers = filteredVolunteers.filter(v => v.volunteerType === "paid")
     }
   }
 
