@@ -1164,7 +1164,7 @@ export default function VolunteerOnboardingPage() {
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="h-8 w-8 text-primary" />
         </div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">You're all set, {profile.name || session?.user?.name || "there"}!</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-2">You're all set, {session?.user?.name || "there"}!</h2>
         <p className="text-muted-foreground">Your profile is ready. Review your details and start exploring opportunities.</p>
       </div>
 

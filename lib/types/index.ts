@@ -418,6 +418,11 @@ export type NotificationType =
   | "profile_unlocked"
   | "project_match"
   | "new_follower"
+  | "followed_ngo_project"
+  | "project_status_change"
+  | "application_limit_warning"
+  | "application_limit_reached"
+  | "subscription_activated"
   | "system"
 
 export interface Notification {
