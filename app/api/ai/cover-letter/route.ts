@@ -50,7 +50,7 @@ Write a compelling, genuine cover letter that:
 Also provide actionable tips and identify key strengths to highlight.`,
     })
 
-    return NextResponse.json({ success: true, data: output })
+    return NextResponse.json(output)
   } catch (error) {
     console.error("AI cover letter generation failed:", error)
     return NextResponse.json({ error: "Failed to generate cover letter" }, { status: 500 })

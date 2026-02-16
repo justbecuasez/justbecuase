@@ -28,7 +28,7 @@ export async function POST(req: Request) {
               demandLevel: z.enum(["high", "medium", "low"]).describe("Current demand for this skill among NGOs"),
             })
           ).describe("5-8 skill suggestions"),
-          profileStrength: z.string().describe("Brief assessment of their current profile strength"),
+          profileStrength: z.number().min(0).max(100).describe("Profile strength score from 0 to 100 based on completeness and skill diversity"),
           careerTip: z.string().describe("One actionable career/impact tip"),
         }),
       }),
@@ -50,7 +50,7 @@ Focus on practical, professional skills relevant to the volunteer consulting/non
 Common high-demand NGO skills include: Grant Writing, Digital Marketing, Data Analysis, UX Design, SEO, Project Management, Fundraising Strategy, Financial Modeling, Impact Measurement, Graphic Design, Social Media Strategy, Content Writing, Web Development, Video Production, Public Speaking.`,
     })
 
-    return NextResponse.json({ success: true, data: output })
+    return NextResponse.json(output)
   } catch (error) {
     console.error("AI skill suggestions failed:", error)
     return NextResponse.json({ error: "Failed to generate skill suggestions" }, { status: 500 })

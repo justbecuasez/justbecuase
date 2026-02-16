@@ -36,6 +36,10 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
   const followStatsResult = await getFollowStats(id)
   const followStats = followStatsResult.success ? followStatsResult.data! : { followersCount: 0, followingCount: 0, isFollowing: false }
 
+  if (!volunteer) {
+    notFound()
+  }
+
   // Get current user for endorsements
   const currentUser = await getCurrentUser()
   const currentUserId = currentUser?.id || ""
@@ -43,10 +47,6 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
   // Get reviews for this volunteer
   const reviewsResult = await getReviewsForUser(id)
   const reviews = reviewsResult.success ? reviewsResult.data || [] : []
-
-  if (!volunteer) {
-    notFound()
-  }
 
   const isLocked = !volunteer.isUnlocked
 

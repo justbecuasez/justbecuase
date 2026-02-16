@@ -194,7 +194,7 @@ export default function ReferralPage() {
               <Card>
                 <CardContent className="p-4 text-center">
                   <Gift className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-foreground">{stats?.totalCodes || 1}</p>
+                  <p className="text-2xl font-bold text-foreground">{stats?.totalReferrals || 0}</p>
                   <p className="text-xs text-muted-foreground">Referral Codes</p>
                 </CardContent>
               </Card>

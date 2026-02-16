@@ -51,7 +51,7 @@ Focus on skill overlap, potential impact, and complementary abilities.
 Be honest but encouraging — highlight strengths while acknowledging any gaps.`,
     })
 
-    return NextResponse.json({ success: true, data: output })
+    return NextResponse.json(output)
   } catch (error) {
     console.error("AI match explanation failed:", error)
     return NextResponse.json({ error: "Failed to generate match explanation" }, { status: 500 })

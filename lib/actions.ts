@@ -3542,8 +3542,22 @@ export async function checkAndCelebrateMilestones(
 ): Promise<void> {
   try {
     const thresholds = MILESTONES[type]
-    const milestone = thresholds.find((t) => t === currentValue)
+    // Find the highest milestone that was just crossed (currentValue >= threshold)
+    // but only if we haven't already celebrated it (check notifications)
+    const milestone = thresholds
+      .filter((t) => currentValue >= t)
+      .reverse()
+      .find((t) => true) // Get the highest crossed threshold
     if (!milestone) return
+
+    // Check if we already celebrated this milestone
+    const db = await getDb()
+    const existingNotification = await db.collection("notifications").findOne({
+      userId,
+      type: "milestone",
+      title: { $regex: `Milestone: ${milestone} ${type === "projects" ? "Projects" : "Hours"}` },
+    })
+    if (existingNotification) return
 
     const profile = await volunteerProfilesDb.findByUserId(userId)
     if (!profile) return
@@ -3914,6 +3928,10 @@ export async function logProjectHours(
   description?: string
 ): Promise<ApiResponse<boolean>> {
   try {
+    if (!hours || hours <= 0 || hours > 24) {
+      return { success: false, error: "Hours must be between 0 and 24" }
+    }
+
     const session = await auth.api.getSession({ headers: await headers() })
     if (!session?.user) return { success: false, error: "Not authenticated" }
 

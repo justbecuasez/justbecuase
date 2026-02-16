@@ -50,7 +50,7 @@ Also generate:
 - SEO keywords for discoverability`,
     })
 
-    return NextResponse.json({ success: true, data: output })
+    return NextResponse.json(output)
   } catch (error) {
     console.error("AI bio generation failed:", error)
     return NextResponse.json({ error: "Failed to generate bio" }, { status: 500 })

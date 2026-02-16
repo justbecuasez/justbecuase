@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { volunteerProfilesDb, ngoProfilesDb, projectsDb, userBadgesDb, getDb, userIdQuery } from "@/lib/database"
+import { volunteerProfilesDb, projectsDb, userBadgesDb, badgesDb, getDb, userIdQuery } from "@/lib/database"
 import { sendEmail, getWeeklyDigestEmailHtml } from "@/lib/email"
 
 // Secured by CRON_SECRET header — call from Vercel Cron or external scheduler
@@ -55,9 +55,14 @@ export async function GET(request: Request) {
         // Get new badges earned this week
         const volUserId = volunteer.userId || volunteer._id?.toString() || ""
         const userBadges = await userBadgesDb.findByUserId(volUserId)
-        const newBadges = userBadges
-          .filter((b: any) => b.earnedAt && new Date(b.earnedAt) >= oneWeekAgo)
-          .map((b: any) => b.badgeName || b.badgeId)
+        const newBadges = await Promise.all(
+          userBadges
+            .filter((b: any) => b.earnedAt && new Date(b.earnedAt) >= oneWeekAgo)
+            .map(async (b: any) => {
+              const badgeDef = await badgesDb.findByBadgeId(b.badgeId)
+              return badgeDef?.name || b.badgeId
+            })
+        )
 
         const html = getWeeklyDigestEmailHtml(
           volunteer.name || "Volunteer",

@@ -59,7 +59,7 @@ The description should:
 - Appeal to skilled professionals who want to make a difference`,
     })
 
-    return NextResponse.json({ success: true, data: output })
+    return NextResponse.json(output)
   } catch (error) {
     console.error("AI project description failed:", error)
     return NextResponse.json({ error: "Failed to generate project description" }, { status: 500 })
