@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { ngoProfilesDb, volunteerProfilesDb, transactionsDb } from "@/lib/database"
+import { ngoProfilesDb, volunteerProfilesDb, transactionsDb, notificationsDb } from "@/lib/database"
 import { verifyPayment } from "@/lib/payment-gateway"
+import { getDb, userIdQuery } from "@/lib/database"
 import type { PaymentGatewayType } from "@/lib/types"
 
 // Calculate subscription expiry (1 month from now)
@@ -133,6 +134,51 @@ export async function POST(request: NextRequest) {
       description: `${isPro ? "Pro" : "Free"} Plan Subscription`,
       createdAt: new Date(),
     })
+
+    // Create in-app notification for subscription activation
+    try {
+      const dashboardPath = isNgoPlan ? "/ngo/dashboard" : "/volunteer/dashboard"
+      await notificationsDb.create({
+        userId,
+        type: "subscription_activated",
+        title: "Pro Plan Activated!",
+        message: `Your Pro subscription is now active. Enjoy unlimited access!`,
+        referenceId: planId,
+        referenceType: "subscription",
+        link: dashboardPath,
+        isRead: false,
+        createdAt: new Date(),
+      })
+    } catch (notifErr) {
+      console.error("[verify-subscription] Failed to create notification:", notifErr)
+    }
+
+    // Send subscription confirmation email
+    try {
+      const db = await getDb()
+      const userRecord = await db.collection("user").findOne(userIdQuery(userId))
+      if (userRecord?.email) {
+        const { sendEmail, getSubscriptionConfirmationEmailHtml } = await import("@/lib/email")
+        const planName = isNgoPlan ? "NGO Pro" : "Impact Agent Pro"
+        const expiryFormatted = subscriptionExpiry.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })
+        const html = getSubscriptionConfirmationEmailHtml(
+          userRecord.name || "there",
+          planName,
+          amount,
+          "INR",
+          expiryFormatted,
+          isNgoPlan ? "ngo" : "volunteer"
+        )
+        await sendEmail({
+          to: userRecord.email,
+          subject: `Your ${planName} subscription is active!`,
+          html,
+          text: `Hi ${userRecord.name || "there"}, your ${planName} subscription is now active! Valid until ${expiryFormatted}. Enjoy your Pro benefits!`,
+        })
+      }
+    } catch (emailErr) {
+      console.error("[verify-subscription] Failed to send confirmation email:", emailErr)
+    }
 
     return NextResponse.json({ 
       success: true, 

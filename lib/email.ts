@@ -1,4 +1,4 @@
-﻿// Email sending utility for JustBecause Network
+// Email sending utility for JustBecause Network
 // Configure RESEND_API_KEY in your environment variables
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || process.env.RESEND_AKASH
@@ -14,7 +14,7 @@ interface EmailOptions {
 export async function sendEmail({ to, subject, html, text }: EmailOptions): Promise<boolean> {
   // If no API key, log and return (for development)
   if (!RESEND_API_KEY) {
-    console.log("ðŸ“§ Email would be sent (RESEND_API_KEY not configured):")
+    console.log("📧 Email would be sent (RESEND_API_KEY not configured):")
     console.log(`  To: ${to}`)
     console.log(`  Subject: ${subject}`)
     console.log(`  Content: ${text || html}`)
@@ -83,7 +83,7 @@ export function getVerificationEmailHtml(url: string, userName?: string): string
       </div>
       
       <div style="text-align: center; color: #999; font-size: 12px;">
-        <p>Â© ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+        <p>© ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
       </div>
     </body>
     </html>
@@ -119,7 +119,7 @@ export function getPasswordResetEmailHtml(url: string, userName?: string): strin
       </div>
       
       <div style="text-align: center; color: #999; font-size: 12px;">
-        <p>Â© ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+        <p>© ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
       </div>
     </body>
     </html>
@@ -157,7 +157,7 @@ export function getPasswordResetCodeEmailHtml(code: string, url?: string, userNa
       </div>
       
       <div style="text-align: center; color: #999; font-size: 12px;">
-        <p>Â© ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+        <p>© ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
       </div>
     </body>
     </html>
@@ -181,7 +181,7 @@ export function getWelcomeEmailHtml(userName: string, userRole: string): string 
       </div>
       
       <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
-        <h2 style="margin-top: 0;">Welcome to JustBeCause Network! ðŸŽ‰</h2>
+        <h2 style="margin-top: 0;">Welcome to JustBeCause Network! 🎉</h2>
         <p>Hi ${userName},</p>
         <p>Thank you for joining our community of ${userRole === 'ngo' ? 'organizations making a difference' : 'skilled impact agents'}!</p>
         
@@ -209,7 +209,7 @@ export function getWelcomeEmailHtml(userName: string, userRole: string): string 
       </div>
       
       <div style="text-align: center; color: #999; font-size: 12px;">
-        <p>Â© ${new Date().getFullYear()} JustBecause Network. All rights reserved.</p>
+        <p>© ${new Date().getFullYear()} JustBecause Network. All rights reserved.</p>
       </div>
     </body>
     </html>
@@ -236,7 +236,7 @@ export function getNewOpportunityEmailHtml(
       </div>
       
       <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
-        <h2 style="margin-top: 0;">New Opportunity Matching Your Skills! ðŸŽ¯</h2>
+        <h2 style="margin-top: 0;">New Opportunity Matching Your Skills! 🎯</h2>
         <p>Hi ${volunteerName},</p>
         <p><strong>${ngoName}</strong> just posted a new opportunity that matches your skills:</p>
         
@@ -325,52 +325,6 @@ export function getNewFollowerEmailHtml(
         <div style="background: #f9fafb; padding: 20px 30px; text-align: center; border-top: 1px solid #e5e7eb;">
           <p style="color: #9ca3af; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
         </div>
-      </div>
-    </body>
-    </html>
-  `
-}
-
-export function getNGOConnectionEmailHtml(
-  volunteerName: string,
-  ngoName: string,
-  message?: string
-): string {
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #10b981; margin: 0;">JustBeCause Network</h1>
-        <p style="color: #666; margin-top: 5px;">Skills-Based Impact Platform</p>
-      </div>
-      
-      <div style="background: #f9fafb; border-radius: 8px; padding: 30px; margin-bottom: 20px;">
-        <h2 style="margin-top: 0;">An NGO Wants to Connect! ðŸ¤</h2>
-        <p>Hi ${volunteerName},</p>
-        <p><strong>${ngoName}</strong> has reached out to you on JustBeCause Network.</p>
-        
-        ${message ? `
-        <div style="background: white; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
-          <p style="color: #666; font-style: italic; margin: 0;">&ldquo;${message}&rdquo;</p>
-        </div>
-        ` : ''}
-        
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="https://justbecausenetwork.com/volunteer/messages" style="display: inline-block; background: #10b981; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">
-            View Messages
-          </a>
-        </div>
-        
-        <p style="color: #666; font-size: 14px;">Don't miss this connection opportunity! Log in to reply and start collaborating.</p>
-      </div>
-      
-      <div style="text-align: center; color: #999; font-size: 12px;">
-        <p>&copy; ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
       </div>
     </body>
     </html>
@@ -590,6 +544,126 @@ export function getContactEmailHtml(
       
       <div style="text-align: center; color: #999; font-size: 12px;">
         <p>&copy; ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+/**
+ * Email template for subscription confirmation (Pro plan activation)
+ */
+export function getSubscriptionConfirmationEmailHtml(
+  recipientName: string,
+  planName: string,
+  amount: number,
+  currency: string,
+  expiryDate: string,
+  role: "ngo" | "volunteer"
+): string {
+  const dashboardUrl = role === "ngo" ? "/ngo/dashboard" : "/volunteer/dashboard"
+  const features = role === "ngo" 
+    ? [
+        "Unlimited access to pro bono Impact Agents",
+        "Unlimited profile unlocks",
+        "Priority project visibility",
+        "Advanced matching &amp; search",
+      ]
+    : [
+        "Unlimited project applications",
+        "Priority in search results",
+        "Pro badge on your profile",
+        "Advanced analytics",
+      ]
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #f3f4f6;">
+      <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">Welcome to Pro! &#x1F389;</h1>
+          <p style="color: #d1fae5; margin-top: 8px;">JustBeCause Network</p>
+        </div>
+        
+        <div style="padding: 30px;">
+          <p>Hi ${recipientName},</p>
+          <p>Your <strong>${planName}</strong> subscription is now active! Thank you for upgrading.</p>
+          
+          <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h3 style="margin-top: 0; color: #111827;">Payment Summary</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr><td style="padding: 8px 0; color: #666;">Plan</td><td style="text-align: right; font-weight: 600;">${planName}</td></tr>
+              <tr><td style="padding: 8px 0; color: #666;">Amount</td><td style="text-align: right; font-weight: 600;">${currency} ${(amount / 100).toFixed(2)}</td></tr>
+              <tr style="border-top: 1px solid #e5e7eb;"><td style="padding: 8px 0; color: #666;">Valid until</td><td style="text-align: right; font-weight: 600;">${expiryDate}</td></tr>
+            </table>
+          </div>
+
+          <h3>What's included:</h3>
+          <ul style="padding-left: 20px;">
+            ${features.map(f => '<li style="margin-bottom: 8px; color: #374151;">' + f + '</li>').join("")}
+          </ul>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="https://justbecausenetwork.com${dashboardUrl}" style="display: inline-block; background: #10b981; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">Go to Dashboard</a>
+          </div>
+        </div>
+        
+        <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+          <p style="color: #9ca3af; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `
+}
+
+/**
+ * Email template for profile completeness nudge (sent to users who haven't completed onboarding)
+ */
+export function getProfileNudgeEmailHtml(
+  recipientName: string,
+  role: "ngo" | "volunteer",
+  onboardingUrl: string
+): string {
+  const roleLabel = role === "ngo" ? "NGO" : "Impact Agent"
+  const benefits = role === "ngo" 
+    ? "post projects, find skilled Impact Agents, and start making an impact"
+    : "discover projects, connect with NGOs, and start making a difference"
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #f3f4f6;">
+      <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 24px;">Complete Your Profile</h1>
+          <p style="color: #d1fae5; margin-top: 8px;">JustBeCause Network</p>
+        </div>
+        
+        <div style="padding: 30px;">
+          <p>Hi ${recipientName},</p>
+          <p>We noticed you signed up as a <strong>${roleLabel}</strong> but haven't completed your profile yet.</p>
+          <p>Finishing your profile takes just a few minutes, and it will allow you to ${benefits}.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="https://justbecausenetwork.com${onboardingUrl}" style="display: inline-block; background: #10b981; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">Complete Your Profile</a>
+          </div>
+          
+          <p style="color: #666; font-size: 14px;">The world needs your skills. Let's get started!</p>
+        </div>
+        
+        <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+          <p style="color: #9ca3af; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} JustBeCause Network. All rights reserved.</p>
+        </div>
       </div>
     </body>
     </html>

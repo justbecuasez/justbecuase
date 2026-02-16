@@ -681,7 +681,27 @@ export async function createProject(data: {
       for (const vol of matchingVolunteers.slice(0, 20)) {
         try {
           const volUser = await database.collection("user").findOne(userIdQuery(vol.userId))
-          if (volUser?.email) {
+          
+          // Create in-app notification for each matching volunteer
+          try {
+            await notificationsDb.create({
+              userId: vol.userId,
+              type: "project_match",
+              title: "New Matching Opportunity",
+              message: `A new project "${sanitizedTitle}" matches your skills`,
+              referenceId: projectId,
+              referenceType: "project",
+              link: `/projects/${projectId}`,
+              isRead: false,
+              createdAt: new Date(),
+            })
+          } catch (notifErr) {
+            console.error(`[createProject] Failed to create notification for ${vol.userId}:`, notifErr)
+          }
+
+          // Check notification preferences before sending email
+          const prefs = volUser?.privacy
+          if (volUser?.email && prefs?.opportunityDigest !== false) {
             await sendEmail({
               to: volUser.email,
               subject: `New opportunity matching your skills: ${sanitizedTitle}`,
@@ -697,9 +717,66 @@ export async function createProject(data: {
           console.error(`[createProject] Failed to email volunteer ${vol.userId}:`, emailErr)
         }
       }
-      console.log(`[createProject] Emailed ${Math.min(matchingVolunteers.length, 20)} matching volunteers`)
+      console.log(`[createProject] Notified ${Math.min(matchingVolunteers.length, 20)} matching volunteers`)
     } catch (emailError) {
       console.error("[createProject] Failed to send opportunity emails:", emailError)
+    }
+
+    // Notify followers of this NGO about the new project
+    try {
+      const { followers } = await followsDb.getFollowers(user.id, 1, 50)
+      const db = await import("@/lib/database").then(m => m.getDb())
+      const database = await db
+      const { sendEmail } = await import("@/lib/email")
+      
+      for (const follow of followers.slice(0, 50)) {
+        try {
+          // In-app notification
+          await notificationsDb.create({
+            userId: follow.followerId,
+            type: "followed_ngo_project",
+            title: "New Project from NGO You Follow",
+            message: `${ngoProfile.organizationName || "An NGO"} posted "${sanitizedTitle}"`,
+            referenceId: projectId,
+            referenceType: "project",
+            link: `/projects/${projectId}`,
+            isRead: false,
+            createdAt: new Date(),
+          })
+
+          // Email (respects preferences)
+          const followerUser = await database.collection("user").findOne(userIdQuery(follow.followerId))
+          const followerPrefs = followerUser?.privacy
+          if (followerUser?.email && followerPrefs?.emailNotifications !== false && followerPrefs?.opportunityDigest !== false) {
+            await sendEmail({
+              to: followerUser.email,
+              subject: `${ngoProfile.organizationName || "An NGO you follow"} posted a new project`,
+              html: `
+                <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <h1 style="color: #10b981;">JustBeCause Network</h1>
+                  <div style="background: #f9fafb; border-radius: 8px; padding: 30px;">
+                    <h2>New Project Alert</h2>
+                    <p>Hi ${followerUser.name || "there"},</p>
+                    <p><strong>${ngoProfile.organizationName || "An NGO"}</strong> that you follow just posted a new project:</p>
+                    <div style="background: white; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+                      <h3 style="margin: 0 0 8px 0;">${sanitizedTitle}</h3>
+                    </div>
+                    <div style="text-align: center; margin: 30px 0;">
+                      <a href="https://justbecausenetwork.com/projects/${projectId}" style="background: #10b981; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Project</a>
+                    </div>
+                  </div>
+                  <p style="color: #999; font-size: 12px; text-align: center;">&copy; ${new Date().getFullYear()} JustBeCause Network</p>
+                </div>
+              `,
+            })
+          }
+        } catch (followErr) {
+          console.error(`[createProject] Failed to notify follower ${follow.followerId}:`, followErr)
+        }
+      }
+      console.log(`[createProject] Notified ${Math.min(followers.length, 50)} followers`)
+    } catch (followerErr) {
+      console.error("[createProject] Failed to notify followers:", followerErr)
     }
 
     revalidatePath("/ngo/projects")
@@ -758,6 +835,64 @@ export async function updateProject(
     }
 
     const result = await projectsDb.update(id, updates)
+
+    // Notify applicants when project status changes to completed/closed/paused
+    const statusChanged = updates.status && updates.status !== project.status
+    const notifyStatuses = ["completed", "closed", "paused"]
+    if (statusChanged && notifyStatuses.includes(updates.status as string)) {
+      try {
+        const applications = await applicationsDb.findByProjectId(id)
+        const statusLabel = updates.status === "completed" ? "completed" : updates.status === "closed" ? "closed" : "paused"
+        
+        for (const app of applications.slice(0, 50)) {
+          try {
+            // In-app notification
+            await notificationsDb.create({
+              userId: app.volunteerId,
+              type: "project_status_change",
+              title: `Project ${statusLabel.charAt(0).toUpperCase() + statusLabel.slice(1)}`,
+              message: `"${project.title}" has been ${statusLabel}`,
+              referenceId: id,
+              referenceType: "project",
+              link: `/projects/${id}`,
+              isRead: false,
+              createdAt: new Date(),
+            })
+
+            // Email notification (respects preferences)
+            const volUser = await (await getDb()).collection("user").findOne(userIdQuery(app.volunteerId))
+            const volPrefs = volUser?.privacy
+            if (volUser?.email && volPrefs?.applicationNotifications !== false && volPrefs?.emailNotifications !== false) {
+              const { sendEmail } = await import("@/lib/email")
+              await sendEmail({
+                to: volUser.email,
+                subject: `Project update: "${project.title}" has been ${statusLabel}`,
+                html: `
+                  <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <h1 style="color: #10b981;">JustBeCause Network</h1>
+                    <div style="background: #f9fafb; border-radius: 8px; padding: 30px;">
+                      <h2>Project Status Update</h2>
+                      <p>Hi ${volUser.name || "there"},</p>
+                      <p>The project <strong>"${project.title}"</strong> that you applied to has been <strong>${statusLabel}</strong>.</p>
+                      <div style="text-align: center; margin: 30px 0;">
+                        <a href="https://justbecausenetwork.com/projects/${id}" style="background: #10b981; color: white; padding: 14px 30px; text-decoration: none; border-radius: 8px; font-weight: 600;">View Project</a>
+                      </div>
+                    </div>
+                    <p style="color: #999; font-size: 12px; text-align: center;">&copy; ${new Date().getFullYear()} JustBeCause Network</p>
+                  </div>
+                `,
+              })
+            }
+          } catch (appErr) {
+            console.error(`[updateProject] Failed to notify applicant ${app.volunteerId}:`, appErr)
+          }
+        }
+        console.log(`[updateProject] Notified ${Math.min(applications.length, 50)} applicants about status change to ${statusLabel}`)
+      } catch (notifErr) {
+        console.error("[updateProject] Failed to send status change notifications:", notifErr)
+      }
+    }
+
     revalidatePath(`/projects/${id}`)
     revalidatePath("/ngo/projects")
     return { success: true, data: result }
@@ -863,6 +998,34 @@ export async function applyToProject(
     if (subscriptionPlan === "free") {
       try {
         await volunteerProfilesDb.incrementApplicationCount(user.id)
+        
+        // Warn when approaching limit (used N-1 of N)
+        const newCount = monthlyApplicationsUsed + 1
+        if (newCount === FREE_PLAN_LIMIT - 1) {
+          await notificationsDb.create({
+            userId: user.id,
+            type: "application_limit_warning",
+            title: "Almost at Application Limit",
+            message: `You have ${FREE_PLAN_LIMIT - newCount} application${FREE_PLAN_LIMIT - newCount === 1 ? "" : "s"} left this month. Upgrade to Pro for unlimited!`,
+            referenceId: user.id,
+            referenceType: "subscription",
+            link: "/pricing",
+            isRead: false,
+            createdAt: new Date(),
+          })
+        } else if (newCount >= FREE_PLAN_LIMIT) {
+          await notificationsDb.create({
+            userId: user.id,
+            type: "application_limit_reached",
+            title: "Monthly Limit Reached",
+            message: `You've used all ${FREE_PLAN_LIMIT} free applications this month. Upgrade to Pro for unlimited applications!`,
+            referenceId: user.id,
+            referenceType: "subscription",
+            link: "/pricing",
+            isRead: false,
+            createdAt: new Date(),
+          })
+        }
       } catch (e) {
         console.error("Failed to increment application count:", e)
       }
@@ -891,10 +1054,12 @@ export async function applyToProject(
       console.error("Failed to create notification:", e)
     }
 
-    // Best effort: Email NGO about new application
+    // Best effort: Email NGO about new application (respects notification preferences)
     try {
       const ngoUserInfo = await getUserInfo(project.ngoId)
-      if (ngoUserInfo?.email) {
+      const ngoUserDb = await (await getDb()).collection("user").findOne(userIdQuery(project.ngoId))
+      const ngoPrefs = ngoUserDb?.privacy
+      if (ngoUserInfo?.email && ngoPrefs?.applicationNotifications !== false && ngoPrefs?.emailNotifications !== false) {
         const { sendEmail, getNewApplicationEmailHtml } = await import("@/lib/email")
         const volunteerName = (await getUserInfo(user.id))?.name || "An Impact Agent"
         const html = getNewApplicationEmailHtml(
@@ -1091,11 +1256,13 @@ export async function updateApplicationStatus(
       createdAt: new Date(),
     })
 
-    // Best effort: Email volunteer about status change
+    // Best effort: Email volunteer about status change (respects notification preferences)
     if (status === "accepted" || status === "rejected" || status === "shortlisted") {
       try {
         const volunteerInfo = await getUserInfo(application.volunteerId)
-        if (volunteerInfo?.email) {
+        const volUserDb = await (await getDb()).collection("user").findOne(userIdQuery(application.volunteerId))
+        const volPrefs = volUserDb?.privacy
+        if (volunteerInfo?.email && volPrefs?.applicationNotifications !== false && volPrefs?.emailNotifications !== false) {
           const project = await projectsDb.findById(application.projectId)
           const ngoInfo = await getUserInfo(application.ngoId)
           const { sendEmail, getApplicationStatusEmailHtml } = await import("@/lib/email")
@@ -2437,9 +2604,12 @@ export async function sendMessage(
       console.error("Failed to create notification:", e)
     }
 
-    // Send email notification to receiver
+    // Send email notification to receiver (respects notification preferences)
     try {
       if (receiverInfo?.email) {
+        const receiverUserDb = await (await getDb()).collection("user").findOne(userIdQuery(receiverId))
+        const receiverPrefs = receiverUserDb?.privacy
+        if (receiverPrefs?.messageNotifications !== false && receiverPrefs?.emailNotifications !== false) {
         const senderRole = senderInfo?.type || "volunteer"
         const { sendEmail, getNewMessageEmailHtml } = await import("@/lib/email")
         const html = getNewMessageEmailHtml(
@@ -2455,6 +2625,7 @@ export async function sendMessage(
           html,
           text: `Hi ${receiverInfo.name}, ${senderName} sent you a message on JustBeCause Network: "${content.trim().substring(0, 100)}..." Log in to reply.`,
         })
+        }
       }
     } catch (emailErr) {
       console.error("[sendMessage] Failed to send email notification:", emailErr)
@@ -2824,8 +2995,9 @@ export async function followUser(targetId: string): Promise<ApiResponse<{ follow
       createdAt: new Date(),
     })
 
-    // Send email notification to the person being followed
-    if (targetUser.email) {
+    // Send email notification to the person being followed (respects notification preferences)
+    const targetPrefs = targetUser?.privacy
+    if (targetUser.email && targetPrefs?.emailNotifications !== false) {
       try {
         const { sendEmail, getNewFollowerEmailHtml } = await import("@/lib/email")
         const html = getNewFollowerEmailHtml(

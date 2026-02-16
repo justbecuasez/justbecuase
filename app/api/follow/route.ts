@@ -50,52 +50,8 @@ export async function POST(request: NextRequest) {
       // Get updated count
       const followersCount = await followsDb.getFollowersCount(targetId)
 
-      // Create notification for the person being followed
-      const followerName = session.user.name || "Someone"
-      const followerProfilePath = followerRole === "ngo" ? `/ngos/${session.user.id}` : `/volunteers/${session.user.id}`
-      const targetRole = targetUser.role || "volunteer"
-      const targetProfilePath = targetRole === "ngo" ? `/ngos/${targetId}` : `/volunteers/${targetId}`
-      const targetName = targetRole === "ngo" ? (targetUser.orgName || targetUser.name || "there") : (targetUser.name || "there")
-
-      try {
-        const notificationsCollection = db.collection("notifications")
-        await notificationsCollection.insertOne({
-          userId: targetId,
-          type: "new_follower",
-          title: "New Follower",
-          message: `${followerName} started following you`,
-          referenceId: session.user.id,
-          referenceType: "user",
-          link: followerProfilePath,
-          isRead: false,
-          createdAt: new Date(),
-        })
-      } catch (e) {
-        console.error("[Follow API] Failed to create notification:", e)
-      }
-
-      // Send email notification
-      if (targetUser.email) {
-        try {
-          const { sendEmail, getNewFollowerEmailHtml } = await import("@/lib/email")
-          const html = getNewFollowerEmailHtml(
-            targetName,
-            followerName,
-            followerRole,
-            followerProfilePath,
-            targetProfilePath,
-            followersCount
-          )
-          await sendEmail({
-            to: targetUser.email,
-            subject: `${followerName} is now following you on JustBeCause!`,
-            html,
-            text: `Hi ${targetName}, ${followerName} just started following you on JustBeCause Network. You now have ${followersCount} follower${followersCount === 1 ? "" : "s"}.`,
-          })
-        } catch (emailErr) {
-          console.error("[Follow API] Failed to send email:", emailErr)
-        }
-      }
+      // NOTE: Notification + email are handled by the followUser server action in lib/actions.ts
+      // This API route only handles the follow DB operation and returns the count
 
       return NextResponse.json({
         success: true,

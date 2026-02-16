@@ -221,6 +221,8 @@ export function MessageThreadPro({
   const fileInputRef = useRef<HTMLInputElement>(null)
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastMessageTimeRef = useRef<string | null>(null)
+  const sendingRef = useRef(false) // Track send-in-progress to pause polling
+  const recentlySentIdsRef = useRef<Set<string>>(new Set()) // Track real IDs of recently sent messages
   
   // Attachment state
   const [pendingAttachments, setPendingAttachments] = useState<{ file: File; previewUrl?: string; type: string }[]>([])
@@ -253,6 +255,10 @@ export function MessageThreadPro({
   // Poll for new messages every 3 seconds
   useEffect(() => {
     const pollMessages = async () => {
+      // Skip polling while a message is being sent to avoid race condition
+      // between optimistic update (temp ID) and polled message (real ID)
+      if (sendingRef.current) return
+
       try {
         const afterParam = lastMessageTimeRef.current 
           ? `?after=${encodeURIComponent(lastMessageTimeRef.current)}`
@@ -263,12 +269,15 @@ export function MessageThreadPro({
           const data = await response.json()
           if (data.messages && data.messages.length > 0) {
             setMessages(prev => {
-              // Merge new messages, avoiding duplicates
+              // Merge new messages, avoiding duplicates by ID
               const existingIds = new Set(prev.map(m => 
                 typeof m._id === "string" ? m._id : m._id?.toString()
               ))
-              const newMsgs = data.messages.filter((m: any) => !existingIds.has(m._id))
-              return [...prev, ...newMsgs]
+              // Also filter out messages we recently sent (already in state via optimistic update)
+              const newMsgs = data.messages.filter((m: any) => 
+                !existingIds.has(m._id) && !recentlySentIdsRef.current.has(m._id)
+              )
+              return newMsgs.length > 0 ? [...prev, ...newMsgs] : prev
             })
             lastMessageTimeRef.current = data.lastMessageAt
           }
@@ -399,6 +408,7 @@ export function MessageThreadPro({
     const messageContent = newMessage.trim()
     setNewMessage("")
     setSending(true)
+    sendingRef.current = true
     
     // Clear typing indicator
     if (typingTimeoutRef.current) {
@@ -425,6 +435,7 @@ export function MessageThreadPro({
       } catch (err) {
         toast.error("Failed to upload attachments")
         setSending(false)
+        sendingRef.current = false
         setUploadingAttachment(false)
         return
       }
@@ -459,6 +470,11 @@ export function MessageThreadPro({
 
       if (response.ok) {
         const data = await response.json()
+        const realId = data.message._id?.toString?.() || data.message._id
+        // Track the real ID so polling won't re-add it
+        recentlySentIdsRef.current.add(realId)
+        // Clean up tracked IDs after 10 seconds (polling will have moved past it by then)
+        setTimeout(() => recentlySentIdsRef.current.delete(realId), 10000)
         // Replace temp message with real one
         setMessages(prev => prev.map(m => 
           (typeof m._id === "string" ? m._id : m._id?.toString()) === tempId
@@ -484,6 +500,7 @@ export function MessageThreadPro({
       ))
     } finally {
       setSending(false)
+      sendingRef.current = false
       inputRef.current?.focus()
     }
   }

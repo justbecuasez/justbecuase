@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation"
+import { Suspense } from "react"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { NGOSidebar } from "@/components/dashboard/ngo-sidebar"
+import { WelcomeToast } from "@/components/dashboard/welcome-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -56,6 +58,10 @@ export default async function NGODashboard() {
 
       <div className="flex">
         <NGOSidebar />
+
+        <Suspense fallback={null}>
+          <WelcomeToast />
+        </Suspense>
 
         <main className="flex-1 p-6 lg:p-8">
           {/* Welcome Section */}

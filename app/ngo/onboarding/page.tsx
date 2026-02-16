@@ -600,8 +600,9 @@ export default function NGOOnboardingPage() {
         // Still redirect - profile is saved
       }
 
-      // Redirect to dashboard
-      router.push("/ngo/dashboard")
+      // Redirect to dashboard with welcome message
+      const orgName = orgDetails.orgName || session?.user?.name || "there"
+      router.push(`/ngo/dashboard?welcome=${encodeURIComponent(orgName)}`)
     } catch (error) {
       console.error("Onboarding error:", error)
       setError("Something went wrong. Please try again.")
@@ -1090,7 +1091,7 @@ export default function NGOOnboardingPage() {
         <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="h-8 w-8 text-secondary" />
         </div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">Welcome to JustBeCause Network!</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-2">Welcome to JustBeCause, {orgDetails.orgName || "there"}!</h2>
         <p className="text-muted-foreground">
           Your organization profile is ready. Review and complete setup.
         </p>

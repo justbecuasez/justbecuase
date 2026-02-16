@@ -217,8 +217,9 @@ export async function POST(
       createdAt: new Date(),
     })
 
-    // Send email notification to receiver
-    if (receiverUser?.email) {
+    // Send email notification to receiver (respects notification preferences)
+    const receiverPrefs = receiverUser?.privacy
+    if (receiverUser?.email && receiverPrefs?.messageNotifications !== false && receiverPrefs?.emailNotifications !== false) {
       try {
         const { sendEmail, getNewMessageEmailHtml } = await import("@/lib/email")
         const html = getNewMessageEmailHtml(
