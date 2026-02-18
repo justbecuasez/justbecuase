@@ -670,3 +670,47 @@
 .dark .jb-chat-wrapper {
   border-color: color-mix(in oklch, var(--border), transparent 30%);
 }
+
+/* ============================================
+   CALL EVENT SYSTEM MESSAGES
+   Style messages with customType="call-event"
+   as centered pills like WhatsApp call cards
+   ============================================ */
+
+.str-chat__li--call-event,
+.str-chat__message-simple-wrapper[data-message-custom-type="call-event"] {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0;
+}
+
+/* Target call event messages by content (📞 prefix) */
+.str-chat__message-text-inner:has(> p:first-child:last-child) {
+  /* Default — handled per message */
+}
+
+/* Call event bubble — centered pill */
+[data-message-custom-type="call-event"] .str-chat__message-bubble,
+[data-message-custom-type="call-event"] .str-chat__message-text-inner {
+  background: var(--muted) !important;
+  color: var(--muted-foreground) !important;
+  border-radius: 16px !important;
+  padding: 6px 16px !important;
+  font-size: 0.8125rem !important;
+  text-align: center !important;
+  max-width: fit-content !important;
+  margin: 0 auto !important;
+  box-shadow: none !important;
+}
+
+[data-message-custom-type="call-event"] .str-chat__message-inner {
+  justify-content: center !important;
+  margin: 0 !important;
+}
+
+[data-message-custom-type="call-event"] .str-chat__message-data,
+[data-message-custom-type="call-event"] .str-chat__avatar,
+[data-message-custom-type="call-event"] .str-chat__message-options,
+[data-message-custom-type="call-event"] .str-chat__message-replies-count-button {
+  display: none !important;
+}

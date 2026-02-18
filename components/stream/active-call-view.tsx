@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   StreamCall,
   SpeakerLayout,
@@ -16,11 +16,11 @@ import { Button } from "@/components/ui/button";
 
 interface ActiveCallProps {
   call: Call;
-  onClose: () => void;
+  onClose: (reason?: string) => void;
 }
 
 /**
- * Full-screen active call UI with speaker layout and controls.
+ * Full-screen active call UI with speaker layout, controls, and live timer.
  */
 export function ActiveCallView({ call, onClose }: ActiveCallProps) {
   return (
@@ -34,18 +34,42 @@ export function ActiveCallView({ call, onClose }: ActiveCallProps) {
   );
 }
 
-function ActiveCallContent({ onClose }: { onClose: () => void }) {
+function useCallDuration() {
+  const [elapsed, setElapsed] = useState(0);
+  const startRef = useRef(Date.now());
+
+  useEffect(() => {
+    startRef.current = Date.now();
+    const timer = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startRef.current) / 1000));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return elapsed;
+}
+
+function formatDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, "0");
+  const s = (seconds % 60).toString().padStart(2, "0");
+  return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
+}
+
+function ActiveCallContent({ onClose }: { onClose: (reason?: string) => void }) {
   const call = useCall();
   const { useCallCallingState, useParticipantCount } = useCallStateHooks();
   const callingState = useCallCallingState();
   const participantCount = useParticipantCount();
+  const duration = useCallDuration();
 
   // Auto-close when call ends
   useEffect(() => {
     if (callingState === CallingState.LEFT || callingState === CallingState.IDLE) {
-      onClose();
+      const durationStr = formatDuration(duration);
+      onClose(`Call ended · ${durationStr}`);
     }
-  }, [callingState, onClose]);
+  }, [callingState, onClose, duration]);
 
   if (!call) return null;
 
@@ -61,14 +85,20 @@ function ActiveCallContent({ onClose }: { onClose: () => void }) {
             {callingState === CallingState.JOINED && `In call · ${participantCount} participant${participantCount !== 1 ? "s" : ""}`}
             {callingState === CallingState.RECONNECTING && "Reconnecting..."}
           </span>
+          {callingState === CallingState.JOINED && (
+            <span className="text-xs text-muted-foreground tabular-nums ml-2">
+              {formatDuration(duration)}
+            </span>
+          )}
         </div>
         <Button
           variant="ghost"
           size="icon"
           className="h-8 w-8"
           onClick={async () => {
+            const durationStr = formatDuration(duration);
             await call.leave();
-            onClose();
+            onClose(`Call ended · ${durationStr}`);
           }}
         >
           <X className="h-4 w-4" />
@@ -83,7 +113,10 @@ function ActiveCallContent({ onClose }: { onClose: () => void }) {
       {/* Call controls */}
       <div className="flex justify-center py-4 bg-card border-t border-border">
         <CallControls
-          onLeave={() => onClose()}
+          onLeave={() => {
+            const durationStr = formatDuration(duration);
+            onClose(`Call ended · ${durationStr}`);
+          }}
         />
       </div>
     </div>
