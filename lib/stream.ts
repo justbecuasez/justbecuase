@@ -42,8 +42,10 @@ export async function generateStreamToken(user: {
   } as Parameters<typeof client.upsertUser>[0]);
 
   // Generate token with 24-hour expiry
-  const expiresAt = Math.floor(Date.now() / 1000) + 24 * 60 * 60;
-  const issuedAt = Math.floor(Date.now() / 1000);
+  // Subtract 60s from iat to avoid clock-skew "token used before issue at" errors
+  const now = Math.floor(Date.now() / 1000);
+  const expiresAt = now + 24 * 60 * 60;
+  const issuedAt = now - 60;
   const token = client.createToken(user.id, expiresAt, issuedAt);
 
   return token;

@@ -9,16 +9,5 @@ interface Props {
 
 export default function NGOMessageThreadPage({ params }: Props) {
   const { id } = use(params)
-
-  return (
-    <main className="flex-1 p-4 sm:p-6 lg:p-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground mb-1">Messages</h1>
-        <p className="text-sm text-muted-foreground">
-          Communicate with impact agents about your projects
-        </p>
-      </div>
-      <ChatView userType="ngo" activeChannelId={id} />
-    </main>
-  )
+  return <ChatView userType="ngo" activeChannelId={id} />
 }

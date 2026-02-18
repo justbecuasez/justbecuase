@@ -1,14 +1,14 @@
 /*
- * GetStream CSS Overrides for JustBecause Network
- * Maps Stream's CSS variables to the app's teal/coral theme
+ * JustBeCause Messenger — WhatsApp-grade chat UI
+ * Maps Stream CSS variables to the app theme + custom layout
  */
 
 /* ============================================
-   Stream Chat Theme Integration
+   Stream Chat Core Theme
    ============================================ */
 
 .str-chat {
-  /* Map Stream colors to JustBecause theme */
+  --str-chat__font-family: inherit;
   --str-chat__primary-color: var(--primary);
   --str-chat__active-primary-color: var(--primary);
   --str-chat__surface-color: var(--card);
@@ -22,90 +22,477 @@
   --str-chat__border-radius-circle: var(--radius);
   --str-chat__avatar-background-color: var(--primary);
   --str-chat__message-bubble-color: var(--foreground);
-
-  /* Font family */
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: inherit;
 }
 
-/* Channel list styling */
+/* ============================================
+   LAYOUT — Full viewport messenger
+   ============================================ */
+
+.jb-chat-wrapper {
+  height: calc(100vh - 64px); /* subtract header */
+  width: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+
+.jb-chat-layout {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+/* ---- Sidebar (channel list) ---- */
+.jb-chat-sidebar {
+  width: 380px;
+  min-width: 320px;
+  max-width: 420px;
+  height: 100%;
+  border-right: 1px solid var(--border);
+  background: var(--card);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.jb-chat-sidebar .str-chat__channel-list-messenger {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.jb-chat-sidebar .str-chat__channel-list-messenger__main {
+  padding: 0;
+}
+
+/* ---- Main chat area ---- */
+.jb-chat-main {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+}
+
+/* ---- Empty desktop state ---- */
+.jb-chat-empty {
+  display: none;
+}
+
+/* ---- Stream Chat container inside main ---- */
+.jb-chat-main .str-chat,
+.jb-chat-main .str-chat__container {
+  height: 100% !important;
+}
+
+.jb-chat-main .str-chat__main-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================
+   CHANNEL SEARCH
+   ============================================ */
+
+.str-chat__channel-search {
+  background: var(--card);
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.str-chat__channel-search-input {
+  background: var(--muted);
+  border: none;
+  border-radius: 8px;
+  color: var(--foreground);
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+.str-chat__channel-search-input::placeholder {
+  color: var(--muted-foreground);
+}
+
+.str-chat__channel-search-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+/* ============================================
+   CHANNEL LIST — hide default previews,
+   our CustomChannelPreview replaces them
+   ============================================ */
+
 .str-chat__channel-list {
   background: var(--card);
   border-color: var(--border);
 }
 
-.str-chat__channel-preview-messenger--active {
-  background: var(--accent) !important;
-  border-radius: var(--radius);
+.str-chat__channel-preview-messenger {
+  display: none !important;
 }
 
-.str-chat__channel-preview-messenger:hover {
-  background: var(--muted);
-  border-radius: var(--radius);
-}
+/* ============================================
+   CUSTOM CHANNEL PREVIEW (conversation item)
+   ============================================ */
 
-/* Channel header */
-.str-chat__channel-header {
-  background: var(--card);
-  border-color: var(--border);
+.jb-channel-preview {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
   padding: 12px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 150ms;
+  border-bottom: 1px solid color-mix(in oklch, var(--border), transparent 60%);
 }
 
-/* Message list */
-.str-chat__list {
+.jb-channel-preview:hover {
+  background: var(--muted);
+}
+
+.jb-channel-preview--active {
+  background: var(--accent) !important;
+}
+
+.jb-channel-preview__avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.jb-online-dot {
+  position: absolute;
+  bottom: 1px;
+  right: 1px;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #22c55e;
+  border: 2.5px solid var(--card);
+  z-index: 2;
+}
+
+.jb-online-dot--sm {
+  width: 11px;
+  height: 11px;
+  border-width: 2px;
+}
+
+.jb-channel-preview__content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.jb-channel-preview__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.jb-channel-preview__name {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.jb-channel-preview__time {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+.jb-channel-preview__time--unread {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.jb-channel-preview__bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.jb-channel-preview__message {
+  font-size: 13px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  line-height: 1.4;
+}
+
+.jb-unread-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 0 5px;
+}
+
+/* ============================================
+   CUSTOM HEADER (channel header)
+   ============================================ */
+
+.jb-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  min-height: 64px;
+}
+
+.jb-header__back {
+  display: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--primary);
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.jb-header__back:hover {
+  background: var(--muted);
+}
+
+.jb-header__user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.jb-header__avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.jb-header__info {
+  min-width: 0;
+}
+
+.jb-header__name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--foreground);
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.jb-header__status {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin: 0;
+  line-height: 1.3;
+}
+
+.jb-header__status--online {
+  color: #22c55e;
+  font-weight: 500;
+}
+
+.jb-header__status--typing {
+  color: var(--primary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.jb-header__actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Hide Stream's default channel header since we replace it */
+.jb-chat-main .str-chat__channel-header {
+  display: none !important;
+}
+
+/* ============================================
+   TYPING INDICATOR ANIMATION
+   ============================================ */
+
+.jb-typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.jb-typing-dots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.6;
+  animation: jb-dot-bounce 1.4s infinite ease-in-out both;
+}
+
+.jb-typing-dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+.jb-typing-dots span:nth-child(2) {
+  animation-delay: 0.16s;
+}
+.jb-typing-dots span:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+@keyframes jb-dot-bounce {
+  0%, 80%, 100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Typing bar above input */
+.jb-typing-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 18px;
+  font-size: 12px;
+  color: var(--muted-foreground);
   background: var(--background);
 }
 
+/* ============================================
+   MESSAGE LIST
+   ============================================ */
+
+.str-chat__list {
+  background: var(--background);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.str-chat__ul {
+  padding: 8px 0;
+}
+
 /* Message bubbles */
-.str-chat__message-simple {
-  font-family: inherit;
-}
-
 .str-chat__message-bubble {
-  border-radius: var(--radius) !important;
+  border-radius: 12px !important;
+  max-width: 65%;
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
 }
 
-/* Own messages - use primary color */
+/* Own messages */
 .str-chat__message--me .str-chat__message-bubble {
   background: var(--primary) !important;
   color: var(--primary-foreground) !important;
+  border-bottom-right-radius: 4px !important;
 }
 
-.str-chat__message--me .str-chat__message-bubble p {
+.str-chat__message--me .str-chat__message-bubble p,
+.str-chat__message--me .str-chat__message-bubble span {
   color: var(--primary-foreground) !important;
 }
 
-/* Other messages */
+/* Sent timestamp on own messages */
+.str-chat__message--me .str-chat__message-simple-timestamp {
+  color: color-mix(in oklch, var(--primary-foreground), transparent 30%) !important;
+}
+
+/* Other's messages */
 .str-chat__message--other .str-chat__message-bubble {
   background: var(--muted) !important;
   color: var(--foreground) !important;
+  border-bottom-left-radius: 4px !important;
 }
 
-/* Message input */
+/* Date separator */
+.str-chat__date-separator-date {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.str-chat__date-separator-line {
+  background: var(--border);
+}
+
+/* ============================================
+   MESSAGE INPUT
+   ============================================ */
+
 .str-chat__message-input {
   background: var(--card);
-  border-color: var(--border);
+  border-top: 1px solid var(--border);
+  padding: 10px 14px;
 }
 
 .str-chat__input-flat {
-  border-color: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--background);
+  padding: 8px 16px;
+  min-height: 44px;
+  font-size: 14px;
 }
 
 .str-chat__input-flat:focus-within {
-  border-color: var(--ring);
-  box-shadow: 0 0 0 2px color-mix(in oklch, var(--ring), transparent 80%);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary), transparent 85%);
+}
+
+.str-chat__input-flat textarea {
+  font-size: 14px;
 }
 
 /* Send button */
 .str-chat__send-button {
-  color: var(--primary);
+  color: var(--primary) !important;
+  border-radius: 50%;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 150ms;
 }
 
 .str-chat__send-button:hover {
-  color: var(--primary);
-  opacity: 0.8;
+  background: var(--primary);
+  color: var(--primary-foreground) !important;
 }
 
-/* Emoji / Attachment buttons */
+/* Attachment / Emoji buttons */
 .str-chat__emoji-picker-button,
 .str-chat__file-input-container button {
   color: var(--muted-foreground);
@@ -113,67 +500,45 @@
 
 .str-chat__emoji-picker-button:hover,
 .str-chat__file-input-container button:hover {
-  color: var(--foreground);
+  color: var(--primary);
 }
 
-/* Thread */
+/* ============================================
+   THREAD
+   ============================================ */
+
 .str-chat__thread {
   background: var(--card);
   border-color: var(--border);
 }
 
-/* Date separator */
-.str-chat__date-separator-date {
-  color: var(--muted-foreground);
-  font-size: 12px;
-}
+/* ============================================
+   REACTION SELECTOR
+   ============================================ */
 
-/* Typing indicator */
-.str-chat__typing-indicator {
-  color: var(--muted-foreground);
-}
-
-/* Search input */
-.str-chat__channel-search {
-  background: var(--card);
-  border-color: var(--border);
-}
-
-.str-chat__channel-search-input {
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  color: var(--foreground);
-}
-
-.str-chat__channel-search-input:focus {
-  border-color: var(--ring);
-  box-shadow: 0 0 0 2px color-mix(in oklch, var(--ring), transparent 80%);
-}
-
-/* Unread badge */
-.str-chat__channel-preview-unread-badge {
-  background: var(--destructive);
-  color: var(--destructive-foreground);
-}
-
-/* Reaction selector */
 .str-chat__reaction-selector {
   background: var(--card);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
 }
 
-/* Attachments */
+/* ============================================
+   ATTACHMENTS
+   ============================================ */
+
 .str-chat__message-attachment--image img {
-  border-radius: var(--radius);
+  border-radius: 12px;
 }
 
-/* Scrollbar */
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+
 .str-chat__list::-webkit-scrollbar,
-.str-chat__channel-list::-webkit-scrollbar {
-  width: 6px;
+.str-chat__channel-list::-webkit-scrollbar,
+.str-chat__channel-list-messenger::-webkit-scrollbar {
+  width: 5px;
 }
 
 .str-chat__list::-webkit-scrollbar-track,
@@ -183,51 +548,34 @@
 
 .str-chat__list::-webkit-scrollbar-thumb,
 .str-chat__channel-list::-webkit-scrollbar-thumb {
-  background: var(--muted-foreground);
+  background: color-mix(in oklch, var(--muted-foreground), transparent 60%);
   border-radius: 3px;
-  opacity: 0.3;
+}
+
+.str-chat__list::-webkit-scrollbar-thumb:hover,
+.str-chat__channel-list::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
 }
 
 /* ============================================
-   Custom container styles
+   UNREAD BADGE (Stream default)
    ============================================ */
 
-.stream-chat-container {
-  position: relative;
-}
-
-/* Custom header with call buttons */
-.stream-custom-header {
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-
-.stream-custom-header .str-chat__channel-header {
-  flex: 1;
-  border-bottom: none;
-}
-
-.stream-header-actions {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 10;
+.str-chat__channel-preview-unread-badge {
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 /* ============================================
-   Video Call Theme Integration
+   VIDEO CALL THEME
    ============================================ */
 
-/* Stream Video theme overrides */
 .str-video {
   --str-video__primary-color: var(--primary);
   --str-video__text-color: var(--foreground);
   --str-video__background-color: var(--background);
 }
 
-/* Video call controls bar */
 .str-video__call-controls {
   background: var(--card);
   border-radius: var(--radius);
@@ -237,27 +585,88 @@
   border-radius: var(--radius);
 }
 
-/* Participant view */
 .str-video__participant-view {
   border-radius: var(--radius);
 }
 
 /* ============================================
-   Responsive adjustments
+   RESPONSIVE — Mobile
    ============================================ */
 
-@media (max-width: 1024px) {
-  .stream-chat-container .str-chat__channel-list {
-    width: 100% !important;
+@media (max-width: 1023px) {
+  .jb-chat-wrapper {
+    height: calc(100vh - 56px);
+    border-radius: 0;
+    border: none;
   }
 
-  .stream-custom-header .str-chat__header-hamburger {
-    display: flex !important;
+  .jb-chat-sidebar {
+    width: 100%;
+    max-width: 100%;
+    min-width: 100%;
+    border-right: none;
+  }
+
+  .jb-chat-sidebar--hidden {
+    display: none !important;
+  }
+
+  .jb-chat-main--hidden {
+    display: none !important;
+  }
+
+  .jb-header__back {
+    display: flex;
+  }
+
+  .jb-chat-empty {
+    display: none !important;
+  }
+
+  .str-chat__message-bubble {
+    max-width: 85%;
   }
 }
 
 @media (min-width: 1024px) {
-  .stream-custom-header .str-chat__header-hamburger {
-    display: none !important;
+  .jb-chat-sidebar--hidden {
+    display: flex !important;
   }
+
+  .jb-chat-main--hidden {
+    display: flex !important;
+  }
+
+  .jb-chat-empty {
+    display: none;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    background: var(--background);
+  }
+
+  /* Show empty state only when there's no active channel */
+  .jb-chat-main:empty + .jb-chat-empty {
+    display: flex;
+  }
+}
+
+/* ============================================
+   DARK MODE TWEAKS
+   ============================================ */
+
+.dark .jb-channel-preview:hover {
+  background: color-mix(in oklch, var(--muted), transparent 40%);
+}
+
+.dark .str-chat__message--other .str-chat__message-bubble {
+  background: color-mix(in oklch, var(--muted), var(--background) 30%) !important;
+}
+
+.dark .str-chat__input-flat {
+  background: color-mix(in oklch, var(--background), var(--card) 40%);
+}
+
+.dark .jb-chat-wrapper {
+  border-color: color-mix(in oklch, var(--border), transparent 30%);
 }
