@@ -20,6 +20,18 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'images.unsplash.com',
       },
+      {
+        protocol: 'https',
+        hostname: '**.getstream.io',
+      },
+      {
+        protocol: 'https',
+        hostname: 'stream-io-cdn.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.stream-io-cdn.com',
+      },
     ],
   },
 

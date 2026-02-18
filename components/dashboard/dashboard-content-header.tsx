@@ -16,7 +16,7 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { UnifiedSearchBar } from "@/components/unified-search-bar"
 import { useNotificationStore } from "@/lib/store"
-import { MessageNotificationBadge } from "@/components/messages/message-notification-badge"
+import { StreamMessageBadge } from "@/components/stream/stream-message-badge"
 import { signOut } from "@/lib/auth-client"
 
 interface DashboardContentHeaderProps {
@@ -55,8 +55,8 @@ export function DashboardContentHeader({ userType, userName, userAvatar }: Dashb
 
       {/* Right side */}
       <div className="flex items-center gap-2">
-        {/* Message Notifications */}
-        <MessageNotificationBadge userType={userType} />
+        {/* Message Notifications - Real-time via GetStream */}
+        <StreamMessageBadge />
 
         {/* Bell Notifications */}
         <Link href={userType === "volunteer" ? "/volunteer/notifications" : "/ngo/notifications"}>

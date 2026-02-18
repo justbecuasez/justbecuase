@@ -6,23 +6,28 @@ import { NotificationListener } from "@/components/notifications/notification-li
 import { VolunteerAppSidebar } from "@/components/dashboard/volunteer-app-sidebar"
 import { DashboardContentHeader } from "@/components/dashboard/dashboard-content-header"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
+import { StreamProvider } from "@/components/stream/stream-provider"
+import { IncomingCallHandler } from "@/components/stream/incoming-call-handler"
 
 function VolunteerLayoutInner({ children }: { children: React.ReactNode }) {
   const { user } = useAuth()
 
   return (
-    <SidebarProvider>
-      <VolunteerAppSidebar />
-      <SidebarInset>
-        <DashboardContentHeader
-          userType="volunteer"
-          userName={user?.name || "Impact Agent"}
-          userAvatar={user?.image || undefined}
-        />
-        {user?.id && <NotificationListener userId={user.id} userType="volunteer" />}
-        {children}
-      </SidebarInset>
-    </SidebarProvider>
+    <StreamProvider>
+      <SidebarProvider>
+        <VolunteerAppSidebar />
+        <SidebarInset>
+          <DashboardContentHeader
+            userType="volunteer"
+            userName={user?.name || "Impact Agent"}
+            userAvatar={user?.image || undefined}
+          />
+          {user?.id && <NotificationListener userId={user.id} userType="volunteer" />}
+          <IncomingCallHandler />
+          {children}
+        </SidebarInset>
+      </SidebarProvider>
+    </StreamProvider>
   )
 }
 
