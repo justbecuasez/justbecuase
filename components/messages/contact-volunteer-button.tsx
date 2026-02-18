@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { MessageSquare, Send, Loader2 } from "lucide-react"
-import { startConversation } from "@/lib/actions"
+import { startStreamConversation } from "@/lib/actions"
 import { toast } from "sonner"
 
 interface ContactVolunteerButtonProps {
@@ -45,7 +45,7 @@ export function ContactVolunteerButton({
 
     setIsSending(true)
     try {
-      const result = await startConversation(volunteerId, projectId, message.trim())
+      const result = await startStreamConversation(volunteerId, projectId, message.trim())
       
       if (result.success) {
         toast.success("Message sent!", {
@@ -53,8 +53,8 @@ export function ContactVolunteerButton({
         })
         setIsOpen(false)
         setMessage("")
-        // Redirect to the conversation
-        router.push(`/ngo/messages/${result.data}`)
+        // Redirect to the messages page (ChatView will show the conversation)
+        router.push(`/ngo/messages`)
       } else {
         toast.error("Failed to send message", {
           description: result.error || "Please try again",

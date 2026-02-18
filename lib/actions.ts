@@ -40,6 +40,7 @@ import {
   getRecommendedVolunteers,
   getRecommendedOpportunities,
 } from "./matching"
+import { getOrCreateChannel, generateStreamToken, getStreamServerClient } from "./stream"
 import type {
   VolunteerProfile,
   NGOProfile,
@@ -2754,6 +2755,100 @@ export async function startConversation(
       throw error
     }
     console.error("[startConversation] Error:", error)
+    return { success: false, error: error.message || "Failed to start conversation" }
+  }
+}
+
+/**
+ * Start a conversation using GetStream (new messaging system).
+ * Creates/gets a Stream channel and sends the initial message.
+ */
+export async function startStreamConversation(
+  receiverId: string,
+  projectId?: string,
+  initialMessage?: string
+): Promise<ApiResponse<string>> {
+  try {
+    const user = await requireAuth()
+    
+    console.log(`[startStreamConversation] User ${user.id} starting conversation with ${receiverId}`)
+    
+    if (!receiverId) {
+      return { success: false, error: "Recipient ID is required" }
+    }
+
+    if (!initialMessage?.trim()) {
+      return { success: false, error: "Initial message is required" }
+    }
+
+    // Get the DB to fetch user details
+    const db = await getDb()
+    const senderUser = await db.collection("user").findOne(userIdQuery(user.id))
+    const receiverUser = await db.collection("user").findOne(userIdQuery(receiverId))
+
+    if (!receiverUser) {
+      return { success: false, error: "Recipient not found" }
+    }
+
+    // Ensure both users are upserted in Stream
+    await generateStreamToken({
+      id: user.id,
+      name: senderUser?.orgName || senderUser?.name || "User",
+      image: senderUser?.image || undefined,
+      role: user.role || "volunteer",
+    })
+
+    await generateStreamToken({
+      id: receiverId,
+      name: receiverUser.orgName || receiverUser.name || "User",
+      image: receiverUser.image || undefined,
+      role: receiverUser.role || "volunteer",
+    })
+
+    // Create or get the Stream channel
+    const channel = await getOrCreateChannel(user.id, receiverId, {
+      projectId,
+      projectTitle: projectId ? undefined : undefined, // Can be enhanced later
+    })
+
+    // Send the initial message
+    await channel.sendMessage({
+      text: initialMessage.trim(),
+      user_id: user.id,
+    })
+
+    console.log(`[startStreamConversation] Message sent in channel ${channel.id}`)
+
+    // Send email notification to receiver
+    try {
+      const { sendEmail, getContactEmailHtml } = await import("@/lib/email")
+      if (receiverUser.email) {
+        const senderName = senderUser?.orgName || senderUser?.name || "Someone"
+        const receiverName = receiverUser.orgName || receiverUser.name || "there"
+        const html = getContactEmailHtml(
+          receiverName,
+          senderName,
+          user.role || "volunteer"
+        )
+        await sendEmail({
+          to: receiverUser.email,
+          subject: `${senderName} sent you a message on JustBeCause`,
+          html,
+          text: `Hi ${receiverName}, ${senderName} has sent you a message on JustBeCause Network. Log in to reply.`,
+        })
+      }
+    } catch (emailError) {
+      console.error("[startStreamConversation] Failed to send email:", emailError)
+    }
+
+    // Return the channel ID
+    return { success: true, data: channel.id! }
+  } catch (error: any) {
+    // Re-throw redirect errors (NEXT_REDIRECT) - they should not be caught
+    if (isRedirectError(error)) {
+      throw error
+    }
+    console.error("[startStreamConversation] Error:", error)
     return { success: false, error: error.message || "Failed to start conversation" }
   }
 }
