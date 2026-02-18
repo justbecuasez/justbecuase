@@ -3,7 +3,6 @@
 import { useState, useEffect, use } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -196,14 +195,7 @@ export default function EditProjectPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader 
-        userType="ngo" 
-        userName={ngoProfile?.organizationName || user?.name || "NGO"}
-        userAvatar={ngoProfile?.logo || user?.image || undefined}
-      />
-
-      <main className="container mx-auto px-4 md:px-6 py-8 max-w-4xl">
+    <main className="container mx-auto px-4 md:px-6 py-8 max-w-4xl">
         {/* Header */}
         <div className="mb-8">
           <Link
@@ -477,7 +469,6 @@ export default function EditProjectPage({ params }: Props) {
             </form>
           </CardContent>
         </Card>
-      </main>
-    </div>
+    </main>
   )
 }

@@ -2,8 +2,6 @@ import { redirect, notFound } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { getConversation, getConversationMessages } from "@/lib/actions"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
 import { MessageThreadPro } from "@/components/messages/message-thread-pro"
 import { getUserInfo } from "@/lib/user-utils"
 import { getDb } from "@/lib/database"
@@ -72,17 +70,7 @@ export default async function VolunteerMessageThreadPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader
-        userType="volunteer"
-        userName={session.user.name || "Impact Agent"}
-        userAvatar={session.user.image || undefined}
-      />
-
-      <div className="flex">
-        <VolunteerSidebar />
-
-        <main className="flex-1 p-6 lg:p-8">
+    <main className="flex-1 p-6 lg:p-8">
           <div className="max-w-4xl mx-auto">
             <MessageThreadPro
               conversationId={id}
@@ -99,8 +87,6 @@ export default async function VolunteerMessageThreadPage({ params }: Props) {
               backUrl="/volunteer/messages"
             />
           </div>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }

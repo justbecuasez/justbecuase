@@ -2,8 +2,6 @@ import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { getNGOProfile, getMyConversations } from "@/lib/actions"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { NGOSidebar } from "@/components/dashboard/ngo-sidebar"
 import { ConversationsList } from "@/components/messages/conversations-list"
 import { Card, CardContent } from "@/components/ui/card"
 import { MessageSquare, Users, Send } from "lucide-react"
@@ -41,17 +39,7 @@ export default async function NGOMessagesPage() {
   const unreadCount = conversations.reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0)
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader
-        userType="ngo"
-        userName={ngoProfile?.orgName || ngoProfile?.organizationName || session.user.name || "NGO"}
-        userAvatar={ngoProfile?.logo || session.user.image || undefined}
-      />
-
-      <div className="flex">
-        <NGOSidebar />
-
-        <main className="flex-1 p-6 lg:p-8">
+    <main className="flex-1 p-6 lg:p-8">
           {/* Page Header */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">Messages</h1>
@@ -128,8 +116,6 @@ export default async function NGOMessagesPage() {
               </Card>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }

@@ -2,8 +2,6 @@ import { redirect, notFound } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { getConversation, getConversationMessages, getNGOProfile } from "@/lib/actions"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { NGOSidebar } from "@/components/dashboard/ngo-sidebar"
 import { MessageThreadPro } from "@/components/messages/message-thread-pro"
 import { getUserInfo } from "@/lib/user-utils"
 import { getDb } from "@/lib/database"
@@ -73,17 +71,7 @@ export default async function NGOMessageThreadPage({ params }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader
-        userType="ngo"
-        userName={ngoProfile?.orgName || ngoProfile?.organizationName || session.user.name || "NGO"}
-        userAvatar={ngoProfile?.logo || session.user.image || undefined}
-      />
-
-      <div className="flex">
-        <NGOSidebar />
-
-        <main className="flex-1 p-6 lg:p-8">
+    <main className="flex-1 p-6 lg:p-8">
           <div className="max-w-4xl mx-auto">
             <MessageThreadPro
               conversationId={id}
@@ -100,8 +88,6 @@ export default async function NGOMessageThreadPage({ params }: Props) {
               backUrl="/ngo/messages"
             />
           </div>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }

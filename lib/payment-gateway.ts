@@ -7,6 +7,14 @@ import Stripe from "stripe"
 
 const PAYMENT_CONFIG_COLLECTION = "paymentGatewayConfig"
 
+// Helper to create Stripe instance with org key support
+function createStripeClient(secretKey: string): Stripe {
+  const accountId = process.env.STRIPE_ACCOUNT_ID
+  return new Stripe(secretKey, {
+    ...(accountId ? { stripeAccount: accountId } : {}),
+  })
+}
+
 export interface PaymentCredentials {
   gateway: PaymentGatewayType
   isLive: boolean
@@ -39,26 +47,26 @@ export async function getPaymentCredentials(): Promise<PaymentCredentials> {
   }
 
   // Fallback to environment variables
-  // Prioritize Razorpay since it's more commonly configured and working
-  const hasRazorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
+  // Prioritize Stripe (primary gateway)
   const hasStripe = process.env.STRIPE_SECRET_KEY && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+  const hasRazorpay = process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET
 
-  // Use Razorpay first if available (as it's been the default)
+  if (hasStripe) {
+    const sk = process.env.STRIPE_SECRET_KEY!
+    return {
+      gateway: "stripe",
+      isLive: sk.startsWith("sk_live") || sk.startsWith("sk_org_live_") || false,
+      stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
+      stripeSecretKey: sk,
+    }
+  }
+
   if (hasRazorpay) {
     return {
       gateway: "razorpay",
       isLive: process.env.RAZORPAY_KEY_ID?.startsWith("rzp_live") || false,
       razorpayKeyId: process.env.RAZORPAY_KEY_ID,
       razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET,
-    }
-  }
-
-  if (hasStripe) {
-    return {
-      gateway: "stripe",
-      isLive: process.env.STRIPE_SECRET_KEY?.startsWith("sk_live") || false,
-      stripePublishableKey: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
-      stripeSecretKey: process.env.STRIPE_SECRET_KEY,
     }
   }
 
@@ -73,7 +81,7 @@ export async function getStripeClient() {
     throw new Error("Stripe is not configured")
   }
 
-  const stripe = new Stripe(creds.stripeSecretKey)
+  const stripe = createStripeClient(creds.stripeSecretKey)
   return { stripe, publishableKey: creds.stripePublishableKey, isLive: creds.isLive }
 }
 

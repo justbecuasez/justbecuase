@@ -2,8 +2,6 @@ import { redirect } from "next/navigation"
 import { Suspense } from "react"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { NGOSidebar } from "@/components/dashboard/ngo-sidebar"
 import { WelcomeToast } from "@/components/dashboard/welcome-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -49,21 +47,10 @@ export default async function NGODashboard() {
   const pendingApplications = applications.filter((a) => a.status === "pending")
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader 
-        userType="ngo" 
-        userName={ngoProfile?.organizationName || session.user.name || "NGO"} 
-        userAvatar={ngoProfile?.logo || session.user.image || undefined} 
-      />
-
-      <div className="flex">
-        <NGOSidebar />
-
-        <Suspense fallback={null}>
-          <WelcomeToast />
-        </Suspense>
-
-        <main className="flex-1 p-6 lg:p-8">
+    <>
+      <Suspense fallback={null}>
+        <WelcomeToast />
+      </Suspense>
           {/* Welcome Section */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
@@ -402,8 +389,6 @@ export default async function NGODashboard() {
               </Card>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+    </>
   )
 }

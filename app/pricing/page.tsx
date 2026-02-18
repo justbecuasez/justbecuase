@@ -11,23 +11,8 @@ import { Check, Building2, User, Sparkles, Zap, Loader2 } from "lucide-react"
 import { client } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { useSubscriptionStore, usePlatformSettingsStore } from "@/lib/store"
+import { formatPrice, getCurrencySymbol } from "@/lib/currency"
 import type { SupportedCurrency } from "@/lib/types"
-
-// Plan prices (matches Stripe prices)
-const PLAN_PRICES = {
-  "ngo-pro": { amount: 0.50, currency: "USD" },
-  "volunteer-pro": { amount: 0.50, currency: "USD" },
-}
-
-const CURRENCY_SYMBOLS: Record<SupportedCurrency, string> = {
-  INR: "₹",
-  USD: "$",
-  EUR: "€",
-  GBP: "£",
-  SGD: "S$",
-  AED: "د.إ",
-  MYR: "RM",
-}
 
 export default function PricingPage() {
   const { data: session } = client.useSession()
@@ -73,9 +58,13 @@ export default function PricingPage() {
   const currentNGOPlan = ngoSubscription?.plan || "free"
   const currentVolunteerPlan = volunteerSubscription?.plan || "free"
 
-  // Get currency symbol
-  const currency = (platformSettings?.currency || "USD") as SupportedCurrency
-  const currencySymbol = CURRENCY_SYMBOLS[currency] || "$"
+  // Get currency from admin settings
+  const currency = (platformSettings?.currency || "INR") as SupportedCurrency
+  const currencySymbol = getCurrencySymbol(currency)
+
+  // Get admin-configured prices (whole currency units, e.g., 2999 = ₹2,999)
+  const ngoProPrice = platformSettings?.ngoProPrice ?? 2999
+  const volunteerProPrice = platformSettings?.volunteerProPrice ?? 999
   
   // Show only the plans relevant to the user's role
   // If user is logged in as volunteer, they can only see/buy volunteer plans
@@ -111,8 +100,8 @@ export default function PricingPage() {
       id: "ngo-pro",
       name: "Pro",
       description: "Unlock unlimited FREE impact agent profiles",
-      price: PLAN_PRICES["ngo-pro"].amount,
-      priceDisplay: `$${PLAN_PRICES["ngo-pro"].amount}`,
+      price: ngoProPrice,
+      priceDisplay: formatPrice(ngoProPrice, currency),
       period: "per month",
       icon: Zap,
       features: platformSettings?.ngoProFeatures || [
@@ -154,8 +143,8 @@ export default function PricingPage() {
       id: "volunteer-pro",
       name: "Pro",
       description: "Apply to unlimited jobs",
-      price: PLAN_PRICES["volunteer-pro"].amount,
-      priceDisplay: `$${PLAN_PRICES["volunteer-pro"].amount}`,
+      price: volunteerProPrice,
+      priceDisplay: formatPrice(volunteerProPrice, currency),
       period: "per month",
       icon: Sparkles,
       features: platformSettings?.volunteerProFeatures || [

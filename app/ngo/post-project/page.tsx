@@ -4,7 +4,6 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -227,13 +226,7 @@ export default function PostProjectPage() {
   const progressPercent = (step / 3) * 100
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader 
-        userType="ngo" 
-        userName={ngoProfile?.orgName || user?.name || "NGO"}
-      />
-
-      <main className="container mx-auto px-4 md:px-6 py-8 max-w-4xl">
+    <main className="container mx-auto px-4 md:px-6 py-8 max-w-4xl">
         {/* Progress */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
@@ -605,7 +598,6 @@ export default function PostProjectPage() {
             </CardContent>
           </Card>
         )}
-      </main>
-    </div>
+    </main>
   )
 }

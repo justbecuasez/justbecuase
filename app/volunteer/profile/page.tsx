@@ -5,8 +5,6 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -297,13 +295,7 @@ export default function VolunteerProfileEditPage() {
   const userAvatar = profile?.avatar || session.user.image || undefined
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader userType="volunteer" userName={userName} userAvatar={userAvatar} />
-
-      <div className="flex">
-        <VolunteerSidebar />
-
-        <main className="flex-1 p-6 lg:p-8">
+    <main className="flex-1 p-6 lg:p-8">
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-between mb-8">
               <div>
@@ -688,8 +680,6 @@ export default function VolunteerProfileEditPage() {
               </div>
             </form>
           </div>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }

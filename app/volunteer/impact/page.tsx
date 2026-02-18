@@ -1,8 +1,6 @@
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -53,11 +51,7 @@ export default async function ImpactDashboardPage() {
   const estimatedValue = hours * 1500 // ~₹1500/hr estimated value
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader userType="volunteer" userName={profile.name || session.user.name} userAvatar={profile.avatar ?? session.user.image ?? undefined} />
-      <div className="flex">
-        <VolunteerSidebar />
-        <main className="flex-1 p-6 lg:p-8">
+    <main className="flex-1 p-6 lg:p-8">
           <div className="max-w-5xl mx-auto">
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-foreground mb-2">Your Impact Dashboard</h1>
@@ -244,8 +238,6 @@ export default async function ImpactDashboardPage() {
               </Card>
             )}
           </div>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }

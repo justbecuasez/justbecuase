@@ -4,8 +4,6 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { NGOSidebar } from "@/components/dashboard/ngo-sidebar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -289,16 +287,7 @@ export default function NGOProfilePage() {
   const completion = calculateCompletion()
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader 
-        userType="ngo" 
-        userName={formData.orgName || user?.name || "NGO"}
-      />
-
-      <div className="flex">
-        <NGOSidebar />
-
-        <main className="flex-1 p-6 lg:p-8 max-w-5xl">
+    <main className="flex-1 p-6 lg:p-8 max-w-5xl">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">Organization Profile</h1>
             <p className="text-muted-foreground">
@@ -805,8 +794,6 @@ export default function NGOProfilePage() {
               )}
             </Button>
           </div>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }

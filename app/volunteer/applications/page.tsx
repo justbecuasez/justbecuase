@@ -3,8 +3,6 @@ import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { getMyApplications } from "@/lib/actions"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -45,17 +43,7 @@ export default async function VolunteerApplicationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader
-        userType="volunteer"
-        userName={session.user.name || "Impact Agent"}
-        userAvatar={session.user.image || undefined}
-      />
-
-      <div className="flex">
-        <VolunteerSidebar />
-
-        <main className="flex-1 p-6 lg:p-8">
+    <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">My Applications</h1>
             <p className="text-muted-foreground">
@@ -102,9 +90,7 @@ export default async function VolunteerApplicationsPage() {
               </Suspense>
             </TabsContent>
           </Tabs>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }
 

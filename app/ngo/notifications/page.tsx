@@ -2,8 +2,6 @@ import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { getNGOProfile, getMyNotifications } from "@/lib/actions"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { NGOSidebar } from "@/components/dashboard/ngo-sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -55,17 +53,7 @@ export default async function NGONotificationsPage() {
   const readNotifications = notifications.filter((n) => n.isRead)
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader
-        userType="ngo"
-        userName={ngoProfile?.organizationName || session.user.name || "NGO"}
-        userAvatar={ngoProfile?.logo || session.user.image || undefined}
-      />
-
-      <div className="flex">
-        <NGOSidebar />
-
-        <main className="flex-1 p-6 lg:p-8">
+    <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground mb-2">Notifications</h1>
@@ -117,9 +105,7 @@ export default async function NGONotificationsPage() {
               <NotificationsList notifications={readNotifications} />
             </TabsContent>
           </Tabs>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }
 

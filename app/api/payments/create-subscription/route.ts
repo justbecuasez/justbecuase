@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { getStripeClient } from "@/lib/payment-gateway"
+import { adminSettingsDb } from "@/lib/database"
+import { toStripeAmount } from "@/lib/currency"
 
-// Stripe Price IDs for each plan (from Stripe Dashboard)
-const STRIPE_PRICE_IDS: Record<string, string> = {
-  "ngo-pro": "price_1SqZeBK5qwIJJQ03wHVdc5Ij",         // NGO Pro - $0.50/month recurring
-  "volunteer-pro": "price_1SqZP4K5qwIJJQ03s0vB1zR2",    // Volunteer Pro - $0.50/month recurring
+// Plan display names for Stripe checkout
+const PLAN_NAMES: Record<string, string> = {
+  "ngo-pro": "NGO Pro Plan",
+  "volunteer-pro": "Impact Agent Pro Plan",
 }
 
 // Create a Stripe Checkout Session for subscription
@@ -35,9 +37,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Validate plan exists in Stripe
-    const priceId = STRIPE_PRICE_IDS[planId]
-    if (!priceId) {
+    // Validate plan
+    const planName = PLAN_NAMES[planId]
+    if (!planName) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
     }
 
@@ -50,19 +52,44 @@ export async function POST(request: NextRequest) {
       }, { status: 403 })
     }
 
+    // Fetch admin-configured prices from database
+    const adminSettings = await adminSettingsDb.get()
+    const currency = (adminSettings?.currency || "INR").toLowerCase()
+    const priceWholeUnits = planId === "ngo-pro"
+      ? (adminSettings?.ngoProPrice ?? 2999)
+      : (adminSettings?.volunteerProPrice ?? 999)
+
+    if (priceWholeUnits <= 0) {
+      return NextResponse.json({ error: "Price not configured" }, { status: 400 })
+    }
+
+    // Check if payments are enabled
+    if (adminSettings && adminSettings.enablePayments === false) {
+      return NextResponse.json({ error: "Payments are currently disabled" }, { status: 400 })
+    }
+
     // Get Stripe client (handles org key + account context automatically)
     const { stripe } = await getStripeClient()
 
     // Build URLs
     const origin = request.headers.get("origin") || process.env.FRONTEND_URL || "https://justbecausenetwork.com"
 
-    // Create Stripe Checkout Session with the recurring price
+    // Create Stripe Checkout Session with dynamic price_data from admin settings
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
       payment_method_types: ["card"],
       line_items: [
         {
-          price: priceId,
+          price_data: {
+            currency,
+            product_data: {
+              name: planName,
+            },
+            unit_amount: toStripeAmount(priceWholeUnits),
+            recurring: {
+              interval: "month",
+            },
+          },
           quantity: 1,
         },
       ],

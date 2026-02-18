@@ -4,8 +4,6 @@ import { headers } from "next/headers"
 import Link from "next/link"
 import { auth } from "@/lib/auth"
 import { getNGOProfile, getNGOApplicationsEnriched } from "@/lib/actions"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { NGOSidebar } from "@/components/dashboard/ngo-sidebar"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -42,17 +40,7 @@ export default async function ApplicationsPage() {
   const ngoProfile = await getNGOProfile()
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader 
-        userType="ngo" 
-        userName={ngoProfile?.orgName || session.user.name || "NGO"} 
-        userAvatar={ngoProfile?.logo || session.user.image || undefined} 
-      />
-
-      <div className="flex">
-        <NGOSidebar />
-
-        <main className="flex-1 p-6 lg:p-8">
+    <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">Applications</h1>
             <p className="text-muted-foreground">Review and manage impact agent applications for your opportunities</p>
@@ -61,9 +49,7 @@ export default async function ApplicationsPage() {
           <Suspense fallback={<ApplicationsSkeleton />}>
             <ApplicationsList />
           </Suspense>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }
 

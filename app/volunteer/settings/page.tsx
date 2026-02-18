@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -309,17 +307,7 @@ export default function VolunteerSettingsPage() {
   const selectedCategory = skillCategories.find((c) => c.id === newSkill.categoryId)
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader
-        userType="volunteer"
-        userName={profile?.name || session.user.name || "Impact Agent"}
-        userAvatar={profile?.avatar || session.user.image || undefined}
-      />
-
-      <div className="flex">
-        <VolunteerSidebar />
-
-        <main className="flex-1 p-6 lg:p-8">
+    <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">Settings</h1>
             <p className="text-muted-foreground">
@@ -1146,8 +1134,6 @@ export default function VolunteerSettingsPage() {
               </div>
             </TabsContent>
           </Tabs>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }

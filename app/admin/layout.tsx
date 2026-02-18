@@ -1,8 +1,9 @@
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { AdminSidebar } from "@/components/admin/admin-sidebar"
+import { AdminAppSidebar } from "@/components/admin/app-sidebar"
 import { AdminHeader } from "@/components/admin/admin-header"
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 
 export default async function AdminLayout({
   children,
@@ -22,14 +23,14 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <AdminHeader user={session.user} />
-      <div className="flex">
-        <AdminSidebar />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 lg:ml-64 min-h-[calc(100vh-4rem)]">
+    <SidebarProvider>
+      <AdminAppSidebar />
+      <SidebarInset>
+        <AdminHeader user={session.user} />
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
           {children}
         </main>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

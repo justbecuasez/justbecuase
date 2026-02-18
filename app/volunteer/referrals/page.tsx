@@ -1,8 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -108,11 +106,7 @@ export default function ReferralPage() {
   const userAvatar = (session?.user as any)?.image || undefined
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader userType="volunteer" userName={userName} userAvatar={userAvatar} />
-      <div className="flex">
-        <VolunteerSidebar />
-        <main className="flex-1 p-6 lg:p-8">
+    <main className="flex-1 p-6 lg:p-8">
           <div className="max-w-3xl mx-auto">
             <div className="mb-8">
               <h1 className="text-2xl font-bold text-foreground mb-2">Refer & Earn</h1>
@@ -247,8 +241,6 @@ export default function ReferralPage() {
               </CardContent>
             </Card>
           </div>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }

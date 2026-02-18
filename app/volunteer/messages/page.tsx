@@ -2,8 +2,6 @@ import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { getMyConversations } from "@/lib/actions"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
 import { ConversationsList } from "@/components/messages/conversations-list"
 import { Card, CardContent } from "@/components/ui/card"
 import { MessageSquare, Building2, Send } from "lucide-react"
@@ -40,17 +38,7 @@ export default async function VolunteerMessagesPage() {
   const unreadCount = conversations.reduce((acc: number, c: any) => acc + (c.unreadCount || 0), 0)
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader
-        userType="volunteer"
-        userName={session.user.name || "Impact Agent"}
-        userAvatar={session.user.image || undefined}
-      />
-
-      <div className="flex">
-        <VolunteerSidebar />
-
-        <main className="flex-1 p-6 lg:p-8">
+    <main className="flex-1 p-6 lg:p-8">
           {/* Page Header */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">Messages</h1>
@@ -127,8 +115,6 @@ export default async function VolunteerMessagesPage() {
               </Card>
             </div>
           </div>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }

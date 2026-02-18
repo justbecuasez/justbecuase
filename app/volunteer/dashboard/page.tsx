@@ -2,8 +2,6 @@ import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { Suspense } from "react"
 import { auth } from "@/lib/auth"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
 import { WelcomeToast } from "@/components/dashboard/welcome-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -61,20 +59,11 @@ export default async function VolunteerDashboard() {
   if (profile?.linkedinUrl || profile?.portfolioUrl) profileCompletion += 15
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <Suspense fallback={null}>
         <WelcomeToast />
       </Suspense>
-      <DashboardHeader 
-        userType="volunteer" 
-        userName={session.user.name || "Impact Agent"} 
-        userAvatar={session.user.image || undefined} 
-      />
-
-      <div className="flex">
-        <VolunteerSidebar />
-
-        <main className="flex-1 p-6 lg:p-8">
+      <main className="flex-1 p-6 lg:p-8">
           {/* Welcome Section */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">
@@ -371,7 +360,6 @@ export default async function VolunteerDashboard() {
             </div>
           </div>
         </main>
-      </div>
-    </div>
+    </>
   )
 }

@@ -2,8 +2,6 @@ import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { getMyNotifications } from "@/lib/actions"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { VolunteerSidebar } from "@/components/dashboard/volunteer-sidebar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -53,17 +51,7 @@ export default async function VolunteerNotificationsPage() {
   const readNotifications = notifications.filter((n) => n.isRead)
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader
-        userType="volunteer"
-        userName={session.user.name || "Impact Agent"}
-        userAvatar={session.user.image || undefined}
-      />
-
-      <div className="flex">
-        <VolunteerSidebar />
-
-        <main className="flex-1 p-6 lg:p-8">
+    <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground mb-2">Notifications</h1>
@@ -115,9 +103,7 @@ export default async function VolunteerNotificationsPage() {
               <NotificationsList notifications={readNotifications} />
             </TabsContent>
           </Tabs>
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }
 

@@ -2,8 +2,6 @@ import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { getNGOProfile, browseVolunteers, getNGOSubscriptionStatus } from "@/lib/actions"
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
-import { NGOSidebar } from "@/components/dashboard/ngo-sidebar"
 import { FindTalentClient } from "@/components/volunteers/find-talent-client"
 
 export default async function NGOFindTalentPage() {
@@ -54,17 +52,7 @@ export default async function NGOFindTalentPage() {
   }))
 
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader
-        userType="ngo"
-        userName={ngoProfile?.organizationName || session.user.name || "NGO"}
-        userAvatar={ngoProfile?.logo || session.user.image || undefined}
-      />
-
-      <div className="flex">
-        <NGOSidebar />
-
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+    <main className="flex-1 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 sm:mb-8">
             <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Find Talent</h1>
             <p className="text-sm sm:text-base text-muted-foreground">
@@ -76,8 +64,6 @@ export default async function NGOFindTalentPage() {
             volunteers={serializedVolunteers}
             subscriptionPlan={ngoSubscription?.plan || "free"}
           />
-        </main>
-      </div>
-    </div>
+    </main>
   )
 }
