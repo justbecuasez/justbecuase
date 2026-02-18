@@ -21,12 +21,16 @@ interface StreamContextValue {
   chatClient: StreamChat | null;
   videoClient: StreamVideoClient | null;
   isReady: boolean;
+  initError: string | null;
+  retry: () => void;
 }
 
 const StreamContext = createContext<StreamContextValue>({
   chatClient: null,
   videoClient: null,
   isReady: false,
+  initError: null,
+  retry: () => {},
 });
 
 export function useStream() {
@@ -42,13 +46,35 @@ export function StreamProvider({ children }: StreamProviderProps) {
   const { resolvedTheme } = useTheme();
   const [chatClient, setChatClient] = useState<StreamChat | null>(null);
   const [videoClient, setVideoClient] = useState<StreamVideoClient | null>(null);
+  const [initError, setInitError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  // Token provider that fetches from our API
+  // Token provider that fetches from our API (with retry)
   const tokenProvider = useCallback(async () => {
-    const res = await fetch("/api/stream/token");
-    if (!res.ok) throw new Error("Failed to fetch Stream token");
-    const data = await res.json();
-    return data.token as string;
+    let lastError: Error | null = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch("/api/stream/token");
+        if (!res.ok) {
+          const text = await res.text().catch(() => "Unknown error");
+          throw new Error(`Token fetch failed (${res.status}): ${text}`);
+        }
+        const data = await res.json();
+        return data.token as string;
+      } catch (err) {
+        lastError = err instanceof Error ? err : new Error(String(err));
+        if (attempt < 2) {
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        }
+      }
+    }
+    throw lastError ?? new Error("Failed to fetch Stream token");
+  }, []);
+
+  // Allow manual retry from error state
+  const retry = useCallback(() => {
+    setInitError(null);
+    setRetryCount((c) => c + 1);
   }, []);
 
   useEffect(() => {
@@ -57,9 +83,12 @@ export function StreamProvider({ children }: StreamProviderProps) {
     let didCancel = false;
     let chat: StreamChat | null = null;
     let video: StreamVideoClient | null = null;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
-    const initClients = async () => {
+    const initClients = async (attempt = 0) => {
       try {
+        setInitError(null);
+
         // Initialize Chat client
         chat = StreamChat.getInstance(STREAM_API_KEY);
 
@@ -99,8 +128,18 @@ export function StreamProvider({ children }: StreamProviderProps) {
 
         setChatClient(chat);
         setVideoClient(video);
+        setInitError(null);
       } catch (err) {
-        console.error("Failed to initialize Stream clients:", err);
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`Failed to initialize Stream clients (attempt ${attempt + 1}):`, msg);
+
+        // Auto-retry up to 3 times with exponential backoff
+        if (!didCancel && attempt < 3) {
+          const delay = Math.min(2000 * Math.pow(2, attempt), 15000);
+          retryTimer = setTimeout(() => initClients(attempt + 1), delay);
+        } else if (!didCancel) {
+          setInitError(msg);
+        }
       }
     };
 
@@ -108,6 +147,7 @@ export function StreamProvider({ children }: StreamProviderProps) {
 
     return () => {
       didCancel = true;
+      if (retryTimer) clearTimeout(retryTimer);
       if (chat) {
         chat.disconnectUser().catch(console.error);
         setChatClient(null);
@@ -117,7 +157,7 @@ export function StreamProvider({ children }: StreamProviderProps) {
         setVideoClient(null);
       }
     };
-  }, [user?.id, user?.name, user?.image, isLoading, tokenProvider]);
+  }, [user?.id, user?.name, user?.image, isLoading, tokenProvider, retryCount]);
 
   // Determine Stream chat theme
   const chatTheme = resolvedTheme === "dark" ? "str-chat__theme-dark" : "str-chat__theme-light";
@@ -126,6 +166,8 @@ export function StreamProvider({ children }: StreamProviderProps) {
     chatClient,
     videoClient,
     isReady: !!chatClient && !!videoClient,
+    initError,
+    retry,
   };
 
   if (!chatClient || !videoClient) {

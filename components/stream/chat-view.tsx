@@ -26,8 +26,30 @@ interface ChatViewProps {
 
 export function ChatView({ userType, activeChannelId }: ChatViewProps) {
   const { user } = useAuth();
-  const { chatClient, isReady } = useStream();
+  const { chatClient, isReady, initError, retry } = useStream();
   const [isChannelListVisible, setIsChannelListVisible] = useState(true);
+
+  if (initError) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-12rem)]">
+        <div className="flex flex-col items-center gap-3 text-center max-w-sm">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+            <MessageSquare className="h-6 w-6 text-destructive" />
+          </div>
+          <p className="text-sm font-medium text-foreground">Connection failed</p>
+          <p className="text-xs text-muted-foreground">
+            Could not connect to messaging service. This is usually temporary.
+          </p>
+          <button
+            onClick={retry}
+            className="mt-2 px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!isReady || !chatClient || !user) {
     return (
