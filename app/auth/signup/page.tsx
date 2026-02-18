@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, Suspense } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -29,6 +29,14 @@ async function waitForSession(maxRetries = 5, delay = 500): Promise<boolean> {
 type AccountType = "volunteer" | "ngo" | null
 
 export default function SignUpPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignUpPageInner />
+    </Suspense>
+  )
+}
+
+function SignUpPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const referralCode = searchParams.get("ref") || ""
