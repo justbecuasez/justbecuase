@@ -13,6 +13,7 @@ import {
   Search,
   CreditCard,
   Sparkles,
+  MessageSquare,
 } from "lucide-react"
 import {
   Sidebar,
@@ -37,6 +38,7 @@ const navGroups = [
       { title: "My Requirements", href: "/ngo/projects", icon: FolderKanban },
       { title: "Applications", href: "/ngo/applications", icon: Users },
       { title: "Find Talent", href: "/ngo/find-talent", icon: Search },
+      { title: "Messages", href: "/ngo/messages", icon: MessageSquare },
     ],
   },
   {

@@ -12,6 +12,7 @@ import {
   Bookmark,
   Trophy,
   Gift,
+  MessageSquare,
 } from "lucide-react"
 import {
   Sidebar,
@@ -35,6 +36,7 @@ const navGroups = [
       { title: "Opportunities", href: "/volunteer/opportunities", icon: Sparkles },
       { title: "Applications", href: "/volunteer/applications", icon: FolderKanban },
       { title: "Saved Opportunities", href: "/volunteer/saved-projects", icon: Bookmark },
+      { title: "Messages", href: "/volunteer/messages", icon: MessageSquare },
     ],
   },
   {
