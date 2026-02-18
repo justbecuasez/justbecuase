@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { adminSettingsDb } from "@/lib/database"
-import { createPaymentOrder, getPaymentCredentials } from "@/lib/payment-gateway"
+import { getStripeClient } from "@/lib/payment-gateway"
 
-// Create a payment order for subscription (supports Stripe & Razorpay)
+// Stripe Price IDs for each plan (from Stripe Dashboard)
+const STRIPE_PRICE_IDS: Record<string, string> = {
+  "ngo-pro": "price_1SqZeBK5qwIJJQ03wHVdc5Ij",         // NGO Pro - $0.50/month recurring
+  "volunteer-pro": "price_1SqZP4K5qwIJJQ03s0vB1zR2",    // Volunteer Pro - $0.50/month recurring
+}
+
+// Create a Stripe Checkout Session for subscription
 export async function POST(request: NextRequest) {
   try {
     const session = await auth.api.getSession({
@@ -22,47 +27,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Plan ID required" }, { status: 400 })
     }
 
-    // Get admin settings for dynamic pricing
-    const settings = await adminSettingsDb.get()
-    const currency = settings?.currency || "USD"
-    
-    console.log("💰 Settings loaded:", {
-      ngoProPrice: settings?.ngoProPrice,
-      volunteerProPrice: settings?.volunteerProPrice,
-      currency: settings?.currency
-    })
-    
-    // Build plan prices from admin settings
-    const PLAN_PRICES: Record<string, number> = {
-      "ngo-free": 0,
-      "ngo-pro": settings?.ngoProPrice || 2999,
-      "volunteer-free": 0,
-      "volunteer-pro": settings?.volunteerProPrice || 999,
-    }
-    
-    console.log("📋 Plan prices:", PLAN_PRICES)
-    console.log("💳 Selected plan:", planId, "Price:", PLAN_PRICES[planId])
-
-    // Validate plan exists
-    const planPrice = PLAN_PRICES[planId]
-    if (planPrice === undefined) {
-      return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
-    }
-
     // Free plans don't need payment
-    if (planPrice === 0) {
+    if (planId === "ngo-free" || planId === "volunteer-free") {
       return NextResponse.json({ 
         success: true, 
         message: "Free plan, no payment needed" 
       })
     }
 
-    // Check if any payment gateway is configured
-    const creds = await getPaymentCredentials()
-    if (creds.gateway === "none") {
-      return NextResponse.json({ 
-        error: "Payment gateway not configured. Please configure Stripe or Razorpay in admin settings." 
-      }, { status: 500 })
+    // Validate plan exists in Stripe
+    const priceId = STRIPE_PRICE_IDS[planId]
+    if (!priceId) {
+      return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
     }
 
     // Validate user role matches plan type
@@ -74,34 +50,42 @@ export async function POST(request: NextRequest) {
       }, { status: 403 })
     }
 
-    // Create payment order using unified interface
-    const order = await createPaymentOrder({
-      amount: planPrice * 100, // Amount in smallest currency unit
-      currency,
-      receipt: `sub_${Date.now()}`.slice(0, 40),
-      description: `${planId} subscription`,
-      notes: {
+    // Get Stripe client (handles org key + account context automatically)
+    const { stripe } = await getStripeClient()
+
+    // Build URLs
+    const origin = request.headers.get("origin") || process.env.FRONTEND_URL || "https://justbecausenetwork.com"
+
+    // Create Stripe Checkout Session with the recurring price
+    const checkoutSession = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      client_reference_id: session.user.id,
+      customer_email: session.user.email || undefined,
+      metadata: {
         userId: session.user.id,
         planId,
-        type: "subscription",
+        userRole,
       },
+      success_url: `${origin}/api/payments/stripe-callback?session_id={CHECKOUT_SESSION_ID}&plan=${planId}`,
+      cancel_url: `${origin}/pricing?payment=cancelled`,
     })
 
     return NextResponse.json({
-      gateway: order.gateway,
-      orderId: order.orderId,
-      amount: planPrice,
-      currency,
-      // Stripe specific
-      clientSecret: order.clientSecret,
-      publishableKey: order.publishableKey,
-      // Razorpay specific
-      keyId: order.keyId,
+      gateway: "stripe",
+      url: checkoutSession.url,
+      sessionId: checkoutSession.id,
     })
   } catch (error: any) {
-    console.error("Error creating subscription order:", error)
+    console.error("Error creating Stripe checkout session:", error)
     return NextResponse.json({ 
-      error: error.message || "Failed to create order" 
+      error: error.message || "Failed to create checkout session" 
     }, { status: 500 })
   }
 }

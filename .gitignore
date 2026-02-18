@@ -57,3 +57,17 @@ coverage/
 # Misc
 *.pem
 *.local
+
+# Test/utility scripts with potential secrets
+check-*.js
+test-*.js
+send-*.js
+setup-*.js
+set-*.js
+verify-*.js
+deep-*.js
+insert-*.js
+init-*.js
+update-*.js
+backup_*.json
+proxy.ts

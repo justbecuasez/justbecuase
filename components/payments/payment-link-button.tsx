@@ -1,3 +1,5 @@
+// @deprecated - This component is no longer used. Payment Links have been replaced by Stripe Checkout Sessions.
+// See app/pricing/page.tsx handleSubscribe() for the new flow.
 "use client"
 
 import { useState } from "react"

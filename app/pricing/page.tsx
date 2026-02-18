@@ -7,12 +7,17 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Check, Building2, User, Sparkles, Zap, Loader2, ExternalLink } from "lucide-react"
+import { Check, Building2, User, Sparkles, Zap, Loader2 } from "lucide-react"
 import { client } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { useSubscriptionStore, usePlatformSettingsStore } from "@/lib/store"
 import type { SupportedCurrency } from "@/lib/types"
-import { getPaymentLinkUrl, STRIPE_PAYMENT_LINKS } from "@/lib/stripe-payment-links"
+
+// Plan prices (matches Stripe prices)
+const PLAN_PRICES = {
+  "ngo-pro": { amount: 0.50, currency: "USD" },
+  "volunteer-pro": { amount: 0.50, currency: "USD" },
+}
 
 const CURRENCY_SYMBOLS: Record<SupportedCurrency, string> = {
   INR: "₹",
@@ -22,12 +27,6 @@ const CURRENCY_SYMBOLS: Record<SupportedCurrency, string> = {
   SGD: "S$",
   AED: "د.إ",
   MYR: "RM",
-}
-
-declare global {
-  interface Window {
-    Razorpay: any
-  }
 }
 
 export default function PricingPage() {
@@ -69,7 +68,6 @@ export default function PricingPage() {
   const defaultTab = userRole === "volunteer" ? "volunteer" : "ngo"
   const [activeTab, setActiveTab] = useState(defaultTab)
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
-  const [usePaymentLinks, setUsePaymentLinks] = useState(true) // Use Stripe Payment Links by default
   
   // Get current plan from store
   const currentNGOPlan = ngoSubscription?.plan || "free"
@@ -113,9 +111,8 @@ export default function PricingPage() {
       id: "ngo-pro",
       name: "Pro",
       description: "Unlock unlimited FREE impact agent profiles",
-      // Use Stripe Payment Link price for accurate display
-      price: STRIPE_PAYMENT_LINKS["ngo-pro-monthly"].price,
-      priceDisplay: `${STRIPE_PAYMENT_LINKS["ngo-pro-monthly"].currency === "USD" ? "$" : currencySymbol}${STRIPE_PAYMENT_LINKS["ngo-pro-monthly"].price}`,
+      price: PLAN_PRICES["ngo-pro"].amount,
+      priceDisplay: `$${PLAN_PRICES["ngo-pro"].amount}`,
       period: "per month",
       icon: Zap,
       features: platformSettings?.ngoProFeatures || [
@@ -157,9 +154,8 @@ export default function PricingPage() {
       id: "volunteer-pro",
       name: "Pro",
       description: "Apply to unlimited jobs",
-      // Use Stripe Payment Link price for accurate display
-      price: STRIPE_PAYMENT_LINKS["volunteer-pro-monthly"].price,
-      priceDisplay: `${STRIPE_PAYMENT_LINKS["volunteer-pro-monthly"].currency === "USD" ? "$" : currencySymbol}${STRIPE_PAYMENT_LINKS["volunteer-pro-monthly"].price}`,
+      price: PLAN_PRICES["volunteer-pro"].amount,
+      priceDisplay: `$${PLAN_PRICES["volunteer-pro"].amount}`,
       period: "per month",
       icon: Sparkles,
       features: platformSettings?.volunteerProFeatures || [
@@ -176,76 +172,7 @@ export default function PricingPage() {
     },
   ]
 
-  const loadRazorpayScript = (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if (window.Razorpay) {
-        resolve(true)
-        return
-      }
-      const script = document.createElement("script")
-      script.src = "https://checkout.razorpay.com/v1/checkout.js"
-      script.onload = () => resolve(true)
-      script.onerror = () => resolve(false)
-      document.body.appendChild(script)
-    })
-  }
-
-  const loadStripeScript = (): Promise<boolean> => {
-    return new Promise((resolve) => {
-      if ((window as any).Stripe) {
-        resolve(true)
-        return
-      }
-      const script = document.createElement("script")
-      script.src = "https://js.stripe.com/v3/"
-      script.onload = () => resolve(true)
-      script.onerror = () => resolve(false)
-      document.body.appendChild(script)
-    })
-  }
-
-  // Handle subscription via Stripe Payment Links
-  const handlePaymentLink = (planId: string) => {
-    if (!user?.id) {
-      toast.error("Please sign in first")
-      window.location.href = "/auth/signin"
-      return
-    }
-
-    setLoadingPlan(planId)
-    
-    // Determine payment link type
-    const linkType = planId === "ngo-pro" ? "ngo-pro-monthly" : "volunteer-pro-monthly"
-    
-    // Get payment URL
-    const paymentUrl = getPaymentLinkUrl(linkType as any, {
-      userId: user.id,
-      metadata: {
-        planId,
-        userName: user.name || "",
-        userEmail: user.email || "",
-      },
-    })
-
-    if (paymentUrl) {
-      // Redirect to Stripe Payment Link
-      window.location.href = paymentUrl
-    } else {
-      toast.error("Payment not configured", {
-        description: "Stripe Payment Links not set up yet.",
-      })
-      setLoadingPlan(null)
-    }
-  }
-
   const handleSubscribe = async (planId: string, amount: number, planName: string) => {
-    // If Payment Links enabled, use that
-    if (usePaymentLinks) {
-      handlePaymentLink(planId)
-      return
-    }
-    
-    // Otherwise use Razorpay
     if (!user) {
       window.location.href = "/auth/signin?redirect=/pricing"
       return
@@ -260,25 +187,23 @@ export default function PricingPage() {
     setLoadingPlan(planId)
 
     try {
-      // Create subscription order
+      // Create Stripe Checkout Session via API
       const response = await fetch("/api/payments/create-subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId, amount }),
+        body: JSON.stringify({ planId }),
       })
 
       const data = await response.json()
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create order")
+        throw new Error(data.error || "Failed to create checkout session")
       }
 
-      // Handle based on gateway type
-      if (data.gateway === "stripe") {
-        await handleStripePayment(data, planId, planName)
-      } else if (data.gateway === "razorpay") {
-        await handleRazorpayPayment(data, planId, planName)
+      if (data.url) {
+        // Redirect to Stripe Checkout
+        window.location.href = data.url
       } else {
-        throw new Error("No payment gateway configured")
+        throw new Error("No checkout URL returned")
       }
     } catch (error: any) {
       toast.error("Payment error", {
@@ -286,115 +211,6 @@ export default function PricingPage() {
       })
       setLoadingPlan(null)
     }
-  }
-
-  const handleStripePayment = async (data: any, planId: string, planName: string) => {
-    const scriptLoaded = await loadStripeScript()
-    if (!scriptLoaded) {
-      toast.error("Failed to load Stripe")
-      setLoadingPlan(null)
-      return
-    }
-
-    const stripe = (window as any).Stripe(data.publishableKey)
-    
-    // For Stripe, we'll use a simple redirect to checkout or embedded form
-    // Using Payment Element for better UX
-    const { error } = await stripe.confirmPayment({
-      clientSecret: data.clientSecret,
-      confirmParams: {
-        return_url: `${window.location.origin}/api/payments/stripe-callback?planId=${planId}`,
-      },
-    })
-
-    if (error) {
-      toast.error("Payment failed", {
-        description: error.message,
-      })
-      setLoadingPlan(null)
-    }
-  }
-
-  const handleRazorpayPayment = async (data: any, planId: string, planName: string) => {
-    const scriptLoaded = await loadRazorpayScript()
-    if (!scriptLoaded) {
-      toast.error("Failed to load payment gateway")
-      setLoadingPlan(null)
-      return
-    }
-
-    // Open Razorpay checkout
-    const options = {
-      key: data.keyId,
-      amount: data.amount * 100,
-      currency: data.currency,
-      name: "JustBeCause Network",
-      description: `${planName} Plan Subscription`,
-      order_id: data.orderId,
-      handler: async function (response: any) {
-        try {
-          const verifyResponse = await fetch("/api/payments/verify-subscription", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              gateway: "razorpay",
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-              planId,
-            }),
-          })
-
-          const verifyData = await verifyResponse.json()
-          if (!verifyResponse.ok) {
-            throw new Error(verifyData.error || "Payment verification failed")
-          }
-
-          // Update Zustand store with new subscription
-          const expiryDate = new Date()
-          expiryDate.setMonth(expiryDate.getMonth() + 1)
-          
-          if (planId.startsWith("ngo-")) {
-            setNGOSubscription({
-              plan: planId === "ngo-pro" ? "pro" : "free",
-              unlocksUsed: 0,
-              expiryDate: expiryDate.toISOString(),
-            })
-          } else if (planId.startsWith("volunteer-")) {
-            setVolunteerSubscription({
-              plan: planId === "volunteer-pro" ? "pro" : "free",
-              applicationsUsed: 0,
-              expiryDate: expiryDate.toISOString(),
-            })
-          }
-
-          // Show success toast immediately
-          toast.success("🎉 Subscription activated!", {
-            description: "Welcome to Pro! Enjoy unlimited access.",
-          })
-          
-          // Redirect after a short delay to let toast show
-          setTimeout(() => {
-            window.location.href = userRole === "ngo" ? "/ngo/dashboard" : "/volunteer/dashboard"
-          }, 1500)
-        } catch (error: any) {
-          toast.error("Payment failed", {
-            description: error.message || "Payment verification failed",
-          })
-        }
-      },
-      prefill: {
-        name: user?.name,
-        email: user?.email,
-      },
-      theme: { color: "#0ea5e9" },
-      modal: {
-        ondismiss: () => setLoadingPlan(null),
-      },
-    }
-
-    const razorpay = new window.Razorpay(options)
-    razorpay.open()
   }
 
   const renderPlanCard = (plan: typeof ngoPlans[0], currentPlan?: string) => {

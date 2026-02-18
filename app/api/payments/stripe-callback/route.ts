@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import Stripe from "stripe"
-import { getPaymentCredentials } from "@/lib/payment-gateway"
-import { ngoProfilesDb, adminSettingsDb, transactionsDb, profileUnlocksDb } from "@/lib/database"
+import { getStripeClient } from "@/lib/payment-gateway"
+import { ngoProfilesDb, volunteerProfilesDb, transactionsDb, notificationsDb } from "@/lib/database"
+import { getDb, userIdQuery } from "@/lib/database"
 
 export async function GET(request: NextRequest) {
   try {
@@ -16,114 +16,135 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const paymentIntentId = searchParams.get("payment_intent")
-    const type = searchParams.get("type")
-    const volunteerId = searchParams.get("volunteerId")
+    const checkoutSessionId = searchParams.get("session_id")
     const plan = searchParams.get("plan")
 
-    if (!paymentIntentId) {
-      return NextResponse.redirect(new URL("/pricing?error=missing_payment_intent", request.url))
+    if (!checkoutSessionId) {
+      return NextResponse.redirect(new URL("/pricing?error=missing_session", request.url))
     }
 
-    // Get Stripe credentials
-    const creds = await getPaymentCredentials()
-    if (creds.gateway !== "stripe" || !creds.stripeSecretKey) {
-      return NextResponse.redirect(new URL("/pricing?error=invalid_gateway", request.url))
+    // Get Stripe client (handles org key automatically)
+    const { stripe } = await getStripeClient()
+
+    // Retrieve the checkout session to verify payment
+    const checkoutSession = await stripe.checkout.sessions.retrieve(checkoutSessionId)
+
+    if (checkoutSession.payment_status !== "paid") {
+      console.error("Payment not completed. Status:", checkoutSession.payment_status)
+      return NextResponse.redirect(new URL("/pricing?error=payment_not_completed", request.url))
     }
 
-    const stripe = new Stripe(creds.stripeSecretKey)
+    // Get user info from session metadata or auth
+    const userId = checkoutSession.client_reference_id || session.user.id
+    const planId = checkoutSession.metadata?.planId || plan
+    const userRole = checkoutSession.metadata?.userRole || session.user.role as string
 
-    // Retrieve the payment intent to verify
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId)
-
-    if (paymentIntent.status !== "succeeded") {
-      return NextResponse.redirect(new URL(`/pricing?error=payment_${paymentIntent.status}`, request.url))
+    if (!planId) {
+      return NextResponse.redirect(new URL("/pricing?error=missing_plan", request.url))
     }
 
-    // Handle based on payment type
-    if (type === "unlock" && volunteerId) {
-      // Profile unlock payment
-      await handleProfileUnlock(session.user.id, volunteerId, paymentIntent)
-      return NextResponse.redirect(new URL(`/volunteers/${volunteerId}?unlocked=true`, request.url))
-    } else if (type === "subscription" && plan) {
-      // Subscription payment
-      await handleSubscription(session.user.id, plan, paymentIntent)
-      return NextResponse.redirect(new URL("/ngo/dashboard?subscription=success", request.url))
+    // Determine plan type
+    const isNgoPlan = planId.startsWith("ngo-")
+    const isPro = planId.endsWith("-pro")
+    const dashboardPath = isNgoPlan ? "/ngo/dashboard" : "/volunteer/dashboard"
+
+    // Calculate subscription dates
+    const now = new Date()
+    const subscriptionExpiry = new Date(now)
+    subscriptionExpiry.setMonth(subscriptionExpiry.getMonth() + 1)
+
+    // Activate subscription in the appropriate profile
+    if (isNgoPlan) {
+      const profile = await ngoProfilesDb.findByUserId(userId)
+      if (profile && profile._id) {
+        await ngoProfilesDb.update(profile._id.toString(), {
+          subscriptionPlan: isPro ? "pro" : "free",
+          subscriptionExpiry,
+          monthlyUnlocksUsed: 0,
+        })
+      }
+    } else {
+      const profile = await volunteerProfilesDb.findByUserId(userId)
+      if (profile && profile._id) {
+        await volunteerProfilesDb.update(profile._id.toString(), {
+          subscriptionPlan: isPro ? "pro" : "free",
+          subscriptionExpiry,
+          monthlyApplicationsUsed: 0,
+        })
+      }
     }
 
-    return NextResponse.redirect(new URL("/pricing?error=unknown_type", request.url))
+    // Get actual amount from checkout session
+    const amount = (checkoutSession.amount_total || 0) / 100
+    const currency = (checkoutSession.currency || "usd").toUpperCase()
+
+    // Create transaction record
+    const subscriptionId = typeof checkoutSession.subscription === 'string' 
+      ? checkoutSession.subscription 
+      : checkoutSession.subscription?.id
+
+    await transactionsDb.create({
+      userId,
+      type: "subscription",
+      referenceId: planId,
+      referenceType: "subscription",
+      amount,
+      currency,
+      paymentGateway: "stripe",
+      paymentId: checkoutSessionId,
+      status: "completed",
+      paymentStatus: "completed",
+      description: `${isPro ? "Pro" : "Free"} Plan Subscription${subscriptionId ? ` (sub: ${subscriptionId})` : ""}`,
+      createdAt: now,
+    })
+
+    // Create in-app notification
+    try {
+      await notificationsDb.create({
+        userId,
+        type: "subscription_activated",
+        title: "Pro Plan Activated!",
+        message: "Your Pro subscription is now active. Enjoy unlimited access!",
+        referenceId: planId,
+        referenceType: "subscription",
+        link: dashboardPath,
+        isRead: false,
+        createdAt: now,
+      })
+    } catch (notifErr) {
+      console.error("[stripe-callback] Failed to create notification:", notifErr)
+    }
+
+    // Send confirmation email
+    try {
+      const db = await getDb()
+      const userRecord = await db.collection("user").findOne(userIdQuery(userId))
+      if (userRecord?.email) {
+        const { sendEmail, getSubscriptionConfirmationEmailHtml } = await import("@/lib/email")
+        const planName = isNgoPlan ? "NGO Pro" : "Impact Agent Pro"
+        const expiryFormatted = subscriptionExpiry.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+        const html = getSubscriptionConfirmationEmailHtml(
+          userRecord.name || "there",
+          planName,
+          amount,
+          currency,
+          expiryFormatted,
+          isNgoPlan ? "ngo" : "volunteer"
+        )
+        await sendEmail({
+          to: userRecord.email,
+          subject: `Your ${planName} subscription is active!`,
+          html,
+          text: `Hi ${userRecord.name || "there"}, your ${planName} subscription is now active! Valid until ${expiryFormatted}. Enjoy your Pro benefits!`,
+        })
+      }
+    } catch (emailErr) {
+      console.error("[stripe-callback] Failed to send confirmation email:", emailErr)
+    }
+
+    return NextResponse.redirect(new URL(`${dashboardPath}?subscription=success`, request.url))
   } catch (error: any) {
     console.error("Stripe callback error:", error)
     return NextResponse.redirect(new URL(`/pricing?error=${encodeURIComponent(error.message)}`, request.url))
-  }
-}
-
-async function handleProfileUnlock(ngoId: string, volunteerId: string, paymentIntent: Stripe.PaymentIntent) {
-  const amount = paymentIntent.amount / 100
-  const currency = paymentIntent.currency.toUpperCase()
-  const now = new Date()
-  
-  // Save transaction record
-  await transactionsDb.create({
-    userId: ngoId,
-    type: "profile_unlock",
-    amount,
-    currency,
-    paymentStatus: "completed",
-    status: "completed",
-    paymentGateway: "stripe",
-    paymentId: paymentIntent.id,
-    createdAt: now,
-  })
-
-  // Create profile unlock record
-  await profileUnlocksDb.create({
-    ngoId,
-    volunteerId,
-    amountPaid: amount,
-    currency,
-    paymentId: paymentIntent.id,
-    paymentMethod: "stripe",
-    unlockedAt: now,
-  })
-
-  // Update NGO profile to add unlocked volunteer
-  const ngoProfile = await ngoProfilesDb.findByUserId(ngoId)
-  if (ngoProfile && ngoProfile._id) {
-    await ngoProfilesDb.incrementMonthlyUnlocks(ngoId)
-  }
-}
-
-async function handleSubscription(ngoId: string, plan: string, paymentIntent: Stripe.PaymentIntent) {
-  const amount = paymentIntent.amount / 100
-  const currency = paymentIntent.currency.toUpperCase()
-
-  // Calculate subscription end date (30 days)
-  const now = new Date()
-  const subscriptionEndDate = new Date(now)
-  subscriptionEndDate.setDate(subscriptionEndDate.getDate() + 30)
-
-  // Save transaction record
-  await transactionsDb.create({
-    userId: ngoId,
-    type: "subscription",
-    description: `${plan} subscription`,
-    amount,
-    currency,
-    paymentStatus: "completed",
-    status: "completed",
-    paymentGateway: "stripe",
-    paymentId: paymentIntent.id,
-    createdAt: now,
-  })
-
-  // Update NGO profile with subscription
-  const ngoProfile = await ngoProfilesDb.findByUserId(ngoId)
-  if (ngoProfile && ngoProfile._id) {
-    const subscriptionPlan = plan.includes("pro") ? "pro" : "free"
-    await ngoProfilesDb.update(ngoProfile._id.toString(), {
-      subscriptionPlan: subscriptionPlan as "free" | "pro",
-      subscriptionExpiry: subscriptionEndDate,
-    })
   }
 }

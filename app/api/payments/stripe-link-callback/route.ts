@@ -1,3 +1,5 @@
+// @deprecated - This route is no longer used. Payment Links have been replaced by Stripe Checkout Sessions.
+// See app/api/payments/stripe-callback/route.ts for the new flow.
 import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
