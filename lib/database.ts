@@ -842,6 +842,12 @@ export const notificationsDb = {
     const result = await collection.deleteMany({ createdAt: { $lt: cutoff }, isRead: true })
     return result.deletedCount
   },
+
+  async delete(id: string): Promise<boolean> {
+    const collection = await getCollection<Notification>(COLLECTIONS.NOTIFICATIONS)
+    const result = await collection.deleteOne({ _id: new ObjectId(id) })
+    return result.deletedCount > 0
+  },
 }
 
 // ============================================

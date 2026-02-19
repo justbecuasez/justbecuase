@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { ngoProfilesDb, profileUnlocksDb, volunteerProfilesDb, notificationsDb } from "@/lib/database"
+import { ngoProfilesDb, profileUnlocksDb, volunteerProfilesDb, notificationsDb, adminSettingsDb } from "@/lib/database"
 
 export async function POST(request: NextRequest) {
   try {
@@ -61,12 +61,16 @@ export async function POST(request: NextRequest) {
       })
     }
 
+    // Get admin settings for currency
+    const adminSettings = await adminSettingsDb.get()
+    const currency = adminSettings?.currency || "INR"
+
     // Create unlock record (free with subscription)
     await profileUnlocksDb.createIfNotExists({
       ngoId: session.user.id,
       volunteerId,
       amountPaid: 0, // Free with Pro subscription
-      currency: "INR",
+      currency,
       unlockedAt: new Date(),
     })
 

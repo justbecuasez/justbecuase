@@ -1587,6 +1587,13 @@ export async function markNotificationRead(id: string): Promise<boolean> {
   return notificationsDb.markAsRead(id)
 }
 
+// Alias for backward compatibility
+export const markNotificationAsRead = markNotificationRead
+
+export async function deleteNotification(id: string): Promise<boolean> {
+  return notificationsDb.delete(id)
+}
+
 export async function markAllNotificationsRead(): Promise<boolean> {
   const user = await getCurrentUser()
   if (!user) return false

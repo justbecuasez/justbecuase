@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
-import { ngoProfilesDb, volunteerProfilesDb, transactionsDb, notificationsDb } from "@/lib/database"
+import { ngoProfilesDb, volunteerProfilesDb, transactionsDb, notificationsDb, adminSettingsDb } from "@/lib/database"
 import { verifyPayment } from "@/lib/payment-gateway"
 import { getDb, userIdQuery } from "@/lib/database"
 import type { PaymentGatewayType } from "@/lib/types"
@@ -118,15 +118,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Plan does not match user role" }, { status: 400 })
     }
 
+    // Fetch admin settings for currency and pricing
+    const adminSettings = await adminSettingsDb.get()
+    const currency = adminSettings?.currency || "INR"
+    const amount = planId === "ngo-pro" 
+      ? (adminSettings?.ngoProPrice ?? 2999) 
+      : planId === "volunteer-pro" 
+        ? (adminSettings?.volunteerProPrice ?? 999) 
+        : 0
+
     // Create transaction record
-    const amount = planId === "ngo-pro" ? 2999 : planId === "volunteer-pro" ? 999 : 0
     await transactionsDb.create({
       userId,
       type: "subscription",
       referenceId: planId,
       referenceType: "subscription",
       amount,
-      currency: "INR",
+      currency,
       paymentGateway: paymentGateway,
       paymentId: paymentVerification.paymentId,
       status: "completed",
