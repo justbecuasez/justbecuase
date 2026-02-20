@@ -8,16 +8,11 @@ export async function POST(request: NextRequest) {
     const validCode = process.env.SITE_ACCESS_CODE
 
     if (!validCode) {
-      // If no access code is configured, allow access (dev mode)
-      const response = NextResponse.json({ message: "Access granted" })
-      response.cookies.set("site-access", "granted", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 30, // 30 days
-        path: "/",
-      })
-      return response
+      // No access code configured — reject (don't silently grant access)
+      return NextResponse.json(
+        { message: "Access gate is not configured. Contact the admin." },
+        { status: 503 }
+      )
     }
 
     if (code !== validCode) {
