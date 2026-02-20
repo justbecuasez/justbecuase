@@ -40,7 +40,7 @@ export function Footer() {
               {(socialLinks?.instagram || !socialLinks) && (
                 <a href={socialLinks?.instagram || "https://www.instagram.com/justbecausenet/"} className="text-muted-foreground hover:text-primary transition-colors" target="_blank" rel="noopener noreferrer">
                   <Instagram className="h-5 w-5" />
-                  <span className="sr-only">Instagram Page</span>
+                  <span className="sr-only">Instagram</span>
                 </a>
               )}
               {(socialLinks?.facebook || !socialLinks) && (
