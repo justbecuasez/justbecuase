@@ -1,10 +1,4 @@
 import { NextRequest, NextResponse } from "next/server"
-import crypto from "crypto"
-
-// Generate a signed token so users can't fake the cookie
-function generateAccessToken(accessCode: string): string {
-  return crypto.createHash("sha256").update(`site-gate:${accessCode}`).digest("hex").slice(0, 32)
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +10,7 @@ export async function POST(request: NextRequest) {
     if (!validCode) {
       // If no access code is configured, allow access (dev mode)
       const response = NextResponse.json({ message: "Access granted" })
-      response.cookies.set("site-access", "dev-mode", {
+      response.cookies.set("site-access", "granted", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
@@ -33,10 +27,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Set cookie with a hashed token (can't be faked without knowing the access code)
-    const token = generateAccessToken(validCode)
     const response = NextResponse.json({ message: "Access granted" })
-    response.cookies.set("site-access", token, {
+    response.cookies.set("site-access", "granted", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",

@@ -71,3 +71,4 @@ init-*.js
 update-*.js
 backup_*.json
 proxy.ts
+.vercel
