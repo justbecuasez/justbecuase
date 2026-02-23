@@ -293,7 +293,6 @@ export async function saveVolunteerOnboarding(data: {
       subscriptionResetDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1),
       isVerified: false,
       isActive: true,
-      isAvailable: true, // For NestJS/migrated data compatibility
       createdAt: new Date(),
       updatedAt: new Date(),
     }
@@ -716,7 +715,7 @@ export async function createProject(data: {
       // Fetch only active volunteers with email notifications enabled
       const allVolunteers = await volunteerProfilesDb.findMany(
         { 
-          $or: [{ isActive: true }, { isAvailable: true }],
+          isActive: { $ne: false },
           "privacy.emailNotifications": { $ne: false },
         } as any, 
         { limit: 500 } as any
@@ -729,7 +728,7 @@ export async function createProject(data: {
       
       const matchingVolunteers = allVolunteers.filter(v => {
         // Skip explicitly deactivated volunteers
-        if (v.isActive === false || (v as any).isAvailable === false) return false
+        if (v.isActive === false) return false
         
         // Parse skills — handles both object array and string array formats
         const vSkills: Array<{categoryId?: string; subskillId?: string}> = Array.isArray(v.skills) ? v.skills : []
@@ -1505,9 +1504,9 @@ export async function getMatchedVolunteersForProject(
   const project = await projectsDb.findById(projectId)
   if (!project) return []
 
-  // Fetch active volunteers: support both isActive (new) and isAvailable (migrated) fields
+  // Fetch active volunteers (isActive: { $ne: false } includes users where field is undefined)
   const volunteers = await volunteerProfilesDb.findMany(
-    { $or: [{ isActive: true }, { isAvailable: true }] } as any
+    { isActive: { $ne: false } } as any
   )
   
   // Subscription-based visibility: non-Pro NGOs can only see paid volunteers
@@ -1592,9 +1591,9 @@ export async function getRecommendedVolunteersForNGO(): Promise<
 
   if (requiredSkillIds.size === 0) return []
 
-  // Get all active volunteers: support both isActive (new) and isAvailable (migrated) fields
+  // Get all active volunteers (isActive: { $ne: false } includes users where field is undefined)
   const volunteers = await volunteerProfilesDb.findMany(
-    { $or: [{ isActive: true }, { isAvailable: true }] } as any
+    { isActive: { $ne: false } } as any
   )
   
   // Subscription-based visibility: non-Pro NGOs can only see paid volunteers
@@ -2087,7 +2086,7 @@ export async function suspendUser(
       await volunteerProfilesDb.update(userId, { isActive: false })
       revalidatePath("/admin/volunteers")
     } else {
-      await ngoProfilesDb.update(userId, { isActive: false })
+      await ngoProfilesDb.update(userId, { isActive: false } as any)
       revalidatePath("/admin/ngos")
     }
     
@@ -2110,7 +2109,7 @@ export async function reactivateUser(
       await volunteerProfilesDb.update(userId, { isActive: true })
       revalidatePath("/admin/volunteers")
     } else {
-      await ngoProfilesDb.update(userId, { isActive: true })
+      await ngoProfilesDb.update(userId, { isActive: true } as any)
       revalidatePath("/admin/ngos")
     }
     
@@ -2200,7 +2199,7 @@ export async function banUser(
     if (userType === "volunteer") {
       await volunteerProfilesDb.update(userId, { isActive: false, isBanned: true })
     } else {
-      await ngoProfilesDb.update(userId, { isActive: false, isBanned: true })
+      await ngoProfilesDb.update(userId, { isActive: false, isBanned: true } as any)
     }
     
     // Create ban record
@@ -2235,7 +2234,7 @@ export async function unbanUser(
     if (userType === "volunteer") {
       await volunteerProfilesDb.update(userId, { isActive: true, isBanned: false })
     } else {
-      await ngoProfilesDb.update(userId, { isActive: true, isBanned: false })
+      await ngoProfilesDb.update(userId, { isActive: true, isBanned: false } as any)
     }
     
     // Deactivate ban record

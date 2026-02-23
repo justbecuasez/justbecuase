@@ -152,10 +152,10 @@ export function VolunteersFilters() {
         <div>
           <Label className="text-sm font-medium mb-3 block">Skills</Label>
           <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
-            {skillCategories.slice(0, 6).map((category) => (
+            {skillCategories.map((category) => (
               <div key={category.id} className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground">{category.name}</p>
-                {category.subskills.slice(0, 3).map((skill) => (
+                {category.subskills.slice(0, 4).map((skill) => (
                   <div key={skill.id} className="flex items-center space-x-2">
                     <Checkbox
                       id={skill.id}

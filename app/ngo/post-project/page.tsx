@@ -345,11 +345,11 @@ export default function PostProjectPage() {
                 <div className="space-y-2">
                   <Label>Skills Required</Label>
                   <div className="space-y-4">
-                    {skillCategories.slice(0, 4).map((category) => (
+                    {skillCategories.map((category) => (
                       <div key={category.id}>
                         <p className="text-sm font-medium text-muted-foreground mb-2">{category.name}</p>
                         <div className="flex flex-wrap gap-2">
-                          {category.subskills.slice(0, 6).map((subskill) => (
+                          {category.subskills.map((subskill) => (
                             <Badge
                               key={subskill.id}
                               variant={formData.selectedSkillNames.includes(subskill.name) ? "default" : "outline"}
