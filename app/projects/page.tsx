@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { skillCategories, resolveSkillName } from "@/lib/skills-data"
 import { SlidersHorizontal, Grid3X3, List, X, Loader2 } from "lucide-react"
 import { UnifiedSearchBar } from "@/components/unified-search-bar"
+import { BrowseGridSkeleton } from "@/components/ui/page-skeletons"
 
 interface Project {
   _id?: { toString: () => string }
@@ -449,9 +450,7 @@ export default function ProjectsPage() {
               </div>
 
               {loading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                </div>
+                <BrowseGridSkeleton columns={3} count={6} />
               ) : filteredProjects.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">No opportunities found</p>

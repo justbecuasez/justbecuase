@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
+import { AdminTableSkeleton } from "@/components/ui/page-skeletons"
 import {
   getTeamMembers,
   createTeamMember,
@@ -324,9 +325,7 @@ export default function AdminTeamPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
+            <AdminTableSkeleton rows={5} />
           ) : members.length > 0 ? (
             <div className="space-y-4">
               {members.map((member) => (

@@ -26,6 +26,7 @@ import {
 import { skillCategories, causes } from "@/lib/skills-data"
 import { SlidersHorizontal, X, Loader2 } from "lucide-react"
 import { UnifiedSearchBar } from "@/components/unified-search-bar"
+import { BrowseGridSkeleton } from "@/components/ui/page-skeletons"
 import type { VolunteerProfileView } from "@/lib/types"
 
 export default function VolunteersPage() {
@@ -506,11 +507,7 @@ export default function VolunteersPage() {
               </div>
 
               {loading ? (
-                <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="h-72 bg-muted animate-pulse rounded-lg" />
-                  ))}
-                </div>
+                <BrowseGridSkeleton columns={3} count={6} />
               ) : filteredVolunteers.length === 0 ? (
                 <div className="text-center py-12">
                   <p className="text-muted-foreground">No impact agents found</p>

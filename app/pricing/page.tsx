@@ -13,6 +13,7 @@ import { toast } from "sonner"
 import { useSubscriptionStore, usePlatformSettingsStore } from "@/lib/store"
 import { formatPrice, getCurrencySymbol } from "@/lib/currency"
 import type { SupportedCurrency } from "@/lib/types"
+import { PricingPageSkeleton } from "@/components/ui/page-skeletons"
 
 export default function PricingPage() {
   const { data: session } = client.useSession()
@@ -293,9 +294,7 @@ export default function PricingPage() {
 
         {/* Loading state */}
         {!settingsLoaded && (
-          <div className="py-16 flex justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
+          <PricingPageSkeleton />
         )}
 
         {/* Pricing Tabs */}

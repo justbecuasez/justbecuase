@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { getBanRecords } from "@/lib/actions"
 import { Ban, Loader2, User, Building2 } from "lucide-react"
 import type { BanRecord } from "@/lib/types"
+import { AdminBanTableSkeleton } from "@/components/ui/page-skeletons"
 
 export default function AdminBansPage() {
   const [records, setRecords] = useState<BanRecord[]>([])
@@ -81,9 +82,7 @@ export default function AdminBansPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
+            <AdminBanTableSkeleton />
           ) : records.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full">

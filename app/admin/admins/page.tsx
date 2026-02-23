@@ -25,6 +25,7 @@ import {
   Lock,
   Calendar,
 } from "lucide-react"
+import { AdminTableSkeleton } from "@/components/ui/page-skeletons"
 
 interface Admin {
   id: string
@@ -231,9 +232,7 @@ export default function AdminManagementPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
+            <AdminTableSkeleton rows={4} />
           ) : admins.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />

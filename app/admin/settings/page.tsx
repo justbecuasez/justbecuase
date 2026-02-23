@@ -41,6 +41,7 @@ import {
 import { getAdminSettings, updateAdminSettings } from "@/lib/actions"
 import { toast } from "sonner"
 import type { AdminSettings, SupportedCurrency, PaymentGatewayType } from "@/lib/types"
+import { SettingsPageSkeleton } from "@/components/ui/page-skeletons"
 
 const CURRENCIES: { value: SupportedCurrency; label: string; symbol: string }[] = [
   { value: "INR", label: "Indian Rupee (INR)", symbol: "₹" },
@@ -319,11 +320,7 @@ export default function AdminSettingsPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
+    return <SettingsPageSkeleton />
   }
 
   if (!settings) {

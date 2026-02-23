@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Lock, Loader2, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
+import { AuthPageSkeleton } from "@/components/ui/page-skeletons"
 
 function ResetPasswordForm() {
   const router = useRouter()
@@ -188,11 +189,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    }>
+    <Suspense fallback={<AuthPageSkeleton />}>
       <ResetPasswordForm />
     </Suspense>
   )

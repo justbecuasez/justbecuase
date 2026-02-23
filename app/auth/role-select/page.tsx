@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Heart, Building2, Loader2 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import { selectRole } from "@/lib/actions"
+import { AuthPageSkeleton } from "@/components/ui/page-skeletons"
 
 function RoleSelectContent() {
   const router = useRouter()
@@ -85,11 +86,7 @@ function RoleSelectContent() {
 
   // Show loading while checking session
   if (isPending) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
+    return <AuthPageSkeleton />
   }
 
   return (
@@ -200,11 +197,7 @@ function RoleSelectContent() {
 
 // Loading fallback for Suspense
 function RoleSelectLoading() {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-    </div>
-  )
+  return <AuthPageSkeleton />
 }
 
 // Main export with Suspense boundary for useSearchParams
