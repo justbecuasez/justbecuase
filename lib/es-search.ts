@@ -1,0 +1,795 @@
+// ============================================
+// Elasticsearch Search Engine
+// ============================================
+// Provides:
+// 1. Hybrid search — BM25 text match + semantic_text for NL understanding
+// 2. Autocomplete — Completion suggesters + prefix matching
+// 3. Cross-entity search — Volunteers, NGOs, Projects, Blog, Pages
+// 4. Filters — workMode, volunteerType, causes, skills, location, etc.
+// ============================================
+
+import esClient, { ES_INDEXES, type ESIndexName } from "./elasticsearch"
+
+// ============================================
+// TYPES
+// ============================================
+
+export interface ESSearchParams {
+  query: string
+  types?: ("volunteer" | "ngo" | "project" | "blog" | "page")[]
+  filters?: {
+    workMode?: string
+    volunteerType?: string
+    causes?: string[]
+    skills?: string[]
+    location?: string
+    experienceLevel?: string
+    isVerified?: boolean
+    minRating?: number
+    maxHourlyRate?: number
+    status?: string
+  }
+  limit?: number
+  offset?: number
+  sort?: "relevance" | "newest" | "rating"
+}
+
+export interface ESSearchResult {
+  id: string
+  mongoId: string
+  type: "volunteer" | "ngo" | "project" | "blog" | "page"
+  title: string
+  subtitle: string
+  description: string
+  url: string
+  score: number
+  highlights: string[]
+  metadata: Record<string, any>
+}
+
+export interface ESSuggestion {
+  text: string
+  type: "volunteer" | "ngo" | "project" | "blog" | "page" | "skill" | "cause"
+  id: string
+  subtitle?: string
+  score?: number
+}
+
+// ============================================
+// TYPE → INDEX MAPPING
+// ============================================
+
+const TYPE_TO_INDEX: Record<string, ESIndexName> = {
+  volunteer: ES_INDEXES.VOLUNTEERS,
+  ngo: ES_INDEXES.NGOS,
+  project: ES_INDEXES.PROJECTS,
+  blog: ES_INDEXES.BLOG_POSTS,
+  page: ES_INDEXES.PAGES,
+}
+
+const INDEX_TO_TYPE: Record<string, string> = {
+  [ES_INDEXES.VOLUNTEERS]: "volunteer",
+  [ES_INDEXES.NGOS]: "ngo",
+  [ES_INDEXES.PROJECTS]: "project",
+  [ES_INDEXES.BLOG_POSTS]: "blog",
+  [ES_INDEXES.PAGES]: "page",
+}
+
+// ============================================
+// MAIN SEARCH FUNCTION
+// ============================================
+
+export async function elasticSearch(params: ESSearchParams): Promise<{
+  results: ESSearchResult[]
+  total: number
+  took: number
+}> {
+  const { query, types, filters, limit = 20, offset = 0, sort = "relevance" } = params
+  const trimmedQuery = query.trim()
+
+  if (!trimmedQuery || trimmedQuery.length < 1) {
+    return { results: [], total: 0, took: 0 }
+  }
+
+  // Determine which indexes to search
+  const targetTypes = types && types.length > 0 ? types : ["volunteer", "ngo", "project", "blog", "page"]
+  const indexes = targetTypes.map(t => TYPE_TO_INDEX[t]).filter(Boolean)
+
+  console.log(`[ES Search] query="${trimmedQuery}" types=${JSON.stringify(targetTypes)} indexes=${JSON.stringify(indexes)} limit=${limit} sort=${sort}`)
+
+  if (indexes.length === 0) {
+    console.log(`[ES Search] No indexes to search — returning empty`)
+    return { results: [], total: 0, took: 0 }
+  }
+
+  // Build the query
+  const esQuery = buildSearchQuery(trimmedQuery, filters)
+  console.log(`[ES Search] Built query:`, JSON.stringify(esQuery).substring(0, 500))
+
+  // Build sort
+  const sortConfig = buildSortConfig(sort)
+
+  try {
+    const response = await esClient.search({
+      index: indexes,
+      query: esQuery,
+      highlight: {
+        fields: {
+          name: { number_of_fragments: 1, fragment_size: 150 },
+          orgName: { number_of_fragments: 1, fragment_size: 150 },
+          title: { number_of_fragments: 1, fragment_size: 150 },
+          description: { number_of_fragments: 2, fragment_size: 200 },
+          bio: { number_of_fragments: 2, fragment_size: 200 },
+          mission: { number_of_fragments: 1, fragment_size: 200 },
+          skillNames: { number_of_fragments: 3, fragment_size: 100 },
+          causeNames: { number_of_fragments: 3, fragment_size: 100 },
+          content: { number_of_fragments: 2, fragment_size: 200 },
+          excerpt: { number_of_fragments: 1, fragment_size: 200 },
+        },
+        pre_tags: ["<mark>"],
+        post_tags: ["</mark>"],
+      },
+      from: offset,
+      size: limit,
+      sort: sortConfig,
+      _source: true,
+      track_total_hits: true,
+    })
+
+    const total = typeof response.hits.total === "number"
+      ? response.hits.total
+      : (response.hits.total as any)?.value || 0
+    console.log(`[ES Search] Response: ${response.hits.hits.length} hits, total=${total}, took=${response.took}ms`)
+
+    const results: ESSearchResult[] = response.hits.hits.map(hit => {
+      const source = hit._source as Record<string, any>
+      const indexType = INDEX_TO_TYPE[hit._index] || "page"
+      const highlights = Object.values(hit.highlight || {}).flat()
+
+      return {
+        ...transformHitToResult(source, indexType, hit._id || ""),
+        score: hit._score || 0,
+        highlights,
+      }
+    })
+
+    if (results.length > 0) {
+      console.log(`[ES Search] Top result: type=${results[0].type} title="${results[0].title}" score=${results[0].score}`)
+    }
+
+    return {
+      results,
+      total,
+      took: response.took || 0,
+    }
+  } catch (error: any) {
+    console.error("[ES Search] Error:", error?.message || error)
+    console.error("[ES Search] Full error:", JSON.stringify(error?.meta?.body || {}).substring(0, 500))
+    // If semantic_text query fails, fall back to text-only search
+    if (error?.message?.includes("semantic_text") || error?.message?.includes("semantic")) {
+      console.log("[ES Search] Falling back to text-only search (semantic query failed)")
+      return elasticSearchTextOnly(trimmedQuery, indexes, filters, limit, offset, sort)
+    }
+    throw error
+  }
+}
+
+// ============================================
+// FALLBACK: Text-only search (no semantic)
+// ============================================
+
+async function elasticSearchTextOnly(
+  query: string,
+  indexes: string[],
+  filters: ESSearchParams["filters"],
+  limit: number,
+  offset: number,
+  sort: string
+): Promise<{ results: ESSearchResult[]; total: number; took: number }> {
+  const esQuery = buildTextOnlyQuery(query, filters)
+  const sortConfig = buildSortConfig(sort)
+
+  const response = await esClient.search({
+    index: indexes,
+    query: esQuery,
+    highlight: {
+      fields: {
+        "*": { number_of_fragments: 2, fragment_size: 200 },
+      },
+      pre_tags: ["<mark>"],
+      post_tags: ["</mark>"],
+    },
+    from: offset,
+    size: limit,
+    sort: sortConfig,
+    _source: true,
+  })
+
+  const results: ESSearchResult[] = response.hits.hits.map(hit => {
+    const source = hit._source as Record<string, any>
+    const indexType = INDEX_TO_TYPE[hit._index] || "page"
+    const highlights = Object.values(hit.highlight || {}).flat()
+
+    return {
+      ...transformHitToResult(source, indexType, hit._id || ""),
+      score: hit._score || 0,
+      highlights,
+    }
+  })
+
+  const total = typeof response.hits.total === "number"
+    ? response.hits.total
+    : (response.hits.total as any)?.value || 0
+
+  return { results, total, took: response.took || 0 }
+}
+
+// ============================================
+// AUTOCOMPLETE / SUGGESTIONS
+// ============================================
+
+export async function elasticSuggest(params: {
+  query: string
+  types?: ("volunteer" | "ngo" | "project" | "blog" | "page")[]
+  limit?: number
+}): Promise<ESSuggestion[]> {
+  const { query, types, limit = 8 } = params
+  const trimmedQuery = query.trim()
+
+  if (!trimmedQuery || trimmedQuery.length < 1) {
+    return []
+  }
+
+  const targetTypes = types && types.length > 0 ? types : ["volunteer", "ngo", "project", "blog", "page"]
+  const indexes = targetTypes.map(t => TYPE_TO_INDEX[t]).filter(Boolean)
+
+  console.log(`[ES Suggest] query="${trimmedQuery}" types=${JSON.stringify(targetTypes)} indexes=${JSON.stringify(indexes)} limit=${limit}`)
+
+  if (indexes.length === 0) {
+    console.log(`[ES Suggest] No indexes — returning empty`)
+    return []
+  }
+
+  try {
+    // Strategy 1: Completion suggester (fastest)
+    const completionResults = await getCompletionSuggestions(trimmedQuery, indexes, Math.ceil(limit / 2))
+    console.log(`[ES Suggest] Completion got ${completionResults.length} results`)
+
+    // Strategy 2: Prefix search (more comprehensive)
+    const prefixResults = await getPrefixSearchSuggestions(trimmedQuery, indexes, limit)
+    console.log(`[ES Suggest] Prefix search got ${prefixResults.length} results`)
+
+    // Merge & deduplicate, completion results first (faster)
+    const seen = new Set<string>()
+    const merged: ESSuggestion[] = []
+
+    for (const item of [...completionResults, ...prefixResults]) {
+      const key = `${item.type}-${item.id}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        merged.push(item)
+      }
+    }
+
+    console.log(`[ES Suggest] Merged ${merged.length} unique results, returning ${Math.min(merged.length, limit)}`)
+    return merged.slice(0, limit)
+  } catch (error: any) {
+    console.error("[ES Suggest] Error:", error?.message)
+    // Fallback to prefix-only search
+    try {
+      return await getPrefixSearchSuggestions(trimmedQuery, indexes, limit)
+    } catch {
+      return []
+    }
+  }
+}
+
+// ============================================
+// COMPLETION SUGGESTER
+// ============================================
+
+async function getCompletionSuggestions(
+  query: string,
+  indexes: string[],
+  limit: number
+): Promise<ESSuggestion[]> {
+  const response = await esClient.search({
+    index: indexes,
+    suggest: {
+      name_suggest: {
+        prefix: query,
+        completion: {
+          field: "suggest",
+          size: limit,
+          skip_duplicates: true,
+          fuzzy: {
+            fuzziness: "AUTO" as any,
+          },
+        },
+      },
+    },
+    _source: ["mongoId", "name", "orgName", "title", "slug", "skillNames", "causeNames", "city", "country", "headline", "subtitle", "description", "excerpt"],
+  })
+
+  const suggestions: ESSuggestion[] = []
+  const suggestResults = (response.suggest as any)?.name_suggest?.[0]?.options || []
+
+  for (const option of suggestResults) {
+    const source = option._source as Record<string, any>
+    const indexType = INDEX_TO_TYPE[option._index] || "page"
+    suggestions.push(hitToSuggestion(source, indexType, option._id, option._score || 0))
+  }
+
+  return suggestions
+}
+
+// ============================================
+// PREFIX SEARCH SUGGESTIONS
+// ============================================
+
+async function getPrefixSearchSuggestions(
+  query: string,
+  indexes: string[],
+  limit: number
+): Promise<ESSuggestion[]> {
+  // Use bool_prefix multi_match for partial word matching
+  const response = await esClient.search({
+    index: indexes,
+    query: {
+      bool: {
+        should: [
+          // Prefix matching across all searchable fields
+          {
+            multi_match: {
+              query,
+              type: "bool_prefix",
+              fields: [
+                "name^10",
+                "name.exact^15",
+                "orgName^10",
+                "orgName.exact^15",
+                "title^10",
+                "title.exact^15",
+                "skillNames^8",
+                "causeNames^6",
+                "headline^5",
+                "description^3",
+                "bio^3",
+                "mission^3",
+                "city^4",
+                "country^3",
+                "location^4",
+                "tags^5",
+                "content^2",
+                "excerpt^4",
+              ],
+              fuzziness: "AUTO",
+            },
+          },
+          // Boost exact keyword matches
+          {
+            multi_match: {
+              query,
+              type: "phrase_prefix",
+              fields: [
+                "name^12",
+                "orgName^12",
+                "title^12",
+                "skillNames^10",
+                "causeNames^8",
+              ],
+            },
+          },
+        ],
+        minimum_should_match: 1,
+      },
+    },
+    size: limit,
+    _source: ["mongoId", "name", "orgName", "title", "slug", "skillNames", "causeNames", "city", "country", "headline", "subtitle", "description", "excerpt", "bio", "mission"],
+  })
+
+  const suggestions: ESSuggestion[] = []
+
+  for (const hit of response.hits.hits) {
+    const source = hit._source as Record<string, any>
+    const indexType = INDEX_TO_TYPE[hit._index] || "page"
+    suggestions.push(hitToSuggestion(source, indexType, hit._id || "", hit._score || 0))
+  }
+
+  return suggestions
+}
+
+// ============================================
+// QUERY BUILDERS
+// ============================================
+
+function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): Record<string, any> {
+  const must: any[] = []
+  const should: any[] = []
+  const filterClauses: any[] = []
+
+  // Adaptive minimum_should_match based on query length
+  const wordCount = query.split(/\s+/).length
+  const minMatch = wordCount <= 2 ? "50%" : wordCount <= 4 ? "40%" : "30%"
+
+  // Primary search — hybrid: text + semantic
+  should.push(
+    // Text search with field boosting (BM25)
+    {
+      multi_match: {
+        query,
+        type: "most_fields",
+        fields: [
+          "name^10",
+          "name.exact^15",
+          "orgName^10",
+          "orgName.exact^15",
+          "title^10",
+          "title.exact^15",
+          "headline^6",
+          "skillNames^8",
+          "skillCategories^5",
+          "causeNames^6",
+          "bio^3",
+          "description^4",
+          "mission^4",
+          "location^4",
+          "city^4",
+          "country^3",
+          "content^2",
+          "excerpt^4",
+          "tags^5",
+          "languages^3",
+          "interests^2",
+        ],
+        fuzziness: "AUTO",
+        prefix_length: 1,
+        operator: "or",
+        minimum_should_match: minMatch,
+      },
+    },
+    // Cross-fields match — treats all fields as one big field (great for multi-concept queries)
+    {
+      multi_match: {
+        query,
+        type: "cross_fields",
+        fields: [
+          "name^5",
+          "orgName^5",
+          "title^5",
+          "headline^4",
+          "skillNames^6",
+          "bio^3",
+          "description^3",
+        ],
+        operator: "or",
+        minimum_should_match: minMatch,
+        boost: 1.5,
+      },
+    },
+    // Phrase match (boost exact phrases)
+    {
+      multi_match: {
+        query,
+        type: "phrase",
+        fields: [
+          "name^15",
+          "orgName^15",
+          "title^15",
+          "headline^8",
+          "description^5",
+          "bio^5",
+          "skillNames^10",
+        ],
+        slop: 2,
+        boost: 2.0,
+      },
+    },
+    // Prefix matching for instant search-as-you-type
+    {
+      multi_match: {
+        query,
+        type: "bool_prefix",
+        fields: [
+          "name^8",
+          "orgName^8",
+          "title^8",
+          "skillNames^6",
+          "causeNames^5",
+          "city^4",
+        ],
+      },
+    }
+  )
+
+  // Semantic search via semantic_text (if available)
+  // This will be ignored gracefully on indexes without semantic_text
+  should.push({
+    semantic: {
+      field: "semantic_content",
+      query,
+      boost: 1.5,
+    },
+  })
+
+  // Apply filters
+  if (filters) {
+    if (filters.workMode) {
+      filterClauses.push({ term: { workMode: filters.workMode } })
+    }
+    if (filters.volunteerType) {
+      filterClauses.push({
+        bool: {
+          should: [
+            { term: { volunteerType: filters.volunteerType } },
+            { term: { volunteerType: "both" } },
+          ],
+        },
+      })
+    }
+    if (filters.causes && filters.causes.length > 0) {
+      filterClauses.push({ terms: { causeIds: filters.causes } })
+    }
+    if (filters.skills && filters.skills.length > 0) {
+      filterClauses.push({ terms: { skillIds: filters.skills } })
+    }
+    if (filters.location) {
+      filterClauses.push({
+        multi_match: {
+          query: filters.location,
+          fields: ["city", "country", "location", "address"],
+          type: "best_fields",
+          fuzziness: "AUTO",
+        },
+      })
+    }
+    if (filters.experienceLevel) {
+      filterClauses.push({ term: { experienceLevel: filters.experienceLevel } })
+    }
+    if (filters.isVerified !== undefined) {
+      filterClauses.push({ term: { isVerified: filters.isVerified } })
+    }
+    if (filters.minRating && filters.minRating > 0) {
+      filterClauses.push({ range: { rating: { gte: filters.minRating } } })
+    }
+    if (filters.maxHourlyRate && filters.maxHourlyRate > 0) {
+      filterClauses.push({
+        bool: {
+          should: [
+            { range: { hourlyRate: { lte: filters.maxHourlyRate } } },
+            { term: { volunteerType: "free" } },
+            { bool: { must_not: { exists: { field: "hourlyRate" } } } },
+          ],
+        },
+      })
+    }
+    if (filters.status) {
+      filterClauses.push({ term: { status: filters.status } })
+    }
+  }
+
+  // Always filter out banned/inactive
+  filterClauses.push({
+    bool: {
+      should: [
+        { term: { isActive: true } },
+        { bool: { must_not: { exists: { field: "isActive" } } } }, // Pages/blog don't have isActive
+      ],
+    },
+  })
+
+  return {
+    function_score: {
+      query: {
+        bool: {
+          should,
+          filter: filterClauses.length > 0 ? filterClauses : undefined,
+          minimum_should_match: 1,
+        },
+      },
+      functions: [
+        // Boost verified users
+        { filter: { term: { isVerified: true } }, weight: 1.5 },
+        // Boost profiles with ratings
+        { filter: { range: { rating: { gte: 3 } } }, weight: 1.3 },
+        // Boost profiles with completed projects (experienced)
+        { filter: { range: { completedProjects: { gte: 1 } } }, weight: 1.2 },
+        // Slight boost for profiles that have an avatar/logo (more complete)
+        { filter: { exists: { field: "avatar" } }, weight: 1.1 },
+        { filter: { exists: { field: "logo" } }, weight: 1.1 },
+      ],
+      score_mode: "multiply",
+      boost_mode: "multiply",
+      max_boost: 3.0,
+    },
+  }
+}
+
+function buildTextOnlyQuery(query: string, filters?: ESSearchParams["filters"]): Record<string, any> {
+  // Same as buildSearchQuery but without the semantic clause
+  const fullQuery = buildSearchQuery(query, filters)
+  // Remove the semantic clause from should (nested inside function_score)
+  const boolQuery = fullQuery.function_score?.query?.bool || fullQuery.bool
+  if (boolQuery?.should) {
+    boolQuery.should = boolQuery.should.filter(
+      (clause: any) => !clause.semantic
+    )
+  }
+  return fullQuery
+}
+
+function buildSortConfig(sort: string): any[] {
+  switch (sort) {
+    case "newest":
+      return [{ createdAt: { order: "desc", unmapped_type: "date" } }, "_score"]
+    case "rating":
+      return [{ rating: { order: "desc", unmapped_type: "float" } }, "_score"]
+    case "relevance":
+    default:
+      return ["_score", { createdAt: { order: "desc", unmapped_type: "date" } }]
+  }
+}
+
+// ============================================
+// HIT → RESULT TRANSFORMERS
+// ============================================
+
+function transformHitToResult(
+  source: Record<string, any>,
+  type: string,
+  esId: string
+): Omit<ESSearchResult, "score" | "highlights"> {
+  switch (type) {
+    case "volunteer":
+      return {
+        id: esId,
+        mongoId: source.mongoId || esId,
+        type: "volunteer",
+        title: source.name || "Unknown Volunteer",
+        subtitle: source.headline || (source.skillNames && source.skillNames.length > 0 ? `Skills: ${Array.isArray(source.skillNames) ? source.skillNames.slice(0, 3).join(", ") : String(source.skillNames).substring(0, 80)}` : ""),
+        description: source.bio || "",
+        url: `/volunteers/${source.mongoId || esId}`,
+        metadata: {
+          avatar: source.avatar,
+          city: source.city,
+          country: source.country,
+          rating: source.rating,
+          skillNames: source.skillNames,
+          causeNames: source.causeNames,
+          volunteerType: source.volunteerType,
+          workMode: source.workMode,
+          isVerified: source.isVerified,
+        },
+      }
+
+    case "ngo":
+      return {
+        id: esId,
+        mongoId: source.mongoId || esId,
+        type: "ngo",
+        title: source.orgName || source.organizationName || "Unknown Organization",
+        subtitle: source.mission ? source.mission.substring(0, 120) : "",
+        description: source.description || "",
+        url: `/ngos/${source.mongoId || esId}`,
+        metadata: {
+          logo: source.logo,
+          city: source.city,
+          country: source.country,
+          causeNames: source.causeNames,
+          skillNames: source.skillNames,
+          isVerified: source.isVerified,
+          volunteersEngaged: source.volunteersEngaged,
+          projectsPosted: source.projectsPosted,
+        },
+      }
+
+    case "project":
+      return {
+        id: esId,
+        mongoId: source.mongoId || esId,
+        type: "project",
+        title: source.title || "Untitled Project",
+        subtitle: source.ngoName ? `by ${source.ngoName}` : "",
+        description: source.description || "",
+        url: `/projects/${source.mongoId || esId}`,
+        metadata: {
+          ngoName: source.ngoName,
+          skillNames: source.skillNames,
+          causeNames: source.causeNames,
+          workMode: source.workMode,
+          experienceLevel: source.experienceLevel,
+          location: source.location,
+          status: source.status,
+          applicantsCount: source.applicantsCount,
+        },
+      }
+
+    case "blog":
+      return {
+        id: esId,
+        mongoId: source.mongoId || esId,
+        type: "blog",
+        title: source.title || "Untitled Post",
+        subtitle: source.authorName ? `by ${source.authorName}` : "",
+        description: source.excerpt || "",
+        url: `/blog/${source.slug || esId}`,
+        metadata: {
+          slug: source.slug,
+          tags: source.tags,
+          category: source.category,
+          publishedAt: source.publishedAt,
+          viewCount: source.viewCount,
+        },
+      }
+
+    case "page":
+      return {
+        id: esId,
+        mongoId: esId,
+        type: "page",
+        title: source.title || "Page",
+        subtitle: source.section || "",
+        description: source.description || "",
+        url: source.slug || "/",
+        metadata: {
+          section: source.section,
+        },
+      }
+
+    default:
+      return {
+        id: esId,
+        mongoId: source.mongoId || esId,
+        type: type as any,
+        title: source.name || source.title || source.orgName || "Unknown",
+        subtitle: "",
+        description: source.description || source.bio || "",
+        url: "#",
+        metadata: {},
+      }
+  }
+}
+
+function hitToSuggestion(
+  source: Record<string, any>,
+  type: string,
+  esId: string,
+  score: number
+): ESSuggestion {
+  let text = ""
+  let subtitle = ""
+
+  switch (type) {
+    case "volunteer":
+      text = source.name || "Volunteer"
+      subtitle = source.headline || source.city || (source.skillNames && source.skillNames.length > 0 ? `${Array.isArray(source.skillNames) ? source.skillNames.slice(0, 2).join(", ") : String(source.skillNames).substring(0, 60)}` : "")
+      break
+    case "ngo":
+      text = source.orgName || "Organization"
+      subtitle = source.city || source.mission?.substring(0, 60) || ""
+      break
+    case "project":
+      text = source.title || "Project"
+      subtitle = source.description?.substring(0, 60) || ""
+      break
+    case "blog":
+      text = source.title || "Blog Post"
+      subtitle = source.excerpt?.substring(0, 60) || ""
+      break
+    case "page":
+      text = source.title || "Page"
+      subtitle = source.description?.substring(0, 60) || ""
+      break
+  }
+
+  // Map types for backward compatibility with existing component
+  const mappedType = type === "project" ? "opportunity" : type
+
+  return {
+    text,
+    type: mappedType as any,
+    id: source.mongoId || source.slug || esId,
+    subtitle,
+    score,
+  }
+}

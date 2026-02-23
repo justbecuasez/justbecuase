@@ -427,8 +427,13 @@ export async function updateVolunteerProfile(
     const result = await volunteerProfilesDb.update(user.id, filteredUpdates)
     revalidatePath("/volunteer/profile")
     return { success: true, data: result }
-  } catch (error) {
-    return { success: false, error: "Failed to update profile" }
+  } catch (error: any) {
+    // Re-throw Next.js internal errors (redirect, notFound, etc.)
+    if (error?.digest?.startsWith?.("NEXT_")) {
+      throw error
+    }
+    console.error("[Volunteer Save] Error:", error?.message || error, error?.stack)
+    return { success: false, error: error?.message || "Failed to update profile" }
   }
 }
 
@@ -550,7 +555,10 @@ export async function updateNGOProfile(
       }
     }
     
+    console.log(`[NGO Save] userId=${user.id}, fields=${Object.keys(filteredUpdates).join(",")}`)
+    
     if (Object.keys(filteredUpdates).length === 0) {
+      console.log(`[NGO Save] No valid fields after filtering. Incoming keys: ${Object.keys(updates).join(",")}`)
       return { success: false, error: "No valid fields to update" }
     }
     
@@ -561,10 +569,17 @@ export async function updateNGOProfile(
     }
     
     const result = await ngoProfilesDb.update(user.id, filteredUpdates)
+    console.log(`[NGO Save] DB update result: modified=${result}`)
     revalidatePath("/ngo/profile")
+    revalidatePath("/ngo/settings")
     return { success: true, data: result }
-  } catch (error) {
-    return { success: false, error: "Failed to update profile" }
+  } catch (error: any) {
+    // Re-throw Next.js internal errors (redirect, notFound, etc.)
+    if (error?.digest?.startsWith?.("NEXT_")) {
+      throw error
+    }
+    console.error("[NGO Save] Error:", error?.message || error, error?.stack)
+    return { success: false, error: error?.message || "Failed to update profile" }
   }
 }
 

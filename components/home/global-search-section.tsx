@@ -30,6 +30,7 @@ interface SearchResult {
   avatar?: string
   verified?: boolean
   matchedField?: string
+  url?: string
 }
 
 interface SearchSuggestion {
@@ -80,6 +81,9 @@ const TYPE_CONFIG = {
     viewAllPath: "/projects",
   },
 } as const
+
+// Only these types are shown on the home page search
+const ALLOWED_TYPES = "volunteer,ngo,opportunity"
 
 // ============================================
 // HELPER HOOKS
@@ -189,12 +193,16 @@ export function GlobalSearchSection() {
     setIsSuggestionsLoading(true)
     try {
       const res = await fetch(
-        `/api/unified-search?q=${encodeURIComponent(query)}&mode=suggestions&limit=6`,
+        `/api/unified-search?q=${encodeURIComponent(query)}&mode=suggestions&limit=6&types=${ALLOWED_TYPES}`,
         { signal: controller.signal }
       )
       const data = await res.json()
       if (data.success && !controller.signal.aborted) {
-        setSuggestions(data.suggestions || [])
+        // Only show volunteer/ngo/opportunity suggestions on home page
+        const filtered = (data.suggestions || []).filter(
+          (s: any) => s.type === "volunteer" || s.type === "ngo" || s.type === "opportunity"
+        )
+        setSuggestions(filtered)
       }
     } catch (error: any) {
       if (error.name !== "AbortError") {
@@ -223,7 +231,7 @@ export function GlobalSearchSection() {
     setHasSearched(true)
 
     try {
-      const types = type === "all" ? "" : `&types=${type}`
+      const types = type === "all" ? `&types=${ALLOWED_TYPES}` : `&types=${type}`
       const res = await fetch(
         `/api/unified-search?q=${encodeURIComponent(query)}${types}&limit=15`,
         { signal: controller.signal }
@@ -233,7 +241,11 @@ export function GlobalSearchSection() {
       // Only update if this request wasn't cancelled
       if (!controller.signal.aborted) {
         if (data.success) {
-          setResults(data.results || [])
+          // Only show volunteer/ngo/opportunity results on home page
+          const filtered = (data.results || []).filter(
+            (r: any) => r.type === "volunteer" || r.type === "ngo" || r.type === "opportunity"
+          )
+          setResults(filtered)
         } else {
           setResults([])
         }
@@ -392,11 +404,12 @@ export function GlobalSearchSection() {
     }
 
     if (item.id && item.resultType) {
-      const path = item.resultType === "volunteer"
-        ? `/volunteers/${item.id}`
-        : item.resultType === "ngo"
-        ? `/ngos/${item.id}`
-        : `/projects/${item.id}`
+      let path = "/"
+      switch (item.resultType) {
+        case "volunteer": path = `/volunteers/${item.id}`; break
+        case "ngo": path = `/ngos/${item.id}`; break
+        default: path = `/projects/${item.id}`; break
+      }
       router.push(path)
     }
   }
@@ -576,7 +589,7 @@ export function GlobalSearchSection() {
                             Suggestions
                           </div>
                           {suggestions.map((suggestion, index) => {
-                            const config = TYPE_CONFIG[suggestion.type]
+                            const config = TYPE_CONFIG[suggestion.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.opportunity
                             const Icon = config.icon
                             const isSelected = selectedIndex === index
                             return (
@@ -795,7 +808,7 @@ export function GlobalSearchSection() {
                         {/* Category pills showing counts */}
                         <div className="hidden sm:flex items-center gap-1.5">
                           {Object.entries(groupedResults).map(([type, items]) => {
-                            const config = TYPE_CONFIG[type as keyof typeof TYPE_CONFIG]
+                            const config = TYPE_CONFIG[type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.opportunity
                             return (
                               <Badge key={type} variant="secondary" className={`text-xs ${config.badgeClass}`}>
                                 {config.pluralLabel}: {items.length}
@@ -814,7 +827,7 @@ export function GlobalSearchSection() {
                     {/* Results grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {results.map((result, index) => {
-                        const config = TYPE_CONFIG[result.type]
+                        const config = TYPE_CONFIG[result.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.opportunity
                         const Icon = config.icon
                         return (
                           <motion.div

@@ -1,16 +1,52 @@
 import { NextRequest, NextResponse } from "next/server"
+import { elasticSearch, elasticSuggest } from "@/lib/es-search"
+// MongoDB fallback (kept for graceful degradation)
 import { unifiedSearch, getSearchSuggestions } from "@/lib/search-indexes"
 
+// ============================================
+// Unified Search API — Elasticsearch-powered
+// ============================================
+// Params:
+//   q        — search query
+//   types    — comma-separated: "volunteer,ngo,opportunity,blog,page"
+//   limit    — max results (default 20)
+//   mode     — "suggestions" for autocomplete, "full" for search (default)
+//   sort     — "relevance" | "newest" | "rating"
+//   filters  — JSON-encoded filters object
+//   engine   — "es" (default) or "mongo" (fallback)
+// ============================================
+
+const ELASTICSEARCH_ENABLED = !!(process.env.ELASTICSEARCH_URL && process.env.ELASTICSEARCH_API_KEY)
+
+// Map legacy "opportunity" type to "project" for ES
+function mapTypes(types: string[] | undefined): ("volunteer" | "ngo" | "project" | "blog" | "page")[] | undefined {
+  if (!types) return undefined
+  return types.map(t => t === "opportunity" ? "project" : t) as any
+}
+
+// Map ES types back to legacy for component compatibility
+function mapResultType(type: string): string {
+  return type === "project" ? "opportunity" : type
+}
+
 export async function GET(request: NextRequest) {
+  const startTime = Date.now()
   try {
     const { searchParams } = new URL(request.url)
     const query = searchParams.get("q") || ""
-    const typesParam = searchParams.get("types") // comma-separated: "volunteer,ngo,opportunity"
+    const typesParam = searchParams.get("types")
     const limitParam = searchParams.get("limit")
-    const mode = searchParams.get("mode") // "suggestions" for autocomplete
+    const mode = searchParams.get("mode") || "full"
+    const sort = (searchParams.get("sort") || "relevance") as "relevance" | "newest" | "rating"
+    const filtersParam = searchParams.get("filters")
+    const engine = searchParams.get("engine") || (ELASTICSEARCH_ENABLED ? "es" : "mongo")
 
-    // Allow single character searches (Amazon-level instant search)
+    console.log(`[Search API] ===== NEW REQUEST =====`)
+    console.log(`[Search API] query="${query}" mode=${mode} types=${typesParam} limit=${limitParam} engine=${engine} sort=${sort}`)
+    console.log(`[Search API] ES_ENABLED=${ELASTICSEARCH_ENABLED} ES_URL=${process.env.ELASTICSEARCH_URL ? "SET" : "MISSING"} ES_KEY=${process.env.ELASTICSEARCH_API_KEY ? "SET" : "MISSING"}`)
+
     if (!query || query.trim().length < 1) {
+      console.log(`[Search API] Query too short, returning empty`)
       return NextResponse.json({
         success: true,
         results: [],
@@ -18,20 +54,118 @@ export async function GET(request: NextRequest) {
         message: "Query too short",
         query: "",
         count: 0,
+        engine,
       })
     }
 
-    const types = typesParam
-      ? (typesParam.split(",") as ("volunteer" | "ngo" | "opportunity")[])
-      : undefined
-
+    const rawTypes = typesParam ? typesParam.split(",") : undefined
     const limit = limitParam ? parseInt(limitParam, 10) : 20
 
-    // Autocomplete suggestions mode (lightweight, fast)
+    // Parse optional filters
+    let filters: Record<string, any> | undefined
+    if (filtersParam) {
+      try {
+        filters = JSON.parse(filtersParam)
+        console.log(`[Search API] Parsed filters:`, JSON.stringify(filters))
+      } catch {
+        console.log(`[Search API] Failed to parse filters: ${filtersParam}`)
+      }
+    }
+
+    // ---- ELASTICSEARCH ENGINE ----
+    if (engine === "es" && ELASTICSEARCH_ENABLED) {
+      console.log(`[Search API] Using Elasticsearch engine`)
+
+      // Autocomplete suggestions
+      if (mode === "suggestions") {
+        console.log(`[Search API] ES suggestions mode — types=${JSON.stringify(mapTypes(rawTypes))} limit=${Math.min(limit, 8)}`)
+        const suggestions = await elasticSuggest({
+          query,
+          types: mapTypes(rawTypes),
+          limit: Math.min(limit, 8),
+        })
+        console.log(`[Search API] ES suggestions returned: ${suggestions.length} results in ${Date.now() - startTime}ms`)
+        if (suggestions.length > 0) {
+          console.log(`[Search API] First suggestion: ${JSON.stringify(suggestions[0])}`)
+        }
+
+        // Map types back for component compatibility
+        const mappedSuggestions = suggestions.map(s => ({
+          text: s.text,
+          type: mapResultType(s.type),
+          id: s.id,
+          subtitle: s.subtitle,
+        }))
+
+        return NextResponse.json({
+          success: true,
+          suggestions: mappedSuggestions,
+          query,
+          count: mappedSuggestions.length,
+          engine: "elasticsearch",
+        })
+      }
+
+      // Full search
+      console.log(`[Search API] ES full search — types=${JSON.stringify(mapTypes(rawTypes))} limit=${Math.min(limit, 50)}`)
+      const result = await elasticSearch({
+        query,
+        types: mapTypes(rawTypes),
+        filters,
+        limit: Math.min(limit, 50),
+        sort,
+      })
+      console.log(`[Search API] ES search returned: ${result.results.length} of ${result.total} total, took ${result.took}ms (total ${Date.now() - startTime}ms)`)
+      if (result.results.length > 0) {
+        console.log(`[Search API] Top 3 results: ${result.results.slice(0, 3).map(r => `${r.type}:${r.title} (${r.score})`).join(", ")}`)
+      } else {
+        console.log(`[Search API] NO RESULTS from ES for query="${query}"`)
+      }
+
+      // Map types back and flatten metadata for frontend card components
+      const mappedResults = result.results.map(r => {
+        const m = r.metadata || {}
+        // Build location string from city/country
+        const locationParts = [m.city, m.country].filter(Boolean)
+        const location = m.location || (locationParts.length > 0 ? locationParts.join(", ") : undefined)
+        // Skills: volunteers/NGOs use skillNames, projects use skillNames too
+        const skills = Array.isArray(m.skillNames) && m.skillNames.length > 0 ? m.skillNames : undefined
+        return {
+          id: r.id,
+          mongoId: r.mongoId,
+          type: mapResultType(r.type),
+          title: r.title,
+          subtitle: r.subtitle,
+          description: r.description,
+          url: r.url,
+          score: r.score,
+          highlights: r.highlights,
+          // Flattened fields for card rendering
+          avatar: m.avatar || m.logo || undefined,
+          location,
+          skills,
+          verified: m.isVerified || false,
+          matchedField: r.highlights?.length > 0 ? r.highlights[0] : undefined,
+        }
+      })
+
+      return NextResponse.json({
+        success: true,
+        results: mappedResults,
+        query,
+        count: result.total,
+        took: result.took,
+        engine: "elasticsearch",
+      })
+    }
+
+    // ---- MONGODB FALLBACK ENGINE ----
+    const mongoTypes = rawTypes as ("volunteer" | "ngo" | "opportunity")[] | undefined
+
     if (mode === "suggestions") {
       const suggestions = await getSearchSuggestions({
         query,
-        types,
+        types: mongoTypes,
         limit: Math.min(limit, 8),
       })
       return NextResponse.json({
@@ -39,13 +173,13 @@ export async function GET(request: NextRequest) {
         suggestions,
         query,
         count: suggestions.length,
+        engine: "mongodb",
       })
     }
 
-    // Full search mode
     const results = await unifiedSearch({
       query,
-      types,
+      types: mongoTypes,
       limit: Math.min(limit, 50),
     })
 
@@ -54,9 +188,47 @@ export async function GET(request: NextRequest) {
       results,
       query,
       count: results.length,
+      engine: "mongodb",
     })
   } catch (error: any) {
-    console.error("[Unified Search API] Error:", error)
+    console.error(`[Search API] ERROR after ${Date.now() - startTime}ms:`, error?.message || error)
+    console.error(`[Search API] Stack:`, error?.stack?.split("\n").slice(0, 5).join("\n"))
+
+    // If ES fails, try MongoDB fallback
+    if (ELASTICSEARCH_ENABLED) {
+      console.log(`[Search API] Attempting MongoDB fallback...`)
+      try {
+        const { searchParams } = new URL(request.url)
+        const query = searchParams.get("q") || ""
+        const mode = searchParams.get("mode")
+
+        if (mode === "suggestions") {
+          const suggestions = await getSearchSuggestions({
+            query,
+            limit: 6,
+          })
+          return NextResponse.json({
+            success: true,
+            suggestions,
+            query,
+            count: suggestions.length,
+            engine: "mongodb-fallback",
+          })
+        }
+
+        const results = await unifiedSearch({ query, limit: 20 })
+        return NextResponse.json({
+          success: true,
+          results,
+          query,
+          count: results.length,
+          engine: "mongodb-fallback",
+        })
+      } catch (fallbackError: any) {
+        console.error("[Unified Search API] Fallback also failed:", fallbackError)
+      }
+    }
+
     return NextResponse.json(
       { success: false, error: error.message || "Search failed", results: [], count: 0 },
       { status: 500 }

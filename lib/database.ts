@@ -299,6 +299,7 @@ export const ngoProfilesDb = {
       ...user,
       userId: user._id.toString(),
       causes: safeJsonParse(user.causes, []),
+      typicalSkillsNeeded: safeJsonParse(user.typicalSkillsNeeded, []),
     } as NGOProfile
   },
 
@@ -312,11 +313,15 @@ export const ngoProfilesDb = {
     // Convert arrays to JSON strings
     const processedUpdates: any = { ...updates }
     if (updates.causes) processedUpdates.causes = JSON.stringify(updates.causes)
+    if (updates.typicalSkillsNeeded) processedUpdates.typicalSkillsNeeded = JSON.stringify(updates.typicalSkillsNeeded)
+    
+    console.log(`[ngoProfilesDb.update] userId=${userId}, fields=${Object.keys(processedUpdates).join(",")}`)
     
     const result = await collection.updateOne(
       userIdQuery(userId),
       { $set: { ...processedUpdates, updatedAt: new Date() } }
     )
+    console.log(`[ngoProfilesDb.update] matchedCount=${result.matchedCount}, modifiedCount=${result.modifiedCount}`)
     return result.modifiedCount > 0
   },
 
@@ -332,6 +337,7 @@ export const ngoProfilesDb = {
       ...u,
       userId: u._id.toString(),
       causes: safeJsonParse(u.causes, []),
+      typicalSkillsNeeded: safeJsonParse(u.typicalSkillsNeeded, []),
     }))
   },
 

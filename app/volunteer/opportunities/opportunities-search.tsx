@@ -176,7 +176,7 @@ export function OpportunitiesSearchCard() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {results.map((result, index) => {
-                    const config = TYPE_CONFIG[result.type]
+                    const config = TYPE_CONFIG[result.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.opportunity
                     const Icon = config.icon
                     return (
                       <motion.div

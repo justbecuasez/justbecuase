@@ -17,6 +17,8 @@ import {
   Briefcase,
   MapPin,
   CheckCircle,
+  FileText,
+  BookOpen,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
@@ -26,16 +28,16 @@ import { Badge } from "@/components/ui/badge"
 
 interface SearchSuggestion {
   text: string
-  type: "volunteer" | "ngo" | "opportunity"
+  type: "volunteer" | "ngo" | "opportunity" | "blog" | "page"
   id: string
   subtitle?: string
 }
 
 export interface UnifiedSearchBarProps {
   /** Pre-filter suggestions by type */
-  defaultType?: "all" | "opportunity" | "volunteer" | "ngo"
+  defaultType?: "all" | "opportunity" | "volunteer" | "ngo" | "blog" | "page"
   /** Restrict search to only these types (overrides defaultType when set) */
-  allowedTypes?: ("opportunity" | "volunteer" | "ngo")[]
+  allowedTypes?: ("opportunity" | "volunteer" | "ngo" | "blog" | "page")[]
   /** Visual variant */
   variant?: "default" | "compact" | "hero"
   /** Custom placeholder */
@@ -86,6 +88,16 @@ const TYPE_CONFIG = {
     icon: Briefcase,
     label: "Opportunity",
     badgeClass: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  },
+  blog: {
+    icon: BookOpen,
+    label: "Blog",
+    badgeClass: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+  },
+  page: {
+    icon: FileText,
+    label: "Page",
+    badgeClass: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
   },
 } as const
 
@@ -361,11 +373,15 @@ export function UnifiedSearchBar({
     }
 
     if (navigateOnSelect && item.id && item.resultType) {
-      const path = item.resultType === "volunteer"
-        ? `/volunteers/${item.id}`
-        : item.resultType === "ngo"
-        ? `/ngos/${item.id}`
-        : `/projects/${item.id}`
+      let path = "/"
+      switch (item.resultType) {
+        case "volunteer": path = `/volunteers/${item.id}`; break
+        case "ngo": path = `/ngos/${item.id}`; break
+        case "opportunity": path = `/projects/${item.id}`; break
+        case "blog": path = `/blog/${item.id}`; break
+        case "page": path = item.id.startsWith("/") ? item.id : `/${item.id}`; break
+        default: path = `/projects/${item.id}`
+      }
       router.push(path)
     }
   }
@@ -398,7 +414,7 @@ export function UnifiedSearchBar({
     ? "Search organizations..."
     : defaultType === "opportunity"
     ? "Search opportunities..."
-    : "Search opportunities, skills, people, causes..."
+    : "Search volunteers, NGOs, opportunities, blog, anything..."
 
   // ============================================
   // RENDER
