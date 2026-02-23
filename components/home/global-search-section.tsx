@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import { resolveSkillName } from "@/lib/skills-data"
 import { motion, AnimatePresence } from "motion/react"
 
 // ============================================
@@ -901,7 +902,7 @@ export function GlobalSearchSection() {
                                     <div className="flex gap-1 mt-1.5 flex-wrap">
                                       {result.skills.slice(0, 2).map((skill) => (
                                         <Badge key={skill} variant="outline" className="text-[10px] px-1.5 py-0">
-                                          {skill.replace(/-/g, " ")}
+                                          {resolveSkillName(skill)}
                                         </Badge>
                                       ))}
                                       {result.skills.length > 2 && (

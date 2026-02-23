@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { skillCategories } from "@/lib/skills-data"
+import { skillCategories, resolveSkillName } from "@/lib/skills-data"
 import { SlidersHorizontal, Grid3X3, List, X, Loader2 } from "lucide-react"
 import { UnifiedSearchBar } from "@/components/unified-search-bar"
 
@@ -471,7 +471,7 @@ export default function ProjectsPage() {
                       id: project._id?.toString() || project.id || "",
                       title: project.title,
                       description: project.description,
-                      skills: project.skills || project.skillsRequired?.map(s => s.subskillId) || [],
+                      skills: (project.skills || project.skillsRequired?.map(s => s.subskillId) || []).map(resolveSkillName),
                       location: project.workMode === "remote" ? "Remote" : project.location || "On-site",
                       timeCommitment: project.timeCommitment,
                       applicants: project.applicantsCount || 0,

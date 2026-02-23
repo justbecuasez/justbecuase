@@ -219,3 +219,19 @@ export const volunteerTypes = [
   { id: "paid", name: "Paid", description: "Charge for your time" },
   { id: "both", name: "Both", description: "Flexible based on opportunity" },
 ] as const;
+
+// ============================================
+// UTILITY: Fast subskillId → display name resolver
+// ============================================
+// Pre-built flat map so every component can resolve IDs in O(1)
+const _skillNameMap = new Map<string, string>()
+for (const cat of skillCategories) {
+  for (const sub of cat.subskills) {
+    _skillNameMap.set(sub.id, sub.name)
+  }
+}
+
+/** Resolve a subskillId to its human-readable name. Falls back to title-cased ID. */
+export function resolveSkillName(subskillId: string): string {
+  return _skillNameMap.get(subskillId) || subskillId.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase())
+}

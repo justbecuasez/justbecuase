@@ -20,7 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { skillCategories } from "@/lib/skills-data"
+import { skillCategories, resolveSkillName } from "@/lib/skills-data"
 import {
   X,
   Loader2,
@@ -545,7 +545,7 @@ export function OpportunitiesBrowser() {
                   <div className="flex flex-wrap gap-1 mb-4">
                     {(project.skills || project.skillsRequired?.map((s) => s.subskillId) || []).slice(0, 3).map((skill: string, i: number) => (
                       <Badge key={i} variant="secondary" className="text-xs">
-                        {skill}
+                        {resolveSkillName(skill)}
                       </Badge>
                     ))}
                     {(project.skillsRequired?.length || 0) > 3 && (

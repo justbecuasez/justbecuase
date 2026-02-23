@@ -14,6 +14,7 @@
 // ============================================
 
 import client from "./db"
+import { skillCategories as _srcSkillCategories, causes as _srcCauses } from "./skills-data"
 
 const DB_NAME = "justbecause"
 
@@ -34,100 +35,15 @@ interface CauseEntry {
   name: string
 }
 
-const SKILL_CATEGORIES: { id: string; name: string; subskills: { id: string; name: string }[] }[] = [
-  {
-    id: "digital-marketing", name: "Digital Marketing",
-    subskills: [
-      { id: "community-management", name: "Community Management" },
-      { id: "email-marketing", name: "Email Marketing / Automation" },
-      { id: "social-media-ads", name: "Social Media Ads (Meta Ads / Facebook Ads)" },
-      { id: "ppc-google-ads", name: "PPC / Google Ads" },
-      { id: "seo-content", name: "SEO / Content" },
-      { id: "social-media-strategy", name: "Social Media Strategy" },
-      { id: "whatsapp-marketing", name: "WhatsApp Marketing" },
-    ],
-  },
-  {
-    id: "fundraising", name: "Fundraising Assistance",
-    subskills: [
-      { id: "grant-writing", name: "Grant Writing" },
-      { id: "grant-research", name: "Grant Research" },
-      { id: "corporate-sponsorship", name: "Corporate Sponsorship" },
-      { id: "major-gift-strategy", name: "Major Gift Strategy" },
-      { id: "peer-to-peer-campaigns", name: "Peer-to-Peer Campaigns" },
-      { id: "fundraising-pitch-deck", name: "Fundraising Pitch Deck Support" },
-    ],
-  },
-  {
-    id: "website", name: "Website Design & Maintenance",
-    subskills: [
-      { id: "wordpress-development", name: "WordPress Development" },
-      { id: "ux-ui", name: "UX / UI" },
-      { id: "html-css", name: "HTML / CSS" },
-      { id: "website-security", name: "Website Security" },
-      { id: "cms-maintenance", name: "CMS Maintenance" },
-      { id: "website-redesign", name: "Website Redesign" },
-      { id: "landing-page-optimization", name: "Landing Page Optimization" },
-    ],
-  },
-  {
-    id: "finance", name: "Finance & Accounting",
-    subskills: [
-      { id: "bookkeeping", name: "Bookkeeping" },
-      { id: "budgeting-forecasting", name: "Budgeting & Forecasting" },
-      { id: "payroll-processing", name: "Payroll Processing" },
-      { id: "financial-reporting", name: "Financial Reporting" },
-      { id: "accounting-software", name: "Accounting Software (Tally / QuickBooks / Zoho)" },
-    ],
-  },
-  {
-    id: "content-creation", name: "Content Creation",
-    subskills: [
-      { id: "photography", name: "Photography (Event / Documentary)" },
-      { id: "videography", name: "Videography / Shooting" },
-      { id: "video-editing", name: "Video Editing" },
-      { id: "photo-editing", name: "Photo Editing / Retouching" },
-      { id: "motion-graphics", name: "Motion Graphics" },
-      { id: "graphic-design", name: "Graphic Design" },
-    ],
-  },
-  {
-    id: "communication", name: "Communication",
-    subskills: [
-      { id: "donor-communications", name: "Donor Communications" },
-      { id: "email-copywriting", name: "Email Copywriting" },
-      { id: "press-release", name: "Press Release" },
-      { id: "impact-story-writing", name: "Impact Story Writing" },
-      { id: "annual-report-writing", name: "Annual Report Writing" },
-    ],
-  },
-  {
-    id: "planning-support", name: "Planning & Support",
-    subskills: [
-      { id: "volunteer-recruitment", name: "Volunteer Recruitment" },
-      { id: "event-planning", name: "Event Planning" },
-      { id: "event-onground-support", name: "Event On-Ground Support" },
-      { id: "telecalling", name: "Telecalling" },
-      { id: "customer-support", name: "Customer Support" },
-      { id: "logistics-management", name: "Logistics Management" },
-    ],
-  },
-]
+// Derive from canonical source (lib/skills-data.tsx) — no more stale duplicates
+const SKILL_CATEGORIES: { id: string; name: string; subskills: { id: string; name: string }[] }[] =
+  _srcSkillCategories.map(c => ({
+    id: c.id,
+    name: c.name,
+    subskills: c.subskills.map(s => ({ id: s.id, name: s.name })),
+  }))
 
-const CAUSE_LIST: CauseEntry[] = [
-  { id: "education", name: "Education" },
-  { id: "healthcare", name: "Healthcare" },
-  { id: "environment", name: "Environment" },
-  { id: "poverty-alleviation", name: "Poverty Alleviation" },
-  { id: "women-empowerment", name: "Women Empowerment" },
-  { id: "child-welfare", name: "Child Welfare" },
-  { id: "animal-welfare", name: "Animal Welfare" },
-  { id: "disaster-relief", name: "Disaster Relief" },
-  { id: "human-rights", name: "Human Rights" },
-  { id: "arts-culture", name: "Arts & Culture" },
-  { id: "senior-citizens", name: "Senior Citizens" },
-  { id: "disability-support", name: "Disability Support" },
-]
+const CAUSE_LIST: CauseEntry[] = _srcCauses.map(c => ({ id: c.id, name: c.name }))
 
 // ============================================
 // SEMANTIC SYNONYM / RELATED-TERMS MAP
@@ -151,21 +67,29 @@ const SYNONYM_GROUPS: string[][] = [
   // WhatsApp
   ["whatsapp", "whatsapp marketing", "messaging", "sms", "text message", "broadcast"],
   // Website & Web Development
-  ["web", "website", "webpage", "site", "wordpress", "html", "css", "frontend", "front-end", "landing page", "cms", "web design", "web development", "webdev"],
+  ["web", "website", "webpage", "site", "wordpress", "html", "css", "frontend", "front-end", "landing page", "cms", "web design", "web development", "webdev", "react", "nextjs", "next.js", "shopify", "webflow", "wix", "squarespace", "ecommerce", "e-commerce", "vercel", "netlify"],
+  // Backend & Full-Stack Development
+  ["backend", "back-end", "node", "nodejs", "node.js", "express", "api", "rest", "graphql", "server", "database", "mongodb", "postgresql", "mysql", "sql", "python", "django", "flask", "full stack", "fullstack"],
+  // Mobile Development
+  ["mobile", "mobile app", "react native", "flutter", "ios", "android", "app development", "native app", "cross platform"],
+  // DevOps & Infrastructure
+  ["devops", "hosting", "aws", "azure", "gcp", "digitalocean", "docker", "kubernetes", "ci/cd", "deployment", "infrastructure", "cloud"],
   // UX/UI Design
   ["ux", "ui", "user experience", "user interface", "design", "wireframe", "prototype", "figma", "usability"],
   // Graphic Design & Creative
-  ["graphic", "graphics", "graphic design", "creative", "visual", "illustration", "poster", "banner", "flyer", "brochure", "canva", "photoshop", "illustrator"],
+  ["graphic", "graphics", "graphic design", "creative", "visual", "illustration", "poster", "banner", "flyer", "brochure", "canva", "photoshop", "illustrator", "figma", "infographic", "branding", "logo", "brand identity", "presentation", "powerpoint", "google slides"],
   // Video & Motion
-  ["video", "videography", "video editing", "motion graphics", "animation", "film", "filming", "shooting", "documentary", "premiere", "after effects", "reel"],
+  ["video", "videography", "video editing", "motion graphics", "animation", "film", "filming", "shooting", "documentary", "premiere", "after effects", "reel", "reels", "shorts", "youtube", "tiktok", "davinci", "davinci resolve", "podcast", "podcast production", "audio"],
   // Photography
   ["photo", "photography", "photographer", "photo editing", "retouching", "lightroom", "camera", "portrait", "event photography"],
   // Writing & Content
-  ["writing", "writer", "copywriting", "copywriter", "content", "content creation", "blog", "article", "storytelling", "impact story", "press release", "annual report", "report writing"],
+  ["writing", "writer", "copywriting", "copywriter", "content", "content creation", "blog", "article", "storytelling", "impact story", "press release", "annual report", "report writing", "newsletter", "proposal", "rfp", "translation", "localization", "public speaking", "training"],
   // Fundraising & Grants
-  ["fundraising", "fundraiser", "donation", "donate", "grant", "grants", "grant writing", "grant research", "sponsorship", "sponsor", "corporate sponsorship", "crowdfunding", "charity", "philanthropy", "giving", "donor", "donors"],
+  ["fundraising", "fundraiser", "donation", "donate", "grant", "grants", "grant writing", "grant research", "sponsorship", "sponsor", "corporate sponsorship", "crowdfunding", "charity", "philanthropy", "giving", "donor", "donors", "csr", "gofundme", "ketto", "milaap", "donor management"],
   // Finance & Accounting
-  ["finance", "financial", "accounting", "accountant", "bookkeeping", "bookkeeper", "budget", "budgeting", "forecasting", "payroll", "tally", "quickbooks", "zoho", "audit", "tax", "taxation", "revenue"],
+  ["finance", "financial", "accounting", "accountant", "bookkeeping", "bookkeeper", "budget", "budgeting", "forecasting", "payroll", "tally", "quickbooks", "zoho", "audit", "tax", "taxation", "revenue", "fcra", "80g", "12a", "compliance", "financial modelling"],
+  // Legal & Compliance
+  ["legal", "law", "lawyer", "advocate", "compliance", "contract", "policy", "ngo registration", "trust", "society", "section 8", "fcra", "trademark", "ip", "intellectual property", "rti", "governance", "pro bono counsel"],
   // Events & Planning
   ["event", "events", "event planning", "event management", "conference", "seminar", "workshop", "meetup", "webinar", "logistics", "coordination", "organizing"],
   // Support & Communication
@@ -197,9 +121,9 @@ const SYNONYM_GROUPS: string[][] = [
   // Arts & Culture
   ["art", "arts", "culture", "cultural", "heritage", "music", "dance", "drama", "theater", "theatre", "painting", "craft", "crafts", "folk", "tradition"],
   // Technology & IT
-  ["technology", "tech", "it", "software", "developer", "programming", "coding", "app", "application", "mobile", "data", "database", "cloud", "server", "devops", "api"],
+  ["technology", "tech", "it", "software", "developer", "programming", "coding", "app", "application", "mobile", "data", "database", "cloud", "server", "devops", "api", "automation", "zapier", "make", "n8n", "chatbot", "ai", "machine learning", "ml", "power bi", "tableau", "looker", "data analysis", "data visualization", "cybersecurity", "google workspace", "microsoft 365"],
   // Management & Strategy
-  ["management", "manager", "strategy", "strategic", "planning", "operations", "project management", "leadership", "administration", "admin"],
+  ["management", "manager", "strategy", "strategic", "planning", "operations", "project management", "leadership", "administration", "admin", "notion", "trello", "asana", "jira", "monitoring", "evaluation", "m&e", "data entry", "documentation", "hr", "human resources", "crm", "hubspot"],
   // Remote / Work Mode
   ["remote", "work from home", "wfh", "online", "virtual", "distributed", "telecommute"],
   ["onsite", "on-site", "in-person", "office", "physical", "field work", "on ground"],

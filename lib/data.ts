@@ -171,14 +171,15 @@ export const sampleNGOs = [
 ]
 
 export const skillCategories = [
-  { name: "Marketing & Communications", icon: "Megaphone", count: 45 },
-  { name: "Web & Technology", icon: "Code", count: 38 },
-  { name: "Design & Creative", icon: "Palette", count: 32 },
-  { name: "Finance & Operations", icon: "Calculator", count: 28 },
-  { name: "Strategy & Planning", icon: "Target", count: 24 },
+  { name: "Digital Marketing", icon: "Megaphone", count: 45 },
+  { name: "Website & App Development", icon: "Code", count: 52 },
+  { name: "Content Creation & Design", icon: "Palette", count: 38 },
+  { name: "Communication & Writing", icon: "MessageSquare", count: 32 },
+  { name: "Fundraising Assistance", icon: "Heart", count: 28 },
+  { name: "Finance & Accounting", icon: "Calculator", count: 24 },
+  { name: "Planning & Operations", icon: "Users", count: 22 },
   { name: "Legal & Compliance", icon: "Scale", count: 15 },
-  { name: "HR & Training", icon: "Users", count: 18 },
-  { name: "Fundraising & Grants", icon: "Heart", count: 22 },
+  { name: "Data & Technology", icon: "Laptop", count: 18 },
 ]
 
 export const impactMetrics = {

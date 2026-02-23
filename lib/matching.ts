@@ -36,11 +36,13 @@ const CATEGORY_SIMILARITY: Record<string, Record<string, number>> = {
   "website": {
     "digital-marketing": 0.25,
     "content-creation": 0.15,
+    "data-technology": 0.35,
   },
   "digital-marketing": {
     "website": 0.20,
     "content-creation": 0.30,
     "communication": 0.25,
+    "data-technology": 0.15,
   },
   "content-creation": {
     "digital-marketing": 0.25,
@@ -55,14 +57,27 @@ const CATEGORY_SIMILARITY: Record<string, Record<string, number>> = {
   "fundraising": {
     "communication": 0.20,
     "finance": 0.15,
+    "planning-support": 0.10,
   },
   "finance": {
     "fundraising": 0.10,
     "planning-support": 0.10,
+    "legal": 0.15,
   },
   "planning-support": {
     "communication": 0.15,
     "finance": 0.10,
+    "data-technology": 0.10,
+  },
+  "legal": {
+    "finance": 0.15,
+    "planning-support": 0.10,
+    "communication": 0.10,
+  },
+  "data-technology": {
+    "website": 0.35,
+    "digital-marketing": 0.15,
+    "planning-support": 0.10,
   },
 }
 

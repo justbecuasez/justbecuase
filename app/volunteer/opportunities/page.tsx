@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { ApplyButton } from "@/app/projects/[id]/apply-button"
 import { OpportunitiesBrowser } from "./opportunities-browser"
 import Link from "next/link"
+import { resolveSkillName } from "@/lib/skills-data"
 import {
   Clock,
   MapPin,
@@ -168,7 +169,7 @@ async function OpportunityCard({
         <div className="flex flex-wrap gap-1 mb-4">
           {project.skillsRequired?.slice(0, 3).map((skill: any, i: number) => (
             <Badge key={i} variant="secondary" className="text-xs">
-              {skill.subskillId}
+              {resolveSkillName(skill.subskillId)}
             </Badge>
           ))}
           {project.skillsRequired?.length > 3 && (

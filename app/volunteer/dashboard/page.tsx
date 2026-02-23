@@ -12,6 +12,7 @@ import { getVolunteerProfile, getMyApplications, getMatchedOpportunitiesForVolun
 import { Clock, CheckCircle2, FolderKanban, TrendingUp, Star, ArrowRight, Edit, Briefcase, CreditCard, Zap } from "lucide-react"
 import { AIMatchExplanation } from "@/components/ai/match-explanation"
 import Link from "next/link"
+import { resolveSkillName } from "@/lib/skills-data"
 
 export default async function VolunteerDashboard() {
   const session = await auth.api.getSession({
@@ -264,7 +265,7 @@ export default async function VolunteerDashboard() {
                       <div className="flex flex-wrap gap-2">
                         {profile.skills.slice(0, 5).map((skill, i) => (
                           <Badge key={i} variant="secondary" className="bg-accent text-accent-foreground">
-                            {skill.subskillId}
+                            {resolveSkillName(skill.subskillId)}
                           </Badge>
                         ))}
                         {profile.skills.length > 5 && (

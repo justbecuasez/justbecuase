@@ -1211,7 +1211,7 @@ function VolunteerCard({
         <div className="flex flex-wrap gap-1 mb-4">
           {volunteer.skills?.slice(0, 3).map((skill, i) => (
             <Badge key={i} variant="secondary" className="text-xs">
-              {skill.subskillId}
+              {getSkillDisplayName(skill.subskillId)}
             </Badge>
           ))}
           {(volunteer.skills?.length || 0) > 3 && (

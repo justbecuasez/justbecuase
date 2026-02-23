@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
 import { UserActions } from "@/components/admin/user-actions"
+import { resolveSkillName } from "@/lib/skills-data"
 
 interface Volunteer {
   userId: string
@@ -108,8 +109,8 @@ export function VolunteersSearchableList({ volunteers, title }: VolunteersSearch
 
   // Helper to display skills
   const getSkillDisplay = (skill: { subskillId?: string; skillId?: string } | string) => {
-    if (typeof skill === "string") return skill
-    return skill.subskillId || skill.skillId || "Unknown"
+    if (typeof skill === "string") return resolveSkillName(skill)
+    return resolveSkillName(skill.subskillId || skill.skillId || "Unknown")
   }
 
   return (

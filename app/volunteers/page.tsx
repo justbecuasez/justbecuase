@@ -304,7 +304,7 @@ export default function VolunteersPage() {
           {skillCategories.map((category) => (
             <div key={category.id} className="space-y-1">
               <p className="text-xs font-medium text-muted-foreground">{category.name}</p>
-              {category.subskills.slice(0, 3).map((skill) => (
+              {category.subskills.slice(0, 4).map((skill) => (
                 <div key={skill.id} className="flex items-center space-x-2">
                   <Checkbox
                     id={`filter-${skill.id}`}

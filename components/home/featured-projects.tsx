@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ProjectCard } from "@/components/project-card"
 import { browseProjects } from "@/lib/actions"
 import { ArrowRight } from "lucide-react"
+import { resolveSkillName } from "@/lib/skills-data"
 
 export async function FeaturedProjects() {
   const projects = await browseProjects()
@@ -74,7 +75,7 @@ export async function FeaturedProjects() {
                       id: project._id?.toString() || "",
                       title: project.title,
                       description: project.description,
-                      skills: project.skillsRequired?.map((s: any) => s.subskillId) || [],
+                      skills: project.skillsRequired?.map((s: any) => resolveSkillName(s.subskillId)) || [],
                       location: project.workMode === "remote" ? "Remote" : project.location || "On-site",
                       timeCommitment: project.timeCommitment,
                       applicants: project.applicantsCount || 0,

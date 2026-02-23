@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import Link from "next/link"
+import { resolveSkillName } from "@/lib/skills-data"
 import {
   PlusCircle,
   FolderKanban,
@@ -212,7 +213,7 @@ function ProjectCard({ project }: { project: any }) {
         <div className="flex flex-wrap gap-1 mb-4">
           {project.skillsRequired?.slice(0, 4).map((skill: any, i: number) => (
             <Badge key={i} variant="secondary" className="text-xs">
-              {skill.subskillId}
+              {resolveSkillName(skill.subskillId)}
             </Badge>
           ))}
           {project.skillsRequired?.length > 4 && (

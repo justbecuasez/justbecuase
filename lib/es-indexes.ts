@@ -14,49 +14,14 @@ import esClient, { ES_INDEXES } from "./elasticsearch"
 // SKILL & CAUSE NAME LOOKUPS (for denormalization)
 // ============================================
 
-const SKILL_MAP: Record<string, { categoryName: string; subskillName: string }> = {
-  "community-management": { categoryName: "Digital Marketing", subskillName: "Community Management" },
-  "email-marketing": { categoryName: "Digital Marketing", subskillName: "Email Marketing / Automation" },
-  "social-media-ads": { categoryName: "Digital Marketing", subskillName: "Social Media Ads (Meta Ads / Facebook Ads)" },
-  "ppc-google-ads": { categoryName: "Digital Marketing", subskillName: "PPC / Google Ads" },
-  "seo-content": { categoryName: "Digital Marketing", subskillName: "SEO / Content" },
-  "social-media-strategy": { categoryName: "Digital Marketing", subskillName: "Social Media Strategy" },
-  "whatsapp-marketing": { categoryName: "Digital Marketing", subskillName: "WhatsApp Marketing" },
-  "grant-writing": { categoryName: "Fundraising Assistance", subskillName: "Grant Writing" },
-  "grant-research": { categoryName: "Fundraising Assistance", subskillName: "Grant Research" },
-  "corporate-sponsorship": { categoryName: "Fundraising Assistance", subskillName: "Corporate Sponsorship" },
-  "major-gift-strategy": { categoryName: "Fundraising Assistance", subskillName: "Major Gift Strategy" },
-  "peer-to-peer-campaigns": { categoryName: "Fundraising Assistance", subskillName: "Peer-to-Peer Campaigns" },
-  "fundraising-pitch-deck": { categoryName: "Fundraising Assistance", subskillName: "Fundraising Pitch Deck Support" },
-  "wordpress-development": { categoryName: "Website Design & Maintenance", subskillName: "WordPress Development" },
-  "ux-ui": { categoryName: "Website Design & Maintenance", subskillName: "UX / UI" },
-  "html-css": { categoryName: "Website Design & Maintenance", subskillName: "HTML / CSS" },
-  "website-security": { categoryName: "Website Design & Maintenance", subskillName: "Website Security" },
-  "cms-maintenance": { categoryName: "Website Design & Maintenance", subskillName: "CMS Maintenance" },
-  "website-redesign": { categoryName: "Website Design & Maintenance", subskillName: "Website Redesign" },
-  "landing-page-optimization": { categoryName: "Website Design & Maintenance", subskillName: "Landing Page Optimization" },
-  "bookkeeping": { categoryName: "Finance & Accounting", subskillName: "Bookkeeping" },
-  "budgeting-forecasting": { categoryName: "Finance & Accounting", subskillName: "Budgeting & Forecasting" },
-  "payroll-processing": { categoryName: "Finance & Accounting", subskillName: "Payroll Processing" },
-  "financial-reporting": { categoryName: "Finance & Accounting", subskillName: "Financial Reporting" },
-  "accounting-software": { categoryName: "Finance & Accounting", subskillName: "Accounting Software (Tally / QuickBooks / Zoho)" },
-  "photography": { categoryName: "Content Creation", subskillName: "Photography (Event / Documentary)" },
-  "videography": { categoryName: "Content Creation", subskillName: "Videography / Shooting" },
-  "video-editing": { categoryName: "Content Creation", subskillName: "Video Editing" },
-  "photo-editing": { categoryName: "Content Creation", subskillName: "Photo Editing / Retouching" },
-  "motion-graphics": { categoryName: "Content Creation", subskillName: "Motion Graphics" },
-  "graphic-design": { categoryName: "Content Creation", subskillName: "Graphic Design" },
-  "donor-communications": { categoryName: "Communication", subskillName: "Donor Communications" },
-  "email-copywriting": { categoryName: "Communication", subskillName: "Email Copywriting" },
-  "press-release": { categoryName: "Communication", subskillName: "Press Release" },
-  "impact-story-writing": { categoryName: "Communication", subskillName: "Impact Story Writing" },
-  "annual-report-writing": { categoryName: "Communication", subskillName: "Annual Report Writing" },
-  "volunteer-recruitment": { categoryName: "Planning & Support", subskillName: "Volunteer Recruitment" },
-  "event-planning": { categoryName: "Planning & Support", subskillName: "Event Planning" },
-  "event-onground-support": { categoryName: "Planning & Support", subskillName: "Event On-Ground Support" },
-  "telecalling": { categoryName: "Planning & Support", subskillName: "Telecalling" },
-  "customer-support": { categoryName: "Planning & Support", subskillName: "Customer Support" },
-  "logistics-management": { categoryName: "Planning & Support", subskillName: "Logistics Management" },
+// Auto-generate SKILL_MAP from the canonical skillCategories source
+import { skillCategories as _skillCats } from "./skills-data"
+
+const SKILL_MAP: Record<string, { categoryName: string; subskillName: string }> = {}
+for (const cat of _skillCats) {
+  for (const sub of cat.subskills) {
+    SKILL_MAP[sub.id] = { categoryName: cat.name, subskillName: sub.name }
+  }
 }
 
 const CAUSE_MAP: Record<string, string> = {
