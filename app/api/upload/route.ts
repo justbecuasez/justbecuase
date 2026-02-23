@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { v2 as cloudinary } from "cloudinary"
 import { getCurrentUser } from "@/lib/actions"
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 
 // Configure Cloudinary
 cloudinary.config({
@@ -10,6 +11,10 @@ cloudinary.config({
 })
 
 export async function POST(request: NextRequest) {
+  // Rate limit uploads: 20 per minute
+  const limited = checkRateLimit(request, { ...RATE_LIMITS.upload, keyPrefix: "upload" })
+  if (limited) return limited
+
   try {
     // Verify user is authenticated
     const user = await getCurrentUser()

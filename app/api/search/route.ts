@@ -3,6 +3,7 @@ import { generateText, Output } from "ai"
 import { openai } from "@ai-sdk/openai"
 import { z } from "zod"
 import client from "@/lib/db"
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit"
 
 // All valid skill IDs and cause IDs from the platform
 const VALID_SKILLS = [
@@ -66,6 +67,10 @@ const queryParseSchema = z.object({
 })
 
 export async function POST(req: NextRequest) {
+  // Rate limit AI search: 30 requests per minute
+  const limited = checkRateLimit(req, { ...RATE_LIMITS.ai, keyPrefix: "ai-search" })
+  if (limited) return limited
+
   try {
     const { query } = await req.json()
 

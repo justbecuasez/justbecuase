@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { elasticSearch, elasticSuggest } from "@/lib/es-search"
 // MongoDB fallback (kept for graceful degradation)
 import { unifiedSearch, getSearchSuggestions } from "@/lib/search-indexes"
+import { trackEvent } from "@/lib/analytics"
 
 // ============================================
 // Unified Search API — Elasticsearch-powered
@@ -168,6 +169,7 @@ export async function GET(request: NextRequest) {
         types: mongoTypes,
         limit: Math.min(limit, 8),
       })
+      trackEvent("search", "suggest", { metadata: { query, engine: "mongodb", count: suggestions.length } })
       return NextResponse.json({
         success: true,
         suggestions,
@@ -183,6 +185,7 @@ export async function GET(request: NextRequest) {
       limit: Math.min(limit, 50),
     })
 
+    trackEvent("search", "query", { metadata: { query, engine: "mongodb", count: results.length, took: Date.now() - startTime } })
     return NextResponse.json({
       success: true,
       results,

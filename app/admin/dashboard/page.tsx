@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { getAdminAnalytics } from "@/lib/actions"
+import { AnalyticsCharts } from "@/components/admin/analytics-charts"
 import {
   Users,
   Building2,
@@ -375,6 +376,9 @@ async function DashboardContent() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Analytics Charts (client-side, loaded async) */}
+      <AnalyticsCharts />
     </>
   )
 }

@@ -34,6 +34,7 @@ import {
   userIdBatchQuery,
 } from "./database"
 import { getUserInfo, getUsersInfo } from "./user-utils"
+import { trackEvent } from "./analytics"
 import {
   matchVolunteersToProject,
   matchOpportunitiesToVolunteer,
@@ -214,6 +215,7 @@ export async function completeOnboarding(): Promise<ApiResponse<boolean>> {
     }
     
     revalidatePath("/")
+    trackEvent("user", "onboarding_complete", { userId: user.id })
     return { success: true, data: true }
   } catch (error) {
     console.error("Error completing onboarding:", error)
@@ -307,6 +309,8 @@ export async function saveVolunteerOnboarding(data: {
     // This would be done through Better Auth's user update
 
     revalidatePath("/volunteer/dashboard")
+    trackEvent("user", "signup", { userId: user.id, metadata: { role: "volunteer", skillCount: data.skills?.length || 0 } })
+    trackEvent("user", "profile_complete", { userId: user.id, metadata: { role: "volunteer" } })
     return { success: true, data: "Profile saved successfully" }
   } catch (error) {
     console.error("Error saving volunteer onboarding:", error)
@@ -518,6 +522,8 @@ export async function saveNGOOnboarding(data: {
     }
 
     revalidatePath("/ngo/dashboard")
+    trackEvent("user", "ngo_signup", { userId: user.id, metadata: { orgName: data.orgDetails.orgName } })
+    trackEvent("user", "profile_complete", { userId: user.id, metadata: { role: "ngo" } })
     return { success: true, data: "NGO profile saved successfully" }
   } catch (error) {
     console.error("Error saving NGO onboarding:", error)
@@ -867,6 +873,7 @@ export async function createProject(data: {
 
     revalidatePath("/ngo/projects")
     revalidatePath("/projects")
+    trackEvent("project", "created", { userId: user.id, metadata: { projectId, title: data.title, skillCount: data.skillsRequired?.length || 0 } })
     return { success: true, data: projectId }
   } catch (error) {
     console.error("Error creating project:", error)
@@ -1186,6 +1193,7 @@ export async function applyToProject(
 
     revalidatePath("/volunteer/applications")
     revalidatePath("/ngo/applications")
+    trackEvent("application", "submitted", { userId: user.id, metadata: { applicationId, projectId } })
     return { success: true, data: applicationId }
   } catch (error) {
     console.error("Error applying to project:", error)
@@ -1395,6 +1403,10 @@ export async function updateApplicationStatus(
     }
 
     revalidatePath("/ngo/applications")
+    trackEvent("application", status === "accepted" ? "accepted" : status === "rejected" ? "rejected" : "status_changed", {
+      userId: user.id,
+      metadata: { applicationId, status, projectId: application.projectId }
+    })
     return { success: true, data: result }
   } catch (error) {
     return { success: false, error: "Failed to update application" }
