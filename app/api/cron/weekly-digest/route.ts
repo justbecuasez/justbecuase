@@ -28,22 +28,25 @@ export async function GET(request: Request) {
 
     let sent = 0
     let failed = 0
+    let skipped = 0
 
     for (const volunteer of volunteers) {
       try {
-        // Find matching projects based on skills
-        const volunteerSkills = (volunteer.skills || []).map((s: any) =>
-          (typeof s === "string" ? s : s.subskillId || s.categoryId || "").toLowerCase()
-        )
+        // Extract volunteer subskillIds (handles both object and plain string formats)
+        const volunteerSkillIds: string[] = (volunteer.skills || []).map((s: any) =>
+          typeof s === "string" ? s.toLowerCase() : (s.subskillId || "").toLowerCase()
+        ).filter(Boolean)
+
+        // Find matching projects based on EXACT subskillId match
         const matchingProjects = newProjects
           .filter((p: any) => {
-            const projectSkills = (p.skillsNeeded || p.skills || []).map(
-              (s: string) => s.toLowerCase()
-            )
+            // Use the correct field: skillsRequired (array of {categoryId, subskillId, priority})
+            const projectSkills: string[] = (p.skillsRequired || []).map(
+              (s: any) => (typeof s === "string" ? s : s.subskillId || "").toLowerCase()
+            ).filter(Boolean)
+            // Require at least one exact subskillId match
             return projectSkills.some((ps: string) =>
-              volunteerSkills.some(
-                (vs: string) => vs.includes(ps) || ps.includes(vs)
-              )
+              volunteerSkillIds.includes(ps)
             )
           })
           .slice(0, 5)
@@ -64,6 +67,13 @@ export async function GET(request: Request) {
             })
         )
 
+        // SKIP sending email if volunteer has ZERO matching projects AND zero new badges
+        // Don't spam people with irrelevant digest emails
+        if (matchingProjects.length === 0 && newBadges.length === 0) {
+          skipped++
+          continue
+        }
+
         const html = getWeeklyDigestEmailHtml(
           volunteer.name || "Volunteer",
           {
@@ -78,9 +88,16 @@ export async function GET(request: Request) {
         const volUser = await db.collection("user").findOne(userIdQuery(volunteer.userId))
         if (!volUser?.email) continue
 
+        // Respect email notification preferences
+        const prefs = volUser.privacy
+        if (prefs?.emailNotifications === false || prefs?.opportunityDigest === false) {
+          skipped++
+          continue
+        }
+
         await sendEmail({
           to: volUser.email,
-          subject: `Your Weekly Impact Digest — ${newProjectCount} new opportunities`,
+          subject: `Your Weekly Impact Digest — ${matchingProjects.length} matching opportunities`,
           html,
         })
         sent++
@@ -93,6 +110,7 @@ export async function GET(request: Request) {
       success: true,
       sent,
       failed,
+      skipped,
       totalVolunteers: volunteers.length,
     })
   } catch (error: any) {

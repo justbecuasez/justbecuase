@@ -45,20 +45,20 @@ export async function GET(request: Request) {
           (p: any) => new Date(p.createdAt) > lastActive
         ).length
 
-        // Count how many match their skills
-        const volunteerSkills = (volunteer.skills || []).map((s: any) =>
-          (typeof s === "string" ? s : s.subskillId || s.categoryId || "").toLowerCase()
-        )
+        // Count how many match their skills (exact subskillId match)
+        const volunteerSkillIds: string[] = (volunteer.skills || []).map((s: any) =>
+          typeof s === "string" ? s.toLowerCase() : (s.subskillId || "").toLowerCase()
+        ).filter(Boolean)
+        
         const missedMatches = allNewProjects.filter((p: any) => {
-          const pSkills = (p.skillsNeeded || p.skills || []).map((s: string) =>
-            s.toLowerCase()
-          )
+          // Use the correct field: skillsRequired (array of {categoryId, subskillId, priority})
+          const projectSkillIds: string[] = (p.skillsRequired || []).map(
+            (s: any) => (typeof s === "string" ? s : s.subskillId || "").toLowerCase()
+          ).filter(Boolean)
           return (
             new Date(p.createdAt) > lastActive &&
-            pSkills.some((ps: string) =>
-              volunteerSkills.some(
-                (vs: string) => vs.includes(ps) || ps.includes(vs)
-              )
+            projectSkillIds.some((ps: string) =>
+              volunteerSkillIds.includes(ps)
             )
           )
         }).length

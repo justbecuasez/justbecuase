@@ -53,6 +53,7 @@ export interface VolunteerProfile {
   location: string
   city: string
   country: string
+  headline?: string
   bio: string
   linkedinUrl?: string
   portfolioUrl?: string

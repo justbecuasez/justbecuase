@@ -713,12 +713,26 @@ export async function createProject(data: {
     try {
       const { sendEmail, getNewOpportunityEmailHtml } = await import("@/lib/email")
       const allVolunteers = await volunteerProfilesDb.findMany({}, { limit: 500 } as any)
-      const projectSkillIds = data.skillsRequired.map(s => s.subskillId)
+      
+      // Build a Set of "categoryId::subskillId" for fast lookup
+      const projectSkillKeys = new Set(
+        data.skillsRequired.map(s => `${s.categoryId}::${s.subskillId}`)
+      )
       
       const matchingVolunteers = allVolunteers.filter(v => {
+        // Skip inactive volunteers or those with no skills
         if (v.isActive === false) return false
-        const vSkills = Array.isArray(v.skills) ? v.skills.map((s: any) => s.subskillId || s) : []
-        return vSkills.some((skillId: string) => projectSkillIds.includes(skillId))
+        
+        // Parse skills — handles both object array and string array formats
+        const vSkills: Array<{categoryId?: string; subskillId?: string}> = Array.isArray(v.skills) ? v.skills : []
+        if (vSkills.length === 0) return false
+        
+        // Require at least one EXACT categoryId + subskillId match
+        return vSkills.some((s: any) => {
+          if (!s || typeof s === 'string') return false
+          const key = `${s.categoryId}::${s.subskillId}`
+          return projectSkillKeys.has(key)
+        })
       })
 
       // Get user emails for matching volunteers (up to 20)
@@ -747,7 +761,7 @@ export async function createProject(data: {
 
           // Check notification preferences before sending email
           const prefs = volUser?.privacy
-          if (volUser?.email && prefs?.opportunityDigest !== false) {
+          if (volUser?.email && prefs?.emailNotifications !== false && prefs?.opportunityDigest !== false) {
             await sendEmail({
               to: volUser.email,
               subject: `New opportunity matching your skills: ${sanitizedTitle}`,
@@ -763,21 +777,26 @@ export async function createProject(data: {
           console.error(`[createProject] Failed to email volunteer ${vol.userId}:`, emailErr)
         }
       }
-      console.log(`[createProject] Notified ${Math.min(matchingVolunteers.length, 20)} matching volunteers`)
+      console.log(`[createProject] Notified ${Math.min(matchingVolunteers.length, 20)} matching volunteers (out of ${allVolunteers.length} total)`)
     } catch (emailError) {
       console.error("[createProject] Failed to send opportunity emails:", emailError)
     }
 
-    // Notify followers of this NGO about the new project
+    // Notify followers of this NGO about the new project (in-app always, email only if skills match)
     try {
       const { followers } = await followsDb.getFollowers(user.id, 1, 50)
       const db = await import("@/lib/database").then(m => m.getDb())
       const database = await db
       const { sendEmail } = await import("@/lib/email")
       
+      // Build skill keys set for matching (reuse same format as above)
+      const projectSkillKeysForFollowers = new Set(
+        data.skillsRequired.map(s => `${s.categoryId}::${s.subskillId}`)
+      )
+      
       for (const follow of followers.slice(0, 50)) {
         try {
-          // In-app notification
+          // In-app notification (always — they chose to follow this NGO)
           await notificationsDb.create({
             userId: follow.followerId,
             type: "followed_ngo_project",
@@ -790,20 +809,34 @@ export async function createProject(data: {
             createdAt: new Date(),
           })
 
-          // Email (respects preferences)
+          // Email ONLY if follower's skills match AND preferences allow
           const followerUser = await database.collection("user").findOne(userIdQuery(follow.followerId))
-          const followerPrefs = followerUser?.privacy
-          if (followerUser?.email && followerPrefs?.emailNotifications !== false && followerPrefs?.opportunityDigest !== false) {
+          if (!followerUser?.email) continue
+          
+          const followerPrefs = followerUser.privacy
+          if (followerPrefs?.emailNotifications === false || followerPrefs?.opportunityDigest === false) continue
+          
+          // Check if the follower (if a volunteer) has matching skills
+          const rawSkills = followerUser.skills
+          const followerSkills = !rawSkills ? [] : typeof rawSkills === 'string' ? (() => { try { return JSON.parse(rawSkills) } catch { return [] } })() : rawSkills
+          const hasMatchingSkills = Array.isArray(followerSkills) && followerSkills.length > 0 &&
+            followerSkills.some((s: any) => {
+              if (!s || typeof s === 'string') return false
+              return projectSkillKeysForFollowers.has(`${s.categoryId}::${s.subskillId}`)
+            })
+          
+          // Only send email if skills match the opportunity
+          if (hasMatchingSkills) {
             await sendEmail({
               to: followerUser.email,
-              subject: `${ngoProfile.organizationName || "An NGO you follow"} posted a new project`,
+              subject: `${ngoProfile.organizationName || "An NGO you follow"} posted a new project matching your skills`,
               html: `
                 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                   <h1 style="color: #10b981;">JustBeCause Network</h1>
                   <div style="background: #f9fafb; border-radius: 8px; padding: 30px;">
                     <h2>New Project Alert</h2>
                     <p>Hi ${followerUser.name || "there"},</p>
-                    <p><strong>${ngoProfile.organizationName || "An NGO"}</strong> that you follow just posted a new project:</p>
+                    <p><strong>${ngoProfile.organizationName || "An NGO"}</strong> that you follow just posted a new project that matches your skills:</p>
                     <div style="background: white; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
                       <h3 style="margin: 0 0 8px 0;">${sanitizedTitle}</h3>
                     </div>
