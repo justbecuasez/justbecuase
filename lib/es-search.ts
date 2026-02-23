@@ -400,6 +400,169 @@ async function getPrefixSearchSuggestions(
 }
 
 // ============================================
+// NATURAL LANGUAGE QUERY UNDERSTANDING
+// ============================================
+// Pre-processes the raw search query to detect intent signals
+// like pricing, experience, availability, work mode, etc.
+// Returns extra should/filter clauses to inject into the query.
+// ============================================
+
+interface QueryIntent {
+  /** Extra should clauses to boost matching results */
+  boosts: any[]
+  /** Extra filter clauses to hard-filter results */
+  filters: any[]
+  /** Detected intent labels for logging */
+  signals: string[]
+}
+
+function detectQueryIntent(query: string): QueryIntent {
+  const q = query.toLowerCase()
+  const boosts: any[] = []
+  const filters: any[] = []
+  const signals: string[] = []
+
+  // --- PRICING INTENT ---
+  // "free", "pro bono", "no cost", "budget", "voluntary"
+  if (/\b(free|pro[- ]?bono|no[- ]?cost|voluntary|gratis|without[- ]?pay)\b/.test(q)) {
+    boosts.push({ term: { volunteerType: { value: "free", boost: 5.0 } } })
+    boosts.push({ term: { volunteerType: { value: "both", boost: 2.0 } } })
+    signals.push("price:free")
+  }
+  // "cheap", "affordable", "budget", "low cost", "inexpensive"
+  if (/\b(cheap|affordable|budget|low[- ]?cost|inexpensive|economical)\b/.test(q)) {
+    boosts.push({ range: { hourlyRate: { lte: 300, boost: 3.0 } } })
+    boosts.push({ term: { volunteerType: { value: "free", boost: 4.0 } } })
+    boosts.push({ term: { volunteerType: { value: "both", boost: 2.0 } } })
+    signals.push("price:cheap")
+  }
+  // "paid", "premium", "professional"
+  if (/\b(paid|premium|professional|hire)\b/.test(q) && !/\b(un[- ]?paid)\b/.test(q)) {
+    boosts.push({ term: { volunteerType: { value: "paid", boost: 3.0 } } })
+    boosts.push({ term: { volunteerType: { value: "both", boost: 1.5 } } })
+    signals.push("price:paid")
+  }
+  // "under X per hour", "below X/hr", "less than X"
+  const rateMatch = q.match(/(?:under|below|less than|max|upto|up to|within)\s*(?:rs\.?|inr|₹|\$|usd)?\s*(\d+)/)
+  if (rateMatch) {
+    const maxRate = parseInt(rateMatch[1])
+    boosts.push({ range: { hourlyRate: { lte: maxRate, boost: 4.0 } } })
+    boosts.push({ term: { volunteerType: { value: "free", boost: 3.0 } } })
+    signals.push(`price:under_${maxRate}`)
+  }
+
+  // --- EXPERIENCE LEVEL INTENT ---
+  // "expert", "senior", "experienced", "specialist", "10 years", "5+ years"
+  if (/\b(expert|senior|specialist|veteran|seasoned|highly[- ]?experienced)\b/.test(q)) {
+    boosts.push({ term: { experienceLevel: { value: "expert", boost: 4.0 } } })
+    signals.push("exp:expert")
+  }
+  // Numeric years: "10 years", "5 years experience", "3+ years"
+  const yearsMatch = q.match(/(\d+)\+?\s*(?:years?|yrs?|yr)\b/)
+  if (yearsMatch) {
+    const years = parseInt(yearsMatch[1])
+    if (years >= 6) {
+      boosts.push({ term: { experienceLevel: { value: "expert", boost: 5.0 } } })
+      // Also boost high completedProjects as proxy for experience
+      boosts.push({ range: { completedProjects: { gte: 3, boost: 2.0 } } })
+      boosts.push({ range: { rating: { gte: 4, boost: 1.5 } } })
+      signals.push(`exp:years_${years}_expert`)
+    } else if (years >= 3) {
+      boosts.push({ term: { experienceLevel: { value: "intermediate", boost: 3.0 } } })
+      boosts.push({ term: { experienceLevel: { value: "expert", boost: 2.0 } } })
+      signals.push(`exp:years_${years}_advanced`)
+    } else {
+      boosts.push({ term: { experienceLevel: { value: "intermediate", boost: 2.0 } } })
+      boosts.push({ term: { experienceLevel: { value: "beginner", boost: 1.5 } } })
+      signals.push(`exp:years_${years}_intermediate`)
+    }
+  }
+  // "beginner", "entry level", "fresher", "newbie", "no experience"
+  if (/\b(beginner|entry[- ]?level|fresher|newbie|no[- ]?experience|starter|newcomer|intern)\b/.test(q)) {
+    boosts.push({ term: { experienceLevel: { value: "beginner", boost: 4.0 } } })
+    signals.push("exp:beginner")
+  }
+  // "beginner friendly" — for projects
+  if (/\b(beginner[- ]?friendly|easy|simple|basic|first[- ]?time)\b/.test(q)) {
+    boosts.push({ term: { experienceLevel: { value: "beginner", boost: 4.0 } } })
+    signals.push("exp:beginner_friendly")
+  }
+
+  // --- WORK MODE INTENT ---
+  if (/\b(remote|work from home|wfh|from anywhere|online|virtual)\b/.test(q)) {
+    boosts.push({ term: { workMode: { value: "remote", boost: 3.0 } } })
+    boosts.push({ term: { acceptRemoteVolunteers: { value: true, boost: 2.0 } } })
+    signals.push("mode:remote")
+  }
+  if (/\b(onsite|on[- ]?site|in[- ]?person|office|local|nearby|near me)\b/.test(q)) {
+    boosts.push({ term: { workMode: { value: "onsite", boost: 3.0 } } })
+    signals.push("mode:onsite")
+  }
+  if (/\b(hybrid|flexible location)\b/.test(q)) {
+    boosts.push({ term: { workMode: { value: "hybrid", boost: 3.0 } } })
+    signals.push("mode:hybrid")
+  }
+
+  // --- AVAILABILITY INTENT ---
+  if (/\b(weekend|saturday|sunday)\b/.test(q)) {
+    boosts.push({ term: { availability: { value: "weekends", boost: 3.0 } } })
+    boosts.push({ term: { availability: { value: "flexible", boost: 1.5 } } })
+    signals.push("avail:weekends")
+  }
+  if (/\b(weekday|monday|friday|morning)\b/.test(q)) {
+    boosts.push({ term: { availability: { value: "weekdays", boost: 3.0 } } })
+    boosts.push({ term: { availability: { value: "flexible", boost: 1.5 } } })
+    signals.push("avail:weekdays")
+  }
+  if (/\b(evening|after[- ]?hours|part[- ]?time|night)\b/.test(q)) {
+    boosts.push({ term: { availability: { value: "evenings", boost: 3.0 } } })
+    boosts.push({ term: { availability: { value: "flexible", boost: 1.5 } } })
+    signals.push("avail:evenings")
+  }
+  if (/\b(flexible|anytime|any time|full[- ]?time)\b/.test(q)) {
+    boosts.push({ term: { availability: { value: "flexible", boost: 3.0 } } })
+    signals.push("avail:flexible")
+  }
+
+  // --- PROJECT TYPE INTENT ---
+  if (/\b(short[- ]?term|quick|temporary|one[- ]?time|sprint)\b/.test(q)) {
+    boosts.push({ term: { projectType: { value: "short-term", boost: 3.0 } } })
+    signals.push("type:short")
+  }
+  if (/\b(long[- ]?term|ongoing|permanent|continuous|regular)\b/.test(q)) {
+    boosts.push({ term: { projectType: { value: "long-term", boost: 2.0 } } })
+    boosts.push({ term: { projectType: { value: "ongoing", boost: 2.0 } } })
+    signals.push("type:long")
+  }
+  if (/\b(consult|advisory|advice|mentor|guidance)\b/.test(q)) {
+    boosts.push({ term: { projectType: { value: "consultation", boost: 3.0 } } })
+    signals.push("type:consult")
+  }
+
+  // --- URGENCY INTENT ---
+  if (/\b(urgent|asap|immediately|right away|starting soon|deadline)\b/.test(q)) {
+    // Boost recently created projects (likely more urgent)
+    boosts.push({ range: { createdAt: { gte: "now-7d", boost: 2.0 } } })
+    signals.push("urgency:high")
+  }
+
+  // --- VERIFIED/TRUST INTENT ---
+  if (/\b(verified|trusted|reliable|reputable|authentic|legitimate)\b/.test(q)) {
+    boosts.push({ term: { isVerified: { value: true, boost: 5.0 } } })
+    signals.push("trust:verified")
+  }
+
+  // --- HIGHLY RATED INTENT ---
+  if (/\b(top rated|highly rated|best|top|star|rated|popular)\b/.test(q)) {
+    boosts.push({ range: { rating: { gte: 4, boost: 4.0 } } })
+    boosts.push({ range: { completedProjects: { gte: 3, boost: 2.0 } } })
+    signals.push("quality:top_rated")
+  }
+
+  return { boosts, filters, signals }
+}
+
+// ============================================
 // QUERY BUILDERS
 // ============================================
 
@@ -407,6 +570,12 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
   const must: any[] = []
   const should: any[] = []
   const filterClauses: any[] = []
+
+  // Detect NL intent signals from query
+  const intent = detectQueryIntent(query)
+  if (intent.signals.length > 0) {
+    console.log(`[ES Search] Detected intent signals: ${intent.signals.join(", ")}`)
+  }
 
   // Adaptive minimum_should_match based on query length
   const wordCount = query.split(/\s+/).length
@@ -577,6 +746,16 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
       ],
     },
   })
+
+  // Inject NL intent boosts — these are extra should clauses that boost
+  // results matching detected signals (free, expert, remote, etc.)
+  if (intent.boosts.length > 0) {
+    should.push(...intent.boosts)
+  }
+  // Inject NL intent hard filters
+  if (intent.filters.length > 0) {
+    filterClauses.push(...intent.filters)
+  }
 
   return {
     function_score: {

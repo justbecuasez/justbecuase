@@ -35,6 +35,7 @@ export default function VolunteerProfileEditPage() {
 
   const [formData, setFormData] = useState({
     name: "",
+    headline: "",
     bio: "",
     location: "",
     phone: "",
@@ -110,6 +111,7 @@ export default function VolunteerProfileEditPage() {
           setProfile(profileData)
           setFormData({
             name: profileData.name || session.user.name || "",
+            headline: profileData.headline || "",
             bio: profileData.bio || "",
             location: profileData.location || "",
             phone: profileData.phone || "",
@@ -257,6 +259,7 @@ export default function VolunteerProfileEditPage() {
     try {
       const result = await updateVolunteerProfile({
         name: formData.name,
+        headline: formData.headline,
         bio: formData.bio,
         location: formData.location,
         phone: formData.phone,
@@ -432,13 +435,27 @@ export default function VolunteerProfileEditPage() {
                       </div>
 
                       <div className="space-y-2">
+                        <Label htmlFor="headline">Professional Headline</Label>
+                        <Input
+                          id="headline"
+                          value={formData.headline}
+                          onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
+                          placeholder="e.g. Senior Web Developer · 8+ years · WordPress & React specialist"
+                          maxLength={120}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          A short tagline that appears in search results. Include your top skill and experience.
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
                         <Label htmlFor="bio">Bio</Label>
                         <Textarea
                           id="bio"
                           value={formData.bio}
                           onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                           rows={4}
-                          placeholder="Tell NGOs about yourself, your experience, and why you contribute..."
+                          placeholder="Describe your experience, years of expertise, what kind of projects you enjoy. E.g. '10+ years of web development experience specializing in WordPress sites for non-profits...'"
                         />
                         <AIBioGenerator
                           name={formData.name}
@@ -450,6 +467,9 @@ export default function VolunteerProfileEditPage() {
                           currentBio={formData.bio}
                           onGenerated={(bio) => setFormData({ ...formData, bio })}
                         />
+                        <p className="text-xs text-muted-foreground">
+                          <strong>Tip:</strong> Mention your years of experience, specialties, and preferred project types — NGOs search for these details!
+                        </p>
                       </div>
 
                       <div className="grid sm:grid-cols-2 gap-4">

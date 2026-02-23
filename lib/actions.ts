@@ -381,9 +381,9 @@ export async function getNGOSubscriptionStatus(): Promise<{
 
 // Allowed fields for volunteer profile updates - filters out sensitive fields
 const ALLOWED_VOLUNTEER_UPDATE_FIELDS = [
-  "name", "avatar", "phone", "location", "city", "country", "bio", "linkedinUrl", "portfolioUrl",
+  "name", "avatar", "phone", "location", "city", "country", "bio", "headline", "linkedinUrl", "portfolioUrl",
   "resumeUrl", "skills", "causes", "volunteerType", "freeHoursPerMonth", "hourlyRate", "discountedRate", "currency",
-  "workMode", "hoursPerWeek", "availability"
+  "workMode", "hoursPerWeek", "availability", "languages", "interests"
 ] as const
 
 export async function updateVolunteerProfile(

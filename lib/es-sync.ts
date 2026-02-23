@@ -95,29 +95,87 @@ function transformVolunteer(doc: any): Record<string, any> | null {
   const { skillIds, skillNames, skillCategories } = denormalizeSkills(doc.skills)
   const { causeIds, causeNames } = denormalizeCauses(doc.causes)
 
-  // Build semantic content — a natural language blob for semantic_text
+  // Build semantic content — a rich natural language blob for semantic_text
+  // This drives NL search: NGOs search like "web developer expert 10 years",
+  // "free volunteer for education", "cheap designer", "marketing remote Mumbai"
   const parts: string[] = []
   if (doc.name) parts.push(`${doc.name} is a volunteer`)
-  if (doc.bio) parts.push(doc.bio)
   if (doc.headline) parts.push(doc.headline)
+  if (doc.bio) parts.push(doc.bio)
+
+  // Skills + levels — map categorical levels to experience-year language
+  const parsedSkills = safeParseArray(doc.skills)
+  const LEVEL_DESCRIPTORS: Record<string, string> = {
+    expert: "6+ years experience, senior-level specialist",
+    advanced: "3-6 years experience, experienced professional",
+    intermediate: "1-3 years experience, working knowledge",
+    beginner: "entry-level, learning, basic knowledge",
+  }
+  const skillsByLevel: Record<string, string[]> = { expert: [], advanced: [], intermediate: [], beginner: [] }
+  for (const s of parsedSkills) {
+    const name = s?.subskillId ? (SKILL_MAP[s.subskillId]?.subskillName || s.subskillId) : null
+    if (name && s.level && skillsByLevel[s.level]) skillsByLevel[s.level].push(name)
+  }
+  if (skillsByLevel.expert.length > 0) parts.push(`Expert-level (${LEVEL_DESCRIPTORS.expert}) in ${skillsByLevel.expert.join(", ")}`)
+  if (skillsByLevel.advanced.length > 0) parts.push(`Advanced (${LEVEL_DESCRIPTORS.advanced}) in ${skillsByLevel.advanced.join(", ")}`)
+  if (skillsByLevel.intermediate.length > 0) parts.push(`Intermediate (${LEVEL_DESCRIPTORS.intermediate}) in ${skillsByLevel.intermediate.join(", ")}`)
+  if (skillsByLevel.beginner.length > 0) parts.push(`Beginner (${LEVEL_DESCRIPTORS.beginner}) in ${skillsByLevel.beginner.join(", ")}`)
   if (skillNames.length > 0) parts.push(`Skills: ${skillNames.join(", ")}`)
   if (skillCategories.length > 0) parts.push(`Expertise in ${skillCategories.join(", ")}`)
+
+  // Causes
   if (causeNames.length > 0) parts.push(`Passionate about ${causeNames.join(", ")}`)
+
+  // Location
   if (doc.location || doc.city) parts.push(`Located in ${doc.city || doc.location || ""}, ${doc.country || ""}`.trim())
-  if (doc.volunteerType) parts.push(`Available for ${doc.volunteerType === "free" ? "pro-bono" : doc.volunteerType === "paid" ? "paid" : "both paid and free"} work`)
-  if (doc.workMode) parts.push(`Prefers ${doc.workMode} work`)
+
+  // Pricing / cost — critical for NGO queries like "free volunteer", "cheap", "affordable", "budget"
+  if (doc.volunteerType === "free") {
+    parts.push("Available for free, pro-bono, no cost, voluntary work. Budget-friendly, affordable, zero cost")
+  } else if (doc.volunteerType === "paid") {
+    const rate = doc.hourlyRate || 0
+    const curr = doc.currency || "INR"
+    parts.push(`Paid volunteer, charges ${rate} ${curr} per hour`)
+    if (rate > 0 && rate <= 300) parts.push("Affordable rate, budget-friendly, low cost")
+    else if (rate > 300 && rate <= 800) parts.push("Mid-range rate, reasonable pricing")
+    else if (rate > 800) parts.push("Premium rate, high-end professional")
+    if (doc.discountedRate && doc.discountedRate < rate) {
+      parts.push(`Offers discounted rate of ${doc.discountedRate} ${curr} per hour for NGOs. Low bono available`)
+    }
+  } else if (doc.volunteerType === "both") {
+    const rate = doc.hourlyRate || 0
+    const curr = doc.currency || "INR"
+    parts.push("Available for both free pro-bono and paid work. Flexible pricing, affordable")
+    if (rate > 0) parts.push(`Paid rate: ${rate} ${curr} per hour`)
+    if (doc.freeHoursPerMonth) parts.push(`Offers ${doc.freeHoursPerMonth} free hours per month for NGOs`)
+    if (doc.discountedRate) parts.push(`Discounted NGO rate: ${doc.discountedRate} ${curr}/hr`)
+  }
+
+  // Work mode + availability — for "remote", "onsite", "weekends", "flexible"
+  if (doc.workMode === "remote") parts.push("Works remotely, available from anywhere, work from home")
+  else if (doc.workMode === "onsite") parts.push("Available for on-site, in-person, office work")
+  else if (doc.workMode === "hybrid") parts.push("Available for both remote and on-site hybrid work")
+
+  if (doc.availability === "weekdays") parts.push("Available on weekdays, Monday to Friday")
+  else if (doc.availability === "weekends") parts.push("Available on weekends, Saturday and Sunday")
+  else if (doc.availability === "evenings") parts.push("Available in evenings after work hours")
+  else if (doc.availability === "flexible") parts.push("Flexible schedule, available anytime")
+
   if (doc.hoursPerWeek) parts.push(`Can contribute ${doc.hoursPerWeek} hours per week`)
-  // Experience indicators
-  if (doc.completedProjects && doc.completedProjects > 0) parts.push(`Has completed ${doc.completedProjects} project${doc.completedProjects > 1 ? "s" : ""}`)
-  if (doc.hoursContributed && doc.hoursContributed > 0) parts.push(`Has contributed ${doc.hoursContributed} hours`)
-  if (doc.rating && doc.rating > 0) parts.push(`Rated ${doc.rating.toFixed(1)} out of 5`)
-  // Skill levels
-  const parsedSkills = safeParseArray(doc.skills)
-  const expertSkills = parsedSkills.filter((s: any) => s?.level === "expert").map((s: any) => SKILL_MAP[s?.subskillId] || s?.subskillId).filter(Boolean)
-  const intermediateSkills = parsedSkills.filter((s: any) => s?.level === "intermediate").map((s: any) => SKILL_MAP[s?.subskillId] || s?.subskillId).filter(Boolean)
-  if (expertSkills.length > 0) parts.push(`Expert in ${expertSkills.join(", ")}`)
-  if (intermediateSkills.length > 0) parts.push(`Intermediate experience in ${intermediateSkills.join(", ")}`)
-  if (doc.isVerified) parts.push("Verified volunteer")
+
+  // Experience indicators — for "experienced", "senior", queries
+  const totalCompleted = doc.completedProjects || 0
+  const totalHours = doc.hoursContributed || 0
+  if (totalCompleted >= 10) parts.push(`Highly experienced volunteer, completed ${totalCompleted} projects. Senior, veteran`)
+  else if (totalCompleted >= 5) parts.push(`Experienced volunteer, completed ${totalCompleted} projects`)
+  else if (totalCompleted >= 1) parts.push(`Has completed ${totalCompleted} project${totalCompleted > 1 ? "s" : ""}`)
+  if (totalHours >= 500) parts.push(`Major contributor with ${totalHours} hours volunteered`)
+  else if (totalHours > 0) parts.push(`Has contributed ${totalHours} hours`)
+  if (doc.rating && doc.rating >= 4) parts.push(`Highly rated ${doc.rating.toFixed(1)}/5 stars, top volunteer`)
+  else if (doc.rating && doc.rating > 0) parts.push(`Rated ${doc.rating.toFixed(1)} out of 5`)
+  if (doc.isVerified) parts.push("Verified volunteer, identity confirmed, trusted")
+
+  // Languages
   if (doc.languages) {
     const langs = Array.isArray(doc.languages) ? doc.languages : typeof doc.languages === "string" ? [doc.languages] : []
     if (langs.length > 0) parts.push(`Speaks ${langs.join(", ")}`)
@@ -177,14 +235,35 @@ function transformNgo(doc: any): Record<string, any> | null {
 
   const parts: string[] = []
   const orgName = doc.orgName || doc.organizationName || ""
-  if (orgName) parts.push(`${orgName} is a non-profit organization`)
+  if (orgName) parts.push(`${orgName} is a non-profit organization, NGO`)
   if (doc.description) parts.push(doc.description)
   if (doc.mission) parts.push(`Mission: ${doc.mission}`)
   if (causeNames.length > 0) parts.push(`Works in ${causeNames.join(", ")}`)
-  if (skillNames.length > 0) parts.push(`Needs volunteers with skills in ${skillNames.join(", ")}`)
+  if (skillNames.length > 0) parts.push(`Looking for volunteers with skills in ${skillNames.join(", ")}`)
   if (doc.city || doc.address) parts.push(`Located in ${doc.city || ""}, ${doc.country || ""}`.trim())
-  if (doc.acceptRemoteVolunteers) parts.push("Accepts remote volunteers")
-  if (doc.yearFounded) parts.push(`Founded in ${doc.yearFounded}`)
+
+  // Work mode — volunteers search "remote NGO", "onsite NGO near me"
+  if (doc.acceptRemoteVolunteers && doc.acceptOnsiteVolunteers) parts.push("Accepts both remote and on-site volunteers, hybrid friendly")
+  else if (doc.acceptRemoteVolunteers) parts.push("Accepts remote volunteers, work from anywhere")
+  else if (doc.acceptOnsiteVolunteers) parts.push("On-site volunteers only, in-person work")
+
+  // Scale / credibility — volunteers search "established NGO", "large organization"
+  if (doc.yearFounded) {
+    const age = new Date().getFullYear() - parseInt(doc.yearFounded)
+    if (age > 10) parts.push(`Founded in ${doc.yearFounded}, established organization with ${age}+ years of experience`)
+    else if (age > 3) parts.push(`Founded in ${doc.yearFounded}, ${age} years of operation`)
+    else parts.push(`Founded in ${doc.yearFounded}, newer organization`)
+  }
+  if (doc.teamSize) parts.push(`Team size: ${doc.teamSize}`)
+  const engaged = doc.volunteersEngaged || 0
+  if (engaged >= 50) parts.push(`Large volunteer community with ${engaged} volunteers engaged`)
+  else if (engaged >= 10) parts.push(`Active organization with ${engaged} volunteers engaged`)
+  else if (engaged > 0) parts.push(`${engaged} volunteers engaged`)
+  const posted = doc.projectsPosted || 0
+  if (posted >= 10) parts.push(`Prolific with ${posted} projects posted, many opportunities available`)
+  else if (posted > 0) parts.push(`Has posted ${posted} project${posted > 1 ? "s" : ""}`)
+  if (doc.isVerified) parts.push("Verified organization, identity confirmed, trusted NGO")
+  if (doc.website) parts.push(`Website: ${doc.website}`)
 
   const suggestInputs: string[] = []
   if (orgName) suggestInputs.push(orgName)
@@ -241,11 +320,42 @@ function transformProject(doc: any, ngoNameMap: Map<string, string>): Record<str
   if (ngoName) parts.push(`Posted by ${ngoName}`)
   if (skillNames.length > 0) parts.push(`Requires skills in ${skillNames.join(", ")}`)
   if (causeNames.length > 0) parts.push(`Related to ${causeNames.join(", ")}`)
-  if (doc.workMode) parts.push(`${doc.workMode} opportunity`)
-  if (doc.location) parts.push(`Location: ${doc.location}`)
-  if (doc.experienceLevel) parts.push(`${doc.experienceLevel} level`)
+
+  // Work mode — volunteers search "remote project", "onsite opportunity", "work from home"
+  if (doc.workMode === "remote") parts.push("Remote opportunity, work from anywhere, work from home")
+  else if (doc.workMode === "onsite") parts.push(`On-site opportunity, in-person work${doc.location ? ` in ${doc.location}` : ""}`)
+  else if (doc.workMode === "hybrid") parts.push("Hybrid opportunity, both remote and on-site")
+  if (doc.location && doc.workMode !== "onsite") parts.push(`Location: ${doc.location}`)
+
+  // Experience level — volunteers search "beginner friendly", "entry level", "for experts"
+  if (doc.experienceLevel === "beginner") parts.push("Beginner friendly, entry level, no experience required, newcomers welcome, internship level")
+  else if (doc.experienceLevel === "intermediate") parts.push("Intermediate level, some experience needed, 1-3 years")
+  else if (doc.experienceLevel === "expert") parts.push("Expert level, highly experienced volunteers needed, senior, 6+ years")
+
+  // Duration/commitment — volunteers search "short term", "quick project", "long term commitment"
   if (doc.timeCommitment) parts.push(`Time commitment: ${doc.timeCommitment}`)
-  if (doc.projectType) parts.push(`${doc.projectType} project`)
+  if (doc.projectType === "short-term") parts.push("Short-term project, quick task, temporary")
+  else if (doc.projectType === "long-term") parts.push("Long-term project, ongoing commitment")
+  else if (doc.projectType === "consultation") parts.push("Consultation, advisory role, one-time advice")
+  else if (doc.projectType === "ongoing") parts.push("Ongoing project, continuous work, permanent volunteer role")
+  if (doc.duration) parts.push(`Duration: ${doc.duration}`)
+
+  // Deadline urgency — volunteers search "urgent", "starting soon"
+  if (doc.deadline) {
+    const daysLeft = Math.ceil((new Date(doc.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    if (daysLeft > 0 && daysLeft <= 7) parts.push("Urgent, deadline soon, apply quickly")
+    else if (daysLeft > 7 && daysLeft <= 30) parts.push("Apply soon, deadline within a month")
+  }
+  if (doc.startDate) {
+    const daysToStart = Math.ceil((new Date(doc.startDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    if (daysToStart >= 0 && daysToStart <= 7) parts.push("Starting soon, immediate start")
+  }
+
+  // Competition — "less applicants", "easy to get"
+  const appCount = doc.applicantsCount || 0
+  if (appCount === 0) parts.push("No applicants yet, great chance to get selected, new opportunity")
+  else if (appCount < 5) parts.push(`Only ${appCount} applicant${appCount > 1 ? "s" : ""}, low competition`)
+  else parts.push(`${appCount} applicants`)
 
   const suggestInputs: string[] = []
   if (doc.title) suggestInputs.push(doc.title)
