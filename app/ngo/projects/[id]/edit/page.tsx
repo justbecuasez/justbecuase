@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth-context"
 import { getNGOProfile, getProjectById, updateProject } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
 import type { NGOProfile, Project } from "@/lib/types"
+import { ProjectEditSkeleton } from "@/components/ui/page-skeletons"
 import {
   ArrowLeft,
   Save,
@@ -170,11 +171,7 @@ export default function EditProjectPage({ params }: Props) {
   }
 
   if (authLoading || isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
+    return <ProjectEditSkeleton />
   }
 
   if (!project) {

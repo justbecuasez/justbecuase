@@ -10,6 +10,7 @@ import { generateReferralCode, getReferralStats } from "@/lib/actions"
 import { Copy, Check, Users, Gift, Share2, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { ReferralsSkeleton } from "@/components/ui/page-skeletons"
 
 export default function ReferralPage() {
   const router = useRouter()
@@ -95,11 +96,7 @@ export default function ReferralPage() {
   }
 
   if (isPending || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
+    return <ReferralsSkeleton />
   }
 
   const userName = session?.user?.name || "Volunteer"

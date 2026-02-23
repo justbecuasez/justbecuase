@@ -17,6 +17,7 @@ import type { VolunteerSkill, ExperienceLevel } from "@/lib/types"
 import { toast } from "sonner"
 import { NotificationPermissionButton } from "@/components/notifications/notification-listener"
 import { AISkillSuggestions } from "@/components/ai/skill-suggestions"
+import { SettingsPageSkeleton } from "@/components/ui/page-skeletons"
 import {
   User,
   Bell,
@@ -295,11 +296,7 @@ export default function VolunteerSettingsPage() {
   }
 
   if (isPending || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
+    return <SettingsPageSkeleton />
   }
 
   if (!session?.user) return null

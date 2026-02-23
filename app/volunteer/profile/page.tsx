@@ -20,6 +20,7 @@ import { skillCategories } from "@/lib/skills-data"
 import { uploadToCloudinary, validateImageFile, uploadDocumentToCloudinary, validateDocumentFile } from "@/lib/upload"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AIBioGenerator } from "@/components/ai/bio-generator"
+import { VolunteerProfileSkeleton } from "@/components/ui/page-skeletons"
 
 export default function VolunteerProfileEditPage() {
   const router = useRouter()
@@ -282,11 +283,7 @@ export default function VolunteerProfileEditPage() {
   }
 
   if (isPending || isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
+    return <VolunteerProfileSkeleton />
   }
 
   if (!session?.user) {

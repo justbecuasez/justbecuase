@@ -76,14 +76,16 @@ const SYNONYM_GROUPS: string[][] = [
   ["devops", "hosting", "aws", "azure", "gcp", "digitalocean", "docker", "kubernetes", "ci/cd", "deployment", "infrastructure", "cloud"],
   // UX/UI Design
   ["ux", "ui", "user experience", "user interface", "design", "wireframe", "prototype", "figma", "usability"],
+  // Content Creation & Design (the CATEGORY — photography, video, graphic design)
+  ["content creator", "content creation", "content creation & design", "creator", "creative", "multimedia", "media", "visual content", "digital content", "social media content"],
   // Graphic Design & Creative
-  ["graphic", "graphics", "graphic design", "creative", "visual", "illustration", "poster", "banner", "flyer", "brochure", "canva", "photoshop", "illustrator", "figma", "infographic", "branding", "logo", "brand identity", "presentation", "powerpoint", "google slides"],
+  ["graphic", "graphics", "graphic design", "visual", "illustration", "poster", "banner", "flyer", "brochure", "canva", "photoshop", "illustrator", "figma", "infographic", "branding", "logo", "brand identity", "presentation", "powerpoint", "google slides"],
   // Video & Motion
   ["video", "videography", "video editing", "motion graphics", "animation", "film", "filming", "shooting", "documentary", "premiere", "after effects", "reel", "reels", "shorts", "youtube", "tiktok", "davinci", "davinci resolve", "podcast", "podcast production", "audio"],
   // Photography
   ["photo", "photography", "photographer", "photo editing", "retouching", "lightroom", "camera", "portrait", "event photography"],
-  // Writing & Content
-  ["writing", "writer", "copywriting", "copywriter", "content", "content creation", "blog", "article", "storytelling", "impact story", "press release", "annual report", "report writing", "newsletter", "proposal", "rfp", "translation", "localization", "public speaking", "training"],
+  // Writing & Communication (NOT conflated with Content Creation category)
+  ["writing", "writer", "copywriting", "copywriter", "blog", "article", "storytelling", "impact story", "press release", "annual report", "report writing", "newsletter", "proposal", "rfp", "translation", "localization", "public speaking", "training"],
   // Fundraising & Grants
   ["fundraising", "fundraiser", "donation", "donate", "grant", "grants", "grant writing", "grant research", "sponsorship", "sponsor", "corporate sponsorship", "crowdfunding", "charity", "philanthropy", "giving", "donor", "donors", "csr", "gofundme", "ketto", "milaap", "donor management"],
   // Finance & Accounting
@@ -627,7 +629,7 @@ function computeRelevanceScore(doc: any, searchTerms: string[]): number {
         const words = valueLower.split(/\s+/)
         for (const word of words) {
           const dist = levenshteinDistance(termLower, word.slice(0, termLower.length + 2))
-          if (dist <= Math.floor(termLower.length / 3)) {
+          if (dist <= Math.max(2, Math.floor(termLower.length / 3))) {
             score += field.weight * 0.8
             break
           }
@@ -648,7 +650,7 @@ function computeRelevanceScore(doc: any, searchTerms: string[]): number {
       } else if (termLower.length >= 3) {
         const skillWords = skillsText.split(/\s+/)
         for (const word of skillWords) {
-          if (word.length >= 3 && levenshteinDistance(termLower, word) <= Math.floor(termLower.length / 3)) {
+          if (word.length >= 3 && levenshteinDistance(termLower, word) <= Math.max(2, Math.floor(termLower.length / 3))) {
             score += 6
             break
           }

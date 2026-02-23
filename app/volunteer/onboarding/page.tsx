@@ -33,6 +33,7 @@ import {
 import { skillCategories, experienceLevels, causes, workModes } from "../../../lib/skills-data"
 import { saveVolunteerOnboarding, completeOnboarding } from "@/lib/actions"
 import { authClient } from "@/lib/auth-client"
+import { OnboardingPageSkeleton } from "@/components/ui/page-skeletons"
 
 type SelectedSkill = {
   categoryId: string
@@ -1253,11 +1254,7 @@ export default function VolunteerOnboardingPage() {
 
   // Show loading state while checking authentication
   if (isPending || isCheckingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
+    return <OnboardingPageSkeleton />
   }
 
   return (

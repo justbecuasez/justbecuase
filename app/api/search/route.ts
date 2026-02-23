@@ -6,20 +6,41 @@ import client from "@/lib/db"
 
 // All valid skill IDs and cause IDs from the platform
 const VALID_SKILLS = [
+  // Digital Marketing
   "community-management", "email-marketing", "social-media-ads", "ppc-google-ads",
   "seo-content", "social-media-strategy", "whatsapp-marketing",
+  "influencer-marketing", "analytics-reporting", "content-marketing", "crm-management",
+  // Fundraising
   "grant-writing", "grant-research", "corporate-sponsorship", "major-gift-strategy",
-  "peer-to-peer-campaigns", "fundraising-pitch-deck",
+  "peer-to-peer-campaigns", "fundraising-pitch-deck", "crowdfunding", "csr-partnerships", "donor-management",
+  // Website & App Development
   "wordpress-development", "ux-ui", "html-css", "website-security",
   "cms-maintenance", "website-redesign", "landing-page-optimization",
+  "react-nextjs", "nodejs-backend", "shopify-ecommerce", "webflow-nocode",
+  "mobile-app-development", "api-integration", "database-management", "devops-hosting", "python-scripting",
+  // Finance & Accounting
   "bookkeeping", "budgeting-forecasting", "payroll-processing",
-  "financial-reporting", "accounting-software",
+  "financial-reporting", "accounting-software", "tax-compliance", "audit-support", "financial-modelling",
+  // Content Creation & Design
   "photography", "videography", "video-editing", "photo-editing",
-  "motion-graphics", "graphic-design",
+  "motion-graphics", "graphic-design", "social-media-content", "podcast-production",
+  "illustration", "branding-identity", "ai-content-tools", "presentation-design",
+  // Communication & Writing
   "donor-communications", "email-copywriting", "press-release",
-  "impact-story-writing", "annual-report-writing",
+  "impact-story-writing", "annual-report-writing", "blog-article-writing",
+  "social-media-copywriting", "proposal-writing", "newsletter-creation",
+  "translation-localization", "public-speaking",
+  // Planning & Operations
   "volunteer-recruitment", "event-planning", "event-onground-support",
   "telecalling", "customer-support", "logistics-management",
+  "project-management", "data-entry", "research-surveys", "monitoring-evaluation",
+  "hr-recruitment", "training-facilitation",
+  // Legal & Compliance
+  "legal-advisory", "ngo-registration", "fcra-compliance", "contract-drafting",
+  "policy-drafting", "ip-trademark", "rti-advocacy",
+  // Data & Technology
+  "data-analysis", "data-visualization", "ai-ml", "chatbot-development",
+  "it-support", "cybersecurity", "google-workspace", "automation-zapier",
 ] as const
 
 const VALID_CAUSES = [
@@ -101,15 +122,23 @@ AVAILABLE CAUSE IDs (use ONLY these exact IDs):
 ${VALID_CAUSES.join(", ")}
 
 SKILL MAPPING — include ALL semantically related skills:
-- "SEO" or "seo expert" → ["seo-content"]
-- "email marketing" → ["email-marketing"]
-- "marketing" → ["community-management", "email-marketing", "social-media-ads", "ppc-google-ads", "seo-content", "social-media-strategy", "whatsapp-marketing"]
-- "website" or "web developer" → ["ux-ui", "wordpress-development", "website-redesign", "html-css"]
-- "video" → ["videography", "video-editing", "motion-graphics"]
-- "writer" → ["email-copywriting", "press-release", "impact-story-writing", "annual-report-writing", "donor-communications"]
-- "graphic designer" → ["graphic-design", "ux-ui"]
-- "fundraising" → ["grant-writing", "grant-research", "corporate-sponsorship", "major-gift-strategy", "peer-to-peer-campaigns", "fundraising-pitch-deck"]
+- "SEO" or "seo expert" → ["seo-content", "content-marketing"]
+- "email marketing" → ["email-marketing", "crm-management"]
+- "marketing" → ["community-management", "email-marketing", "social-media-ads", "ppc-google-ads", "seo-content", "social-media-strategy", "whatsapp-marketing", "influencer-marketing", "analytics-reporting", "content-marketing", "crm-management"]
+- "website" or "web developer" → ["react-nextjs", "nodejs-backend", "wordpress-development", "ux-ui", "html-css", "website-redesign", "landing-page-optimization", "webflow-nocode", "shopify-ecommerce"]
+- "react" or "nextjs" or "frontend" → ["react-nextjs", "html-css", "ux-ui"]
+- "backend" or "node" or "api" → ["nodejs-backend", "api-integration", "database-management", "python-scripting"]
+- "mobile app" → ["mobile-app-development"]
+- "shopify" or "ecommerce" → ["shopify-ecommerce", "webflow-nocode"]
+- "content creator" or "content creation" → ["photography", "videography", "video-editing", "photo-editing", "motion-graphics", "graphic-design", "social-media-content", "podcast-production", "illustration", "branding-identity", "ai-content-tools", "presentation-design"]
+- "video" → ["videography", "video-editing", "motion-graphics", "social-media-content"]
+- "writer" or "writing" → ["email-copywriting", "press-release", "impact-story-writing", "annual-report-writing", "blog-article-writing", "social-media-copywriting", "proposal-writing", "newsletter-creation", "donor-communications"]
+- "graphic designer" or "designer" → ["graphic-design", "ux-ui", "illustration", "branding-identity", "presentation-design"]
 - "photographer" → ["photography", "photo-editing"]
+- "fundraising" → ["grant-writing", "grant-research", "corporate-sponsorship", "major-gift-strategy", "peer-to-peer-campaigns", "fundraising-pitch-deck", "crowdfunding", "csr-partnerships", "donor-management"]
+- "data" or "analytics" → ["data-analysis", "data-visualization", "analytics-reporting", "ai-ml"]
+- "legal" or "lawyer" → ["legal-advisory", "ngo-registration", "fcra-compliance", "contract-drafting", "policy-drafting"]
+- "project manager" or "operations" → ["project-management", "event-planning", "logistics-management", "monitoring-evaluation"]
 
 OTHER FILTERS:
 - "remote" → workMode: "remote"
@@ -297,12 +326,38 @@ async function keywordFallbackWithDB(query: string) {
     "budget": ["budgeting-forecasting"],
     "payroll": ["payroll-processing"],
     "photo": ["photography", "photo-editing"],
-    "video": ["videography", "video-editing", "motion-graphics"],
+    "video": ["videography", "video-editing", "motion-graphics", "social-media-content"],
     "editing": ["video-editing", "photo-editing"],
-    "graphic": ["graphic-design", "motion-graphics"],
-    "content": ["email-copywriting", "impact-story-writing", "annual-report-writing", "seo-content"],
-    "writing": ["grant-writing", "email-copywriting", "impact-story-writing", "annual-report-writing", "press-release"],
-    "copy": ["email-copywriting"],
+    "graphic": ["graphic-design", "motion-graphics", "illustration", "branding-identity"],
+    "content creator": ["photography", "videography", "video-editing", "photo-editing", "motion-graphics", "graphic-design", "social-media-content", "podcast-production", "illustration", "branding-identity", "ai-content-tools", "presentation-design"],
+    "content creation": ["photography", "videography", "video-editing", "photo-editing", "motion-graphics", "graphic-design", "social-media-content", "podcast-production", "illustration", "branding-identity", "ai-content-tools", "presentation-design"],
+    "creator": ["photography", "videography", "video-editing", "graphic-design", "social-media-content", "motion-graphics", "illustration"],
+    "content": ["social-media-content", "content-marketing", "seo-content", "photography", "videography", "video-editing", "graphic-design"],
+    "writing": ["grant-writing", "email-copywriting", "impact-story-writing", "annual-report-writing", "press-release", "blog-article-writing", "social-media-copywriting", "proposal-writing", "newsletter-creation", "donor-communications"],
+    "writer": ["email-copywriting", "blog-article-writing", "social-media-copywriting", "impact-story-writing", "annual-report-writing", "press-release"],
+    "copy": ["email-copywriting", "social-media-copywriting"],
+    "blog": ["blog-article-writing", "seo-content"],
+    "react": ["react-nextjs"],
+    "nextjs": ["react-nextjs"],
+    "next.js": ["react-nextjs"],
+    "frontend": ["react-nextjs", "html-css", "ux-ui"],
+    "backend": ["nodejs-backend", "api-integration", "database-management", "python-scripting"],
+    "mobile app": ["mobile-app-development"],
+    "mobile": ["mobile-app-development"],
+    "shopify": ["shopify-ecommerce"],
+    "ecommerce": ["shopify-ecommerce", "webflow-nocode"],
+    "node": ["nodejs-backend"],
+    "api": ["api-integration"],
+    "python": ["python-scripting"],
+    "database": ["database-management"],
+    "data": ["data-analysis", "data-visualization", "analytics-reporting"],
+    "analytics": ["analytics-reporting", "data-analysis", "data-visualization"],
+    "legal": ["legal-advisory", "ngo-registration", "fcra-compliance", "contract-drafting", "policy-drafting"],
+    "compliance": ["fcra-compliance", "12a-80g-compliance", "legal-advisory"],
+    "lawyer": ["legal-advisory", "contract-drafting"],
+    "contract": ["contract-drafting"],
+    "ai": ["ai-ml", "ai-content-tools"],
+    "machine learning": ["ai-ml"],
     "event": ["event-planning", "event-onground-support"],
     "planning": ["event-planning"],
     "support": ["customer-support", "event-onground-support"],

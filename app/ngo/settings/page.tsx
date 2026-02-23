@@ -23,6 +23,7 @@ import {
 } from "@/lib/actions"
 import { skillCategories, causes as causesList } from "@/lib/skills-data"
 import type { RequiredSkill, SkillPriority } from "@/lib/types"
+import { SettingsPageSkeleton } from "@/components/ui/page-skeletons"
 import {
   Building2,
   Bell,
@@ -323,11 +324,7 @@ export default function NGOSettingsPage() {
   }
 
   if (isPending || isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
+    return <SettingsPageSkeleton />
   }
 
   return (

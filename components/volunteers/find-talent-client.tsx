@@ -550,9 +550,15 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
             const skillMatch = v.skills?.some(s =>
               s.subskillId.toLowerCase().includes(query) ||
               s.categoryId.toLowerCase().includes(query) ||
-              getSkillDisplayName(s.subskillId).toLowerCase().includes(query)
+              getSkillDisplayName(s.subskillId).toLowerCase().includes(query) ||
+              getSkillDisplayName(s.categoryId).toLowerCase().includes(query)
             )
-            if (!nameMatch && !headlineMatch && !locationMatch && !skillMatch) {
+            // Also match multi-word queries against category names (e.g. "content creator" matches "content-creation-design")
+            const categoryNameMatch = v.skills?.some(s => {
+              const catName = getSkillDisplayName(s.categoryId).toLowerCase()
+              return query.split(/\s+/).every(word => catName.includes(word) || s.categoryId.toLowerCase().includes(word))
+            })
+            if (!nameMatch && !headlineMatch && !locationMatch && !skillMatch && !categoryNameMatch) {
               matches = false
             }
           }

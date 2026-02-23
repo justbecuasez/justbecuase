@@ -13,12 +13,13 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Camera, Save, Loader2, CheckCircle, Building2, Globe, Users, ExternalLink, FileText, Upload, X } from "lucide-react"
+import { Camera, Save, Loader2, Building2, Globe, Users, ExternalLink, FileText, Upload, X, CheckCircle } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
 import { getNGOProfile, updateNGOProfile } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
 import { uploadToCloudinary, validateImageFile, uploadDocumentToCloudinary, validateDocumentFile } from "@/lib/upload"
 import type { NGOProfile } from "@/lib/types"
+import { Skeleton } from "@/components/ui/skeleton"
 
 const teamSizes = [
   "1-5",
@@ -50,7 +51,6 @@ export default function NGOProfilePage() {
   const [profile, setProfile] = useState<NGOProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
-  const [isSaved, setIsSaved] = useState(false)
   const [error, setError] = useState("")
   const [uploadingLogo, setUploadingLogo] = useState(false)
   const [uploadingDoc, setUploadingDoc] = useState(false)
@@ -248,7 +248,6 @@ export default function NGOProfilePage() {
   const handleSave = async () => {
     setIsSaving(true)
     setError("")
-    setIsSaved(false)
 
     try {
       const result = await updateNGOProfile({
@@ -257,14 +256,26 @@ export default function NGOProfilePage() {
       })
 
       if (result.success) {
-        setIsSaved(true)
-        setTimeout(() => setIsSaved(false), 3000)
+        toast.success("Profile saved successfully!", {
+          description: "Your organization profile has been updated.",
+          duration: 4000,
+          action: {
+            label: "View Profile",
+            onClick: () => router.push(`/ngos/${profile?._id}`),
+          },
+        })
       } else {
-        setError(result.error || "Failed to save profile")
+        toast.error("Failed to save profile", {
+          description: result.error || "Please try again.",
+          duration: 4000,
+        })
       }
     } catch (err) {
       console.error("Save error:", err)
-      setError("Failed to save profile")
+      toast.error("Failed to save profile", {
+        description: "An unexpected error occurred. Please try again.",
+        duration: 4000,
+      })
     } finally {
       setIsSaving(false)
     }
@@ -278,9 +289,59 @@ export default function NGOProfilePage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
+      <main className="flex-1 p-6 lg:p-8 max-w-5xl">
+        <div className="mb-8">
+          <Skeleton className="h-8 w-64 mb-2" />
+          <Skeleton className="h-4 w-96" />
+        </div>
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <Skeleton className="h-5 w-40 mb-2" />
+                <Skeleton className="h-4 w-64" />
+              </div>
+              <Skeleton className="h-8 w-12" />
+            </div>
+            <Skeleton className="h-2 w-full" />
+          </CardContent>
+        </Card>
+        <div className="flex gap-2 mb-6">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-10 w-28 rounded-md" />
+          ))}
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-64 mt-1" />
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center gap-6">
+              <Skeleton className="w-24 h-24 rounded-lg" />
+              <div className="space-y-2">
+                <Skeleton className="h-4 w-48" />
+                <Skeleton className="h-9 w-32 rounded-md" />
+              </div>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-10 w-full rounded-md" />
+                </div>
+              ))}
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-24 w-full rounded-md" />
+            </div>
+          </CardContent>
+        </Card>
+        <div className="mt-8 flex justify-end">
+          <Skeleton className="h-11 w-36 rounded-md" />
+        </div>
+      </main>
     )
   }
 
@@ -317,12 +378,7 @@ export default function NGOProfilePage() {
             </div>
           )}
 
-          {isSaved && (
-            <div className="mb-6 p-4 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 rounded-lg flex items-center gap-2">
-              <CheckCircle className="h-5 w-5" />
-              Profile saved successfully!
-            </div>
-          )}
+
 
           <Tabs defaultValue="basic" className="space-y-6">
             <TabsList>

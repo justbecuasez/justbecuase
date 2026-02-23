@@ -34,6 +34,7 @@ import { saveNGOOnboarding, completeOnboarding } from "@/lib/actions"
 import { authClient } from "@/lib/auth-client"
 import { uploadDocumentToCloudinary, validateDocumentFile } from "@/lib/upload"
 import { toast } from "sonner"
+import { OnboardingPageSkeleton } from "@/components/ui/page-skeletons"
 
 type RequiredSkill = {
   categoryId: string
@@ -1242,11 +1243,7 @@ export default function NGOOnboardingPage() {
 
   // Show loading state while checking authentication
   if (isPending || isCheckingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-secondary" />
-      </div>
-    )
+    return <OnboardingPageSkeleton />
   }
 
   return (

@@ -579,7 +579,7 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
 
   // Adaptive minimum_should_match based on query length
   const wordCount = query.split(/\s+/).length
-  const minMatch = wordCount <= 2 ? "50%" : wordCount <= 4 ? "40%" : "30%"
+  const minMatch = wordCount <= 2 ? "75%" : wordCount <= 4 ? "50%" : "30%"
 
   // Primary search — hybrid: text + semantic
   should.push(
