@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     }
 
     const { output } = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: openai("gpt-5.2"),
       output: Output.object({
         schema: z.object({
           bio: z.string().describe("A professional, honest bio (80-150 words)"),

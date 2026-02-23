@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     }
 
     const { output } = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: openai("gpt-5.2"),
       output: Output.object({
         schema: z.object({
           explanation: z.string().describe("A natural, honest explanation of the match quality — positive for high scores, critical for low scores (2-4 sentences)"),

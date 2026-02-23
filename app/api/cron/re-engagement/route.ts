@@ -17,10 +17,11 @@ export async function GET(request: Request) {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
     // Find volunteers inactive for 14-30 days (don't spam people inactive longer)
+    // Note: emailNotifications is nested under privacy, so we filter at the correct path
     const inactiveVolunteers = await volunteerProfilesDb.findMany(
       {
         updatedAt: { $lte: fourteenDaysAgo, $gte: thirtyDaysAgo },
-        emailNotifications: { $ne: false },
+        "privacy.emailNotifications": { $ne: false },
       } as any
     )
 
@@ -64,6 +65,8 @@ export async function GET(request: Request) {
         }).length
 
         if (newProjectsSince === 0 && missedMatches === 0) continue
+        // Don't send with misleading subject if no skills matched
+        if (missedMatches === 0) continue
 
         const html = getReEngagementEmailHtml(
           volunteer.name || "Volunteer",
@@ -77,6 +80,10 @@ export async function GET(request: Request) {
         const db = await getDb()
         const volUser = await db.collection("user").findOne(userIdQuery(volunteer.userId))
         if (!volUser?.email) continue
+
+        // Respect email notification preferences (double-check at user level)
+        const prefs = volUser.privacy
+        if (prefs?.emailNotifications === false) continue
 
         await sendEmail({
           to: volUser.email,

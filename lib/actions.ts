@@ -293,6 +293,7 @@ export async function saveVolunteerOnboarding(data: {
       subscriptionResetDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1),
       isVerified: false,
       isActive: true,
+      isAvailable: true, // For NestJS/migrated data compatibility
       createdAt: new Date(),
       updatedAt: new Date(),
     }
@@ -712,7 +713,14 @@ export async function createProject(data: {
     // Best effort: Email volunteers whose skills match this opportunity
     try {
       const { sendEmail, getNewOpportunityEmailHtml } = await import("@/lib/email")
-      const allVolunteers = await volunteerProfilesDb.findMany({}, { limit: 500 } as any)
+      // Fetch only active volunteers with email notifications enabled
+      const allVolunteers = await volunteerProfilesDb.findMany(
+        { 
+          $or: [{ isActive: true }, { isAvailable: true }],
+          "privacy.emailNotifications": { $ne: false },
+        } as any, 
+        { limit: 500 } as any
+      )
       
       // Build a Set of "categoryId::subskillId" for fast lookup
       const projectSkillKeys = new Set(
@@ -720,8 +728,8 @@ export async function createProject(data: {
       )
       
       const matchingVolunteers = allVolunteers.filter(v => {
-        // Skip inactive volunteers or those with no skills
-        if (v.isActive === false) return false
+        // Skip explicitly deactivated volunteers
+        if (v.isActive === false || (v as any).isAvailable === false) return false
         
         // Parse skills — handles both object array and string array formats
         const vSkills: Array<{categoryId?: string; subskillId?: string}> = Array.isArray(v.skills) ? v.skills : []
@@ -1497,7 +1505,10 @@ export async function getMatchedVolunteersForProject(
   const project = await projectsDb.findById(projectId)
   if (!project) return []
 
-  const volunteers = await volunteerProfilesDb.findMany({ isActive: true })
+  // Fetch active volunteers: support both isActive (new) and isAvailable (migrated) fields
+  const volunteers = await volunteerProfilesDb.findMany(
+    { $or: [{ isActive: true }, { isAvailable: true }] } as any
+  )
   
   // Subscription-based visibility: non-Pro NGOs can only see paid volunteers
   let visibleVolunteers = volunteers
@@ -1581,8 +1592,10 @@ export async function getRecommendedVolunteersForNGO(): Promise<
 
   if (requiredSkillIds.size === 0) return []
 
-  // Get all active volunteers
-  const volunteers = await volunteerProfilesDb.findMany({ isActive: true })
+  // Get all active volunteers: support both isActive (new) and isAvailable (migrated) fields
+  const volunteers = await volunteerProfilesDb.findMany(
+    { $or: [{ isActive: true }, { isAvailable: true }] } as any
+  )
   
   // Subscription-based visibility: non-Pro NGOs can only see paid volunteers
   const ngoProfile = await ngoProfilesDb.findByUserId(user.id)

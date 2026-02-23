@@ -16,7 +16,7 @@ export async function POST(req: Request) {
     const { currentSkills, causes, bio, completedProjects } = body
 
     const { output } = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: openai("gpt-5.2"),
       output: Output.object({
         schema: z.object({
           suggestions: z.array(

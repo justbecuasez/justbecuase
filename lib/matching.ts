@@ -560,7 +560,11 @@ export function matchVolunteersToProject(
   const scores: MatchScore[] = []
 
   for (const volunteer of volunteers) {
-    if (!volunteer.isActive) continue
+    // Support both isActive (Next.js) and isAvailable (NestJS/migrated) fields
+    // Skip only explicitly deactivated/banned volunteers
+    if (volunteer.isActive === false || (volunteer as any).isAvailable === false) continue
+    // Skip volunteers with no skills (incomplete profiles)
+    if (!volunteer.skills || volunteer.skills.length === 0) continue
 
     // Phase 1: Deep skill analysis
     const skill = deepSkillMatch(project.skillsRequired, volunteer.skills)
@@ -697,7 +701,9 @@ export function getRecommendedVolunteers(
   const scores: MatchScore[] = []
 
   for (const volunteer of volunteers) {
-    if (!volunteer.isActive) continue
+    // Support both isActive (Next.js) and isAvailable (NestJS/migrated) fields
+    if (volunteer.isActive === false || (volunteer as any).isAvailable === false) continue
+    if (!volunteer.skills || volunteer.skills.length === 0) continue
 
     const skill = deepSkillMatch(ngoTypicalSkills, volunteer.skills)
     const cause = causeScore(volunteer.causes, ngoCauses)

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { generateText, Output } from "ai"
-import { google } from "@ai-sdk/google"
+import { openai } from "@ai-sdk/openai"
 import { z } from "zod"
 import client from "@/lib/db"
 
@@ -55,9 +55,9 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // If no Gemini key, fall back to keyword matching
-    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      console.log("[AI Search] No Google Gemini API key, using keyword fallback")
+    // If no OpenAI key, fall back to keyword matching
+    if (!process.env.OPENAI_API_KEY) {
+      console.log("[AI Search] No OpenAI API key, using keyword fallback")
       const result = await keywordFallbackWithDB(query)
       return NextResponse.json({ success: true, data: result, method: "keyword" })
     }
@@ -84,7 +84,7 @@ async function searchWithAgent(query: string) {
 
   // Step 1: Use AI to parse the natural language query into structured filters
   const { output: parsedFilters } = await generateText({
-    model: google("gemini-2.5-flash"),
+    model: openai("gpt-5.2"),
     temperature: 0,
     system: `You are a search query parser. Your ONLY job is to extract structured filters from the user's EXACT query text.
 

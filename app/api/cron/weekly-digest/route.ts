@@ -21,9 +21,9 @@ export async function GET(request: Request) {
 
     const newProjectCount = newProjects.length
 
-    // Get all active volunteers
+    // Get all active volunteers (filter on correct nested path for email preferences)
     const volunteers = await volunteerProfilesDb.findMany(
-      { emailNotifications: { $ne: false } } as any
+      { "privacy.emailNotifications": { $ne: false } } as any
     )
 
     let sent = 0

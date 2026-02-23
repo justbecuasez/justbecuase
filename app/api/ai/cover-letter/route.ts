@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     }
 
     const { output } = await generateText({
-      model: openai("gpt-4o-mini"),
+      model: openai("gpt-5.2"),
       output: Output.object({
         schema: z.object({
           coverLetter: z.string().describe("A personalized cover letter that honestly reflects the volunteer's fit"),

@@ -48,20 +48,29 @@ export async function POST(request: NextRequest) {
     for (const user of recentUsers) {
       const role = user.role as "volunteer" | "ngo"
       
-      // Check if they have a profile
-      const profileCollection = role === "volunteer" ? "volunteer_profiles" : "ngo_profiles"
-      const profile = await db.collection(profileCollection).findOne({ userId: user.id || user._id?.toString() })
+      // All profile data is now stored in the unified "user" collection
+      // Check directly on the user document whether they completed onboarding
+      const userId = user.id || user._id?.toString()
+      
+      // Check profile completeness directly from the user document
+      const isComplete = role === "volunteer"
+        ? !!(user.name && (() => {
+            // Skills may be a JSON string or array
+            const skills = typeof user.skills === "string" 
+              ? (() => { try { return JSON.parse(user.skills) } catch { return [] } })() 
+              : user.skills
+            return Array.isArray(skills) && skills.length > 0
+          })())
+        : !!(user.organizationName && (() => {
+            const causes = typeof user.causes === "string"
+              ? (() => { try { return JSON.parse(user.causes) } catch { return [] } })()
+              : user.causes
+            return Array.isArray(causes) && causes.length > 0
+          })())
 
-      // If profile exists and has key fields filled, skip
-      if (profile) {
-        const isComplete = role === "volunteer"
-          ? !!(profile.name && profile.skills?.length > 0)
-          : !!(profile.organizationName && profile.causes?.length > 0)
-        
-        if (isComplete) {
-          results.push({ userId: user.id, email: user.email, role, status: "skipped_complete" })
-          continue
-        }
+      if (isComplete) {
+        results.push({ userId, email: user.email, role, status: "skipped_complete" })
+        continue
       }
 
       // Check email notification preference
