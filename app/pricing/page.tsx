@@ -7,11 +7,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Check, Building2, User, Sparkles, Zap, Loader2 } from "lucide-react"
+import { Check, Building2, User, Sparkles, Zap, Loader2, Tag, X } from "lucide-react"
 import { client } from "@/lib/auth-client"
 import { toast } from "sonner"
 import { useSubscriptionStore, usePlatformSettingsStore } from "@/lib/store"
 import { formatPrice, getCurrencySymbol } from "@/lib/currency"
+import { Input } from "@/components/ui/input"
 import type { SupportedCurrency } from "@/lib/types"
 import { PricingPageSkeleton } from "@/components/ui/page-skeletons"
 
@@ -54,6 +55,20 @@ export default function PricingPage() {
   const defaultTab = userRole === "volunteer" ? "volunteer" : "ngo"
   const [activeTab, setActiveTab] = useState(defaultTab)
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+
+  // Coupon state
+  const [couponInput, setCouponInput] = useState("")
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string
+    discountAmount: number
+    finalAmount: number
+    originalAmount: number
+    discountType: "percentage" | "fixed"
+    discountValue: number
+    planId: string
+  } | null>(null)
+  const [couponError, setCouponError] = useState("")
   
   // Get current plan from store
   const currentNGOPlan = ngoSubscription?.plan || "free"
@@ -162,6 +177,57 @@ export default function PricingPage() {
     },
   ]
 
+  const handleApplyCoupon = async (planId: string) => {
+    if (!couponInput.trim()) return
+    if (!user) {
+      toast.error("Please sign in to apply a coupon")
+      return
+    }
+
+    setCouponLoading(true)
+    setCouponError("")
+
+    try {
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponInput.trim(), planId }),
+      })
+
+      const data = await response.json()
+      if (!data.valid) {
+        setCouponError(data.error || "Invalid coupon")
+        setAppliedCoupon(null)
+      } else {
+        setAppliedCoupon({
+          code: couponInput.trim().toUpperCase(),
+          discountAmount: data.discountAmount,
+          finalAmount: data.finalAmount,
+          originalAmount: data.originalAmount,
+          discountType: data.discountType,
+          discountValue: data.discountValue,
+          planId,
+        })
+        setCouponError("")
+        toast.success("Coupon applied!", {
+          description: data.discountType === "percentage"
+            ? `${data.discountValue}% off applied`
+            : `${getCurrencySymbol(currency)}${data.discountAmount} off applied`,
+        })
+      }
+    } catch {
+      setCouponError("Failed to validate coupon")
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  const clearCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponInput("")
+    setCouponError("")
+  }
+
   const handleSubscribe = async (planId: string, amount: number, planName: string) => {
     if (!user) {
       window.location.href = "/auth/signin?redirect=/pricing"
@@ -177,11 +243,14 @@ export default function PricingPage() {
     setLoadingPlan(planId)
 
     try {
-      // Create Stripe Checkout Session via API
+      // Create Stripe Checkout Session via API (with optional coupon)
       const response = await fetch("/api/payments/create-subscription", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ planId }),
+        body: JSON.stringify({ 
+          planId,
+          ...(appliedCoupon && appliedCoupon.planId === planId ? { couponCode: appliedCoupon.code } : {}),
+        }),
       })
 
       const data = await response.json()
@@ -190,7 +259,7 @@ export default function PricingPage() {
       }
 
       if (data.url) {
-        // Redirect to Stripe Checkout
+        // Redirect to Stripe Checkout (or coupon-free URL)
         window.location.href = data.url
       } else {
         throw new Error("No checkout URL returned")
@@ -249,7 +318,58 @@ export default function PricingPage() {
             </div>
           )}
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col gap-3">
+          {/* Coupon section — only for paid plans */}
+          {plan.price > 0 && !isCurrentPlan && (
+            <div className="w-full space-y-2">
+              {appliedCoupon && appliedCoupon.planId === plan.id ? (
+                <div className="flex items-center justify-between p-2 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md text-sm">
+                  <div className="flex items-center gap-1.5">
+                    <Tag className="h-3.5 w-3.5 text-green-600" />
+                    <span className="font-medium text-green-700 dark:text-green-400">{appliedCoupon.code}</span>
+                    <span className="text-green-600 dark:text-green-500">
+                      ({appliedCoupon.discountType === "percentage" 
+                        ? `${appliedCoupon.discountValue}% off` 
+                        : `${currencySymbol}${appliedCoupon.discountAmount} off`})
+                    </span>
+                  </div>
+                  <button onClick={clearCoupon} className="text-green-600 hover:text-green-800 dark:hover:text-green-300">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="Coupon code"
+                    value={couponInput}
+                    onChange={(e) => { setCouponInput(e.target.value); setCouponError("") }}
+                    className="h-8 text-sm uppercase"
+                    disabled={couponLoading}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 shrink-0"
+                    disabled={!couponInput.trim() || couponLoading}
+                    onClick={() => handleApplyCoupon(plan.id)}
+                  >
+                    {couponLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Apply"}
+                  </Button>
+                </div>
+              )}
+              {couponError && (
+                <p className="text-xs text-destructive">{couponError}</p>
+              )}
+              {appliedCoupon && appliedCoupon.planId === plan.id && (
+                <div className="text-sm text-muted-foreground">
+                  <span className="line-through">{formatPrice(appliedCoupon.originalAmount, currency)}</span>
+                  {" → "}
+                  <span className="font-semibold text-primary">{formatPrice(appliedCoupon.finalAmount, currency)}</span>
+                  <span className="text-muted-foreground">/month</span>
+                </div>
+              )}
+            </div>
+          )}
           <Button 
             className="w-full" 
             variant={isCurrentPlan ? "outline" : plan.popular ? "default" : "outline"}

@@ -26,6 +26,8 @@ import type {
   UserBadge,
   Referral,
   BlogPost,
+  CouponCode,
+  CouponUsage,
 } from "./types"
 
 // ============================================
@@ -69,6 +71,8 @@ export const COLLECTIONS = {
   USER_BADGES: "userBadges",
   REFERRALS: "referrals",
   BLOG_POSTS: "blogPosts",
+  COUPONS: "coupons",
+  COUPON_USAGES: "couponUsages",
 } as const
 
 // Helper: safely parse JSON with fallback
@@ -1619,5 +1623,159 @@ export const blogPostsDb = {
   async countPublished(): Promise<number> {
     const collection = await getCollection<BlogPost>(COLLECTIONS.BLOG_POSTS)
     return collection.countDocuments({ status: "published" })
+  },
+}
+
+// ============================================
+// COUPON CODES DATABASE OPERATIONS
+// ============================================
+export const couponsDb = {
+  async create(coupon: Omit<CouponCode, "_id">): Promise<string> {
+    const collection = await getCollection<CouponCode>(COLLECTIONS.COUPONS)
+    // Ensure unique code index
+    await collection.createIndex({ code: 1 }, { unique: true })
+    const result = await collection.insertOne(coupon as CouponCode)
+    return result.insertedId.toString()
+  },
+
+  async findByCode(code: string): Promise<CouponCode | null> {
+    const collection = await getCollection<CouponCode>(COLLECTIONS.COUPONS)
+    return collection.findOne({ code: code.toUpperCase() })
+  },
+
+  async findById(id: string): Promise<CouponCode | null> {
+    const collection = await getCollection<CouponCode>(COLLECTIONS.COUPONS)
+    return collection.findOne({ _id: new ObjectId(id) })
+  },
+
+  async findAll(): Promise<CouponCode[]> {
+    const collection = await getCollection<CouponCode>(COLLECTIONS.COUPONS)
+    return collection.find({}).sort({ createdAt: -1 }).toArray()
+  },
+
+  async findActive(): Promise<CouponCode[]> {
+    const collection = await getCollection<CouponCode>(COLLECTIONS.COUPONS)
+    const now = new Date()
+    return collection.find({
+      isActive: true,
+      validFrom: { $lte: now },
+      validUntil: { $gte: now },
+    }).sort({ createdAt: -1 }).toArray()
+  },
+
+  async update(id: string, updates: Partial<CouponCode>): Promise<boolean> {
+    const collection = await getCollection<CouponCode>(COLLECTIONS.COUPONS)
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { ...updates, updatedAt: new Date() } }
+    )
+    return result.modifiedCount > 0
+  },
+
+  async incrementUsage(code: string): Promise<boolean> {
+    const collection = await getCollection<CouponCode>(COLLECTIONS.COUPONS)
+    const result = await collection.updateOne(
+      { code: code.toUpperCase() },
+      { $inc: { usedCount: 1 } }
+    )
+    return result.modifiedCount > 0
+  },
+
+  async delete(id: string): Promise<boolean> {
+    const collection = await getCollection<CouponCode>(COLLECTIONS.COUPONS)
+    const result = await collection.deleteOne({ _id: new ObjectId(id) })
+    return result.deletedCount > 0
+  },
+
+  /**
+   * Validate a coupon code for a specific user and plan.
+   * Returns the coupon if valid, or an error message.
+   */
+  async validate(code: string, userId: string, planId: string, amount: number): Promise<{
+    valid: boolean
+    coupon?: CouponCode
+    discountAmount?: number
+    finalAmount?: number
+    error?: string
+  }> {
+    const coupon = await this.findByCode(code.toUpperCase())
+    if (!coupon) {
+      return { valid: false, error: "Invalid coupon code" }
+    }
+
+    if (!coupon.isActive) {
+      return { valid: false, error: "This coupon is no longer active" }
+    }
+
+    const now = new Date()
+    if (now < new Date(coupon.validFrom)) {
+      return { valid: false, error: "This coupon is not yet active" }
+    }
+    if (now > new Date(coupon.validUntil)) {
+      return { valid: false, error: "This coupon has expired" }
+    }
+
+    // Check max uses
+    if (coupon.maxUses > 0 && coupon.usedCount >= coupon.maxUses) {
+      return { valid: false, error: "This coupon has reached its usage limit" }
+    }
+
+    // Check per-user usage limit
+    if (coupon.maxUsesPerUser > 0) {
+      const userUsageCount = await couponUsagesDb.countByUserAndCoupon(userId, coupon._id!.toString())
+      if (userUsageCount >= coupon.maxUsesPerUser) {
+        return { valid: false, error: "You have already used this coupon" }
+      }
+    }
+
+    // Check applicable plans
+    if (coupon.applicablePlans.length > 0 && !coupon.applicablePlans.includes(planId)) {
+      return { valid: false, error: "This coupon does not apply to the selected plan" }
+    }
+
+    // Check minimum amount
+    if (coupon.minAmount && amount < coupon.minAmount) {
+      return { valid: false, error: `Minimum order amount is ${coupon.minAmount} for this coupon` }
+    }
+
+    // Calculate discount
+    let discountAmount: number
+    if (coupon.discountType === "percentage") {
+      discountAmount = Math.round(amount * (coupon.discountValue / 100))
+    } else {
+      discountAmount = Math.min(coupon.discountValue, amount) // Can't discount more than the price
+    }
+
+    const finalAmount = Math.max(0, amount - discountAmount)
+
+    return {
+      valid: true,
+      coupon,
+      discountAmount,
+      finalAmount,
+    }
+  },
+}
+
+export const couponUsagesDb = {
+  async create(usage: Omit<CouponUsage, "_id">): Promise<string> {
+    const collection = await getCollection<CouponUsage>(COLLECTIONS.COUPON_USAGES)
+    const result = await collection.insertOne(usage as CouponUsage)
+    return result.insertedId.toString()
+  },
+
+  async countByUserAndCoupon(userId: string, couponId: string): Promise<number> {
+    const collection = await getCollection<CouponUsage>(COLLECTIONS.COUPON_USAGES)
+    return collection.countDocuments({ userId, couponId })
+  },
+
+  async findByUserId(userId: string): Promise<CouponUsage[]> {
+    const collection = await getCollection<CouponUsage>(COLLECTIONS.COUPON_USAGES)
+    return collection.find({ userId }).sort({ usedAt: -1 }).toArray()
+  },
+
+  async findByCouponId(couponId: string): Promise<CouponUsage[]> {
+    const collection = await getCollection<CouponUsage>(COLLECTIONS.COUPON_USAGES)
+    return collection.find({ couponId }).sort({ usedAt: -1 }).toArray()
   },
 }

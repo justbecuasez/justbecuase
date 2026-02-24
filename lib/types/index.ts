@@ -597,6 +597,42 @@ export interface TeamMember {
 }
 
 // ============================================
+// COUPON / DISCOUNT CODES
+// ============================================
+export type CouponDiscountType = "percentage" | "fixed"
+
+export interface CouponCode {
+  _id?: ObjectId
+  code: string                 // Unique coupon code (uppercase, e.g., "LAUNCH50")
+  description?: string         // Internal description for admins
+  discountType: CouponDiscountType // "percentage" or "fixed" amount
+  discountValue: number        // e.g., 50 for 50% or 500 for ₹500 off
+  maxUses: number              // 0 = unlimited
+  usedCount: number            // How many times this coupon has been used
+  maxUsesPerUser: number       // Max times a single user can use (0 = unlimited)
+  applicablePlans: string[]    // e.g., ["ngo-pro", "volunteer-pro"], empty = all plans
+  minAmount?: number           // Minimum order amount to apply (in whole currency units)
+  validFrom: Date
+  validUntil: Date
+  isActive: boolean
+  createdBy: string
+  createdAt: Date
+  updatedAt: Date
+}
+
+export interface CouponUsage {
+  _id?: ObjectId
+  couponId: string
+  couponCode: string
+  userId: string
+  planId: string
+  discountAmount: number       // Actual discount applied (in whole currency units)
+  originalAmount: number
+  finalAmount: number
+  usedAt: Date
+}
+
+// ============================================
 // FOLLOW SYSTEM
 // ============================================
 export interface Follow {

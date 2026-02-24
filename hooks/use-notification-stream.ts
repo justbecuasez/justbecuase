@@ -69,7 +69,7 @@ export function useNotificationStream(): UseNotificationStreamReturn {
     es.onerror = () => {
       setConnected(false)
       es.close()
-      // Reconnect with exponential backoff
+      // Reconnect after 5 seconds
       reconnectTimeoutRef.current = setTimeout(connect, 5000)
     }
   }, [])

@@ -16,6 +16,7 @@ import {
   UsersRound,
   Ban,
   Bell,
+  Tag,
 } from "lucide-react"
 import {
   Sidebar,
@@ -50,6 +51,7 @@ const navGroups = [
     label: "Finance",
     items: [
       { title: "Payments", href: "/admin/payments", icon: CreditCard },
+      { title: "Coupons", href: "/admin/coupons", icon: Tag },
     ],
   },
   {

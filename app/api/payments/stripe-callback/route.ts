@@ -3,7 +3,8 @@ import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { getStripeClient } from "@/lib/payment-gateway"
 import { ngoProfilesDb, volunteerProfilesDb, transactionsDb, notificationsDb } from "@/lib/database"
-import { getDb, userIdQuery } from "@/lib/database"
+import { getDb, userIdQuery, couponsDb, couponUsagesDb } from "@/lib/database"
+import { trackEvent } from "@/lib/analytics"
 
 export async function GET(request: NextRequest) {
   try {
@@ -56,8 +57,8 @@ export async function GET(request: NextRequest) {
     // Activate subscription in the appropriate profile
     if (isNgoPlan) {
       const profile = await ngoProfilesDb.findByUserId(userId)
-      if (profile && profile._id) {
-        await ngoProfilesDb.update(profile._id.toString(), {
+      if (profile) {
+        await ngoProfilesDb.update(userId, {
           subscriptionPlan: isPro ? "pro" : "free",
           subscriptionExpiry,
           monthlyUnlocksUsed: 0,
@@ -65,8 +66,8 @@ export async function GET(request: NextRequest) {
       }
     } else {
       const profile = await volunteerProfilesDb.findByUserId(userId)
-      if (profile && profile._id) {
-        await volunteerProfilesDb.update(profile._id.toString(), {
+      if (profile) {
+        await volunteerProfilesDb.update(userId, {
           subscriptionPlan: isPro ? "pro" : "free",
           subscriptionExpiry,
           monthlyApplicationsUsed: 0,
@@ -77,6 +78,13 @@ export async function GET(request: NextRequest) {
     // Get actual amount from checkout session
     const amount = (checkoutSession.amount_total || 0) / 100
     const currency = (checkoutSession.currency || "usd").toUpperCase()
+
+    // Track payment event for analytics
+    trackEvent("payment", "subscription", {
+      userId,
+      value: checkoutSession.amount_total || 0,
+      metadata: { planId, gateway: "stripe", currency },
+    })
 
     // Create transaction record
     const subscriptionId = typeof checkoutSession.subscription === 'string' 
@@ -97,6 +105,27 @@ export async function GET(request: NextRequest) {
       description: `${isPro ? "Pro" : "Free"} Plan Subscription${subscriptionId ? ` (sub: ${subscriptionId})` : ""}`,
       createdAt: now,
     })
+
+    // Record coupon usage if a coupon was applied
+    const couponCode = checkoutSession.metadata?.couponCode
+    const couponId = checkoutSession.metadata?.couponId
+    if (couponCode && couponId) {
+      try {
+        await couponsDb.incrementUsage(couponCode)
+        await couponUsagesDb.create({
+          couponId,
+          couponCode,
+          userId,
+          planId: planId!,
+          discountAmount: Number(checkoutSession.metadata?.discountAmount || 0),
+          originalAmount: Number(checkoutSession.metadata?.originalAmount || 0),
+          finalAmount: amount,
+          usedAt: now,
+        })
+      } catch (couponErr) {
+        console.error("[stripe-callback] Failed to record coupon usage:", couponErr)
+      }
+    }
 
     // Create in-app notification
     try {

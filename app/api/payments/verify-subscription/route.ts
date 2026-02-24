@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth"
 import { ngoProfilesDb, volunteerProfilesDb, transactionsDb, notificationsDb, adminSettingsDb } from "@/lib/database"
 import { verifyPayment } from "@/lib/payment-gateway"
 import { getDb, userIdQuery } from "@/lib/database"
+import { trackEvent } from "@/lib/analytics"
 import type { PaymentGatewayType } from "@/lib/types"
 
 // Calculate subscription expiry (1 month from now)
@@ -127,6 +128,13 @@ export async function POST(request: NextRequest) {
         ? (adminSettings?.volunteerProPrice ?? 999) 
         : 0
 
+    // Track payment event for analytics
+    trackEvent("payment", "subscription", {
+      userId,
+      value: amount,
+      metadata: { planId, gateway: paymentGateway, currency },
+    })
+
     // Create transaction record
     await transactionsDb.create({
       userId,
@@ -168,12 +176,13 @@ export async function POST(request: NextRequest) {
       if (userRecord?.email) {
         const { sendEmail, getSubscriptionConfirmationEmailHtml } = await import("@/lib/email")
         const planName = isNgoPlan ? "NGO Pro" : "Impact Agent Pro"
-        const expiryFormatted = subscriptionExpiry.toLocaleDateString("en-IN", { year: "numeric", month: "long", day: "numeric" })
+        const locale = currency === "INR" ? "en-IN" : "en-US"
+        const expiryFormatted = subscriptionExpiry.toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric" })
         const html = getSubscriptionConfirmationEmailHtml(
           userRecord.name || "there",
           planName,
           amount,
-          "INR",
+          currency,
           expiryFormatted,
           isNgoPlan ? "ngo" : "volunteer"
         )

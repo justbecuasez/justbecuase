@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { getStripeClient } from "@/lib/payment-gateway"
-import { adminSettingsDb } from "@/lib/database"
+import { adminSettingsDb, couponsDb, couponUsagesDb } from "@/lib/database"
 import { toStripeAmount } from "@/lib/currency"
 
 // Plan display names for Stripe checkout
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { planId } = body
+    const { planId, couponCode } = body
 
     if (!planId) {
       return NextResponse.json({ error: "Plan ID required" }, { status: 400 })
@@ -74,6 +74,46 @@ export async function POST(request: NextRequest) {
     // Build URLs
     const origin = request.headers.get("origin") || process.env.FRONTEND_URL || "https://justbecausenetwork.com"
 
+    // Validate and apply coupon if provided
+    let finalPrice = priceWholeUnits
+    let couponData: { couponId: string; couponCode: string; discountAmount: number; originalAmount: number } | null = null
+
+    if (couponCode) {
+      const couponResult = await couponsDb.validate(couponCode, session.user.id, planId, priceWholeUnits)
+      if (!couponResult.valid) {
+        return NextResponse.json({ error: couponResult.error || "Invalid coupon" }, { status: 400 })
+      }
+      finalPrice = couponResult.finalAmount!
+      couponData = {
+        couponId: couponResult.coupon!._id!.toString(),
+        couponCode: couponCode.toUpperCase(),
+        discountAmount: couponResult.discountAmount!,
+        originalAmount: priceWholeUnits,
+      }
+
+      // If coupon makes it fully free, skip Stripe entirely
+      if (finalPrice <= 0) {
+        // Record coupon usage
+        await couponsDb.incrementUsage(couponCode)
+        await couponUsagesDb.create({
+          couponId: couponData.couponId,
+          couponCode: couponData.couponCode,
+          userId: session.user.id,
+          planId,
+          discountAmount: couponData.discountAmount,
+          originalAmount: couponData.originalAmount,
+          finalAmount: 0,
+          usedAt: new Date(),
+        })
+
+        return NextResponse.json({
+          gateway: "coupon",
+          url: `${origin}/api/payments/stripe-callback?coupon_free=true&plan=${planId}&coupon=${couponCode.toUpperCase()}`,
+          message: "Coupon applied — 100% discount",
+        })
+      }
+    }
+
     // Create Stripe Checkout Session with dynamic price_data from admin settings
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "subscription",
@@ -83,9 +123,11 @@ export async function POST(request: NextRequest) {
           price_data: {
             currency,
             product_data: {
-              name: planName,
+              name: couponData 
+                ? `${planName} (Coupon: ${couponData.couponCode})`
+                : planName,
             },
-            unit_amount: toStripeAmount(priceWholeUnits),
+            unit_amount: toStripeAmount(finalPrice),
             recurring: {
               interval: "month",
             },
@@ -99,6 +141,12 @@ export async function POST(request: NextRequest) {
         userId: session.user.id,
         planId,
         userRole,
+        ...(couponData ? {
+          couponCode: couponData.couponCode,
+          couponId: couponData.couponId,
+          originalAmount: String(couponData.originalAmount),
+          discountAmount: String(couponData.discountAmount),
+        } : {}),
       },
       success_url: `${origin}/api/payments/stripe-callback?session_id={CHECKOUT_SESSION_ID}&plan=${planId}`,
       cancel_url: `${origin}/pricing?payment=cancelled`,
