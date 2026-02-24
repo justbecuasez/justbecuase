@@ -3,6 +3,8 @@ import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
 import { couponsDb, adminSettingsDb } from "@/lib/database"
 
+export const dynamic = "force-dynamic"
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth.api.getSession({ headers: await headers() })

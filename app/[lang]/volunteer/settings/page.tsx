@@ -18,6 +18,7 @@ import type { VolunteerSkill, ExperienceLevel } from "@/lib/types"
 import { toast } from "sonner"
 import { NotificationPermissionButton } from "@/components/notifications/notification-listener"
 import { AISkillSuggestions } from "@/components/ai/skill-suggestions"
+import { getCurrencySymbol } from "@/lib/currency"
 import { SettingsPageSkeleton } from "@/components/ui/page-skeletons"
 import {
   User,
@@ -1003,7 +1004,7 @@ export default function VolunteerSettingsPage() {
                             <Label htmlFor="hourlyRate">Hourly Rate</Label>
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                                {(profile?.currency || "USD") === "USD" ? "$" : (profile?.currency || "USD") === "EUR" ? "€" : (profile?.currency || "USD") === "GBP" ? "£" : (profile?.currency || "USD") === "INR" ? "₹" : (profile?.currency || "USD") === "SGD" ? "S$" : (profile?.currency || "USD") === "AED" ? "د.إ" : "RM"}
+                                {getCurrencySymbol(profile?.currency || "USD")}
                               </span>
                               <Input
                                 id="hourlyRate"
@@ -1026,7 +1027,7 @@ export default function VolunteerSettingsPage() {
                             <Label htmlFor="discountedRate">Discounted Rate for NGOs</Label>
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                                {(profile?.currency || "USD") === "USD" ? "$" : (profile?.currency || "USD") === "EUR" ? "€" : (profile?.currency || "USD") === "GBP" ? "£" : (profile?.currency || "USD") === "INR" ? "₹" : (profile?.currency || "USD") === "SGD" ? "S$" : (profile?.currency || "USD") === "AED" ? "د.إ" : "RM"}
+                                {getCurrencySymbol(profile?.currency || "USD")}
                               </span>
                               <Input
                                 id="discountedRate"

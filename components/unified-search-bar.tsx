@@ -29,7 +29,7 @@ import { Badge } from "@/components/ui/badge"
 
 interface SearchSuggestion {
   text: string
-  type: "volunteer" | "ngo" | "opportunity" | "blog" | "page"
+  type: "volunteer" | "ngo" | "opportunity" | "blog" | "page" | "skill" | "cause"
   id: string
   subtitle?: string
 }
@@ -99,6 +99,16 @@ const TYPE_CONFIG = {
     icon: FileText,
     label: "Page",
     badgeClass: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
+  },
+  skill: {
+    icon: Sparkles,
+    label: "Skill",
+    badgeClass: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400",
+  },
+  cause: {
+    icon: TrendingUp,
+    label: "Cause",
+    badgeClass: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
   },
 } as const
 
@@ -507,7 +517,7 @@ export function UnifiedSearchBar({
                         Suggestions
                       </div>
                       {suggestions.map((suggestion, index) => {
-                        const config = TYPE_CONFIG[suggestion.type]
+                        const config = TYPE_CONFIG[suggestion.type as keyof typeof TYPE_CONFIG] ?? TYPE_CONFIG.page
                         const Icon = config.icon
                         const isSelected = selectedIndex === index
                         return (

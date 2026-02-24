@@ -14,6 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { authClient } from "@/lib/auth-client"
 import { toast } from "sonner"
+import { getCurrencySymbol } from "@/lib/currency"
+import { usePlatformSettingsStore } from "@/lib/store"
 import { NotificationPermissionButton } from "@/components/notifications/notification-listener"
 import { 
   getNGOProfile, 
@@ -582,7 +584,7 @@ export default function NGOSettingsPage() {
                               </p>
                             </div>
                             <div className="text-right">
-                              <p className="font-medium">${tx.amount}</p>
+                              <p className="font-medium">{getCurrencySymbol(usePlatformSettingsStore.getState().settings?.currency || "USD")}{tx.amount}</p>
                               <Badge
                                 variant={tx.status === "completed" ? "default" : "secondary"}
                               >

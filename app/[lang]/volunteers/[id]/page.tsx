@@ -13,6 +13,7 @@ import { skillCategories } from "@/lib/skills-data"
 import { Star, MapPin, Clock, CheckCircle, ExternalLink, Award, TrendingUp, Lock, Crown, User, MessageSquare } from "lucide-react"
 import { ContactVolunteerButton } from "@/components/messages/contact-volunteer-button"
 import { SkillEndorsements } from "@/components/endorsements/skill-endorsements"
+import { getCurrencySymbol } from "@/lib/currency"
 import { ReviewsList } from "@/components/reviews/review-form"
 
 // Helper function to get skill name from ID
@@ -362,7 +363,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">Hourly Rate</span>
                       <span className="text-sm font-medium">
-                        {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "€" : volunteer.currency === "GBP" ? "£" : volunteer.currency === "INR" ? "₹" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "د.إ" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.hourlyRate}/hr
+                        {getCurrencySymbol(volunteer.currency || "USD")}{volunteer.hourlyRate}/hr
                       </span>
                     </div>
                   )}
@@ -370,7 +371,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">NGO Discounted Rate</span>
                       <span className="text-sm font-medium text-green-600">
-                        {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "€" : volunteer.currency === "GBP" ? "£" : volunteer.currency === "INR" ? "₹" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "د.إ" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.discountedRate}/hr
+                        {getCurrencySymbol(volunteer.currency || "USD")}{volunteer.discountedRate}/hr
                       </span>
                     </div>
                   )}

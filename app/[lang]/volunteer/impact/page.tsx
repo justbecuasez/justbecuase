@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { getVolunteerProfile, getUserBadges, getReviewsForUser } from "@/lib/actions"
+import { getCurrencySymbol } from "@/lib/currency"
+import { adminSettingsDb } from "@/lib/database"
 import { Trophy, Award, Clock, FolderKanban, Star, TrendingUp, Shield, Target } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -47,8 +49,13 @@ export default async function ImpactDashboardPage() {
     ? reviews.reduce((sum: number, r: any) => sum + r.overallRating, 0) / reviews.length
     : 0
 
+  // Fetch platform currency from admin settings
+  const adminSettings = await adminSettingsDb.get()
+  const platformCurrency = adminSettings?.currency || "INR"
+  const currencySymbol = getCurrencySymbol(platformCurrency)
+
   const levelInfo = getLevelInfo(hours)
-  const estimatedValue = hours * 1500 // ~₹1500/hr estimated value
+  const estimatedValue = hours * 1500 // estimated value per hour
 
   return (
     <main className="flex-1 p-6 lg:p-8">
@@ -126,7 +133,7 @@ export default async function ImpactDashboardPage() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-foreground">
-                      ₹{estimatedValue.toLocaleString()}
+                      {currencySymbol}{estimatedValue.toLocaleString()}
                     </p>
                     <p className="text-xs text-muted-foreground">Value Created</p>
                   </div>

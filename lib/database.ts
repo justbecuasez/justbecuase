@@ -1738,15 +1738,15 @@ export const couponsDb = {
       return { valid: false, error: `Minimum order amount is ${coupon.minAmount} for this coupon` }
     }
 
-    // Calculate discount
+    // Calculate discount (use 2-decimal precision, not integer rounding)
     let discountAmount: number
     if (coupon.discountType === "percentage") {
-      discountAmount = Math.round(amount * (coupon.discountValue / 100))
+      discountAmount = Math.round(amount * (coupon.discountValue / 100) * 100) / 100
     } else {
       discountAmount = Math.min(coupon.discountValue, amount) // Can't discount more than the price
     }
 
-    const finalAmount = Math.max(0, amount - discountAmount)
+    const finalAmount = Math.max(0, Math.round((amount - discountAmount) * 100) / 100)
 
     return {
       valid: true,

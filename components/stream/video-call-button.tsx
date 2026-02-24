@@ -68,8 +68,15 @@ function formatCallDuration(seconds: number): string {
 /**
  * Button component to start video or audio calls from within a chat channel.
  * Requests mic/camera permissions before starting the call.
+ * Guarded: only renders inner component when Stream clients are ready.
  */
 export function VideoCallButton() {
+  const { chatClient, videoClient } = useStream();
+  if (!chatClient || !videoClient) return null;
+  return <VideoCallButtonInner />;
+}
+
+function VideoCallButtonInner() {
   const { channel } = useChatContext();
   const videoClient = useStreamVideoClient();
   const [loading, setLoading] = useState<"audio" | "video" | null>(null);

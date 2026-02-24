@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
+import { getCurrencySymbol } from "@/lib/currency"
 import { Separator } from "@/components/ui/separator"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
@@ -1004,7 +1005,7 @@ export default function VolunteerOnboardingPage() {
                   <Label htmlFor="hourlyRate">Hourly Rate</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      {workPreferences.currency === "USD" ? "$" : workPreferences.currency === "EUR" ? "€" : workPreferences.currency === "GBP" ? "£" : workPreferences.currency === "INR" ? "₹" : workPreferences.currency === "SGD" ? "S$" : workPreferences.currency === "AED" ? "د.إ" : "RM"}
+                      {getCurrencySymbol(workPreferences.currency || "USD")}
                     </span>
                     <Input
                       id="hourlyRate"
@@ -1027,7 +1028,7 @@ export default function VolunteerOnboardingPage() {
                   <Label htmlFor="discountedRate">Discounted Rate for NGOs</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                      {workPreferences.currency === "USD" ? "$" : workPreferences.currency === "EUR" ? "€" : workPreferences.currency === "GBP" ? "£" : workPreferences.currency === "INR" ? "₹" : workPreferences.currency === "SGD" ? "S$" : workPreferences.currency === "AED" ? "د.إ" : "RM"}
+                      {getCurrencySymbol(workPreferences.currency || "USD")}
                     </span>
                     <Input
                       id="discountedRate"
@@ -1239,11 +1240,11 @@ export default function VolunteerOnboardingPage() {
                 <>
                   <div>
                     <h3 className="font-medium text-sm text-muted-foreground">Hourly Rate</h3>
-                    <p className="text-foreground">{workPreferences.currency === "USD" ? "$" : workPreferences.currency === "EUR" ? "€" : workPreferences.currency === "GBP" ? "£" : workPreferences.currency === "INR" ? "₹" : workPreferences.currency === "SGD" ? "S$" : workPreferences.currency === "AED" ? "د.إ" : "RM"}{workPreferences.hourlyRate || 0}/hr</p>
+                    <p className="text-foreground">{getCurrencySymbol(workPreferences.currency || "USD")}{workPreferences.hourlyRate || 0}/hr</p>
                   </div>
                   <div>
                     <h3 className="font-medium text-sm text-muted-foreground">Discounted Rate</h3>
-                    <p className="text-foreground text-green-600">{workPreferences.currency === "USD" ? "$" : workPreferences.currency === "EUR" ? "€" : workPreferences.currency === "GBP" ? "£" : workPreferences.currency === "INR" ? "₹" : workPreferences.currency === "SGD" ? "S$" : workPreferences.currency === "AED" ? "د.إ" : "RM"}{workPreferences.discountedRate || 0}/hr</p>
+                    <p className="text-foreground text-green-600">{getCurrencySymbol(workPreferences.currency || "USD")}{workPreferences.discountedRate || 0}/hr</p>
                   </div>
                 </>
               )}

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
 import { adminSettingsDb } from "@/lib/database"
 
+// Force dynamic — never cache this route so admin changes take effect immediately
+export const dynamic = "force-dynamic"
+
 // GET /api/settings - Get public platform settings (no auth required)
 export async function GET() {
   try {

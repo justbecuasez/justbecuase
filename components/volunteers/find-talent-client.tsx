@@ -43,6 +43,7 @@ import {
   Wand2,
 } from "lucide-react"
 import { skillCategories } from "@/lib/skills-data"
+import { getCurrencySymbol } from "@/lib/currency"
 import { UnifiedSearchBar } from "@/components/unified-search-bar"
 
 // ==========================================
@@ -1174,22 +1175,22 @@ function VolunteerCard({
                   </Badge>
                 )}
                 <Badge variant="outline" className="text-xs">
-                  {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.hourlyRate}/hr
+                  {getCurrencySymbol(volunteer.currency || "USD")}{volunteer.hourlyRate}/hr
                 </Badge>
                 {volunteer.discountedRate && (
                   <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
-                    NGO: {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.discountedRate}/hr
+                    NGO: {getCurrencySymbol(volunteer.currency || "USD")}{volunteer.discountedRate}/hr
                   </Badge>
                 )}
               </>
             ) : (
               <>
                 <Badge variant={isFree ? "secondary" : "outline"} className="text-xs">
-                  {isFree ? "Free" : `${volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}${volunteer.hourlyRate}/hr`}
+                  {isFree ? "Free" : `${getCurrencySymbol(volunteer.currency || "USD")}${volunteer.hourlyRate}/hr`}
                 </Badge>
                 {isPaid && volunteer.discountedRate && (
                   <Badge variant="secondary" className="text-xs bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
-                    NGO: {volunteer.currency === "USD" ? "$" : volunteer.currency === "EUR" ? "\u20ac" : volunteer.currency === "GBP" ? "\u00a3" : volunteer.currency === "INR" ? "\u20b9" : volunteer.currency === "SGD" ? "S$" : volunteer.currency === "AED" ? "\u062f.\u0625" : volunteer.currency === "MYR" ? "RM" : "$"}{volunteer.discountedRate}/hr
+                    NGO: {getCurrencySymbol(volunteer.currency || "USD")}{volunteer.discountedRate}/hr
                   </Badge>
                 )}
               </>
