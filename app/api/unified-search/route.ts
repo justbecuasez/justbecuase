@@ -130,7 +130,20 @@ export async function GET(request: NextRequest) {
         const locationParts = [m.city, m.country].filter(Boolean)
         const location = m.location || (locationParts.length > 0 ? locationParts.join(", ") : undefined)
         // Skills: volunteers/NGOs use skillNames, projects use skillNames too
-        const skills = Array.isArray(m.skillNames) && m.skillNames.length > 0 ? m.skillNames : undefined
+        // Sort skills so query-matching ones appear first on cards
+        let skills = Array.isArray(m.skillNames) && m.skillNames.length > 0 ? m.skillNames : undefined
+        if (skills && query) {
+          const queryTerms = query.toLowerCase().split(/\s+/).filter((t: string) => t.length >= 2)
+          skills = [...skills].sort((a: string, b: string) => {
+            const aLower = a.toLowerCase()
+            const bLower = b.toLowerCase()
+            const aMatch = queryTerms.some((t: string) => aLower.includes(t))
+            const bMatch = queryTerms.some((t: string) => bLower.includes(t))
+            if (aMatch && !bMatch) return -1
+            if (!aMatch && bMatch) return 1
+            return 0
+          })
+        }
         return {
           id: r.id,
           mongoId: r.mongoId,

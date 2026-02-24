@@ -347,6 +347,7 @@ async function getPrefixSearchSuggestions(
       bool: {
         should: [
           // Prefix matching across key fields only (no bio/description/content)
+          // NOTE: skillCategories excluded — too broad for autocomplete
           {
             multi_match: {
               query: textQuery,
@@ -359,7 +360,6 @@ async function getPrefixSearchSuggestions(
                 "title^10",
                 "title.exact^15",
                 "skillNames^12",
-                "skillCategories^8",
                 "causeNames^6",
                 "headline^5",
                 "tags^5",
@@ -646,96 +646,135 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
   const wordCount = textQuery.split(/\s+/).length
   const minMatch = wordCount <= 2 ? "75%" : wordCount <= 4 ? "60%" : "40%"
 
-  // Primary search — hybrid: text + semantic
-  // Uses the CLEANED query (intent words removed) for text matching
-  should.push(
-    // Text search with field boosting (BM25) — high weight on skill/role fields
-    {
-      multi_match: {
-        query: textQuery,
-        type: "most_fields",
-        fields: [
-          "name^10",
-          "name.exact^15",
-          "orgName^10",
-          "orgName.exact^15",
-          "title^10",
-          "title.exact^15",
-          "headline^6",
-          "skillNames^12",
-          "skillCategories^8",
-          "causeNames^6",
-          "bio^3",
-          "description^4",
-          "mission^4",
-          "location^4",
-          "city^4",
-          "country^3",
-          "content^2",
-          "excerpt^4",
-          "tags^5",
-          "languages^3",
-          "interests^2",
-        ],
-        fuzziness: "AUTO",
-        prefix_length: 2,
-        operator: "or",
-        minimum_should_match: minMatch,
-      },
+  // ============================================
+  // MUST: Core text match — every result MUST match the cleaned query
+  //   on at least one of the key fields (name, title, skills, headline).
+  //   This prevents the semantic clause or bio mentions from pulling in
+  //   completely irrelevant results.
+  // ============================================
+  must.push({
+    bool: {
+      should: [
+        // Primary multi_match across key searchable fields
+        // NOTE: skillCategories intentionally excluded from must — it's too
+        //   broad ("Content Creation & Design" matches "content" but
+        //   includes Graphic Designers who aren't content creators).
+        //   It's included in should[] below as a bonus signal.
+        {
+          multi_match: {
+            query: textQuery,
+            type: "most_fields",
+            fields: [
+              "name^10",
+              "name.exact^15",
+              "orgName^10",
+              "orgName.exact^15",
+              "title^10",
+              "title.exact^15",
+              "headline^6",
+              "skillNames^12",
+              "causeNames^6",
+              "tags^5",
+              "city^4",
+              "country^3",
+              "location^4",
+            ],
+            fuzziness: "AUTO",
+            prefix_length: 2,
+            operator: "or",
+            minimum_should_match: minMatch,
+          },
+        },
+        // Cross-fields: treats fields as one corpus
+        {
+          multi_match: {
+            query: textQuery,
+            type: "cross_fields",
+            fields: [
+              "name^5",
+              "orgName^5",
+              "title^5",
+              "headline^4",
+              "skillNames^8",
+            ],
+            operator: "or",
+            minimum_should_match: minMatch,
+          },
+        },
+        // Prefix matching for search-as-you-type
+        {
+          multi_match: {
+            query: textQuery,
+            type: "bool_prefix",
+            fields: [
+              "name^8",
+              "orgName^8",
+              "title^8",
+              "skillNames^8",
+              "causeNames^5",
+              "city^4",
+            ],
+          },
+        },
+      ],
+      minimum_should_match: 1,
     },
-    // Cross-fields match — treats all fields as one big field (great for multi-concept queries)
-    {
-      multi_match: {
-        query: textQuery,
-        type: "cross_fields",
-        fields: [
-          "name^5",
-          "orgName^5",
-          "title^5",
-          "headline^4",
-          "skillNames^8",
-          "bio^3",
-          "description^3",
-        ],
-        operator: "or",
-        minimum_should_match: minMatch,
-        boost: 1.5,
-      },
+  })
+
+  // ============================================
+  // SHOULD: Bonus scoring — re-rank but don't gate results
+  // ============================================
+
+  // Phrase match boosts (exact phrase on key fields scores higher)
+  should.push({
+    multi_match: {
+      query: textQuery,
+      type: "phrase",
+      fields: [
+        "name^15",
+        "orgName^15",
+        "title^15",
+        "headline^8",
+        "skillNames^14",
+      ],
+      slop: 2,
+      boost: 2.5,
     },
-    // Phrase match (boost exact phrases) — uses cleaned query
-    {
-      multi_match: {
-        query: textQuery,
-        type: "phrase",
-        fields: [
-          "name^15",
-          "orgName^15",
-          "title^15",
-          "headline^8",
-          "description^5",
-          "bio^5",
-          "skillNames^14",
-        ],
-        slop: 2,
-        boost: 2.5,
-      },
+  })
+
+  // Skill categories — bonus scoring only (not gating)
+  should.push({
+    multi_match: {
+      query: textQuery,
+      type: "best_fields",
+      fields: ["skillCategories^4"],
+      fuzziness: "AUTO",
+      prefix_length: 2,
+      boost: 0.5,
     },
-    // Prefix matching for instant search-as-you-type
-    {
-      multi_match: {
-        query: textQuery,
-        type: "bool_prefix",
-        fields: [
-          "name^8",
-          "orgName^8",
-          "title^8",
-          "skillNames^8",
-          "causeNames^5",
-          "city^4",
-        ],
-      },
-    }
-  )
+  })
+
+  // Secondary text match on broader fields (bio, description) — bonus, not required
+  should.push({
+    multi_match: {
+      query: textQuery,
+      type: "most_fields",
+      fields: [
+        "bio^3",
+        "description^4",
+        "mission^4",
+        "content^2",
+        "excerpt^4",
+        "languages^2",
+        "interests^2",
+      ],
+      fuzziness: "AUTO",
+      prefix_length: 2,
+      operator: "or",
+      minimum_should_match: minMatch,
+      boost: 0.8,
+    },
+  })
 
   // Semantic search via semantic_text (if available) — uses ORIGINAL query for NL understanding
   // This will be ignored gracefully on indexes without semantic_text
@@ -743,7 +782,7 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
     semantic: {
       field: "semantic_content",
       query,
-      boost: 1.5,
+      boost: 1.2,
     },
   })
 
@@ -827,25 +866,26 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
     function_score: {
       query: {
         bool: {
+          must,
           should,
           filter: filterClauses.length > 0 ? filterClauses : undefined,
-          minimum_should_match: 1,
+          minimum_should_match: 0, // should clauses are purely for scoring
         },
       },
       functions: [
         // Boost verified users
-        { filter: { term: { isVerified: true } }, weight: 1.5 },
+        { filter: { term: { isVerified: true } }, weight: 1.3 },
         // Boost profiles with ratings
-        { filter: { range: { rating: { gte: 3 } } }, weight: 1.3 },
+        { filter: { range: { rating: { gte: 3 } } }, weight: 1.2 },
         // Boost profiles with completed projects (experienced)
-        { filter: { range: { completedProjects: { gte: 1 } } }, weight: 1.2 },
+        { filter: { range: { completedProjects: { gte: 1 } } }, weight: 1.1 },
         // Slight boost for profiles that have an avatar/logo (more complete)
-        { filter: { exists: { field: "avatar" } }, weight: 1.1 },
-        { filter: { exists: { field: "logo" } }, weight: 1.1 },
+        { filter: { exists: { field: "avatar" } }, weight: 1.05 },
+        { filter: { exists: { field: "logo" } }, weight: 1.05 },
       ],
       score_mode: "multiply",
       boost_mode: "multiply",
-      max_boost: 3.0,
+      max_boost: 2.0,
     },
   }
 }
