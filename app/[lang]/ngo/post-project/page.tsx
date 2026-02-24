@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import LocaleLink from "@/components/locale-link"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -58,6 +59,7 @@ const skillOptions = skillCategories.flatMap(cat =>
 
 export default function PostProjectPage() {
   const router = useRouter()
+  const locale = useLocale()
   const { user, isLoading: authLoading } = useAuth()
   const [ngoProfile, setNgoProfile] = useState<NGOProfile | null>(null)
   const [step, setStep] = useState(1)
@@ -212,7 +214,7 @@ export default function PostProjectPage() {
       })
 
       if (result.success) {
-        router.push("/ngo/projects")
+        router.push(localePath("/ngo/projects", locale))
       } else {
         setError(result.error || "Failed to create opportunity")
       }

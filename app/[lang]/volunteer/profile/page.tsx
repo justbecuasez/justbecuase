@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import LocaleLink from "@/components/locale-link"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,6 +25,7 @@ import { VolunteerProfileSkeleton } from "@/components/ui/page-skeletons"
 
 export default function VolunteerProfileEditPage() {
   const router = useRouter()
+  const locale = useLocale()
   const { data: session, isPending } = authClient.useSession()
   const [profile, setProfile] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -132,7 +134,7 @@ export default function VolunteerProfileEditPage() {
     if (!isPending && session?.user) {
       loadProfile()
     } else if (!isPending && !session?.user) {
-      router.push("/auth/signin")
+      router.push(localePath("/auth/signin", locale))
     }
   }, [session, isPending, router])
 

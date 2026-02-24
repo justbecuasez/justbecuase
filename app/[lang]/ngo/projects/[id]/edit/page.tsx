@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react"
 import LocaleLink from "@/components/locale-link"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -31,6 +32,7 @@ interface Props {
 export default function EditProjectPage({ params }: Props) {
   const { id } = use(params)
   const router = useRouter()
+  const locale = useLocale()
   const { user, isLoading: authLoading } = useAuth()
   const [ngoProfile, setNgoProfile] = useState<NGOProfile | null>(null)
   const [project, setProject] = useState<Project | null>(null)
@@ -158,7 +160,7 @@ export default function EditProjectPage({ params }: Props) {
       if (result.success) {
         setSuccess(true)
         setTimeout(() => {
-          router.push("/ngo/projects")
+          router.push(localePath("/ngo/projects", locale))
         }, 1500)
       } else {
         setError(result.error || "Failed to update opportunity")

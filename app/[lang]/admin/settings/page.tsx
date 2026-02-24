@@ -42,6 +42,7 @@ import { getAdminSettings, updateAdminSettings } from "@/lib/actions"
 import { toast } from "sonner"
 import type { AdminSettings, SupportedCurrency, PaymentGatewayType } from "@/lib/types"
 import { SettingsPageSkeleton } from "@/components/ui/page-skeletons"
+import { usePlatformSettingsStore } from "@/lib/store"
 
 const CURRENCIES: { value: SupportedCurrency; label: string; symbol: string }[] = [
   { value: "INR", label: "Indian Rupee (INR)", symbol: "₹" },
@@ -273,7 +274,9 @@ export default function AdminSettingsPage() {
     setIsSaving(true)
     const result = await updateAdminSettings(settings)
     if (result.success) {
-      toast.success("Settings saved successfully")
+      // Invalidate the cached platform settings so all pages refresh
+      usePlatformSettingsStore.getState().invalidate()
+      toast.success("Settings saved successfully — changes will propagate to all users within minutes")
     } else {
       toast.error(result.error || "Failed to save settings")
     }

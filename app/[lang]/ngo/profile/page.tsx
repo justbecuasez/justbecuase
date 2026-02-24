@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -47,6 +48,7 @@ const causes = [
 
 export default function NGOProfilePage() {
   const router = useRouter()
+  const locale = useLocale()
   const { user, isLoading: authLoading } = useAuth()
   const [profile, setProfile] = useState<NGOProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -124,7 +126,7 @@ export default function NGOProfilePage() {
     if (!authLoading && user) {
       loadProfile()
     } else if (!authLoading && !user) {
-      router.push("/auth/signin")
+      router.push(localePath("/auth/signin", locale))
     }
   }, [user, authLoading, router])
 
@@ -261,7 +263,7 @@ export default function NGOProfilePage() {
           duration: 4000,
           action: {
             label: "View Profile",
-            onClick: () => router.push(`/ngos/${profile?._id}`),
+            onClick: () => router.push(localePath(`/ngos/${profile?._id}`, locale)),
           },
         })
       } else {

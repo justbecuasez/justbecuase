@@ -5,6 +5,7 @@ import { useState, useRef, useEffect, Suspense } from "react"
 import LocaleLink from "@/components/locale-link"
 import Image from "next/image"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -39,6 +40,7 @@ export default function SignUpPage() {
 
 function SignUpPageInner() {
   const router = useRouter()
+  const locale = useLocale()
   const searchParams = useSearchParams()
   const referralCode = searchParams.get("ref") || ""
   const dict = useDictionary()
@@ -254,7 +256,7 @@ function SignUpPageInner() {
       if (!sessionReady) {
         // Session failed - redirect to role-select
         console.log("Session not ready, redirecting to role-select")
-        router.push("/auth/role-select")
+        router.push(localePath("/auth/role-select", locale))
         return
       }
 
@@ -263,7 +265,7 @@ function SignUpPageInner() {
       
       if (!roleResult.success) {
         console.error("Failed to set role:", roleResult.error)
-        router.push("/auth/role-select")
+        router.push(localePath("/auth/role-select", locale))
         return
       }
 
@@ -288,7 +290,7 @@ function SignUpPageInner() {
       }
 
       // Redirect to onboarding
-      router.push(accountType === "volunteer" ? "/volunteer/onboarding" : "/ngo/onboarding")
+      router.push(localePath(accountType === "volunteer" ? "/volunteer/onboarding" : "/ngo/onboarding", locale))
     } catch (err: any) {
       setError(err.message || "Something went wrong")
       setIsLoading(false)

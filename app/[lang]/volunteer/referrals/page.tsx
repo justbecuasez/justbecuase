@@ -10,10 +10,12 @@ import { generateReferralCode, getReferralStats } from "@/lib/actions"
 import { Copy, Check, Users, Gift, Share2, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { ReferralsSkeleton } from "@/components/ui/page-skeletons"
 
 export default function ReferralPage() {
   const router = useRouter()
+  const locale = useLocale()
   const { data: session, isPending } = authClient.useSession()
   const [isLoading, setIsLoading] = useState(true)
   const [referralCode, setReferralCode] = useState("")
@@ -42,16 +44,16 @@ export default function ReferralPage() {
     if (!isPending && session?.user) {
       const user = session.user as any
       if (user.role !== "volunteer") {
-        router.push(user.role === "ngo" ? "/ngo/dashboard" : "/auth/role-select")
+        router.push(localePath(user.role === "ngo" ? "/ngo/dashboard" : "/auth/role-select", locale))
         return
       }
       if (!user.isOnboarded) {
-        router.push("/volunteer/onboarding")
+        router.push(localePath("/volunteer/onboarding", locale))
         return
       }
       loadData()
     } else if (!isPending && !session?.user) {
-      router.push("/auth/signin")
+      router.push(localePath("/auth/signin", locale))
     }
   }, [session, isPending, router])
 

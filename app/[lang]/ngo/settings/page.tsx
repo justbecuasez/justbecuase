@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -55,6 +56,7 @@ interface PrivacySettings {
 
 export default function NGOSettingsPage() {
   const router = useRouter()
+  const locale = useLocale()
   const { data: session, isPending } = authClient.useSession()
   const [profile, setProfile] = useState<any>(null)
   const [transactions, setTransactions] = useState<any[]>([])
@@ -145,7 +147,7 @@ export default function NGOSettingsPage() {
     if (!isPending && session?.user) {
       loadData()
     } else if (!isPending && !session?.user) {
-      router.push("/auth/signin")
+      router.push(localePath("/auth/signin", locale))
     }
   }, [session, isPending, router])
 
@@ -312,7 +314,7 @@ export default function NGOSettingsPage() {
       const result = await deleteAccount()
       if (result.success) {
         await authClient.signOut()
-        router.push("/")
+        router.push(localePath("/", locale))
       } else {
         setError(result.error || "Failed to delete account")
       }
@@ -351,13 +353,15 @@ export default function NGOSettingsPage() {
           )}
 
           <Tabs defaultValue="organization" className="space-y-6">
-            <TabsList className="grid w-full max-w-3xl grid-cols-5">
-              <TabsTrigger value="organization">Organization</TabsTrigger>
-              <TabsTrigger value="skills">Skills & Causes</TabsTrigger>
-              <TabsTrigger value="billing">Billing</TabsTrigger>
-              <TabsTrigger value="security">Security</TabsTrigger>
-              <TabsTrigger value="privacy">Privacy</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto -mx-2 px-2">
+              <TabsList className="inline-flex w-auto min-w-full sm:w-full sm:max-w-3xl sm:grid sm:grid-cols-5 h-auto gap-1">
+                <TabsTrigger value="organization" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Organization</TabsTrigger>
+                <TabsTrigger value="skills" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Skills & Causes</TabsTrigger>
+                <TabsTrigger value="billing" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Billing</TabsTrigger>
+                <TabsTrigger value="security" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Security</TabsTrigger>
+                <TabsTrigger value="privacy" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Privacy</TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Organization Settings */}
             <TabsContent value="organization">

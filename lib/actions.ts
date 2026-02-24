@@ -1750,6 +1750,8 @@ export async function updateAdminSettings(
     
     const result = await adminSettingsDb.update(settingsWithoutId, user.id)
     revalidatePath("/admin/settings")
+    revalidatePath("/pricing")
+    revalidatePath("/checkout")
     return { success: true, data: result }
   } catch (error) {
     console.error("Update admin settings error:", error)

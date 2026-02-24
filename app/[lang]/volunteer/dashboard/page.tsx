@@ -333,9 +333,9 @@ export default async function VolunteerDashboard() {
                           Apply to as many opportunities as you want with Pro
                         </p>
                         <Button asChild size="sm" className="w-full">
-                          <Link href="/pricing">
+                          <Link href="/checkout?plan=volunteer-pro">
                             <Zap className="h-4 w-4 mr-2" />
-                            Upgrade to Pro - $9.99/month
+                            Upgrade to Pro
                           </Link>
                         </Button>
                       </div>

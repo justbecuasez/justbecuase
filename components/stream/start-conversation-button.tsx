@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale, localePath } from "@/hooks/use-locale";
 import { useChatContext } from "stream-chat-react";
 import { MessageSquare, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,6 +60,7 @@ export function StartConversationButton({
   const { user } = useAuth();
   const { chatClient } = useStream();
   const router = useRouter();
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -102,7 +104,7 @@ export function StartConversationButton({
 
       // Navigate to messages
       const basePath = user.role === "ngo" ? "/ngo/messages" : "/volunteer/messages";
-      router.push(basePath);
+      router.push(localePath(basePath, locale));
     } catch (err) {
       console.error("Error starting conversation:", err);
       toast.error("Failed to send message. Please try again.");

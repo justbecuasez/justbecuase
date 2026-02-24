@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { useNotificationStore } from "@/lib/store"
 import { useBrowserNotification, useNotificationPermission } from "@/components/store-provider"
 import { Button } from "@/components/ui/button"
@@ -20,6 +21,7 @@ export function NotificationListener({
   pollInterval = 10000 // 10 seconds for faster real-time feel
 }: NotificationListenerProps) {
   const router = useRouter()
+  const locale = useLocale()
   const { sendNotification, hasPermission } = useBrowserNotification()
   const { requestPermission } = useNotificationPermission()
   const { setUnreadCount, setNotifications, notifications, unreadCount } = useNotificationStore()
@@ -64,7 +66,7 @@ export function NotificationListener({
             description: latestNotification.message,
             action: notificationUrl ? {
               label: "View",
-              onClick: () => router.push(notificationUrl),
+              onClick: () => router.push(localePath(notificationUrl, locale)),
             } : undefined,
             duration: 5000,
           })

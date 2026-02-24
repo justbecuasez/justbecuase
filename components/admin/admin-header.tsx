@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { signOut } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 
 interface AdminHeaderProps {
   user: {
@@ -27,10 +28,11 @@ interface AdminHeaderProps {
 
 export function AdminHeader({ user }: AdminHeaderProps) {
   const router = useRouter()
+  const locale = useLocale()
 
   const handleSignOut = async () => {
     await signOut()
-    router.push("/")
+    router.push(localePath("/", locale))
   }
 
   return (

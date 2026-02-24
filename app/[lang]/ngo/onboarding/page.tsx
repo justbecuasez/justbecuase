@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useGeolocated } from "react-geolocated"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -44,6 +45,7 @@ type RequiredSkill = {
 
 export default function NGOOnboardingPage() {
   const router = useRouter()
+  const locale = useLocale()
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
@@ -57,18 +59,18 @@ export default function NGOOnboardingPage() {
     if (!isPending) {
       if (!session?.user) {
         // Not authenticated, redirect to sign in
-        router.push("/auth/signin")
+        router.push(localePath("/auth/signin", locale))
       } else {
         const user = session.user as any
         // If already onboarded, redirect to dashboard
         if (user.isOnboarded) {
-          router.push("/ngo/dashboard")
+          router.push(localePath("/ngo/dashboard", locale))
         } else if (user.role !== "ngo" && user.role !== "user") {
           // Wrong role, redirect to correct onboarding or dashboard
           if (user.role === "volunteer") {
-            router.push("/volunteer/onboarding")
+            router.push(localePath("/volunteer/onboarding", locale))
           } else {
-            router.push("/auth/role-select")
+            router.push(localePath("/auth/role-select", locale))
           }
         } else {
           setIsCheckingAuth(false)
@@ -603,7 +605,7 @@ export default function NGOOnboardingPage() {
 
       // Redirect to dashboard with welcome message
       const orgName = orgDetails.orgName || session?.user?.name || "there"
-      router.push(`/ngo/dashboard?welcome=${encodeURIComponent(orgName)}`)
+      router.push(localePath(`/ngo/dashboard?welcome=${encodeURIComponent(orgName)}`, locale))
     } catch (error) {
       console.error("Onboarding error:", error)
       setError("Something went wrong. Please try again.")

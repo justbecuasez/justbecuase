@@ -2,12 +2,14 @@
 
 import { useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 
 export default function GatePage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const locale = useLocale()
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -22,7 +24,7 @@ export default function GatePage() {
       })
 
       if (res.ok) {
-        router.push("/")
+        router.push(localePath("/", locale))
         router.refresh()
       } else {
         const data = await res.json()

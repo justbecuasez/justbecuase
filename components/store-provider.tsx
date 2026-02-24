@@ -34,7 +34,7 @@ export function StoreProvider({ children, initialData }: StoreProviderProps) {
   const setNGOSubscription = useSubscriptionStore((state) => state.setNGOSubscription)
   const setVolunteerSubscription = useSubscriptionStore((state) => state.setVolunteerSubscription)
   const setPermission = useNotificationStore((state) => state.setPermission)
-  const { setSettings, setLoaded, isLoaded } = usePlatformSettingsStore()
+  const { setSettings, setLoaded, isLoaded, needsRefresh } = usePlatformSettingsStore()
 
   // Initialize store with server data
   useEffect(() => {
@@ -52,9 +52,10 @@ export function StoreProvider({ children, initialData }: StoreProviderProps) {
     }
   }, [initialData, setUser, setNGOSubscription, setVolunteerSubscription, setUnlockedProfiles])
 
-  // Load platform settings from API
+  // Load platform settings from API (with TTL-based refresh)
   useEffect(() => {
-    if (!isLoaded) {
+    const shouldFetch = !isLoaded || needsRefresh()
+    if (shouldFetch) {
       fetch("/api/settings")
         .then(res => res.json())
         .then(data => {
@@ -67,7 +68,7 @@ export function StoreProvider({ children, initialData }: StoreProviderProps) {
           setLoaded(true)
         })
     }
-  }, [isLoaded, setSettings, setLoaded])
+  }, [isLoaded, needsRefresh, setSettings, setLoaded])
 
   // Check notification permission
   useEffect(() => {

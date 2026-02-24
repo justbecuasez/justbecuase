@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useTransition } from "react"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -14,6 +15,7 @@ export function VolunteersFilters() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
+  const locale = useLocale()
 
   // Read current filters from URL
   const selectedSkills = searchParams.get("skills")?.split(",").filter(Boolean) || []
@@ -34,7 +36,7 @@ export function VolunteersFilters() {
         }
       })
       
-      router.push(`/volunteers?${params.toString()}`)
+      router.push(localePath(`/volunteers?${params.toString()}`, locale))
     })
   }, [router, searchParams])
 
@@ -53,7 +55,7 @@ export function VolunteersFilters() {
   }
 
   const clearFilters = () => {
-    router.push("/volunteers")
+    router.push(localePath("/volunteers", locale))
   }
 
   const hasFilters =

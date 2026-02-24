@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { motion, AnimatePresence } from "motion/react"
 import {
   Search,
@@ -174,6 +175,7 @@ export function UnifiedSearchBar({
   showPopularTags = false,
 }: UnifiedSearchBarProps) {
   const router = useRouter()
+  const locale = useLocale()
 
   // Search state
   const isControlled = externalValue !== undefined
@@ -382,7 +384,7 @@ export function UnifiedSearchBar({
         case "page": path = item.id.startsWith("/") ? item.id : `/${item.id}`; break
         default: path = `/projects/${item.id}`
       }
-      router.push(path)
+      router.push(localePath(path, locale))
     }
   }
 

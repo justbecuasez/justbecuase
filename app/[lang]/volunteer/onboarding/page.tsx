@@ -4,6 +4,7 @@ import type React from "react"
 import { useState, useEffect, useRef } from "react"
 import { useGeolocated } from "react-geolocated"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,6 +44,7 @@ type SelectedSkill = {
 
 export default function VolunteerOnboardingPage() {
   const router = useRouter()
+  const locale = useLocale()
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
@@ -56,18 +58,18 @@ export default function VolunteerOnboardingPage() {
     if (!isPending) {
       if (!session?.user) {
         // Not authenticated, redirect to sign in
-        router.push("/auth/signin")
+        router.push(localePath("/auth/signin", locale))
       } else {
         const user = session.user as any
         // If already onboarded, redirect to dashboard
         if (user.isOnboarded) {
-          router.push("/volunteer/dashboard")
+          router.push(localePath("/volunteer/dashboard", locale))
         } else if (user.role !== "volunteer" && user.role !== "user") {
           // Wrong role, redirect to correct onboarding or dashboard
           if (user.role === "ngo") {
-            router.push("/ngo/onboarding")
+            router.push(localePath("/ngo/onboarding", locale))
           } else {
-            router.push("/auth/role-select")
+            router.push(localePath("/auth/role-select", locale))
           }
         } else {
           setIsCheckingAuth(false)
@@ -484,7 +486,7 @@ export default function VolunteerOnboardingPage() {
       const volunteerName = session?.user?.name || "there"
       
       // Redirect to dashboard with welcome message
-      router.push(`/volunteer/dashboard?welcome=${encodeURIComponent(volunteerName)}`)
+      router.push(localePath(`/volunteer/dashboard?welcome=${encodeURIComponent(volunteerName)}`, locale))
     } catch (error) {
       console.error("Onboarding error:", error)
       setError("Something went wrong. Please try again.")

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -33,6 +34,7 @@ export function MessageNotificationBadge({
   initialUnread = 0 
 }: MessageNotificationBadgeProps) {
   const router = useRouter()
+  const locale = useLocale()
   const [unreadCount, setUnreadCount] = useState(initialUnread)
   const [conversations, setConversations] = useState<UnreadConversation[]>([])
   const [isOpen, setIsOpen] = useState(false)
@@ -71,13 +73,13 @@ export function MessageNotificationBadge({
 
   const handleConversationClick = (conversationId: string) => {
     const baseUrl = userType === "ngo" ? "/ngo/messages" : "/volunteer/messages"
-    router.push(`${baseUrl}/${conversationId}`)
+    router.push(localePath(`${baseUrl}/${conversationId}`, locale))
     setIsOpen(false)
   }
 
   const handleViewAll = () => {
     const baseUrl = userType === "ngo" ? "/ngo/messages" : "/volunteer/messages"
-    router.push(baseUrl)
+    router.push(localePath(baseUrl, locale))
     setIsOpen(false)
   }
 

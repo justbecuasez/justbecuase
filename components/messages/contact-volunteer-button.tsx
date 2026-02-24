@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import {
@@ -33,6 +34,7 @@ export function ContactVolunteerButton({
   variant = "default",
 }: ContactVolunteerButtonProps) {
   const router = useRouter()
+  const locale = useLocale()
   const [isOpen, setIsOpen] = useState(false)
   const [message, setMessage] = useState("")
   const [isSending, setIsSending] = useState(false)
@@ -54,7 +56,7 @@ export function ContactVolunteerButton({
         setIsOpen(false)
         setMessage("")
         // Redirect to the messages page (ChatView will show the conversation)
-        router.push(`/ngo/messages`)
+        router.push(localePath(`/ngo/messages`, locale))
       } else {
         toast.error("Failed to send message", {
           description: result.error || "Please try again",

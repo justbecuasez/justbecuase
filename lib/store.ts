@@ -154,6 +154,9 @@ export const useMessageStore = create<MessageState>((set) => ({
 }))
 
 // Platform settings state (public settings from admin)
+// TTL for settings cache: 5 minutes (in milliseconds)
+const SETTINGS_CACHE_TTL = 5 * 60 * 1000
+
 interface PlatformSettingsState {
   settings: {
     // Platform Info
@@ -195,20 +198,30 @@ interface PlatformSettingsState {
   } | null
   
   isLoaded: boolean
+  lastFetchedAt: number | null
   
   // Actions
   setSettings: (settings: PlatformSettingsState['settings']) => void
   setLoaded: (loaded: boolean) => void
+  needsRefresh: () => boolean
+  invalidate: () => void
 }
 
 export const usePlatformSettingsStore = create<PlatformSettingsState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       settings: null,
       isLoaded: false,
+      lastFetchedAt: null,
       
-      setSettings: (settings) => set({ settings, isLoaded: true }),
+      setSettings: (settings) => set({ settings, isLoaded: true, lastFetchedAt: Date.now() }),
       setLoaded: (loaded) => set({ isLoaded: loaded }),
+      needsRefresh: () => {
+        const { lastFetchedAt, isLoaded } = get()
+        if (!isLoaded || !lastFetchedAt) return true
+        return Date.now() - lastFetchedAt > SETTINGS_CACHE_TTL
+      },
+      invalidate: () => set({ isLoaded: false, lastFetchedAt: null }),
     }),
     {
       name: 'platform-settings',

@@ -362,7 +362,7 @@ export default async function NGODashboard() {
                           View contact details of any impact agent
                         </p>
                         <Button asChild size="sm" className="w-full">
-                          <Link href="/pricing">
+                          <Link href="/checkout?plan=ngo-pro">
                             <Zap className="h-4 w-4 mr-2" />
                             Upgrade to Pro
                           </Link>

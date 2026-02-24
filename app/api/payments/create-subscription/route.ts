@@ -159,8 +159,24 @@ export async function POST(request: NextRequest) {
     })
   } catch (error: any) {
     console.error("Error creating Stripe checkout session:", error)
+    
+    // Return specific error messages based on the type of failure
+    const message = error.message || "Failed to create checkout session"
+    
+    if (message.includes("not configured") || message.includes("Stripe is not configured")) {
+      return NextResponse.json({ 
+        error: "Payment gateway is not configured. Please contact support or try again later." 
+      }, { status: 503 })
+    }
+    
+    if (message.includes("API key") || message.includes("authentication")) {
+      return NextResponse.json({ 
+        error: "Payment system configuration error. Please contact support." 
+      }, { status: 503 })
+    }
+    
     return NextResponse.json({ 
-      error: error.message || "Failed to create checkout session" 
+      error: message
     }, { status: 500 })
   }
 }

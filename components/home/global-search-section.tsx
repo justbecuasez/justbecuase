@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import LocaleLink from "@/components/locale-link"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import {
   Search, Users, Building2, Briefcase, ArrowRight, MapPin,
   CheckCircle, Loader2, X, Clock, TrendingUp, Sparkles,
@@ -174,6 +175,7 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
 
 export function GlobalSearchSection() {
   const router = useRouter()
+  const locale = useLocale()
   const dict = useDictionary()
   const s = (dict as any).search || {}
 
@@ -432,7 +434,7 @@ export function GlobalSearchSection() {
         case "ngo": path = `/ngos/${item.id}`; break
         default: path = `/projects/${item.id}`; break
       }
-      router.push(path)
+      router.push(localePath(path, locale))
     }
   }
 

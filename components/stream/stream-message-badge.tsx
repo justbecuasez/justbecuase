@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useChatContext } from "stream-chat-react";
 import { useRouter } from "next/navigation";
+import { useLocale, localePath } from "@/hooks/use-locale";
 import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,7 @@ export function StreamMessageBadge() {
   const { chatClient } = useStream();
   const { user } = useAuth();
   const router = useRouter();
+  const locale = useLocale();
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export function StreamMessageBadge() {
   const handleClick = () => {
     if (!user) return;
     const basePath = user.role === "ngo" ? "/ngo/messages" : "/volunteer/messages";
-    router.push(basePath);
+    router.push(localePath(basePath, locale));
   };
 
   return (

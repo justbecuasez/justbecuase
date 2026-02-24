@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useSession, signOut as authSignOut } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { useLocale, localePath } from "@/hooks/use-locale";
 
 interface User {
   id: string;
@@ -26,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { data: session, isPending, refetch } = useSession();
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
+  const locale = useLocale();
 
   useEffect(() => {
     if (session?.user) {
@@ -45,7 +47,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const handleSignOut = async () => {
     await authSignOut();
     setUser(null);
-    router.push("/");
+    router.push(localePath("/", locale));
   };
 
   return (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -53,6 +54,7 @@ interface PrivacySettings {
 
 export default function VolunteerSettingsPage() {
   const router = useRouter()
+  const locale = useLocale()
   const { data: session, isPending } = authClient.useSession()
   const [profile, setProfile] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -125,7 +127,7 @@ export default function VolunteerSettingsPage() {
     if (!isPending && session?.user) {
       loadProfile()
     } else if (!isPending && !session?.user) {
-      router.push("/auth/signin")
+      router.push(localePath("/auth/signin", locale))
     }
   }, [session, isPending, router])
 
@@ -284,7 +286,7 @@ export default function VolunteerSettingsPage() {
       const result = await deleteAccount()
       if (result.success) {
         await authClient.signOut()
-        router.push("/")
+        router.push(localePath("/", locale))
       } else {
         showNotification("error", result.error || "Failed to delete account")
       }
@@ -327,13 +329,15 @@ export default function VolunteerSettingsPage() {
           )}
 
           <Tabs defaultValue="skills" className="space-y-6">
-            <TabsList className="grid w-full max-w-xl grid-cols-5">
-              <TabsTrigger value="skills">Skills</TabsTrigger>
-              <TabsTrigger value="account">Account</TabsTrigger>
-              <TabsTrigger value="notifications">Alerts</TabsTrigger>
-              <TabsTrigger value="privacy">Privacy</TabsTrigger>
-              <TabsTrigger value="billing">Billing</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto -mx-2 px-2">
+              <TabsList className="inline-flex w-auto min-w-full sm:w-full sm:max-w-xl sm:grid sm:grid-cols-5 h-auto gap-1">
+                <TabsTrigger value="skills" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Skills</TabsTrigger>
+                <TabsTrigger value="account" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Account</TabsTrigger>
+                <TabsTrigger value="notifications" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Alerts</TabsTrigger>
+                <TabsTrigger value="privacy" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Privacy</TabsTrigger>
+                <TabsTrigger value="billing" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Billing</TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Skills Settings */}
             <TabsContent value="skills">
@@ -1121,7 +1125,7 @@ export default function VolunteerSettingsPage() {
                         </p>
                       </div>
                       {profile?.subscriptionPlan !== "pro" && (
-                        <Button variant="outline" onClick={() => router.push("/pricing")}>
+                        <Button variant="outline" onClick={() => router.push(localePath("/checkout?plan=volunteer-pro", locale))}>
                           Upgrade to Pro
                         </Button>
                       )}
