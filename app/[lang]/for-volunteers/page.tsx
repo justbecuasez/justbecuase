@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { testimonials } from "@/lib/data"
 import { Briefcase, Award, TrendingUp, Heart, Clock, Globe, ArrowRight, CheckCircle, Gift, DollarSign, Sparkles } from "lucide-react"
-import { useDictionary } from "@/app/[lang]/dictionary-provider"
+import { useDictionary } from "@/components/dictionary-provider"
 
 export default function ForVolunteersPage() {
   const dict = useDictionary()

@@ -305,7 +305,7 @@ export default function PricingPage() {
             <span className="text-muted-foreground ml-2">/{plan.period}</span>
           </div>
           <ul className="space-y-3">
-            {plan.features.map((feature, i) => (
+            {plan.features.map((feature: string, i: number) => (
               <li key={i} className="flex items-start gap-2">
                 <Check className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
                 <span className="text-sm text-foreground">{feature}</span>
@@ -315,7 +315,7 @@ export default function PricingPage() {
           {plan.limitations.length > 0 && (
             <div className="mt-4 pt-4 border-t">
               <p className="text-xs text-muted-foreground mb-2">{p.limitations || "Limitations:"}</p>
-              {plan.limitations.map((limit, i) => (
+              {plan.limitations.map((limit: string, i: number) => (
                 <p key={i} className="text-xs text-amber-600">{limit}</p>
               ))}
             </div>

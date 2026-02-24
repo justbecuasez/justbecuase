@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { resolveSkillName } from "@/lib/skills-data"
 import { motion, AnimatePresence } from "motion/react"
-import { useDictionary } from "@/app/[lang]/dictionary-provider"
+import { useDictionary } from "@/components/dictionary-provider"
 
 // ============================================
 // TYPES
