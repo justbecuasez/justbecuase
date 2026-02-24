@@ -3,7 +3,7 @@
 import LocaleLink from "@/components/locale-link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Clock, MapPin, Users, CheckCircle } from "lucide-react"
+import { Clock, MapPin, Users, CheckCircle, ArrowRight } from "lucide-react"
 import { useDictionary } from "@/components/dictionary-provider"
 
 interface Project {
@@ -99,7 +99,7 @@ export function ProjectCard({ project }: { project: Project }) {
           </span>
         </div>
         <Button asChild size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10">
-          <LocaleLink href={`/projects/${project.id}`}>{t.apply || "Apply"} →</LocaleLink>
+          <LocaleLink href={`/projects/${project.id}`}>{t.apply || "Apply"} <ArrowRight className="h-3 w-3 inline ml-1" /></LocaleLink>
         </Button>
       </div>
     </div>

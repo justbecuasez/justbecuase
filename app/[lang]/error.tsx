@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { AlertTriangle, Home, RefreshCw, Bug } from "lucide-react"
 import LocaleLink from "@/components/locale-link"
-import { useDictionary } from "@/app/[lang]/dictionary-provider"
+import { useDictionary } from "@/components/dictionary-provider"
 
 export default function Error({
   error,

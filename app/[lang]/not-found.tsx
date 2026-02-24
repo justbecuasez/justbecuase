@@ -5,7 +5,7 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Home, Search, ArrowLeft, HelpCircle } from "lucide-react"
-import { useDictionary } from "@/app/[lang]/dictionary-provider"
+import { useDictionary } from "@/components/dictionary-provider"
 
 export default function NotFound() {
   const dict = useDictionary()
