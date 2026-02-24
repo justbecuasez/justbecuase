@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation"
 import { i18n, type Locale } from "@/lib/i18n-config"
+import { getDictionary } from "./dictionaries"
+import { DictionaryProvider } from "@/components/dictionary-provider"
 
 /**
  * Locale segment layout — validates that the [lang] param is a supported locale.
- * The root layout (app/layout.tsx) handles <html>, <body>, fonts, ThemeProvider, etc.
- * This layout simply validates the locale and passes children through.
+ * Loads the dictionary and wraps all children with DictionaryProvider so every
+ * page and component under [lang] can call useDictionary().
  */
 
 export async function generateStaticParams() {
@@ -25,5 +27,11 @@ export default async function LocaleLayout({
     notFound()
   }
 
-  return <>{children}</>
+  const dict = await getDictionary(lang as Locale)
+
+  return (
+    <DictionaryProvider dictionary={dict}>
+      {children}
+    </DictionaryProvider>
+  )
 }

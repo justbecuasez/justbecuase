@@ -12,6 +12,7 @@ import { useTheme } from "next-themes"
 import { useSubscriptionStore, usePlatformSettingsStore } from "@/lib/store"
 import LocaleLink from "@/components/locale-link"
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { useDictionary } from "@/components/dictionary-provider"
 
 import {
   DropdownMenu,
@@ -29,6 +30,7 @@ export function Navbar() {
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const [isOpen, setIsOpen] = useState(false)
+  const dict = useDictionary()
 
   const { data: session, isPending } = client.useSession()
   const user = session?.user
@@ -76,15 +78,15 @@ export function Navbar() {
 
   // ⭐ Role-based nav
   const baseLinks = [
-    { href: "/projects", label: "Browse Opportunities" },
-    { href: "/for-volunteers", label: "For Impact Agents" },
-    { href: "/for-ngos", label: "For NGOs" },
-    { href: "/about", label: "About Us" },
+    { href: "/projects", label: dict.nav.browseOpportunities },
+    { href: "/for-volunteers", label: dict.nav.forImpactAgents },
+    { href: "/for-ngos", label: dict.nav.forNGOs },
+    { href: "/about", label: dict.nav.aboutUs },
   ]
 
   const adminLinks = [{ href: "/admin", label: "Admin Panel" }]
-  const ngoLinks = [{ href: "/ngo/dashboard", label: "NGO Dashboard" }]
-  const volunteerLinks = [{ href: "/volunteer/dashboard", label: "Impact Agent Dashboard" }]
+  const ngoLinks = [{ href: "/ngo/dashboard", label: dict.nav.myDashboard }]
+  const volunteerLinks = [{ href: "/volunteer/dashboard", label: dict.nav.myDashboard }]
 
   const roleLinks =
     user?.role === "admin"
@@ -149,10 +151,10 @@ export function Navbar() {
             <>
               <LanguageSwitcher />
               <Button variant="ghost" asChild>
-                <LocaleLink href="/auth/signin">Sign In</LocaleLink>
+                <LocaleLink href="/auth/signin">{dict.common.signin}</LocaleLink>
               </Button>
               <Button asChild>
-                <LocaleLink href="/auth/signup">Get Started</LocaleLink>
+                <LocaleLink href="/auth/signup">{dict.common.getStarted}</LocaleLink>
               </Button>
             </>
           )}
@@ -178,7 +180,7 @@ export function Navbar() {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem asChild>
-                  <LocaleLink href={user?.role === "admin" ? "/admin" : user?.role === "ngo" ? "/ngo/dashboard" : "/volunteer/dashboard"}>My Dashboard</LocaleLink>
+                  <LocaleLink href={user?.role === "admin" ? "/admin" : user?.role === "ngo" ? "/ngo/dashboard" : "/volunteer/dashboard"}>{dict.nav.myDashboard}</LocaleLink>
                 </DropdownMenuItem>
 
                 {user?.role === "ngo" && (
@@ -192,14 +194,14 @@ export function Navbar() {
                     {isPro ? (
                       <DropdownMenuItem disabled className="flex items-center gap-2 text-primary">
                         <Zap className="h-4 w-4" />
-                        <span>Pro Plan</span>
+                        <span>{dict.common.pro}</span>
                         <Badge variant="secondary" className="ml-auto text-xs">Active</Badge>
                       </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem asChild>
                         <LocaleLink href="/pricing" className="flex items-center gap-2 text-primary">
                           <Sparkles className="h-4 w-4" />
-                          Upgrade to Pro
+                          {dict.common.upgrade}
                         </LocaleLink>
                       </DropdownMenuItem>
                     )}
@@ -217,14 +219,14 @@ export function Navbar() {
                     {isPro ? (
                       <DropdownMenuItem disabled className="flex items-center gap-2 text-primary">
                         <Zap className="h-4 w-4" />
-                        <span>Pro Plan</span>
+                        <span>{dict.common.pro}</span>
                         <Badge variant="secondary" className="ml-auto text-xs">Active</Badge>
                       </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem asChild>
                         <LocaleLink href="/pricing" className="flex items-center gap-2 text-primary">
                           <Sparkles className="h-4 w-4" />
-                          Upgrade to Pro
+                          {dict.common.upgrade}
                         </LocaleLink>
                       </DropdownMenuItem>
                     )}
@@ -237,7 +239,7 @@ export function Navbar() {
                   className="text-red-600 cursor-pointer"
                   onClick={() => client.signOut()}
                 >
-                  Logout
+                  {dict.common.signout}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -275,22 +277,22 @@ export function Navbar() {
                 {!user ? (
                   <>
                     <Button asChild variant="outline">
-                      <LocaleLink href="/auth/signin">Sign In</LocaleLink>
+                      <LocaleLink href="/auth/signin">{dict.common.signin}</LocaleLink>
                     </Button>
                     <Button asChild>
-                      <LocaleLink href="/auth/signup">Get Started</LocaleLink>
+                      <LocaleLink href="/auth/signup">{dict.common.getStarted}</LocaleLink>
                     </Button>
                   </>
                 ) : (
                   <>
                     <Button asChild variant="outline">
-                      <LocaleLink href={user?.role === "admin" ? "/admin" : user?.role === "ngo" ? "/ngo/dashboard" : "/volunteer/dashboard"}>Dashboard</LocaleLink>
+                      <LocaleLink href={user?.role === "admin" ? "/admin" : user?.role === "ngo" ? "/ngo/dashboard" : "/volunteer/dashboard"}>{dict.common.dashboard}</LocaleLink>
                     </Button>
                     <Button
                       onClick={() => client.signOut()}
                       className="bg-red-600 text-white hover:bg-red-700"
                     >
-                      Logout
+                      {dict.common.signout}
                     </Button>
                   </>
                 )}

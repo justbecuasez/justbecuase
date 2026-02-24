@@ -30,17 +30,24 @@ export function HeroSection() {
           {/* Tagline */}
           <p className="mx-auto mb-6 max-w-xl text-lg text-foreground font-medium">
             {(hero.tagline || "You've spent years perfecting your {skill}; now, give it a {purpose}.")
-              .replace("{skill}", "")
-              .split("{purpose}")[0]}
-            <span className="font-bold">{hero.skill || "skill"}</span>
-            {"; now, give it a "}
-            <span className="font-bold">{hero.purpose || "purpose"}</span>.
+              .split(/(\{skill\}|\{purpose\})/g)
+              .map((part: string, i: number) => {
+                if (part === "{skill}") return <span key={i} className="font-bold">{hero.skill || "skill"}</span>;
+                if (part === "{purpose}") return <span key={i} className="font-bold">{hero.purpose || "purpose"}</span>;
+                return part;
+              })}
           </p>
 
           {/* Description */}
           <p className="mx-auto mb-12 max-w-2xl text-muted-foreground leading-relaxed">
-            {(hero.description || "").replace("{platformName}", "")}
-            {!hero.description && (
+            {hero.description ? (
+              hero.description.split("{platformName}").map((part: string, i: number, arr: string[]) => (
+                <span key={i}>
+                  {part}
+                  {i < arr.length - 1 && <span className="font-semibold text-foreground">{platformName}</span>}
+                </span>
+              ))
+            ) : (
               <>
                 Across the globe, visionary NGOs are working tirelessly to change lives, but they shouldn&apos;t have to do it alone. 
                 They have the passion, but they need your professional expertise to break through. 

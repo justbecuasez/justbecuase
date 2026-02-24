@@ -42,6 +42,11 @@ const nextConfig = {
       bodySizeLimit: '2mb',
     },
   },
+
+  // Fix lockfile detection — tell Turbopack this is the project root
+  turbopack: {
+    root: process.cwd(),
+  },
 }
 
 export default nextConfig
