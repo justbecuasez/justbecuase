@@ -251,19 +251,23 @@ export async function elasticSuggest(params: {
   }
 
   try {
-    // Strategy 1: Completion suggester (fastest)
+    // Strategy 0: In-memory skill/category suggestions (instant, no ES roundtrip)
+    const skillSuggestions = getInMemorySkillSuggestions(trimmedQuery, Math.ceil(limit / 3))
+    console.log(`[ES Suggest] In-memory skill suggestions: ${skillSuggestions.length}`)
+
+    // Strategy 1: Completion suggester (fastest ES query)
     const completionResults = await getCompletionSuggestions(trimmedQuery, indexes, Math.ceil(limit / 2))
     console.log(`[ES Suggest] Completion got ${completionResults.length} results`)
 
-    // Strategy 2: Prefix search (more comprehensive)
+    // Strategy 2: Prefix search (most comprehensive)
     const prefixResults = await getPrefixSearchSuggestions(trimmedQuery, indexes, limit)
     console.log(`[ES Suggest] Prefix search got ${prefixResults.length} results`)
 
-    // Merge & deduplicate, completion results first (faster)
+    // Merge & deduplicate: skill suggestions first (instant + highly relevant), then completion, then prefix
     const seen = new Set<string>()
     const merged: ESSuggestion[] = []
 
-    for (const item of [...completionResults, ...prefixResults]) {
+    for (const item of [...skillSuggestions, ...completionResults, ...prefixResults]) {
       const key = `${item.type}-${item.id}`
       if (!seen.has(key)) {
         seen.add(key)
@@ -275,13 +279,166 @@ export async function elasticSuggest(params: {
     return merged.slice(0, limit)
   } catch (error: any) {
     console.error("[ES Suggest] Error:", error?.message)
-    // Fallback to prefix-only search
+    // Fallback: at least return skill suggestions (no ES needed)
+    const fallbackSkills = getInMemorySkillSuggestions(trimmedQuery, limit)
+    if (fallbackSkills.length > 0) return fallbackSkills
+    // Try prefix-only search
     try {
       return await getPrefixSearchSuggestions(trimmedQuery, indexes, limit)
     } catch {
       return []
     }
   }
+}
+
+// ============================================
+// IN-MEMORY SKILL/CATEGORY SUGGESTIONS
+// ============================================
+// Provides instant autocomplete for platform skills and categories
+// without needing an Elasticsearch roundtrip. When user types "web",
+// they immediately see "Web Development", "Website Redesign", etc.
+// ============================================
+
+// Pre-build flat skill list for fast lookup
+import { skillCategories as _skillCategoriesData, causes as _causesData } from "./skills-data"
+
+interface SkillSuggestionEntry {
+  text: string
+  type: "skill" | "cause"
+  id: string
+  categoryName?: string
+}
+
+const SKILL_SUGGESTION_ENTRIES: SkillSuggestionEntry[] = []
+
+// Add all subskills
+for (const cat of _skillCategoriesData) {
+  for (const sub of cat.subskills) {
+    SKILL_SUGGESTION_ENTRIES.push({
+      text: sub.name,
+      type: "skill",
+      id: `skill:${sub.id}`,
+      categoryName: cat.name,
+    })
+  }
+  // Add category itself
+  SKILL_SUGGESTION_ENTRIES.push({
+    text: cat.name,
+    type: "skill",
+    id: `skill:${cat.id}`,
+  })
+}
+
+// Add causes
+for (const cause of _causesData) {
+  SKILL_SUGGESTION_ENTRIES.push({
+    text: cause.name,
+    type: "cause",
+    id: `cause:${cause.id}`,
+  })
+}
+
+// Add common role terms that map to skills
+const ROLE_SUGGESTIONS: Array<{ text: string; subtitle: string; id: string }> = [
+  { text: "Web Developer", subtitle: "React, HTML/CSS, WordPress, Node.js", id: "skill:website" },
+  { text: "Graphic Designer", subtitle: "Canva, Figma, Photoshop, Branding", id: "skill:content-creation" },
+  { text: "Video Editor", subtitle: "Premiere Pro, DaVinci, Motion Graphics", id: "skill:content-creation" },
+  { text: "Content Creator", subtitle: "Social Media, Reels, Photography", id: "skill:content-creation" },
+  { text: "Content Writer", subtitle: "Blog Writing, SEO, Copywriting", id: "skill:communication" },
+  { text: "Social Media Manager", subtitle: "Strategy, Ads, Analytics", id: "skill:digital-marketing" },
+  { text: "SEO Expert", subtitle: "SEO/Content, Analytics, Content Marketing", id: "skill:digital-marketing" },
+  { text: "Data Analyst", subtitle: "Excel, Power BI, Google Sheets", id: "skill:data-technology" },
+  { text: "Fundraiser", subtitle: "Grant Writing, Crowdfunding, CSR", id: "skill:fundraising" },
+  { text: "Event Planner", subtitle: "Event Planning, Logistics, Coordination", id: "skill:planning-support" },
+  { text: "Accountant", subtitle: "Bookkeeping, Tax Compliance, Tally", id: "skill:finance" },
+  { text: "Project Manager", subtitle: "Notion, Trello, Asana", id: "skill:planning-support" },
+  { text: "UX/UI Designer", subtitle: "Figma, User Experience, Prototyping", id: "skill:website" },
+  { text: "Mobile Developer", subtitle: "React Native, Flutter", id: "skill:website" },
+  { text: "Legal Advisor", subtitle: "NGO Registration, FCRA, Contracts", id: "skill:legal" },
+  { text: "Photographer", subtitle: "Event, Documentary, Photo Editing", id: "skill:content-creation" },
+  { text: "Translator", subtitle: "Translation, Localization", id: "skill:communication" },
+  { text: "Digital Marketer", subtitle: "SEO, Social Media, Ads, Analytics", id: "skill:digital-marketing" },
+]
+
+function getInMemorySkillSuggestions(query: string, limit: number): ESSuggestion[] {
+  const q = query.toLowerCase().trim()
+  if (q.length < 1) return []
+
+  const results: Array<ESSuggestion & { matchScore: number }> = []
+
+  // Clean the query for matching (remove intent words)
+  const cleanedQ = cleanQueryForTextSearch(query).toLowerCase().trim()
+  const searchTerms = cleanedQ.split(/\s+/).filter(t => t.length >= 2)
+
+  if (searchTerms.length === 0) return []
+
+  // Match against skills
+  for (const entry of SKILL_SUGGESTION_ENTRIES) {
+    const textLower = entry.text.toLowerCase()
+    let matchScore = 0
+
+    // Exact prefix match (highest)
+    if (textLower.startsWith(cleanedQ)) {
+      matchScore = 100
+    }
+    // Word starts with query
+    else if (textLower.split(/[\s/()]+/).some(word => searchTerms.some(t => word.startsWith(t)))) {
+      matchScore = 70
+    }
+    // Contains query
+    else if (searchTerms.some(t => textLower.includes(t))) {
+      matchScore = 40
+    }
+    // Category name match
+    else if (entry.categoryName && searchTerms.some(t => entry.categoryName!.toLowerCase().includes(t))) {
+      matchScore = 20
+    }
+
+    if (matchScore > 0) {
+      results.push({
+        text: entry.text,
+        type: entry.type as any,
+        id: entry.id,
+        subtitle: entry.categoryName || undefined,
+        score: matchScore,
+        matchScore,
+      })
+    }
+  }
+
+  // Match against role suggestions
+  for (const role of ROLE_SUGGESTIONS) {
+    const textLower = role.text.toLowerCase()
+    let matchScore = 0
+
+    if (textLower.startsWith(cleanedQ)) matchScore = 95
+    else if (textLower.split(/\s+/).some(word => searchTerms.some(t => word.startsWith(t)))) matchScore = 65
+    else if (searchTerms.some(t => textLower.includes(t))) matchScore = 35
+
+    if (matchScore > 0) {
+      results.push({
+        text: role.text,
+        type: "skill" as any,
+        id: role.id,
+        subtitle: role.subtitle,
+        score: matchScore,
+        matchScore,
+      })
+    }
+  }
+
+  // Sort by match score (best first) and deduplicate
+  results.sort((a, b) => b.matchScore - a.matchScore)
+  const seen = new Set<string>()
+  const deduped: ESSuggestion[] = []
+  for (const r of results) {
+    if (!seen.has(r.text.toLowerCase())) {
+      seen.add(r.text.toLowerCase())
+      deduped.push({ text: r.text, type: r.type, id: r.id, subtitle: r.subtitle, score: r.score })
+    }
+  }
+
+  return deduped.slice(0, limit)
 }
 
 // ============================================
@@ -1522,6 +1679,9 @@ function transformHitToResult(
           causeNames: source.causeNames,
           volunteerType: source.volunteerType,
           workMode: source.workMode,
+          experienceLevel: source.experienceLevel,
+          hourlyRate: source.hourlyRate,
+          completedProjects: source.completedProjects,
           isVerified: source.isVerified,
         },
       }

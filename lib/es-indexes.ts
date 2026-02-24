@@ -135,6 +135,7 @@ export async function ensureElasticsearchIndexes(): Promise<void> {
         // Filters
         volunteerType: keywordField(),
         workMode: keywordField(),
+        experienceLevel: keywordField(),
         availability: keywordField(),
         hoursPerWeek: { type: "keyword" as const },
         hourlyRate: { type: "float" as const },

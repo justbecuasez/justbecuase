@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import {
   Search, Users, Building2, Briefcase, ArrowRight, MapPin,
   CheckCircle, Loader2, X, Clock, TrendingUp, Sparkles,
-  ChevronRight, ArrowUpRight, Star, Globe,
+  ChevronRight, ArrowUpRight, Star, Globe, GraduationCap, Lightbulb, Heart,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -86,6 +86,20 @@ const TYPE_CONFIG = {
     label: "Opportunity",
     pluralLabel: "Opportunities",
     badgeClass: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+    viewAllPath: "/projects",
+  },
+  skill: {
+    icon: Lightbulb,
+    label: "Skill",
+    pluralLabel: "Skills",
+    badgeClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    viewAllPath: "/volunteers",
+  },
+  cause: {
+    icon: Heart,
+    label: "Cause",
+    pluralLabel: "Causes",
+    badgeClass: "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
     viewAllPath: "/projects",
   },
 } as const
@@ -206,11 +220,8 @@ export function GlobalSearchSection() {
       )
       const data = await res.json()
       if (data.success && !controller.signal.aborted) {
-        // Only show volunteer/ngo/opportunity suggestions on home page
-        const filtered = (data.suggestions || []).filter(
-          (s: any) => s.type === "volunteer" || s.type === "ngo" || s.type === "opportunity"
-        )
-        setSuggestions(filtered)
+        // Allow all suggestion types: volunteer, ngo, opportunity, skill, cause
+        setSuggestions(data.suggestions || [])
       }
     } catch (error: any) {
       if (error.name !== "AbortError") {
@@ -406,8 +417,8 @@ export function GlobalSearchSection() {
     addRecentSearch(item.text)
     setShowDropdown(false)
 
-    // Skill/cause suggestions (id like "skill:email-marketing") → just search, don't navigate
-    if (item.id?.startsWith("skill:") || item.id?.startsWith("cause:")) {
+    // Skill/cause suggestions (id like "skill:email-marketing" or "cause:education") → just search, don't navigate
+    if (item.id?.startsWith("skill:") || item.id?.startsWith("cause:") || item.resultType === "skill" || item.resultType === "cause") {
       return
     }
 
@@ -841,6 +852,9 @@ export function GlobalSearchSection() {
                         const workModeLabel = result.workMode === "remote" ? "Remote" : result.workMode === "onsite" ? "On-site" : result.workMode === "hybrid" ? "Hybrid" : null
                         // Format volunteer type label
                         const pricingLabel = result.volunteerType === "free" ? "Pro Bono" : result.volunteerType === "paid" ? "Paid" : null
+                        // Format experience level label
+                        const expLabel = result.experienceLevel === "expert" ? "Expert" : result.experienceLevel === "advanced" ? "Advanced" : result.experienceLevel === "intermediate" ? "Intermediate" : result.experienceLevel === "beginner" ? "Beginner" : null
+                        const expColor = result.experienceLevel === "expert" ? "border-violet-300 text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/20" : result.experienceLevel === "advanced" ? "border-blue-300 text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20" : result.experienceLevel === "intermediate" ? "border-cyan-300 text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/20" : "border-slate-300 text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/20"
                         // Description snippet — strip HTML and truncate
                         const descSnippet = result.description
                           ? result.description.replace(/<[^>]*>/g, "").substring(0, 100).trim() + (result.description.length > 100 ? "…" : "")
@@ -877,6 +891,12 @@ export function GlobalSearchSection() {
                                   {pricingLabel && (
                                     <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${pricingLabel === "Pro Bono" ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-amber-300 text-amber-700 dark:text-amber-400"}`}>
                                       {pricingLabel}
+                                    </Badge>
+                                  )}
+                                  {expLabel && (
+                                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 flex items-center gap-0.5 ${expColor}`}>
+                                      <GraduationCap className="h-2.5 w-2.5" />
+                                      {expLabel}
                                     </Badge>
                                   )}
                                 </div>

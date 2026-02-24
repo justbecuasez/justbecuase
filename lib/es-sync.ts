@@ -123,6 +123,16 @@ function transformVolunteer(doc: any): Record<string, any> | null {
   if (skillNames.length > 0) parts.push(`Skills: ${skillNames.join(", ")}`)
   if (skillCategories.length > 0) parts.push(`Expertise in ${skillCategories.join(", ")}`)
 
+  // Compute overall experience level — highest level among all skills
+  const LEVEL_RANK: Record<string, number> = { expert: 4, advanced: 3, intermediate: 2, beginner: 1 }
+  let bestLevel = ""
+  let bestRank = 0
+  for (const s of parsedSkills) {
+    const rank = LEVEL_RANK[s?.level] || 0
+    if (rank > bestRank) { bestRank = rank; bestLevel = s.level }
+  }
+  const computedExperienceLevel = bestLevel || ""
+
   // Causes
   if (causeNames.length > 0) parts.push(`Passionate about ${causeNames.join(", ")}`)
 
@@ -205,6 +215,7 @@ function transformVolunteer(doc: any): Record<string, any> | null {
     causeNames,
     volunteerType: doc.volunteerType || "free",
     workMode: doc.workMode || "remote",
+    experienceLevel: computedExperienceLevel,
     availability: doc.availability || "flexible",
     hoursPerWeek: doc.hoursPerWeek || "",
     hourlyRate: doc.hourlyRate || 0,
