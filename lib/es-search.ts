@@ -336,56 +336,84 @@ async function getPrefixSearchSuggestions(
   const textQuery = cleanQueryForTextSearch(query)
   console.log(`[ES Suggest] Cleaned query for prefix: "${query}" → "${textQuery}"`)
 
+  // Expand abbreviations and detect synonyms for better suggestions
+  const expansion = expandQueryWithSynonyms(textQuery)
+  const searchText = expansion.expandedQuery || textQuery
+  if (expansion.expansions.length > 0) {
+    console.log(`[ES Suggest] Synonym expansions: ${expansion.expansions.join(", ")}`)
+  }
+
+  // Extract location so "designer in mumbai" suggests Mumbai-based designers
+  const locationExtraction = extractLocationFromQuery(query)
+
   // Detect intent from original query for boosting
   const intent = detectQueryIntent(query)
   const intentBoosts = intent.boosts.length > 0 ? intent.boosts : []
+
+  // Build should clauses
+  const shouldClauses: any[] = [
+    // Prefix matching across key fields only (no bio/description/content)
+    // NOTE: skillCategories excluded — too broad for autocomplete
+    {
+      multi_match: {
+        query: searchText,
+        type: "bool_prefix",
+        fields: [
+          "name^10",
+          "name.exact^15",
+          "orgName^10",
+          "orgName.exact^15",
+          "title^10",
+          "title.exact^15",
+          "skillNames^12",
+          "causeNames^6",
+          "headline^5",
+          "tags^5",
+          "city^3",
+        ],
+        fuzziness: "AUTO",
+      },
+    },
+    // Boost exact phrase prefix matches on skill names / titles
+    {
+      multi_match: {
+        query: searchText,
+        type: "phrase_prefix",
+        fields: [
+          "skillNames^14",
+          "name^12",
+          "orgName^12",
+          "title^12",
+          "causeNames^8",
+        ],
+        boost: 2.0,
+      },
+    },
+    // Add intent-based boosts (e.g. experience level, pricing)
+    ...intentBoosts,
+    // Add synonym boosts for better suggestion ranking
+    ...expansion.synonymBoosts,
+  ]
+
+  // Location boost for suggestions
+  if (locationExtraction.location) {
+    shouldClauses.push({
+      multi_match: {
+        query: locationExtraction.location,
+        fields: ["city^8", "country^6", "location^6"],
+        type: "best_fields",
+        fuzziness: "AUTO",
+        boost: 3.0,
+      },
+    })
+  }
 
   // Use bool_prefix multi_match with CLEANED query for partial word matching
   const response = await esClient.search({
     index: indexes,
     query: {
       bool: {
-        should: [
-          // Prefix matching across key fields only (no bio/description/content)
-          // NOTE: skillCategories excluded — too broad for autocomplete
-          {
-            multi_match: {
-              query: textQuery,
-              type: "bool_prefix",
-              fields: [
-                "name^10",
-                "name.exact^15",
-                "orgName^10",
-                "orgName.exact^15",
-                "title^10",
-                "title.exact^15",
-                "skillNames^12",
-                "causeNames^6",
-                "headline^5",
-                "tags^5",
-                "city^3",
-              ],
-              fuzziness: "AUTO",
-            },
-          },
-          // Boost exact phrase prefix matches on skill names / titles
-          {
-            multi_match: {
-              query: textQuery,
-              type: "phrase_prefix",
-              fields: [
-                "skillNames^14",
-                "name^12",
-                "orgName^12",
-                "title^12",
-                "causeNames^8",
-              ],
-              boost: 2.0,
-            },
-          },
-          // Add intent-based boosts (e.g. experience level, pricing)
-          ...intentBoosts,
-        ],
+        should: shouldClauses,
         minimum_should_match: 1,
       },
     },
@@ -402,6 +430,269 @@ async function getPrefixSearchSuggestions(
   }
 
   return suggestions
+}
+
+// ============================================
+// SYNONYM / ROLE-TO-SKILL MAPPING
+// ============================================
+// Maps common user search terms (roles, job titles, abbreviations,
+// tool names) to the actual skill names stored in Elasticsearch.
+// This ensures "video editor" matches people with "Video Editing
+// (Premiere Pro / DaVinci)" even though the exact text differs.
+// ============================================
+
+/** Common role/title → platform skill names */
+const ROLE_TO_SKILLS: Record<string, string[]> = {
+  // Content Creation roles
+  "content creator": ["Social Media Content", "Video Editing", "Photo Editing", "Graphic Design", "Social Media Copywriting", "Reels", "Shorts"],
+  "video editor": ["Video Editing", "Premiere Pro", "DaVinci", "Motion Graphics", "After Effects"],
+  "video maker": ["Video Editing", "Videography", "Motion Graphics", "Premiere Pro"],
+  "videographer": ["Videography", "Video Editing", "Documentary"],
+  "photographer": ["Photography", "Photo Editing", "Retouching", "Event", "Documentary"],
+  "photo editor": ["Photo Editing", "Retouching", "Photoshop"],
+  "graphic designer": ["Graphic Design", "Canva", "Figma", "Photoshop", "Branding", "Visual Identity"],
+  "logo designer": ["Graphic Design", "Branding", "Visual Identity", "Illustration"],
+  "illustrator": ["Illustration", "Infographics", "Graphic Design"],
+  "animator": ["Motion Graphics", "After Effects", "Animation"],
+  "motion designer": ["Motion Graphics", "After Effects", "Animation"],
+  "podcaster": ["Podcast Production"],
+  "brand designer": ["Branding", "Visual Identity", "Graphic Design"],
+  "presentation designer": ["Presentation Design", "PowerPoint", "Google Slides"],
+  "ui designer": ["UX / UI Design", "Figma", "Graphic Design"],
+  "ux designer": ["UX / UI Design", "Figma", "User Experience"],
+
+  // Digital Marketing roles
+  "social media manager": ["Social Media Strategy", "Social Media Content", "Social Media Copywriting", "Social Media Ads", "Reels", "Shorts"],
+  "digital marketer": ["Digital Marketing", "Content Marketing", "Social Media Strategy", "SEO", "Analytics"],
+  "seo expert": ["SEO / Content", "Content Marketing", "Analytics"],
+  "seo specialist": ["SEO / Content", "Content Marketing", "Analytics"],
+  "marketer": ["Digital Marketing", "Content Marketing", "Social Media Strategy"],
+  "marketing manager": ["Digital Marketing", "Content Marketing", "Social Media Strategy", "Analytics"],
+  "email marketer": ["Email Marketing", "Automation", "Email Copywriting", "Newsletter"],
+  "ads expert": ["Social Media Ads", "Meta Ads", "Facebook Ads", "PPC", "Google Ads"],
+  "ads manager": ["Social Media Ads", "Meta Ads", "Facebook Ads", "PPC", "Google Ads"],
+  "community manager": ["Community Management", "Social Media Strategy"],
+  "influencer": ["Influencer Marketing", "Social Media Content"],
+  "growth hacker": ["Digital Marketing", "SEO", "Social Media Ads", "Analytics"],
+  "analytics expert": ["Analytics & Reporting", "GA4", "Meta Insights", "Data Analysis"],
+  "crm manager": ["CRM Management", "HubSpot", "Mailchimp", "Zoho"],
+  "whatsapp marketer": ["WhatsApp Marketing"],
+
+  // Web Development roles
+  "web developer": ["React / Next.js", "HTML / CSS", "WordPress", "Node.js", "Website Redesign"],
+  "frontend developer": ["React / Next.js", "HTML / CSS", "UX / UI Design", "JavaScript"],
+  "frontend dev": ["React / Next.js", "HTML / CSS", "JavaScript"],
+  "backend developer": ["Node.js", "Backend Development", "Database Management", "API Integration"],
+  "backend dev": ["Node.js", "Backend Development", "Database Management"],
+  "fullstack developer": ["React / Next.js", "Node.js", "Database Management", "API Integration"],
+  "full stack developer": ["React / Next.js", "Node.js", "Database Management", "API Integration"],
+  "app developer": ["Mobile App Development", "React Native", "Flutter"],
+  "mobile developer": ["Mobile App Development", "React Native", "Flutter"],
+  "ios developer": ["Mobile App Development", "React Native"],
+  "android developer": ["Mobile App Development", "React Native", "Flutter"],
+  "wordpress developer": ["WordPress Development", "CMS Maintenance", "Website Redesign"],
+  "shopify developer": ["Shopify", "E-Commerce"],
+  "webflow designer": ["Webflow", "No-Code"],
+  "no-code developer": ["Webflow", "No-Code Tools"],
+  "devops engineer": ["DevOps", "Hosting", "Vercel", "AWS"],
+  "python developer": ["Python", "Scripting", "Automation"],
+  "react developer": ["React / Next.js", "JavaScript", "Frontend"],
+  "nextjs developer": ["React / Next.js", "Node.js"],
+  "software engineer": ["React / Next.js", "Node.js", "Database Management", "API Integration", "Python"],
+  "programmer": ["React / Next.js", "Node.js", "Python", "HTML / CSS"],
+  "coder": ["React / Next.js", "Node.js", "Python", "HTML / CSS"],
+  "website designer": ["WordPress Development", "UX / UI Design", "Website Redesign", "HTML / CSS"],
+
+  // Communication & Writing roles
+  "writer": ["Blog / Article Writing", "Impact Story Writing", "Newsletter Creation", "Social Media Copywriting"],
+  "content writer": ["Blog / Article Writing", "Content Marketing", "SEO / Content", "Social Media Copywriting"],
+  "blog writer": ["Blog / Article Writing", "Content Marketing"],
+  "copywriter": ["Email Copywriting", "Social Media Copywriting", "Blog / Article Writing"],
+  "editor": ["Blog / Article Writing", "Newsletter Creation", "Annual Report Writing"],
+  "grant writer": ["Grant Writing", "Grant Research", "Proposal / RFP Writing"],
+  "proposal writer": ["Proposal / RFP Writing", "Grant Writing"],
+  "translator": ["Translation / Localization"],
+  "public speaker": ["Public Speaking", "Training"],
+  "trainer": ["Training & Workshop Facilitation", "Public Speaking"],
+  "communications manager": ["Donor Communications", "Press Release", "Media Outreach", "Impact Story Writing"],
+  "pr manager": ["Press Release", "Media Outreach"],
+  "newsletter writer": ["Newsletter Creation", "Email Copywriting"],
+
+  // Finance & Accounting roles
+  "accountant": ["Bookkeeping", "Financial Reporting", "Tax Compliance", "Audit Support", "Accounting Software"],
+  "bookkeeper": ["Bookkeeping", "Accounting Software", "Tally", "QuickBooks"],
+  "financial analyst": ["Financial Modelling", "Budgeting & Forecasting", "Financial Reporting"],
+  "auditor": ["Audit Support", "Financial Reporting", "Tax Compliance"],
+  "tax consultant": ["Tax Compliance", "80G", "12A", "FCRA"],
+  "payroll specialist": ["Payroll Processing", "Accounting Software"],
+  "finance manager": ["Financial Reporting", "Budgeting & Forecasting", "Financial Modelling"],
+  "ca": ["Bookkeeping", "Financial Reporting", "Tax Compliance", "Audit Support"],
+  "chartered accountant": ["Bookkeeping", "Financial Reporting", "Tax Compliance", "Audit Support"],
+
+  // Fundraising roles
+  "fundraiser": ["Grant Writing", "Crowdfunding", "Peer-to-Peer Campaigns", "Fundraising Pitch Deck"],
+  "grant researcher": ["Grant Research", "Grant Writing"],
+  "crowdfunding expert": ["Crowdfunding", "GoFundMe", "Ketto", "Milaap"],
+  "donor manager": ["Donor Database Management", "Major Gift Strategy"],
+  "csr expert": ["CSR Partnerships", "Corporate Sponsorship"],
+  "sponsorship manager": ["Corporate Sponsorship", "CSR Partnerships"],
+
+  // Operations & Planning roles
+  "event planner": ["Event Planning", "Event On-Ground Support", "Logistics"],
+  "event manager": ["Event Planning", "Event On-Ground Support", "Logistics"],
+  "event coordinator": ["Event Planning", "Event On-Ground Support"],
+  "project manager": ["Project Management", "Notion", "Trello", "Asana"],
+  "recruiter": ["HR & Recruitment", "Volunteer Recruitment"],
+  "hr manager": ["HR & Recruitment", "Volunteer Recruitment", "Training"],
+  "operations manager": ["Logistics", "Project Management", "Volunteer Recruitment"],
+  "volunteer coordinator": ["Volunteer Recruitment & Management", "Event Planning"],
+  "researcher": ["Research & Surveys", "Data Analysis", "Grant Research"],
+  "data entry": ["Data Entry & Documentation"],
+  "telecaller": ["Telecalling", "Outreach"],
+  "customer support": ["Customer / Beneficiary Support"],
+
+  // Legal roles
+  "lawyer": ["Legal Advisory", "Pro Bono Counsel", "Contract Drafting"],
+  "advocate": ["Legal Advisory", "Pro Bono Counsel", "RTI"],
+  "legal advisor": ["Legal Advisory", "Pro Bono Counsel", "Policy Drafting"],
+  "compliance officer": ["FCRA Compliance", "Tax Compliance", "Policy Drafting"],
+  "company secretary": ["NGO Registration", "Contract Drafting", "Policy Drafting"],
+
+  // Data & Technology roles
+  "data analyst": ["Data Analysis", "Excel", "Google Sheets", "Power BI"],
+  "data scientist": ["AI / Machine Learning", "Data Analysis", "Python"],
+  "ai engineer": ["AI / Machine Learning", "Python", "Chatbot"],
+  "ml engineer": ["AI / Machine Learning", "Python"],
+  "chatbot developer": ["Chatbot Development"],
+  "it support": ["IT Support", "Google Workspace", "Microsoft 365"],
+  "cybersecurity": ["Cybersecurity Basics", "Website Security"],
+  "automation expert": ["Automation", "Zapier", "Make", "n8n"],
+}
+
+/** Abbreviation / shorthand → expanded search term */
+const ABBREVIATION_MAP: Record<string, string> = {
+  "smm": "social media manager",
+  "seo": "SEO / Content",
+  "sem": "PPC / Google Ads",
+  "ppc": "PPC / Google Ads",
+  "ux": "UX / UI Design",
+  "ui": "UX / UI Design",
+  "ux/ui": "UX / UI Design",
+  "ui/ux": "UX / UI Design",
+  "dev": "developer",
+  "devops": "DevOps / Hosting",
+  "ml": "AI / Machine Learning",
+  "ai": "AI / Machine Learning",
+  "ga4": "Analytics & Reporting",
+  "ga": "Analytics & Reporting",
+  "csr": "CSR Partnerships",
+  "hr": "HR & Recruitment",
+  "pr": "Press Release / Media Outreach",
+  "crm": "CRM Management",
+  "cms": "CMS Maintenance",
+  "vfx": "Motion Graphics / After Effects",
+  "pm": "Project Management",
+  "ngo": "organization",
+  "it": "IT Support",
+  "wp": "WordPress Development",
+  "js": "JavaScript",
+  "ts": "TypeScript",
+  "db": "Database Management",
+  "api": "API Integration",
+  "rn": "React Native",
+  "qa": "quality assurance",
+  "rti": "RTI / Legal Advocacy",
+  "fcra": "FCRA Compliance",
+  "ca": "chartered accountant",
+  "mba": "Financial Modelling",
+}
+
+/** Tool / software name → skill name it belongs to */
+const TOOL_TO_SKILL: Record<string, string[]> = {
+  "canva": ["Graphic Design", "Canva"],
+  "figma": ["UX / UI Design", "Graphic Design", "Figma"],
+  "photoshop": ["Graphic Design", "Photo Editing", "Photoshop"],
+  "illustrator": ["Illustration", "Graphic Design"],
+  "after effects": ["Motion Graphics", "After Effects"],
+  "premiere pro": ["Video Editing", "Premiere Pro"],
+  "premiere": ["Video Editing", "Premiere Pro"],
+  "davinci": ["Video Editing", "DaVinci"],
+  "davinci resolve": ["Video Editing", "DaVinci"],
+  "final cut": ["Video Editing"],
+  "capcut": ["Video Editing", "Social Media Content"],
+  "lightroom": ["Photo Editing", "Photography"],
+  "indesign": ["Graphic Design", "Branding"],
+  "wordpress": ["WordPress Development", "CMS Maintenance"],
+  "shopify": ["Shopify", "E-Commerce"],
+  "webflow": ["Webflow", "No-Code"],
+  "wix": ["Website Redesign", "No-Code"],
+  "squarespace": ["Website Redesign", "No-Code"],
+  "react": ["React / Next.js"],
+  "nextjs": ["React / Next.js"],
+  "next.js": ["React / Next.js"],
+  "angular": ["Website & App Development"],
+  "vue": ["Website & App Development"],
+  "node": ["Node.js", "Backend Development"],
+  "nodejs": ["Node.js", "Backend Development"],
+  "node.js": ["Node.js", "Backend Development"],
+  "express": ["Node.js", "Backend Development"],
+  "python": ["Python", "Scripting"],
+  "django": ["Python", "Backend Development"],
+  "flask": ["Python", "Backend Development"],
+  "flutter": ["Mobile App Development", "Flutter"],
+  "react native": ["Mobile App Development", "React Native"],
+  "swift": ["Mobile App Development"],
+  "kotlin": ["Mobile App Development"],
+  "mongodb": ["Database Management", "MongoDB"],
+  "postgresql": ["Database Management", "PostgreSQL"],
+  "mysql": ["Database Management"],
+  "redis": ["Database Management"],
+  "aws": ["DevOps", "Hosting", "AWS"],
+  "vercel": ["DevOps", "Hosting", "Vercel"],
+  "docker": ["DevOps"],
+  "kubernetes": ["DevOps"],
+  "tally": ["Accounting Software", "Bookkeeping", "Tally"],
+  "quickbooks": ["Accounting Software", "QuickBooks"],
+  "zoho": ["Accounting Software", "CRM Management", "Zoho"],
+  "hubspot": ["CRM Management", "HubSpot"],
+  "mailchimp": ["CRM Management", "Email Marketing", "Mailchimp"],
+  "notion": ["Project Management", "Notion"],
+  "trello": ["Project Management", "Trello"],
+  "asana": ["Project Management", "Asana"],
+  "jira": ["Project Management"],
+  "slack": ["Operations"],
+  "zapier": ["Automation", "Zapier"],
+  "make": ["Automation"],
+  "n8n": ["Automation", "n8n"],
+  "chatgpt": ["AI Content Tools", "ChatGPT"],
+  "midjourney": ["AI Content Tools", "Midjourney"],
+  "stable diffusion": ["AI Content Tools"],
+  "power bi": ["Data Visualization", "Power BI"],
+  "tableau": ["Data Visualization", "Tableau"],
+  "looker": ["Data Visualization", "Looker"],
+  "excel": ["Data Analysis", "Excel"],
+  "google sheets": ["Data Analysis", "Google Sheets"],
+  "powerpoint": ["Presentation Design", "PowerPoint"],
+  "google slides": ["Presentation Design", "Google Slides"],
+  "gofundme": ["Crowdfunding"],
+  "ketto": ["Crowdfunding", "Ketto"],
+  "milaap": ["Crowdfunding", "Milaap"],
+}
+
+/** Cause keywords → cause IDs */
+const CAUSE_KEYWORDS: Record<string, string[]> = {
+  "education": ["education", "teaching", "school", "tutoring", "literacy", "tutor", "academic", "student", "learning", "scholarship", "edtech"],
+  "healthcare": ["healthcare", "health", "medical", "hospital", "nutrition", "doctor", "nurse", "mental health", "therapy", "wellness", "sanitation"],
+  "environment": ["environment", "climate", "green", "sustainability", "ecology", "conservation", "recycle", "renewable", "pollution", "wildlife", "forest", "ocean", "biodiversity", "nature", "tree"],
+  "poverty-alleviation": ["poverty", "hunger", "food", "shelter", "livelihood", "homeless", "slum", "rural", "microfinance"],
+  "women-empowerment": ["women", "gender", "feminism", "girls", "women empowerment", "menstruation", "maternal"],
+  "child-welfare": ["child", "children", "kids", "youth", "orphan", "juvenile", "pediatric", "adoption", "child rights"],
+  "animal-welfare": ["animal", "pet", "wildlife", "stray", "veterinary", "dog", "cat", "cow", "rescue", "shelter"],
+  "disaster-relief": ["disaster", "flood", "earthquake", "cyclone", "tsunami", "relief", "emergency", "crisis", "hurricane", "drought"],
+  "human-rights": ["human rights", "justice", "equality", "advocacy", "discrimination", "refugee", "minority", "lgbtq", "civil rights", "freedom"],
+  "arts-culture": ["arts", "culture", "music", "dance", "theatre", "theater", "heritage", "folk", "craft", "museum", "painting"],
+  "senior-citizens": ["senior", "elderly", "old age", "retirement", "geriatric"],
+  "disability-support": ["disability", "disabled", "handicap", "accessible", "accessibility", "blind", "deaf", "wheelchair", "inclusive"],
 }
 
 // ============================================
@@ -441,6 +732,16 @@ function cleanQueryForTextSearch(query: string): string {
     // Common filler prepositions / articles (only if not the entire query)
     "with", "for", "who", "that", "has", "have", "having",
     "looking", "need", "find", "search", "looking for",
+    // NL sentence starters
+    "i need a", "i need an", "i need", "i am looking for", "i want a", "i want an",
+    "i want", "find me a", "find me an", "find me", "get me a", "get me an",
+    "get me", "show me", "can you find", "help me find", "looking for a",
+    "looking for an", "searching for", "searching for a", "want to hire",
+    "need to hire", "hire a", "hire an", "hire", "someone who can",
+    "someone to", "person who can", "person to", "people who",
+    "anybody who", "anyone who", "anyone to",
+    // Titles / salutations
+    "please", "plz", "pls",
   ]
 
   // Sort longest first so multi-word patterns are removed before their sub-words
@@ -458,6 +759,224 @@ function cleanQueryForTextSearch(query: string): string {
 
   // If cleaning stripped everything, fall back to original
   return cleaned.length >= 2 ? cleaned : query.trim()
+}
+
+// ============================================
+// LOCATION EXTRACTION
+// ============================================
+// Pulls location mentions out of NL queries (e.g. "designer in Mumbai")
+// Returns the detected location and a query with location removed.
+// ============================================
+
+// Common Indian cities & states for robust detection
+const KNOWN_LOCATIONS = new Set([
+  // Major Indian cities
+  "mumbai", "delhi", "bangalore", "bengaluru", "hyderabad", "chennai",
+  "kolkata", "pune", "ahmedabad", "jaipur", "lucknow", "surat",
+  "chandigarh", "noida", "gurgaon", "gurugram", "indore", "bhopal",
+  "nagpur", "patna", "kochi", "coimbatore", "thiruvananthapuram",
+  "visakhapatnam", "vadodara", "goa", "dehradun", "ranchi",
+  "bhubaneswar", "mangalore", "mysore", "nashik", "aurangabad",
+  "thane", "faridabad", "ghaziabad", "agra", "varanasi", "allahabad",
+  "prayagraj", "amritsar", "ludhiana", "jodhpur", "udaipur",
+  "rajkot", "madurai", "tiruchirappalli", "salem", "hubli",
+  // International cities
+  "new york", "london", "san francisco", "singapore", "dubai",
+  "toronto", "sydney", "berlin", "tokyo", "paris", "hong kong",
+  "los angeles", "chicago", "seattle", "boston", "austin",
+  // Indian states / regions
+  "maharashtra", "karnataka", "tamil nadu", "telangana", "kerala",
+  "uttar pradesh", "rajasthan", "gujarat", "west bengal", "madhya pradesh",
+  "andhra pradesh", "bihar", "odisha", "punjab", "haryana",
+  "uttarakhand", "jharkhand", "chhattisgarh", "assam", "goa",
+  // Countries
+  "india", "usa", "uk", "united states", "united kingdom", "canada",
+  "australia", "germany", "france", "japan", "singapore", "uae",
+  "dubai", "qatar", "saudi arabia", "south africa", "brazil",
+  "nepal", "sri lanka", "bangladesh",
+])
+
+interface LocationExtraction {
+  /** Query with location removed */
+  cleanedQuery: string
+  /** Detected location string (null if none found) */
+  location: string | null
+}
+
+function extractLocationFromQuery(query: string): LocationExtraction {
+  const q = query.toLowerCase()
+
+  // Pattern 1: "in <City>", "from <City>", "near <City>", "based in <City>", "located in <City>"
+  const locationPrepositionPattern = /\b(?:in|from|near|based\s+in|located\s+in|at|around)\s+([a-z][a-z\s]+?)(?:\s*$|\s+(?:with|who|that|and|for|free|remote|paid|online|expert|senior|junior|experience|yr|year))/i
+  const prepMatch = q.match(locationPrepositionPattern)
+  if (prepMatch) {
+    const candidate = prepMatch[1].trim()
+    // Verify against known locations (multi-word aware)
+    if (KNOWN_LOCATIONS.has(candidate)) {
+      return {
+        cleanedQuery: query.replace(prepMatch[0], " ").replace(/\s+/g, " ").trim(),
+        location: candidate,
+      }
+    }
+    // Also try if the candidate starts with a known location
+    for (const loc of KNOWN_LOCATIONS) {
+      if (candidate.startsWith(loc)) {
+        return {
+          cleanedQuery: query.replace(new RegExp(`\\b(?:in|from|near|based\\s+in|located\\s+in|at|around)\\s+${loc.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}`, "gi"), " ").replace(/\s+/g, " ").trim(),
+          location: loc,
+        }
+      }
+    }
+  }
+
+  // Pattern 2: Location at end of query without preposition — "graphic designer mumbai"
+  const words = q.split(/\s+/)
+  // Check last 1-2 words
+  for (let n = Math.min(3, words.length); n >= 1; n--) {
+    const tail = words.slice(-n).join(" ")
+    if (KNOWN_LOCATIONS.has(tail)) {
+      return {
+        cleanedQuery: words.slice(0, -n).join(" ").trim(),
+        location: tail,
+      }
+    }
+  }
+
+  // Pattern 3: Location at start — "mumbai graphic designer"
+  for (let n = Math.min(3, words.length - 1); n >= 1; n--) {
+    const head = words.slice(0, n).join(" ")
+    if (KNOWN_LOCATIONS.has(head)) {
+      return {
+        cleanedQuery: words.slice(n).join(" ").trim(),
+        location: head,
+      }
+    }
+  }
+
+  return { cleanedQuery: query, location: null }
+}
+
+// ============================================
+// CAUSE DETECTION
+// ============================================
+// Detects cause-area mentions in the query (e.g. "education volunteers")
+// Returns matching cause IDs to boost/filter by.
+// ============================================
+
+function detectCausesFromQuery(query: string): string[] {
+  const q = query.toLowerCase()
+  const detected: string[] = []
+  for (const [causeId, keywords] of Object.entries(CAUSE_KEYWORDS)) {
+    if (keywords.some(k => {
+      // For multi-word keywords, check substring; for single words, check word boundary
+      if (k.includes(" ")) return q.includes(k)
+      return new RegExp(`\\b${k}\\b`).test(q)
+    })) {
+      detected.push(causeId)
+    }
+  }
+  return detected
+}
+
+// ============================================
+// SYNONYM EXPANSION
+// ============================================
+// Expands the cleaned query with synonym skill names so ES can find
+// volunteers/projects whose skill fields contain official platform names.
+// Returns extra should clauses to inject into the query.
+// ============================================
+
+interface QueryExpansion {
+  /** Extra should clauses to boost synonym matches */
+  synonymBoosts: any[]
+  /** The original or abbreviation-expanded query */
+  expandedQuery: string
+  /** Debug log of what was expanded */
+  expansions: string[]
+}
+
+function expandQueryWithSynonyms(query: string): QueryExpansion {
+  const q = query.toLowerCase().trim()
+  const synonymBoosts: any[] = []
+  const expansions: string[] = []
+
+  // --- Step 1: Expand abbreviations in the query itself ---
+  let expandedQuery = q
+  const words = q.split(/\s+/)
+  for (const word of words) {
+    if (ABBREVIATION_MAP[word]) {
+      const expanded = ABBREVIATION_MAP[word]
+      expandedQuery = expandedQuery.replace(new RegExp(`\\b${word}\\b`, "gi"), expanded)
+      expansions.push(`abbr:${word}→${expanded}`)
+    }
+  }
+
+  // --- Step 2: Check if query matches a known role → boost those skill names ---
+  // Check multi-word roles first (longest match wins)
+  const sortedRoles = Object.keys(ROLE_TO_SKILLS).sort((a, b) => b.length - a.length)
+  for (const role of sortedRoles) {
+    if (expandedQuery.includes(role)) {
+      const skillNames = ROLE_TO_SKILLS[role]
+      // Add a should clause that boosts documents with any of these skill names
+      for (const skillName of skillNames) {
+        synonymBoosts.push({
+          multi_match: {
+            query: skillName,
+            fields: ["skillNames^14", "skillCategories^4", "title^6", "description^3"],
+            type: "phrase_prefix",
+            boost: 3.0,
+          },
+        })
+      }
+      expansions.push(`role:${role}→[${skillNames.slice(0, 4).join(", ")}${skillNames.length > 4 ? "..." : ""}]`)
+      break // Only match the first (longest) role
+    }
+  }
+
+  // --- Step 3: Check if query mentions a specific tool → boost the skill ---
+  const sortedTools = Object.keys(TOOL_TO_SKILL).sort((a, b) => b.length - a.length)
+  for (const tool of sortedTools) {
+    if (expandedQuery.includes(tool)) {
+      const skillNames = TOOL_TO_SKILL[tool]
+      for (const skillName of skillNames) {
+        synonymBoosts.push({
+          multi_match: {
+            query: skillName,
+            fields: ["skillNames^12", "description^3"],
+            type: "phrase_prefix",
+            boost: 2.5,
+          },
+        })
+      }
+      expansions.push(`tool:${tool}→[${skillNames.join(", ")}]`)
+      break // Only match the first (longest) tool
+    }
+  }
+
+  // --- Step 4: For single-word queries, check if it's a partial skill match ---
+  if (words.length === 1 && synonymBoosts.length === 0) {
+    const word = words[0]
+    // Check if it partially matches any role
+    for (const role of sortedRoles) {
+      if (role.includes(word) || word.includes(role.split(" ")[0])) {
+        const skillNames = ROLE_TO_SKILLS[role]
+        for (const skillName of skillNames.slice(0, 3)) {
+          synonymBoosts.push({
+            multi_match: {
+              query: skillName,
+              fields: ["skillNames^10", "title^4"],
+              type: "phrase_prefix",
+              boost: 1.5,
+            },
+          })
+        }
+        expansions.push(`partial:${word}~${role}→[${skillNames.slice(0, 3).join(", ")}]`)
+        break
+      }
+    }
+  }
+
+  return { synonymBoosts, expandedQuery, expansions }
 }
 
 // ============================================
@@ -632,18 +1151,40 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
   const should: any[] = []
   const filterClauses: any[] = []
 
-  // Detect NL intent signals from raw query
+  // --- Step 1: Detect NL intent signals from raw query ---
   const intent = detectQueryIntent(query)
   if (intent.signals.length > 0) {
     console.log(`[ES Search] Detected intent signals: ${intent.signals.join(", ")}`)
   }
 
-  // Clean query — remove intent/noise words so text matching focuses on the "what"
-  const textQuery = cleanQueryForTextSearch(query)
+  // --- Step 2: Extract location from query ---
+  const locationExtraction = extractLocationFromQuery(query)
+  const queryAfterLocation = locationExtraction.cleanedQuery
+  if (locationExtraction.location) {
+    console.log(`[ES Search] Extracted location: "${locationExtraction.location}" from query`)
+  }
+
+  // --- Step 3: Detect cause mentions ---
+  const detectedCauses = detectCausesFromQuery(query)
+  if (detectedCauses.length > 0) {
+    console.log(`[ES Search] Detected causes: ${detectedCauses.join(", ")}`)
+  }
+
+  // --- Step 4: Clean query — remove intent/noise words ---
+  const textQuery = cleanQueryForTextSearch(queryAfterLocation)
   console.log(`[ES Search] Cleaned query: "${query}" → "${textQuery}"`)
 
+  // --- Step 5: Expand with synonyms ---
+  const expansion = expandQueryWithSynonyms(textQuery)
+  if (expansion.expansions.length > 0) {
+    console.log(`[ES Search] Synonym expansions: ${expansion.expansions.join(", ")}`)
+  }
+
+  // Use the expanded query for text matching (abbreviations resolved)
+  const searchText = expansion.expandedQuery || textQuery
+
   // Adaptive minimum_should_match based on cleaned word count
-  const wordCount = textQuery.split(/\s+/).length
+  const wordCount = searchText.split(/\s+/).length
   const minMatch = wordCount <= 2 ? "75%" : wordCount <= 4 ? "60%" : "40%"
 
   // ============================================
@@ -662,7 +1203,7 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
         //   It's included in should[] below as a bonus signal.
         {
           multi_match: {
-            query: textQuery,
+            query: searchText,
             type: "most_fields",
             fields: [
               "name^10",
@@ -688,7 +1229,7 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
         // Cross-fields: treats fields as one corpus
         {
           multi_match: {
-            query: textQuery,
+            query: searchText,
             type: "cross_fields",
             fields: [
               "name^5",
@@ -704,7 +1245,7 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
         // Prefix matching for search-as-you-type
         {
           multi_match: {
-            query: textQuery,
+            query: searchText,
             type: "bool_prefix",
             fields: [
               "name^8",
@@ -728,7 +1269,7 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
   // Phrase match boosts (exact phrase on key fields scores higher)
   should.push({
     multi_match: {
-      query: textQuery,
+      query: searchText,
       type: "phrase",
       fields: [
         "name^15",
@@ -745,7 +1286,7 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
   // Skill categories — bonus scoring only (not gating)
   should.push({
     multi_match: {
-      query: textQuery,
+      query: searchText,
       type: "best_fields",
       fields: ["skillCategories^4"],
       fuzziness: "AUTO",
@@ -757,7 +1298,7 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
   // Secondary text match on broader fields (bio, description) — bonus, not required
   should.push({
     multi_match: {
-      query: textQuery,
+      query: searchText,
       type: "most_fields",
       fields: [
         "bio^3",
@@ -775,6 +1316,44 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
       boost: 0.8,
     },
   })
+
+  // --- Synonym skill boosts (maps "video editor" → "Video Editing (Premiere Pro / DaVinci)") ---
+  if (expansion.synonymBoosts.length > 0) {
+    should.push(...expansion.synonymBoosts)
+  }
+
+  // --- Location boost (not a hard filter — boosts nearby matches) ---
+  if (locationExtraction.location) {
+    should.push({
+      multi_match: {
+        query: locationExtraction.location,
+        fields: ["city^8", "country^6", "location^6", "address^4"],
+        type: "best_fields",
+        fuzziness: "AUTO",
+        boost: 4.0,
+      },
+    })
+  }
+
+  // --- Cause boosts (detected from NL query like "education volunteers") ---
+  if (detectedCauses.length > 0) {
+    for (const causeId of detectedCauses) {
+      should.push({ term: { causeIds: { value: causeId, boost: 4.0 } } })
+    }
+    // Also boost causeNames text match
+    const causeNames = detectedCauses.map(id => {
+      const entry = Object.entries(CAUSE_KEYWORDS).find(([k]) => k === id)
+      return entry ? id.replace(/-/g, " ") : id
+    })
+    should.push({
+      multi_match: {
+        query: causeNames.join(" "),
+        fields: ["causeNames^8", "mission^4", "description^3"],
+        type: "best_fields",
+        boost: 3.0,
+      },
+    })
+  }
 
   // Semantic search via semantic_text (if available) — uses ORIGINAL query for NL understanding
   // This will be ignored gracefully on indexes without semantic_text
