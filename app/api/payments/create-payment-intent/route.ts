@@ -5,19 +5,18 @@ import { getStripeClient } from "@/lib/payment-gateway"
 import { adminSettingsDb, couponsDb, couponUsagesDb } from "@/lib/database"
 import { toStripeAmount } from "@/lib/currency"
 
-// Plan display names for Stripe checkout
 const PLAN_NAMES: Record<string, string> = {
   "ngo-pro": "NGO Pro Plan",
   "volunteer-pro": "Impact Agent Pro Plan",
 }
 
-// Create a Stripe Checkout Session for subscription
+/**
+ * Creates a Stripe PaymentIntent for the embedded Elements checkout.
+ * Returns { clientSecret, publishableKey } so the frontend can confirm payment.
+ */
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    })
-
+    const session = await auth.api.getSession({ headers: await headers() })
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
@@ -31,28 +30,22 @@ export async function POST(request: NextRequest) {
 
     // Free plans don't need payment
     if (planId === "ngo-free" || planId === "volunteer-free") {
-      return NextResponse.json({ 
-        success: true, 
-        message: "Free plan, no payment needed" 
-      })
+      return NextResponse.json({ success: true, message: "Free plan, no payment needed" })
     }
 
-    // Validate plan
     const planName = PLAN_NAMES[planId]
     if (!planName) {
       return NextResponse.json({ error: "Invalid plan" }, { status: 400 })
     }
 
-    // Validate user role matches plan type
+    // Validate role
     const userRole = session.user.role as string
     const planRole = planId.startsWith("ngo-") ? "ngo" : "volunteer"
     if (userRole !== planRole) {
-      return NextResponse.json({ 
-        error: `This plan is for ${planRole}s only` 
-      }, { status: 403 })
+      return NextResponse.json({ error: `This plan is for ${planRole}s only` }, { status: 403 })
     }
 
-    // Fetch admin-configured prices from database
+    // Fetch admin prices
     const adminSettings = await adminSettingsDb.get()
     const currency = (adminSettings?.currency || "INR").toLowerCase()
     const priceWholeUnits = planId === "ngo-pro"
@@ -63,20 +56,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Price not configured" }, { status: 400 })
     }
 
-    // Check if payments are enabled
     if (adminSettings && adminSettings.enablePayments === false) {
       return NextResponse.json({ error: "Payments are currently disabled" }, { status: 400 })
     }
 
-    // Get Stripe client (handles org key + account context automatically)
-    const { stripe } = await getStripeClient()
+    // Get Stripe client
+    const { stripe, publishableKey } = await getStripeClient()
 
-    // Build URLs
-    const origin = request.headers.get("origin") || process.env.FRONTEND_URL || "https://justbecausenetwork.com"
-
-    // Validate and apply coupon if provided
+    // Apply coupon
     let finalPrice = priceWholeUnits
-    let couponData: { couponId: string; couponCode: string; discountAmount: number; originalAmount: number } | null = null
+    let couponData: {
+      couponId: string
+      couponCode: string
+      discountAmount: number
+      originalAmount: number
+    } | null = null
 
     if (couponCode) {
       const couponResult = await couponsDb.validate(couponCode, session.user.id, planId, priceWholeUnits)
@@ -91,9 +85,8 @@ export async function POST(request: NextRequest) {
         originalAmount: priceWholeUnits,
       }
 
-      // If coupon makes it fully free, skip Stripe entirely
+      // 100% discount → skip Stripe entirely
       if (finalPrice <= 0) {
-        // Record coupon usage
         await couponsDb.incrementUsage(couponCode)
         await couponUsagesDb.create({
           couponId: couponData.couponId,
@@ -106,77 +99,60 @@ export async function POST(request: NextRequest) {
           usedAt: new Date(),
         })
 
+        const origin = request.headers.get("origin") || process.env.FRONTEND_URL || "https://justbecausenetwork.com"
         return NextResponse.json({
-          gateway: "coupon",
-          url: `${origin}/api/payments/stripe-callback?coupon_free=true&plan=${planId}&coupon=${couponCode.toUpperCase()}`,
+          free: true,
+          redirectUrl: `${origin}/api/payments/stripe-callback?coupon_free=true&plan=${planId}&coupon=${couponCode.toUpperCase()}`,
           message: "Coupon applied — 100% discount",
         })
       }
     }
 
-    // Create Stripe Checkout Session with dynamic price_data from admin settings
-    const checkoutSession = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency,
-            product_data: {
-              name: couponData 
-                ? `${planName} (Coupon: ${couponData.couponCode})`
-                : planName,
-            },
-            unit_amount: toStripeAmount(finalPrice),
-            recurring: {
-              interval: "month",
-            },
-          },
-          quantity: 1,
-        },
-      ],
-      client_reference_id: session.user.id,
-      customer_email: session.user.email || undefined,
+    // Create Stripe PaymentIntent (one-time payment representing first month)
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: toStripeAmount(finalPrice),
+      currency,
+      automatic_payment_methods: { enabled: true },
+      description: couponData
+        ? `${planName} (Coupon: ${couponData.couponCode})`
+        : planName,
+      receipt_email: session.user.email || undefined,
       metadata: {
         userId: session.user.id,
         planId,
         userRole,
-        ...(couponData ? {
-          couponCode: couponData.couponCode,
-          couponId: couponData.couponId,
-          originalAmount: String(couponData.originalAmount),
-          discountAmount: String(couponData.discountAmount),
-        } : {}),
+        ...(couponData
+          ? {
+              couponCode: couponData.couponCode,
+              couponId: couponData.couponId,
+              originalAmount: String(couponData.originalAmount),
+              discountAmount: String(couponData.discountAmount),
+            }
+          : {}),
       },
-      success_url: `${origin}/api/payments/stripe-callback?session_id={CHECKOUT_SESSION_ID}&plan=${planId}`,
-      cancel_url: `${origin}/pricing?payment=cancelled`,
     })
 
     return NextResponse.json({
-      gateway: "stripe",
-      url: checkoutSession.url,
-      sessionId: checkoutSession.id,
+      clientSecret: paymentIntent.client_secret,
+      publishableKey,
+      paymentIntentId: paymentIntent.id,
     })
   } catch (error: any) {
-    console.error("Error creating Stripe checkout session:", error)
-    
-    // Return specific error messages based on the type of failure
-    const message = error.message || "Failed to create checkout session"
-    
+    console.error("Error creating PaymentIntent:", error)
+
+    const message = error.message || "Failed to create payment"
     if (message.includes("not configured") || message.includes("Stripe is not configured")) {
-      return NextResponse.json({ 
-        error: "Payment gateway is not configured. Please contact support or try again later." 
-      }, { status: 503 })
+      return NextResponse.json(
+        { error: "Payment gateway is not configured. Please contact support." },
+        { status: 503 }
+      )
     }
-    
     if (message.includes("API key") || message.includes("authentication")) {
-      return NextResponse.json({ 
-        error: "Payment system configuration error. Please contact support." 
-      }, { status: 503 })
+      return NextResponse.json(
+        { error: "Payment system configuration error. Please contact support." },
+        { status: 503 }
+      )
     }
-    
-    return NextResponse.json({ 
-      error: message
-    }, { status: 500 })
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

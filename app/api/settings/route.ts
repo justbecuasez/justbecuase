@@ -47,6 +47,7 @@ export async function GET() {
     }
     
     // Return only public settings (exclude sensitive data)
+    // Coerce prices to numbers to prevent string issues from MongoDB
     return NextResponse.json({
       success: true,
       data: {
@@ -55,12 +56,12 @@ export async function GET() {
         supportEmail: settings.supportEmail,
         platformLogo: settings.platformLogo,
         currency: settings.currency,
-        volunteerFreeApplicationsPerMonth: settings.volunteerFreeApplicationsPerMonth,
-        volunteerProPrice: settings.volunteerProPrice,
+        volunteerFreeApplicationsPerMonth: Number(settings.volunteerFreeApplicationsPerMonth) || 3,
+        volunteerProPrice: Number(settings.volunteerProPrice) || 999,
         volunteerProFeatures: settings.volunteerProFeatures || [],
-        ngoFreeProjectsPerMonth: settings.ngoFreeProjectsPerMonth,
-        ngoFreeProfileUnlocksPerMonth: settings.ngoFreeProfileUnlocksPerMonth,
-        ngoProPrice: settings.ngoProPrice,
+        ngoFreeProjectsPerMonth: Number(settings.ngoFreeProjectsPerMonth) || 3,
+        ngoFreeProfileUnlocksPerMonth: Number(settings.ngoFreeProfileUnlocksPerMonth) || 0,
+        ngoProPrice: Number(settings.ngoProPrice) || 2999,
         ngoProFeatures: settings.ngoProFeatures || [],
         enablePayments: settings.enablePayments,
         enableMessaging: settings.enableMessaging,

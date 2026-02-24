@@ -1747,6 +1747,19 @@ export async function updateAdminSettings(
     
     // Remove _id field if present to avoid MongoDB errors
     const { _id, ...settingsWithoutId } = settings as any
+
+    // Coerce price fields to numbers to prevent string storage
+    const numericFields = [
+      "volunteerProPrice", "ngoProPrice",
+      "volunteerFreeUnlocks", "ngoFreeUnlocks",
+      "volunteerProUnlocks", "ngoProUnlocks",
+      "volunteerFreeApplications", "volunteerProApplications",
+    ]
+    for (const field of numericFields) {
+      if (field in settingsWithoutId && settingsWithoutId[field] !== undefined) {
+        settingsWithoutId[field] = Number(settingsWithoutId[field]) || 0
+      }
+    }
     
     const result = await adminSettingsDb.update(settingsWithoutId, user.id)
     revalidatePath("/admin/settings")

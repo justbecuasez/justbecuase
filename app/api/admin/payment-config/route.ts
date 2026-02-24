@@ -203,25 +203,24 @@ export async function PUT(request: NextRequest) {
     const db = await getDb()
     const config = await db.collection(PAYMENT_CONFIG_COLLECTION).findOne({ type: "primary" })
 
-    if (!config) {
-      return NextResponse.json({ 
-        success: false, 
-        error: "No payment configuration found" 
-      }, { status: 400 })
-    }
+    // Fall back to env vars if no DB config exists (mirrors getPaymentCredentials logic)
+    const stripeSecretKey = config?.stripeSecretKey || process.env.STRIPE_SECRET_KEY
+    const stripePublishableKey = config?.stripePublishableKey || process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+    const razorpayKeyId = config?.razorpayKeyId || process.env.RAZORPAY_KEY_ID
+    const razorpayKeySecret = config?.razorpayKeySecret || process.env.RAZORPAY_KEY_SECRET
 
     let testResult = { success: false, message: "", details: {} as any }
 
     if (gateway === "stripe") {
-      if (!config.stripeSecretKey) {
+      if (!stripeSecretKey) {
         return NextResponse.json({ 
           success: false, 
-          error: "Stripe secret key not configured" 
+          error: "Stripe secret key not configured (neither in admin settings nor in environment variables)" 
         }, { status: 400 })
       }
 
       try {
-        const stripe = new Stripe(config.stripeSecretKey)
+        const stripe = new Stripe(stripeSecretKey)
         const account = await stripe.accounts.retrieve()
         
         testResult = {
@@ -233,6 +232,7 @@ export async function PUT(request: NextRequest) {
             currency: account.default_currency?.toUpperCase(),
             chargesEnabled: account.charges_enabled,
             payoutsEnabled: account.payouts_enabled,
+            keySource: config?.stripeSecretKey ? "admin settings" : "environment variable",
           }
         }
       } catch (stripeError: any) {
@@ -243,18 +243,18 @@ export async function PUT(request: NextRequest) {
         }
       }
     } else if (gateway === "razorpay") {
-      if (!config.razorpayKeyId || !config.razorpayKeySecret) {
+      if (!razorpayKeyId || !razorpayKeySecret) {
         return NextResponse.json({ 
           success: false, 
-          error: "Razorpay credentials not configured" 
+          error: "Razorpay credentials not configured (neither in admin settings nor in environment variables)" 
         }, { status: 400 })
       }
 
       try {
         const Razorpay = require("razorpay")
         const razorpay = new Razorpay({
-          key_id: config.razorpayKeyId,
-          key_secret: config.razorpayKeySecret,
+          key_id: razorpayKeyId,
+          key_secret: razorpayKeySecret,
         })
         
         // Test by fetching payments (limited)
@@ -264,7 +264,8 @@ export async function PUT(request: NextRequest) {
           success: true,
           message: "Razorpay connection successful!",
           details: {
-            keyId: config.razorpayKeyId,
+            keyId: razorpayKeyId,
+            keySource: config?.razorpayKeyId ? "admin settings" : "environment variable",
           }
         }
       } catch (razorpayError: any) {
@@ -281,7 +282,7 @@ export async function PUT(request: NextRequest) {
       }, { status: 400 })
     }
 
-    // Update last tested info
+    // Update last tested info (upsert in case no DB config exists)
     await db.collection(PAYMENT_CONFIG_COLLECTION).updateOne(
       { type: "primary" },
       { 
@@ -289,7 +290,8 @@ export async function PUT(request: NextRequest) {
           lastTestedAt: new Date(),
           testSuccessful: testResult.success,
         } 
-      }
+      },
+      { upsert: true }
     )
 
     return NextResponse.json(testResult)

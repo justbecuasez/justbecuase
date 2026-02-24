@@ -17,12 +17,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Coupon code and plan ID are required" }, { status: 400 })
     }
 
-    // Get the plan price from admin settings
+    // Get the plan price from admin settings (coerce to number — may be stored as string)
     const adminSettings = await adminSettingsDb.get()
     const amount = planId === "ngo-pro"
-      ? (adminSettings?.ngoProPrice ?? 2999)
+      ? (Number(adminSettings?.ngoProPrice) || 2999)
       : planId === "volunteer-pro"
-        ? (adminSettings?.volunteerProPrice ?? 999)
+        ? (Number(adminSettings?.volunteerProPrice) || 999)
         : 0
 
     if (amount <= 0) {

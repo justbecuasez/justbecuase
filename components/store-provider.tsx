@@ -34,7 +34,7 @@ export function StoreProvider({ children, initialData }: StoreProviderProps) {
   const setNGOSubscription = useSubscriptionStore((state) => state.setNGOSubscription)
   const setVolunteerSubscription = useSubscriptionStore((state) => state.setVolunteerSubscription)
   const setPermission = useNotificationStore((state) => state.setPermission)
-  const { setSettings, setLoaded, isLoaded, needsRefresh } = usePlatformSettingsStore()
+  const { setSettings, setLoaded, isLoaded } = usePlatformSettingsStore()
 
   // Initialize store with server data
   useEffect(() => {
@@ -54,21 +54,31 @@ export function StoreProvider({ children, initialData }: StoreProviderProps) {
 
   // Load platform settings from API (with TTL-based refresh)
   useEffect(() => {
-    const shouldFetch = !isLoaded || needsRefresh()
-    if (shouldFetch) {
-      fetch("/api/settings")
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.data) {
-            setSettings(data.data)
-          }
-          setLoaded(true)
-        })
-        .catch(() => {
-          setLoaded(true)
-        })
+    const fetchSettings = () => {
+      const shouldFetch = !usePlatformSettingsStore.getState().isLoaded || usePlatformSettingsStore.getState().needsRefresh()
+      if (shouldFetch) {
+        fetch("/api/settings")
+          .then(res => res.json())
+          .then(data => {
+            if (data.success && data.data) {
+              setSettings(data.data)
+            } else {
+              setLoaded(true)
+            }
+          })
+          .catch(() => {
+            setLoaded(true)
+          })
+      }
     }
-  }, [isLoaded, needsRefresh, setSettings, setLoaded])
+
+    // Fetch on mount / when invalidated
+    fetchSettings()
+
+    // Also set up a periodic TTL check (every 60s) so stale data gets refreshed
+    const interval = setInterval(fetchSettings, 60_000)
+    return () => clearInterval(interval)
+  }, [isLoaded, setSettings, setLoaded])
 
   // Check notification permission
   useEffect(() => {

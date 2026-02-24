@@ -33,12 +33,12 @@ export default function PricingPage() {
   } = useSubscriptionStore()
 
   // Platform settings from Zustand store
-  const { settings: platformSettings, isLoaded: settingsLoaded, setSettings, setLoaded, needsRefresh } = usePlatformSettingsStore()
+  const { settings: platformSettings, isLoaded: settingsLoaded, setSettings, setLoaded } = usePlatformSettingsStore()
   const [settingsError, setSettingsError] = useState(false)
   
   // Fetch platform settings on mount (with TTL-based refresh)
   useEffect(() => {
-    const shouldFetch = (!settingsLoaded || needsRefresh()) && !settingsError
+    const shouldFetch = (!settingsLoaded || usePlatformSettingsStore.getState().needsRefresh()) && !settingsError
     if (shouldFetch) {
       fetch("/api/settings")
         .then(res => res.json())
@@ -53,7 +53,7 @@ export default function PricingPage() {
           setLoaded(true)
         })
     }
-  }, [settingsLoaded, settingsError, setSettings, setLoaded, needsRefresh])
+  }, [settingsLoaded, settingsError, setSettings, setLoaded])
   
   // Default tab based on user role
   const defaultTab = userRole === "volunteer" ? "volunteer" : "ngo"

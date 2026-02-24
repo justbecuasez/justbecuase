@@ -19,6 +19,76 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const checkoutSessionId = searchParams.get("session_id")
     const plan = searchParams.get("plan")
+    const couponFree = searchParams.get("coupon_free")
+    const couponCodeParam = searchParams.get("coupon")
+
+    // Handle 100% coupon discount (no Stripe session needed)
+    if (couponFree === "true" && plan) {
+      const userId = session.user.id
+      const planId = plan
+      const isNgoPlan = planId.startsWith("ngo-")
+      const isPro = planId.endsWith("-pro")
+      const dashboardPath = isNgoPlan ? "/ngo/dashboard" : "/volunteer/dashboard"
+      const now = new Date()
+      const subscriptionExpiry = new Date(now)
+      subscriptionExpiry.setMonth(subscriptionExpiry.getMonth() + 1)
+
+      // Activate subscription
+      if (isNgoPlan) {
+        const profile = await ngoProfilesDb.findByUserId(userId)
+        if (profile) {
+          await ngoProfilesDb.update(userId, {
+            subscriptionPlan: isPro ? "pro" : "free",
+            subscriptionExpiry,
+            monthlyUnlocksUsed: 0,
+          })
+        }
+      } else {
+        const profile = await volunteerProfilesDb.findByUserId(userId)
+        if (profile) {
+          await volunteerProfilesDb.update(userId, {
+            subscriptionPlan: isPro ? "pro" : "free",
+            subscriptionExpiry,
+            monthlyApplicationsUsed: 0,
+          })
+        }
+      }
+
+      // Create transaction record for coupon-free
+      await transactionsDb.create({
+        userId,
+        type: "subscription",
+        referenceId: planId,
+        referenceType: "subscription",
+        amount: 0,
+        currency: "COUPON",
+        paymentGateway: "coupon",
+        paymentId: `coupon_${couponCodeParam || "free"}_${Date.now()}`,
+        status: "completed",
+        paymentStatus: "completed",
+        description: `${isPro ? "Pro" : "Free"} Plan (100% coupon: ${couponCodeParam || "N/A"})`,
+        createdAt: now,
+      })
+
+      // Create notification
+      try {
+        await notificationsDb.create({
+          userId,
+          type: "subscription_activated",
+          title: "Pro Plan Activated!",
+          message: `Your Pro subscription is now active via coupon ${couponCodeParam || ""}. Enjoy unlimited access!`,
+          referenceId: planId,
+          referenceType: "subscription",
+          link: dashboardPath,
+          isRead: false,
+          createdAt: now,
+        })
+      } catch (notifErr) {
+        console.error("[stripe-callback] Coupon-free notification error:", notifErr)
+      }
+
+      return NextResponse.redirect(new URL(`${dashboardPath}?subscription=success`, request.url))
+    }
 
     if (!checkoutSessionId) {
       return NextResponse.redirect(new URL("/pricing?error=missing_session", request.url))
