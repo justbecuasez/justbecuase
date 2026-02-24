@@ -12,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import Link from "next/link"
 import { UserActions } from "@/components/admin/user-actions"
 import { resolveSkillName } from "@/lib/skills-data"
 

@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
@@ -59,7 +59,7 @@ export function VolunteerAppSidebar({ ...props }: React.ComponentProps<typeof Si
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/volunteer/dashboard">
+              <LocaleLink href="/volunteer/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <User className="size-4" />
                 </div>
@@ -67,7 +67,7 @@ export function VolunteerAppSidebar({ ...props }: React.ComponentProps<typeof Si
                   <span className="truncate font-semibold">Impact Agent</span>
                   <span className="truncate text-xs text-muted-foreground">Dashboard</span>
                 </div>
-              </Link>
+              </LocaleLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -88,10 +88,10 @@ export function VolunteerAppSidebar({ ...props }: React.ComponentProps<typeof Si
                         isActive={isActive}
                         tooltip={item.title}
                       >
-                        <Link href={item.href}>
+                        <LocaleLink href={item.href}>
                           <item.icon />
                           <span>{item.title}</span>
-                        </Link>
+                        </LocaleLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )

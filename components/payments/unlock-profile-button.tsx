@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2, Unlock, Crown, CheckCircle } from "lucide-react"
 import { toast } from "sonner"
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 
 interface UnlockProfileButtonProps {
   volunteerId: string
@@ -111,10 +111,10 @@ export function UnlockProfileButton({
       variant="default"
       className={className}
     >
-      <Link href="/pricing">
+      <LocaleLink href="/pricing">
         <Crown className="h-4 w-4 mr-2" />
         Upgrade to Pro to Unlock
-      </Link>
+      </LocaleLink>
     </Button>
   )
 }

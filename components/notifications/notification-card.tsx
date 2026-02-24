@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -393,10 +393,10 @@ export function NotificationCard({
                       asChild
                       onClick={(e) => e.stopPropagation()}
                     >
-                      <Link href={action.href}>
+                      <LocaleLink href={action.href}>
                         {action.label}
                         {idx === 0 && <ExternalLink className="h-3 w-3 ml-1.5" />}
-                      </Link>
+                      </LocaleLink>
                     </Button>
                   ) : (
                     <Button
@@ -457,9 +457,9 @@ export function NotificationCard({
   // Wrap in Link if there's a primary action
   if (primaryLink && !showActions) {
     return (
-      <Link href={primaryLink} className="block">
+      <LocaleLink href={primaryLink} className="block">
         {cardContent}
-      </Link>
+      </LocaleLink>
     )
   }
 

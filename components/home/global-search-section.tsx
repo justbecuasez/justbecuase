@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react"
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import { useRouter } from "next/navigation"
 import {
   Search, Users, Building2, Briefcase, ArrowRight, MapPin,
@@ -804,13 +804,13 @@ export function GlobalSearchSection() {
                     </p>
                     <div className="flex flex-wrap justify-center gap-2">
                       <Button asChild variant="outline" size="sm">
-                        <Link href="/projects">Browse Opportunities</Link>
+                        <LocaleLink href="/projects">Browse Opportunities</LocaleLink>
                       </Button>
                       <Button asChild variant="outline" size="sm">
-                        <Link href="/volunteers">Browse Impact Agents</Link>
+                        <LocaleLink href="/volunteers">Browse Impact Agents</LocaleLink>
                       </Button>
                       <Button asChild variant="outline" size="sm">
-                        <Link href="/ngos">Browse NGOs</Link>
+                        <LocaleLink href="/ngos">Browse NGOs</LocaleLink>
                       </Button>
                     </div>
                   </div>
@@ -837,9 +837,9 @@ export function GlobalSearchSection() {
                         </div>
                       </div>
                       <Button asChild variant="ghost" size="sm" className="text-primary">
-                        <Link href={getViewAllLink()}>
+                        <LocaleLink href={getViewAllLink()}>
                           View All <ArrowRight className="ml-1 h-3.5 w-3.5" />
-                        </Link>
+                        </LocaleLink>
                       </Button>
                     </div>
 
@@ -866,7 +866,7 @@ export function GlobalSearchSection() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: Math.min(index * 0.03, 0.3) }}
                           >
-                            <Link
+                            <LocaleLink
                               href={getResultLink(result)}
                               onClick={() => addRecentSearch(searchQuery)}
                               className="block bg-background rounded-xl border hover:border-primary/50 hover:shadow-lg transition-all duration-200 group h-full overflow-hidden"
@@ -997,7 +997,7 @@ export function GlobalSearchSection() {
                                   </div>
                                 )}
                               </div>
-                            </Link>
+                            </LocaleLink>
                           </motion.div>
                         )
                       })}

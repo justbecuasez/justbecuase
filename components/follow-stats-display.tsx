@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, UserCheck, ChevronLeft, ChevronRight } from "lucide-react"
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 
 interface FollowUser {
   id: string
@@ -179,7 +179,7 @@ function UserList({ userId, type }: { userId: string; type: "followers" | "follo
   return (
     <div className="space-y-1">
       {users.map((user) => (
-        <Link
+        <LocaleLink
           key={user.id}
           href={user.role === "ngo" ? `/ngos/${user.id}` : `/volunteers/${user.id}`}
           className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent transition-colors"
@@ -202,7 +202,7 @@ function UserList({ userId, type }: { userId: string; type: "followers" | "follo
               <p className="text-xs text-muted-foreground truncate">{user.headline}</p>
             )}
           </div>
-        </Link>
+        </LocaleLink>
       ))}
 
       {/* Pagination */}

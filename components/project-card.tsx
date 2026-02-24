@@ -1,4 +1,4 @@
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Clock, MapPin, Users, CheckCircle } from "lucide-react"
@@ -94,7 +94,7 @@ export function ProjectCard({ project }: { project: Project }) {
           </span>
         </div>
         <Button asChild size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10">
-          <Link href={`/projects/${project.id}`}>Apply →</Link>
+          <LocaleLink href={`/projects/${project.id}`}>Apply Ã¢â€ â€™</LocaleLink>
         </Button>
       </div>
     </div>

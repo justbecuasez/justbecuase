@@ -3,7 +3,7 @@
 import { UserPlus, Search, Rocket, FileText, Users, CheckCircle, Gift, DollarSign, Sparkles } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import Link from "next/link";
+import LocaleLink from "@/components/locale-link";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 
@@ -149,7 +149,7 @@ export function HowItWorks() {
               className="mt-16 text-center"
             >
               <Button asChild size="lg" className="h-12 px-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 rounded-full transition-all hover:scale-105 active:scale-95">
-                <Link href="/for-volunteers">Join as an Impact Agent</Link>
+                <LocaleLink href="/for-volunteers">Join as an Impact Agent</LocaleLink>
               </Button>
             </motion.div>
           </TabsContent>
@@ -196,7 +196,7 @@ export function HowItWorks() {
               className="mt-16 text-center"
             >
               <Button asChild size="lg" className="h-12 px-10 bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-xl shadow-secondary/20 rounded-full transition-all hover:scale-105 active:scale-95">
-                <Link href="/for-ngos">Register Organization</Link>
+                <LocaleLink href="/for-ngos">Register Organization</LocaleLink>
               </Button>
             </motion.div>
           </TabsContent>

@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
@@ -49,7 +49,7 @@ export function NGOSidebar() {
         {sidebarLinks.map((link) => {
           const isActive = pathname === link.href || (link.href.includes('?') && pathname === link.href.split('?')[0])
           return (
-            <Link
+            <LocaleLink
               key={link.href}
               href={link.href}
               className={cn(
@@ -73,7 +73,7 @@ export function NGOSidebar() {
                   {link.badge}
                 </Badge>
               )}
-            </Link>
+            </LocaleLink>
           )
         })}
       </nav>

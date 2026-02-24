@@ -18,7 +18,7 @@ import {
   Loader2,
   Briefcase,
 } from "lucide-react"
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 
 interface Message {
   _id?: { toString: () => string }
@@ -138,9 +138,9 @@ export function MessageThread({
       <CardHeader className="flex-shrink-0 border-b">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild>
-            <Link href={backUrl}>
+            <LocaleLink href={backUrl}>
               <ArrowLeft className="h-4 w-4" />
-            </Link>
+            </LocaleLink>
           </Button>
           <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
             {otherParticipant.avatar ? (

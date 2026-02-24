@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { LayoutDashboard, Search, FolderKanban, CheckCircle2, User, Settings, Heart, Bell, Sparkles, Bookmark, Trophy, Gift, LucideIcon } from "lucide-react"
@@ -34,7 +34,7 @@ export function VolunteerSidebar() {
         {sidebarLinks.map((link) => {
           const isActive = pathname === link.href
           return (
-            <Link
+            <LocaleLink
               key={link.href}
               href={link.href}
               className={cn(
@@ -56,7 +56,7 @@ export function VolunteerSidebar() {
                   {link.badge}
                 </Badge>
               )}
-            </Link>
+            </LocaleLink>
           )
         })}
       </nav>

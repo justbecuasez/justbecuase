@@ -10,6 +10,8 @@ import Image from "next/image"
 import { client } from "@/lib/auth-client" // Better Auth
 import { useTheme } from "next-themes"
 import { useSubscriptionStore, usePlatformSettingsStore } from "@/lib/store"
+import LocaleLink from "@/components/locale-link"
+import { LanguageSwitcher } from "@/components/language-switcher"
 
 import {
   DropdownMenu,
@@ -98,23 +100,23 @@ export function Navbar() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
 
         {/* LOGO */}
-        <Link href="/" className="flex items-center gap-2">
+        <LocaleLink href="/" className="flex items-center gap-2">
           <Image src="/logo-main.png" alt="JBC Logo" width={200} height={98} className="h-14 w-auto" priority />
-        </Link>
+        </LocaleLink>
 
         {/* DESKTOP NAV */}
         <nav className="hidden md:flex items-center gap-6">
           {[...baseLinks, ...roleLinks].map((link) => (
-            <Link
+            <LocaleLink
               key={link.href}
               href={link.href}
-              className={`text-sm font-medium transition ${pathname === link.href
+              className={`text-sm font-medium transition ${pathname.endsWith(link.href) || pathname.includes(link.href + "/")
                   ? "text-primary font-semibold"
                   : "text-muted-foreground hover:text-foreground"
                 }`}
             >
               {link.label}
-            </Link>
+            </LocaleLink>
           ))}
         </nav>
 
@@ -131,9 +133,9 @@ export function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" asChild>
-                  <Link href={user?.role === "ngo" ? "/ngo/notifications" : "/volunteer/notifications"}>
+                  <LocaleLink href={user?.role === "ngo" ? "/ngo/notifications" : "/volunteer/notifications"}>
                     <Bell className="h-5 w-5" />
-                  </Link>
+                  </LocaleLink>
                 </Button>
               </DropdownMenuTrigger>
             </DropdownMenu>
@@ -145,17 +147,20 @@ export function Navbar() {
           {/* LOGGED OUT */}
           {!isPending && !user && (
             <>
+              <LanguageSwitcher />
               <Button variant="ghost" asChild>
-                <Link href="/auth/signin">Sign In</Link>
+                <LocaleLink href="/auth/signin">Sign In</LocaleLink>
               </Button>
               <Button asChild>
-                <Link href="/auth/signup">Get Started</Link>
+                <LocaleLink href="/auth/signup">Get Started</LocaleLink>
               </Button>
             </>
           )}
 
           {/* USER AVATAR */}
           {!isPending && user && (
+            <>
+            <LanguageSwitcher />
             <DropdownMenu>
               <DropdownMenuTrigger className="rounded-full outline-none">
                 <Avatar className="h-8 w-8 cursor-pointer">
@@ -173,16 +178,16 @@ export function Navbar() {
                 <DropdownMenuSeparator />
 
                 <DropdownMenuItem asChild>
-                  <Link href={user?.role === "admin" ? "/admin" : user?.role === "ngo" ? "/ngo/dashboard" : "/volunteer/dashboard"}>My Dashboard</Link>
+                  <LocaleLink href={user?.role === "admin" ? "/admin" : user?.role === "ngo" ? "/ngo/dashboard" : "/volunteer/dashboard"}>My Dashboard</LocaleLink>
                 </DropdownMenuItem>
 
                 {user?.role === "ngo" && (
                   <>
                     <DropdownMenuItem asChild>
-                      <Link href="/ngo/settings?tab=billing" className="flex items-center gap-2">
+                      <LocaleLink href="/ngo/settings?tab=billing" className="flex items-center gap-2">
                         <CreditCard className="h-4 w-4" />
                         Billing & Payments
-                      </Link>
+                      </LocaleLink>
                     </DropdownMenuItem>
                     {isPro ? (
                       <DropdownMenuItem disabled className="flex items-center gap-2 text-primary">
@@ -192,10 +197,10 @@ export function Navbar() {
                       </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem asChild>
-                        <Link href="/pricing" className="flex items-center gap-2 text-primary">
+                        <LocaleLink href="/pricing" className="flex items-center gap-2 text-primary">
                           <Sparkles className="h-4 w-4" />
                           Upgrade to Pro
-                        </Link>
+                        </LocaleLink>
                       </DropdownMenuItem>
                     )}
                   </>
@@ -204,10 +209,10 @@ export function Navbar() {
                 {user?.role === "volunteer" && (
                   <>
                     <DropdownMenuItem asChild>
-                      <Link href="/volunteer/settings?tab=billing" className="flex items-center gap-2">
+                      <LocaleLink href="/volunteer/settings?tab=billing" className="flex items-center gap-2">
                         <CreditCard className="h-4 w-4" />
                         Billing
-                      </Link>
+                      </LocaleLink>
                     </DropdownMenuItem>
                     {isPro ? (
                       <DropdownMenuItem disabled className="flex items-center gap-2 text-primary">
@@ -217,10 +222,10 @@ export function Navbar() {
                       </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem asChild>
-                        <Link href="/pricing" className="flex items-center gap-2 text-primary">
+                        <LocaleLink href="/pricing" className="flex items-center gap-2 text-primary">
                           <Sparkles className="h-4 w-4" />
                           Upgrade to Pro
-                        </Link>
+                        </LocaleLink>
                       </DropdownMenuItem>
                     )}
                   </>
@@ -236,6 +241,7 @@ export function Navbar() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            </>
           )}
         </div>
 
@@ -252,33 +258,33 @@ export function Navbar() {
 
               {/* MOBILE LINKS */}
               {[...baseLinks, ...roleLinks].map((link) => (
-                <Link
+                <LocaleLink
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsOpen(false)}
-                  className={`text-lg ${pathname === link.href
+                  className={`text-lg ${pathname.endsWith(link.href) || pathname.includes(link.href + "/")
                       ? "text-primary font-semibold"
                       : "text-foreground"
                     }`}
                 >
                   {link.label}
-                </Link>
+                </LocaleLink>
               ))}
 
               <div className="pt-6 border-t flex flex-col gap-3">
                 {!user ? (
                   <>
                     <Button asChild variant="outline">
-                      <Link href="/auth/signin">Sign In</Link>
+                      <LocaleLink href="/auth/signin">Sign In</LocaleLink>
                     </Button>
                     <Button asChild>
-                      <Link href="/auth/signup">Get Started</Link>
+                      <LocaleLink href="/auth/signup">Get Started</LocaleLink>
                     </Button>
                   </>
                 ) : (
                   <>
                     <Button asChild variant="outline">
-                      <Link href={user?.role === "admin" ? "/admin" : user?.role === "ngo" ? "/ngo/dashboard" : "/volunteer/dashboard"}>Dashboard</Link>
+                      <LocaleLink href={user?.role === "admin" ? "/admin" : user?.role === "ngo" ? "/ngo/dashboard" : "/volunteer/dashboard"}>Dashboard</LocaleLink>
                     </Button>
                     <Button
                       onClick={() => client.signOut()}

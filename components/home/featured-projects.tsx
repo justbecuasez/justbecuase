@@ -1,12 +1,18 @@
-import Link from "next/link"
+"use client"
+
+import { useState, useEffect } from "react"
+import LocaleLink from "@/components/locale-link"
 import { ProjectCard } from "@/components/project-card"
 import { browseProjects } from "@/lib/actions"
 import { ArrowRight } from "lucide-react"
 import { resolveSkillName } from "@/lib/skills-data"
 
-export async function FeaturedProjects() {
-  const projects = await browseProjects()
-  const featuredProjects = projects.slice(0, 6)
+export function FeaturedProjects() {
+  const [featuredProjects, setFeaturedProjects] = useState<Awaited<ReturnType<typeof browseProjects>>>([]);
+
+  useEffect(() => {
+    browseProjects().then(projects => setFeaturedProjects(projects.slice(0, 6)));
+  }, []);
 
   return (
     <section className="relative py-24 bg-white overflow-hidden">
@@ -36,13 +42,13 @@ export async function FeaturedProjects() {
           </div>
 
           <div className="mt-8 md:mt-0">
-            <Link 
+            <LocaleLink 
               href="/projects" 
               className="group flex items-center gap-3 text-xs uppercase tracking-widest font-bold text-slate-900 transition-all"
             >
               Browse All Opportunities
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-3" />
-            </Link>
+            </LocaleLink>
           </div>
         </header>
 

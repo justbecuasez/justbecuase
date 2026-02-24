@@ -24,7 +24,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet"
 
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import {
   MapPin,
   Clock,
@@ -357,7 +357,7 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
   const [aiLocationFilter, setAiLocationFilter] = useState<string | null>(null)
 
   // ==========================================
-  // UNIFIED SEARCH API — drives the volunteer grid
+  // UNIFIED SEARCH API Ã¢â‚¬â€ drives the volunteer grid
   // When user types, we call the powerful unified search API
   // (synonyms, multi-strategy, fuzzy, 30+ fields)
   // and use returned IDs to filter the local volunteer list,
@@ -368,7 +368,7 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
   const [isUnifiedSearching, setIsUnifiedSearching] = useState(false)
   const unifiedAbortRef = useRef<AbortController | null>(null)
 
-  // Debounced unified search — fires when searchQuery changes
+  // Debounced unified search Ã¢â‚¬â€ fires when searchQuery changes
   useEffect(() => {
     // Don't search when AI search is applied (AI has its own filters)
     if (aiSearchApplied) return
@@ -532,16 +532,16 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
         // If the user typed a search query and API results are ready,
         // only show volunteers whose IDs were returned by the API.
         // This gives us synonym expansion, multi-strategy fuzzy,
-        // 30+ field matching — the full power of the search engine.
+        // 30+ field matching Ã¢â‚¬â€ the full power of the search engine.
         // ==========================================
         if (!aiSearchApplied && searchQuery.trim().length >= 1) {
           if (unifiedMatchedIds !== null) {
-            // API results are ready — only include matched IDs
+            // API results are ready Ã¢â‚¬â€ only include matched IDs
             if (!unifiedMatchedIds.includes(volunteerId)) {
               matches = false
             }
           } else {
-            // API hasn't returned yet — fall back to basic client-side text match
+            // API hasn't returned yet Ã¢â‚¬â€ fall back to basic client-side text match
             // so results don't flash empty while loading
             const query = searchQuery.toLowerCase()
             const nameMatch = v.name?.toLowerCase().includes(query)
@@ -638,7 +638,7 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
             const hasAISkill = v.skills?.some(s => aiSkillFilters.includes(s.subskillId))
             if (!hasAISkill) matches = false
           }
-          // If neither matchedIds nor skills — show all (no AI filter applied)
+          // If neither matchedIds nor skills Ã¢â‚¬â€ show all (no AI filter applied)
         }
         
         // Calculate relevance score
@@ -1037,9 +1037,9 @@ export function FindTalentClient({ volunteers, subscriptionPlan }: FindTalentCli
                 </p>
               </div>
               <Button asChild size="sm">
-                <Link href="/ngo/settings?tab=subscription">
+                <LocaleLink href="/ngo/settings?tab=subscription">
                   Upgrade
-                </Link>
+                </LocaleLink>
               </Button>
             </div>
           </CardContent>
@@ -1229,15 +1229,15 @@ function VolunteerCard({
 
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="flex-1 text-xs sm:text-sm" asChild>
-            <Link href={`/volunteers/${volunteerId}`}>
+            <LocaleLink href={`/volunteers/${volunteerId}`}>
               View Profile
-            </Link>
+            </LocaleLink>
           </Button>
           <Button size="sm" className="flex-1 text-xs sm:text-sm" asChild>
-            <Link href={`/volunteers/${volunteerId}?action=contact`}>
+            <LocaleLink href={`/volunteers/${volunteerId}?action=contact`}>
               <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
               Contact
-            </Link>
+            </LocaleLink>
           </Button>
         </div>
       </CardContent>

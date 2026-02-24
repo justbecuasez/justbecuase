@@ -13,7 +13,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { UserActions } from "@/components/admin/user-actions"
-import Link from "next/link"
 
 interface User {
   id: string

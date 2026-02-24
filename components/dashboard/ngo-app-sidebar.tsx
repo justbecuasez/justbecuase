@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
@@ -62,7 +62,7 @@ export function NGOAppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/ngo/dashboard">
+              <LocaleLink href="/ngo/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <Building2 className="size-4" />
                 </div>
@@ -70,7 +70,7 @@ export function NGOAppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>
                   <span className="truncate font-semibold">NGO Dashboard</span>
                   <span className="truncate text-xs text-muted-foreground">Manage your organization</span>
                 </div>
-              </Link>
+              </LocaleLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -93,10 +93,10 @@ export function NGOAppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>
                         tooltip={item.title}
                         className={item.highlight && !isActive ? "text-primary" : undefined}
                       >
-                        <Link href={item.href}>
+                        <LocaleLink href={item.href}>
                           <item.icon />
                           <span>{item.title}</span>
-                        </Link>
+                        </LocaleLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )

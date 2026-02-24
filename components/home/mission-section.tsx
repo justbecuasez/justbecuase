@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import { Button } from "@/components/ui/button"
 import { Heart, Users, Building2, ArrowRight } from "lucide-react"
 import { motion } from "motion/react"
@@ -58,11 +58,11 @@ export function MissionSection() {
               size="lg" 
               className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-lg h-14 px-8"
             >
-              <Link href="/auth/signup?role=volunteer" className="flex items-center gap-2">
+              <LocaleLink href="/auth/signup?role=volunteer" className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
                 Register as Impact Agent
                 <ArrowRight className="h-4 w-4" />
-              </Link>
+              </LocaleLink>
             </Button>
             <Button
               asChild
@@ -70,10 +70,10 @@ export function MissionSection() {
               size="lg"
               className="w-full sm:w-auto text-lg h-14 px-8 border-2"
             >
-              <Link href="/auth/signup?role=ngo" className="flex items-center gap-2">
+              <LocaleLink href="/auth/signup?role=ngo" className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
                 Register as NGO
-              </Link>
+              </LocaleLink>
             </Button>
           </motion.div>
 

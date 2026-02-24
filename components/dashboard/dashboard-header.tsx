@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import {
@@ -63,22 +63,22 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
               </div>
               <nav className="flex flex-col gap-2">
                 {mobileLinks.map((link) => (
-                  <Link
+                  <LocaleLink
                     key={link.href}
                     href={link.href}
                     className="px-4 py-2 rounded-lg text-foreground hover:bg-muted transition-colors"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {link.label}
-                  </Link>
+                  </LocaleLink>
                 ))}
               </nav>
             </SheetContent>
           </Sheet>
 
-          <Link href="/" className="flex items-center gap-2">
+          <LocaleLink href="/" className="flex items-center gap-2">
             <Image src="/logo-main.png" alt="JBC Logo" width={200} height={98} className="h-14 w-auto" />
-          </Link>
+          </LocaleLink>
         </div>
 
         {/* Search - Desktop */}
@@ -101,7 +101,7 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
           <MessageNotificationBadge userType={userType} />
           
           {/* Bell Notifications */}
-          <Link href={userType === "volunteer" ? "/volunteer/notifications" : "/ngo/notifications"}>
+          <LocaleLink href={userType === "volunteer" ? "/volunteer/notifications" : "/ngo/notifications"}>
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
               {unreadCount > 0 && (
@@ -110,7 +110,7 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
                 </span>
               )}
             </Button>
-          </Link>
+          </LocaleLink>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -127,16 +127,16 @@ export function DashboardHeader({ userType, userName, userAvatar }: DashboardHea
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href={userType === "volunteer" ? "/volunteer/profile" : "/ngo/profile"}>
+                <LocaleLink href={userType === "volunteer" ? "/volunteer/profile" : "/ngo/profile"}>
                   <User className="mr-2 h-4 w-4" />
                   Profile
-                </Link>
+                </LocaleLink>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href={userType === "volunteer" ? "/volunteer/settings" : "/ngo/settings"}>
+                <LocaleLink href={userType === "volunteer" ? "/volunteer/settings" : "/ngo/settings"}>
                   <Settings className="mr-2 h-4 w-4" />
                   Settings
-                </Link>
+                </LocaleLink>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem

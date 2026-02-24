@@ -46,7 +46,7 @@ import {
   Heart,
   ShieldOff,
 } from "lucide-react"
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 
 interface UserActionsProps {
   userId: string
@@ -229,10 +229,10 @@ export function UserActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
-            <Link href={profileUrl} className="flex items-center gap-2">
+            <LocaleLink href={profileUrl} className="flex items-center gap-2">
               <ExternalLink className="h-4 w-4" />
               View Profile
-            </Link>
+            </LocaleLink>
           </DropdownMenuItem>
           
           <DropdownMenuSeparator />

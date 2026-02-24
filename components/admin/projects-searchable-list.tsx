@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 
 interface Project {
   _id?: any
@@ -209,10 +209,10 @@ export function ProjectsSearchableList({ projects, title }: ProjectsSearchableLi
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuItem asChild>
-                                <Link href={`/projects/${projectId}`}>
+                                <LocaleLink href={`/projects/${projectId}`}>
                                   <Eye className="h-4 w-4 mr-2" />
                                   View Opportunity
-                                </Link>
+                                </LocaleLink>
                               </DropdownMenuItem>
                               <DropdownMenuItem className="text-red-600">
                                 <Trash2 className="h-4 w-4 mr-2" />

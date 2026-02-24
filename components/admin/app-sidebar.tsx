@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
@@ -86,7 +86,7 @@ export function AdminAppSidebar({ ...props }: React.ComponentProps<typeof Sideba
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/admin/dashboard">
+              <LocaleLink href="/admin/dashboard">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <Shield className="size-4" />
                 </div>
@@ -94,7 +94,7 @@ export function AdminAppSidebar({ ...props }: React.ComponentProps<typeof Sideba
                   <span className="truncate font-semibold">Admin Panel</span>
                   <span className="truncate text-xs text-muted-foreground">JustBeCause</span>
                 </div>
-              </Link>
+              </LocaleLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -115,10 +115,10 @@ export function AdminAppSidebar({ ...props }: React.ComponentProps<typeof Sideba
                         isActive={isActive}
                         tooltip={item.title}
                       >
-                        <Link href={item.href}>
+                        <LocaleLink href={item.href}>
                           <item.icon />
                           <span>{item.title}</span>
-                        </Link>
+                        </LocaleLink>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )

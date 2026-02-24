@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -91,7 +91,7 @@ function ConversationItem({
     : conversation._id?.toString()
 
   return (
-    <Link
+    <LocaleLink
       href={`${baseUrl}/${conversationId}`}
       className={cn(
         "block p-4 transition-all duration-200",
@@ -155,7 +155,7 @@ function ConversationItem({
           </div>
         </div>
       </div>
-    </Link>
+    </LocaleLink>
   )
 }
 
@@ -308,7 +308,7 @@ export function ConversationsList({
         <div className="border-t p-3 bg-muted/30">
           <p className="text-xs text-center text-muted-foreground">
             {filteredConversations.length} conversation{filteredConversations.length !== 1 ? "s" : ""}
-            {totalUnread > 0 && ` • ${totalUnread} unread`}
+            {totalUnread > 0 && ` Ã¢â‚¬Â¢ ${totalUnread} unread`}
           </p>
         </div>
       )}

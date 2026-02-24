@@ -1,8 +1,14 @@
-import Link from "next/link"
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Heart } from "lucide-react"
+import { useDictionary } from "@/components/dictionary-provider"
+import LocaleLink from "@/components/locale-link"
 
 export function CTASection() {
+  const dict = useDictionary()
+  const home = dict.home || {}
+
   return (
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4 md:px-6">
@@ -28,10 +34,10 @@ export function CTASection() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
-                  <Link href="/auth/signup" className="flex items-center gap-2">
-                    Join as an Impact Agent
+                  <LocaleLink href="/auth/signup" className="flex items-center gap-2">
+                    {home.ctaButton || "Join as an Impact Agent"}
                     <ArrowRight className="h-4 w-4" />
-                  </Link>
+                  </LocaleLink>
                 </Button>
                 <Button
                   asChild
@@ -39,7 +45,7 @@ export function CTASection() {
                   variant="outline"
                   className="border-white/30 text-primary-foreground hover:bg-white/10 bg-transparent"
                 >
-                  <Link href="/for-ngos">Partner as an NGO</Link>
+                  <LocaleLink href="/for-ngos">Partner as an NGO</LocaleLink>
                 </Button>
               </div>
             </div>

@@ -5,6 +5,7 @@ import { Linkedin, Twitter, Instagram, Facebook } from "lucide-react"
 import Image from "next/image"
 import { NewsletterSubscribe } from "./newsletter-subscribe"
 import { usePlatformSettingsStore } from "@/lib/store"
+import LocaleLink from "@/components/locale-link"
 
 export function Footer() {
   // Get platform settings for branding and social links
@@ -18,9 +19,9 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
+            <LocaleLink href="/" className="flex items-center gap-2 mb-4">
               <Image src="/logo-main.png" alt="JBC Logo" width={200} height={98} className="h-16 w-auto" />
-            </Link>
+            </LocaleLink>
             <p className="text-muted-foreground mb-6 max-w-sm">
               {platformSettings?.platformDescription || "Connecting Skills with Purpose. Turn your expertise into lasting impact."}
             </p>
@@ -57,27 +58,27 @@ export function Footer() {
             <h4 className="font-semibold text-foreground mb-4">For Impact Agents</h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/projects" className="text-muted-foreground hover:text-foreground transition-colors">
+                <LocaleLink href="/projects" className="text-muted-foreground hover:text-foreground transition-colors">
                   Browse Opportunities
-                </Link>
+                </LocaleLink>
               </li>
               <li>
-                <Link href="/for-volunteers" className="text-muted-foreground hover:text-foreground transition-colors">
+                <LocaleLink href="/for-volunteers" className="text-muted-foreground hover:text-foreground transition-colors">
                   How It Works
-                </Link>
+                </LocaleLink>
               </li>
               <li>
-                <Link href="/auth/signup" className="text-muted-foreground hover:text-foreground transition-colors">
+                <LocaleLink href="/auth/signup" className="text-muted-foreground hover:text-foreground transition-colors">
                   Create Profile
-                </Link>
+                </LocaleLink>
               </li>
               <li>
-                <Link
+                <LocaleLink
                   href="/volunteer/dashboard"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Dashboard
-                </Link>
+                </LocaleLink>
               </li>
             </ul>
           </div>
@@ -87,22 +88,22 @@ export function Footer() {
             <h4 className="font-semibold text-foreground mb-4">For NGOs</h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/for-ngos" className="text-muted-foreground hover:text-foreground transition-colors">
+                <LocaleLink href="/for-ngos" className="text-muted-foreground hover:text-foreground transition-colors">
                   Why Partner
-                </Link>
+                </LocaleLink>
               </li>
               <li>
-                <Link
+                <LocaleLink
                   href="/ngo/post-project"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   Post an Opportunity
-                </Link>
+                </LocaleLink>
               </li>
               <li>
-                <Link href="/ngo/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
+                <LocaleLink href="/ngo/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
                   Dashboard
-                </Link>
+                </LocaleLink>
               </li>
             </ul>
           </div>
@@ -112,24 +113,24 @@ export function Footer() {
             <h4 className="font-semibold text-foreground mb-4">Company</h4>
             <ul className="space-y-3">
               <li>
-                <Link href="/about" className="text-muted-foreground hover:text-foreground transition-colors">
+                <LocaleLink href="/about" className="text-muted-foreground hover:text-foreground transition-colors">
                   About Us
-                </Link>
+                </LocaleLink>
               </li>
               <li>
-                <Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">
+                <LocaleLink href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">
                   Blog
-                </Link>
+                </LocaleLink>
               </li>
               <li>
-                <Link href="/changelog" className="text-muted-foreground hover:text-foreground transition-colors">
+                <LocaleLink href="/changelog" className="text-muted-foreground hover:text-foreground transition-colors">
                   Changelog
-                </Link>
+                </LocaleLink>
               </li>
               <li>
-                <Link href="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
+                <LocaleLink href="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
                   Contact
-                </Link>
+                </LocaleLink>
               </li>
             </ul>
           </div>
@@ -151,12 +152,12 @@ export function Footer() {
               © {new Date().getFullYear()} {platformName}. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
-              <Link href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <LocaleLink href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Privacy Policy
-              </Link>
-              <Link href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              </LocaleLink>
+              <LocaleLink href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Terms of Service
-              </Link>
+              </LocaleLink>
             </div>
           </div>
         </div>

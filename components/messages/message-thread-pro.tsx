@@ -28,7 +28,7 @@ import {
   X,
   FileText,
 } from "lucide-react"
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import { cn } from "@/lib/utils"
 import { uploadDocumentToCloudinary, validateDocumentFile, SUPPORTED_ALL_TYPES } from "@/lib/upload"
 
@@ -544,9 +544,9 @@ export function MessageThreadPro({
       <CardHeader className="flex-shrink-0 border-b bg-background/80 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" className="hover:bg-muted" asChild>
-            <Link href={backUrl}>
+            <LocaleLink href={backUrl}>
               <ArrowLeft className="h-4 w-4" />
-            </Link>
+            </LocaleLink>
           </Button>
           
           {/* Avatar with online indicator */}
@@ -585,7 +585,7 @@ export function MessageThreadPro({
               )}
               {projectTitle && (
                 <>
-                  <span className="text-muted-foreground/40">•</span>
+                  <span className="text-muted-foreground/40">Ã¢â‚¬Â¢</span>
                   <div className="flex items-center gap-1 truncate">
                     <Briefcase className="h-3 w-3" />
                     <span className="truncate">{projectTitle}</span>

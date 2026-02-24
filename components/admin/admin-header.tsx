@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import {
@@ -38,24 +38,24 @@ export function AdminHeader({ user }: AdminHeaderProps) {
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="mr-2 h-4" />
-        <Link href="/admin/dashboard" className="flex items-center gap-2">
+        <LocaleLink href="/admin/dashboard" className="flex items-center gap-2">
           <Image src="/logo-main.png" alt="JBC Logo" width={160} height={78} className="h-10 w-auto" />
           <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded">Admin</span>
-        </Link>
+        </LocaleLink>
       </div>
 
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="sm" asChild>
-          <Link href="/" target="_blank" className="flex items-center gap-1">
+          <LocaleLink href="/" target="_blank" className="flex items-center gap-1">
             <ExternalLink className="h-4 w-4" />
             View Site
-          </Link>
+          </LocaleLink>
         </Button>
 
         <Button variant="ghost" size="icon" asChild>
-          <Link href="/admin/notifications">
+          <LocaleLink href="/admin/notifications">
             <Bell className="h-5 w-5" />
-          </Link>
+          </LocaleLink>
         </Button>
 
         <DropdownMenu>
@@ -78,10 +78,10 @@ export function AdminHeader({ user }: AdminHeaderProps) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href="/admin/settings" className="flex items-center gap-2 cursor-pointer">
+              <LocaleLink href="/admin/settings" className="flex items-center gap-2 cursor-pointer">
                 <Settings className="h-4 w-4" />
                 Settings
-              </Link>
+              </LocaleLink>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600">

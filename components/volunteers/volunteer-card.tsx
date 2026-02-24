@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -140,16 +140,16 @@ export function VolunteerCard({ volunteer }: VolunteerCardProps) {
         {/* Actions */}
         <div className="px-6 pb-6 flex gap-2">
           <Button asChild variant="outline" className="flex-1">
-            <Link href={`/volunteers/${volunteer.id}`}>
+            <LocaleLink href={`/volunteers/${volunteer.id}`}>
               <Eye className="h-4 w-4 mr-2" />
               View Profile
-            </Link>
+            </LocaleLink>
           </Button>
           {isLocked ? (
             <Button className="flex-1" asChild>
-              <Link href="/pricing">
+              <LocaleLink href="/pricing">
                 Subscribe
-              </Link>
+              </LocaleLink>
             </Button>
           ) : (
             <Button className="flex-1" disabled={!volunteer.canMessage}>

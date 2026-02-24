@@ -1,5 +1,8 @@
+"use client"
+
 import type React from "react"
-import Link from "next/link"
+import { useState, useEffect } from "react"
+import LocaleLink from "@/components/locale-link"
 import { getSkillCategoryCounts } from "@/lib/actions"
 import { Megaphone, Code, Palette, Calculator, Target, Users, Heart } from "lucide-react"
 
@@ -13,10 +16,13 @@ const iconMap: { [key: string]: React.ElementType } = {
   Heart,
 }
 
-export async function SkillCategories() {
-  // Fetch real project counts from database
-  const categories = await getSkillCategoryCounts()
-  
+export function SkillCategories() {
+  const [categories, setCategories] = useState<Awaited<ReturnType<typeof getSkillCategoryCounts>>>([]);
+
+  useEffect(() => {
+    getSkillCategoryCounts().then(setCategories);
+  }, []);
+
   return (
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4 md:px-6">
@@ -31,7 +37,7 @@ export async function SkillCategories() {
           {categories.map((category) => {
             const Icon = iconMap[category.icon] || Code
             return (
-              <Link
+              <LocaleLink
                 key={category.id}
                 href={`/projects?skill=${encodeURIComponent(category.id)}`}
                 className="group p-6 rounded-2xl bg-card border border-border hover:border-primary/50 hover:shadow-lg transition-all duration-300"
@@ -45,7 +51,7 @@ export async function SkillCategories() {
                   </h3>
                   <p className="text-sm text-muted-foreground">{category.count} opportunities</p>
                 </div>
-              </Link>
+              </LocaleLink>
             )
           })}
         </div>
