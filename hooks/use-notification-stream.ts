@@ -27,7 +27,7 @@ export function useNotificationStream(): UseNotificationStreamReturn {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [connected, setConnected] = useState(false)
   const eventSourceRef = useRef<EventSource | null>(null)
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const connect = useCallback(() => {
     // Cleanup existing connection
