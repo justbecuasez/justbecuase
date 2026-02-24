@@ -147,6 +147,14 @@ export async function GET(request: NextRequest) {
           skills,
           verified: m.isVerified || false,
           matchedField: r.highlights?.length > 0 ? r.highlights[0] : undefined,
+          // Extra metadata for richer cards
+          volunteerType: m.volunteerType || undefined,
+          workMode: m.workMode || undefined,
+          experienceLevel: m.experienceLevel || undefined,
+          rating: m.rating || undefined,
+          causes: Array.isArray(m.causeNames) && m.causeNames.length > 0 ? m.causeNames : undefined,
+          ngoName: m.ngoName || undefined,
+          status: m.status || undefined,
         }
       })
 

@@ -332,16 +332,24 @@ async function getPrefixSearchSuggestions(
   indexes: string[],
   limit: number
 ): Promise<ESSuggestion[]> {
-  // Use bool_prefix multi_match for partial word matching
+  // Clean the query — strip intent/noise words so suggestions focus on skills/names
+  const textQuery = cleanQueryForTextSearch(query)
+  console.log(`[ES Suggest] Cleaned query for prefix: "${query}" → "${textQuery}"`)
+
+  // Detect intent from original query for boosting
+  const intent = detectQueryIntent(query)
+  const intentBoosts = intent.boosts.length > 0 ? intent.boosts : []
+
+  // Use bool_prefix multi_match with CLEANED query for partial word matching
   const response = await esClient.search({
     index: indexes,
     query: {
       bool: {
         should: [
-          // Prefix matching across all searchable fields
+          // Prefix matching across key fields only (no bio/description/content)
           {
             multi_match: {
-              query,
+              query: textQuery,
               type: "bool_prefix",
               fields: [
                 "name^10",
@@ -350,36 +358,33 @@ async function getPrefixSearchSuggestions(
                 "orgName.exact^15",
                 "title^10",
                 "title.exact^15",
-                "skillNames^8",
+                "skillNames^12",
+                "skillCategories^8",
                 "causeNames^6",
                 "headline^5",
-                "description^3",
-                "bio^3",
-                "mission^3",
-                "city^4",
-                "country^3",
-                "location^4",
                 "tags^5",
-                "content^2",
-                "excerpt^4",
+                "city^3",
               ],
               fuzziness: "AUTO",
             },
           },
-          // Boost exact keyword matches
+          // Boost exact phrase prefix matches on skill names / titles
           {
             multi_match: {
-              query,
+              query: textQuery,
               type: "phrase_prefix",
               fields: [
+                "skillNames^14",
                 "name^12",
                 "orgName^12",
                 "title^12",
-                "skillNames^10",
                 "causeNames^8",
               ],
+              boost: 2.0,
             },
           },
+          // Add intent-based boosts (e.g. experience level, pricing)
+          ...intentBoosts,
         ],
         minimum_should_match: 1,
       },
@@ -397,6 +402,62 @@ async function getPrefixSearchSuggestions(
   }
 
   return suggestions
+}
+
+// ============================================
+// QUERY CLEANING — strip intent/noise words
+// ============================================
+// Removes words that indicate intent (experience, years, pricing,
+// work-mode, etc.) from the raw query so the core text-matching
+// only uses the "what" (skills, role, name) and not the "how".
+// The stripped tokens are handled separately via detectQueryIntent.
+// ============================================
+
+function cleanQueryForTextSearch(query: string): string {
+  let cleaned = query
+
+  // Remove numeric experience patterns: "2 year experience", "5+ years of exp", "10 yrs"
+  cleaned = cleaned.replace(/\b\d+\+?\s*(?:years?|yrs?|yr)\s*(?:of\s+)?(?:experience|exp)?\b/gi, " ")
+
+  // Remove standalone intent words
+  const intentWords = [
+    // Experience / level
+    "experience", "experienced", "expert", "beginner", "intermediate",
+    "senior", "junior", "fresher", "entry-level", "entry level", "specialist",
+    "veteran", "seasoned", "newbie", "newcomer", "intern", "level",
+    // Pricing
+    "free", "paid", "premium", "pro bono", "probono", "affordable",
+    "cheap", "budget", "low cost", "no cost",
+    // Work mode
+    "remote", "onsite", "on-site", "hybrid", "work from home", "wfh",
+    "online", "virtual", "in person", "in-person",
+    // Urgency / quality
+    "urgent", "asap", "immediately",
+    "verified", "trusted", "reliable", "top", "best", "rated",
+    "top rated", "highly rated",
+    // Availability
+    "weekend", "weekday", "evening", "part-time", "full-time",
+    "flexible", "anytime",
+    // Common filler prepositions / articles (only if not the entire query)
+    "with", "for", "who", "that", "has", "have", "having",
+    "looking", "need", "find", "search", "looking for",
+  ]
+
+  // Sort longest first so multi-word patterns are removed before their sub-words
+  const sortedIntentWords = [...intentWords].sort((a, b) => b.length - a.length)
+  for (const w of sortedIntentWords) {
+    const regex = new RegExp(`\\b${w.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}\\b`, "gi")
+    cleaned = cleaned.replace(regex, " ")
+  }
+
+  // Remove lone numbers that aren't part of a word (e.g. leftover "2" from "2 year")
+  cleaned = cleaned.replace(/\b\d+\b/g, " ")
+
+  // Collapse whitespace
+  cleaned = cleaned.replace(/\s+/g, " ").trim()
+
+  // If cleaning stripped everything, fall back to original
+  return cleaned.length >= 2 ? cleaned : query.trim()
 }
 
 // ============================================
@@ -571,22 +632,27 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
   const should: any[] = []
   const filterClauses: any[] = []
 
-  // Detect NL intent signals from query
+  // Detect NL intent signals from raw query
   const intent = detectQueryIntent(query)
   if (intent.signals.length > 0) {
     console.log(`[ES Search] Detected intent signals: ${intent.signals.join(", ")}`)
   }
 
-  // Adaptive minimum_should_match based on query length
-  const wordCount = query.split(/\s+/).length
-  const minMatch = wordCount <= 2 ? "75%" : wordCount <= 4 ? "50%" : "30%"
+  // Clean query — remove intent/noise words so text matching focuses on the "what"
+  const textQuery = cleanQueryForTextSearch(query)
+  console.log(`[ES Search] Cleaned query: "${query}" → "${textQuery}"`)
+
+  // Adaptive minimum_should_match based on cleaned word count
+  const wordCount = textQuery.split(/\s+/).length
+  const minMatch = wordCount <= 2 ? "75%" : wordCount <= 4 ? "60%" : "40%"
 
   // Primary search — hybrid: text + semantic
+  // Uses the CLEANED query (intent words removed) for text matching
   should.push(
-    // Text search with field boosting (BM25)
+    // Text search with field boosting (BM25) — high weight on skill/role fields
     {
       multi_match: {
-        query,
+        query: textQuery,
         type: "most_fields",
         fields: [
           "name^10",
@@ -596,8 +662,8 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
           "title^10",
           "title.exact^15",
           "headline^6",
-          "skillNames^8",
-          "skillCategories^5",
+          "skillNames^12",
+          "skillCategories^8",
           "causeNames^6",
           "bio^3",
           "description^4",
@@ -612,7 +678,7 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
           "interests^2",
         ],
         fuzziness: "AUTO",
-        prefix_length: 1,
+        prefix_length: 2,
         operator: "or",
         minimum_should_match: minMatch,
       },
@@ -620,14 +686,14 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
     // Cross-fields match — treats all fields as one big field (great for multi-concept queries)
     {
       multi_match: {
-        query,
+        query: textQuery,
         type: "cross_fields",
         fields: [
           "name^5",
           "orgName^5",
           "title^5",
           "headline^4",
-          "skillNames^6",
+          "skillNames^8",
           "bio^3",
           "description^3",
         ],
@@ -636,10 +702,10 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
         boost: 1.5,
       },
     },
-    // Phrase match (boost exact phrases)
+    // Phrase match (boost exact phrases) — uses cleaned query
     {
       multi_match: {
-        query,
+        query: textQuery,
         type: "phrase",
         fields: [
           "name^15",
@@ -648,22 +714,22 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
           "headline^8",
           "description^5",
           "bio^5",
-          "skillNames^10",
+          "skillNames^14",
         ],
         slop: 2,
-        boost: 2.0,
+        boost: 2.5,
       },
     },
     // Prefix matching for instant search-as-you-type
     {
       multi_match: {
-        query,
+        query: textQuery,
         type: "bool_prefix",
         fields: [
           "name^8",
           "orgName^8",
           "title^8",
-          "skillNames^6",
+          "skillNames^8",
           "causeNames^5",
           "city^4",
         ],
@@ -671,7 +737,7 @@ function buildSearchQuery(query: string, filters?: ESSearchParams["filters"]): R
     }
   )
 
-  // Semantic search via semantic_text (if available)
+  // Semantic search via semantic_text (if available) — uses ORIGINAL query for NL understanding
   // This will be ignored gracefully on indexes without semantic_text
   should.push({
     semantic: {
@@ -939,17 +1005,27 @@ function hitToSuggestion(
   let subtitle = ""
 
   switch (type) {
-    case "volunteer":
+    case "volunteer": {
       text = source.name || "Volunteer"
-      subtitle = source.headline || source.city || (source.skillNames && source.skillNames.length > 0 ? `${Array.isArray(source.skillNames) ? source.skillNames.slice(0, 2).join(", ") : String(source.skillNames).substring(0, 60)}` : "")
+      // Show location first, then top skills — gives a quick profile snapshot
+      const location = source.city || source.country || ""
+      const skillPreview = Array.isArray(source.skillNames) && source.skillNames.length > 0
+        ? source.skillNames.slice(0, 2).join(", ")
+        : ""
+      if (location && skillPreview) {
+        subtitle = `${location} · ${skillPreview}`
+      } else {
+        subtitle = source.headline || location || skillPreview || ""
+      }
       break
+    }
     case "ngo":
       text = source.orgName || "Organization"
       subtitle = source.city || source.mission?.substring(0, 60) || ""
       break
     case "project":
       text = source.title || "Project"
-      subtitle = source.description?.substring(0, 60) || ""
+      subtitle = source.description?.replace(/<[^>]*>/g, "").substring(0, 60) || ""
       break
     case "blog":
       text = source.title || "Blog Post"

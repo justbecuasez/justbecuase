@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import {
   Search, Users, Building2, Briefcase, ArrowRight, MapPin,
   CheckCircle, Loader2, X, Clock, TrendingUp, Sparkles,
-  ChevronRight, ArrowUpRight,
+  ChevronRight, ArrowUpRight, Star, Globe,
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -32,6 +32,13 @@ interface SearchResult {
   verified?: boolean
   matchedField?: string
   url?: string
+  volunteerType?: string
+  workMode?: string
+  experienceLevel?: string
+  rating?: number
+  causes?: string[]
+  ngoName?: string
+  status?: string
 }
 
 interface SearchSuggestion {
@@ -830,6 +837,14 @@ export function GlobalSearchSection() {
                       {results.map((result, index) => {
                         const config = TYPE_CONFIG[result.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.opportunity
                         const Icon = config.icon
+                        // Format work mode label
+                        const workModeLabel = result.workMode === "remote" ? "Remote" : result.workMode === "onsite" ? "On-site" : result.workMode === "hybrid" ? "Hybrid" : null
+                        // Format volunteer type label
+                        const pricingLabel = result.volunteerType === "free" ? "Pro Bono" : result.volunteerType === "paid" ? "Paid" : null
+                        // Description snippet — strip HTML and truncate
+                        const descSnippet = result.description
+                          ? result.description.replace(/<[^>]*>/g, "").substring(0, 100).trim() + (result.description.length > 100 ? "…" : "")
+                          : null
                         return (
                           <motion.div
                             key={`${result.type}-${result.id}`}
@@ -840,79 +855,127 @@ export function GlobalSearchSection() {
                             <Link
                               href={getResultLink(result)}
                               onClick={() => addRecentSearch(searchQuery)}
-                              className="block p-4 bg-background rounded-xl border hover:border-primary/50 hover:shadow-lg transition-all duration-200 group h-full"
+                              className="block bg-background rounded-xl border hover:border-primary/50 hover:shadow-lg transition-all duration-200 group h-full overflow-hidden"
                             >
-                              <div className="flex items-start gap-3">
-                                {/* Avatar/Icon */}
-                                <div className="flex-shrink-0">
-                                  {result.avatar ? (
-                                    <img
-                                      src={result.avatar}
-                                      alt={result.title}
-                                      className="w-12 h-12 rounded-lg object-cover bg-muted"
-                                      loading="lazy"
-                                      onError={(e) => {
-                                        (e.target as HTMLImageElement).style.display = "none"
-                                        const parent = (e.target as HTMLImageElement).parentElement
-                                        if (parent) {
-                                          parent.innerHTML = `<div class="w-12 h-12 rounded-lg flex items-center justify-center ${config.badgeClass}"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>`
-                                        }
-                                      }}
-                                    />
-                                  ) : (
-                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${config.badgeClass}`}>
-                                      <Icon className="h-5 w-5" />
-                                    </div>
+                              {/* Card Header — type badge strip */}
+                              <div className={`px-4 py-1.5 flex items-center justify-between border-b ${
+                                result.type === "volunteer" ? "bg-blue-50 dark:bg-blue-950/20" :
+                                result.type === "ngo" ? "bg-green-50 dark:bg-green-950/20" :
+                                "bg-purple-50 dark:bg-purple-950/20"
+                              }`}>
+                                <Badge variant="secondary" className={`text-[10px] px-2 py-0.5 font-medium ${config.badgeClass}`}>
+                                  <Icon className="h-2.5 w-2.5 mr-1" />
+                                  {config.label}
+                                </Badge>
+                                <div className="flex items-center gap-1.5">
+                                  {workModeLabel && (
+                                    <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                      <Globe className="h-2.5 w-2.5" />
+                                      {workModeLabel}
+                                    </span>
+                                  )}
+                                  {pricingLabel && (
+                                    <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${pricingLabel === "Pro Bono" ? "border-emerald-300 text-emerald-700 dark:text-emerald-400" : "border-amber-300 text-amber-700 dark:text-amber-400"}`}>
+                                      {pricingLabel}
+                                    </Badge>
                                   )}
                                 </div>
+                              </div>
 
-                                <div className="flex-1 min-w-0">
-                                  {/* Title */}
-                                  <div className="flex items-center gap-1.5 mb-1">
-                                    <h3 className="font-medium text-foreground truncate group-hover:text-primary transition-colors text-sm">
-                                      <HighlightedText text={result.title} query={searchQuery} />
-                                    </h3>
-                                    {result.verified && (
-                                      <CheckCircle className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                              <div className="p-4">
+                                <div className="flex items-start gap-3">
+                                  {/* Avatar/Icon */}
+                                  <div className="flex-shrink-0">
+                                    {result.avatar ? (
+                                      <img
+                                        src={result.avatar}
+                                        alt={result.title}
+                                        className="w-12 h-12 rounded-full object-cover bg-muted ring-2 ring-background shadow-sm"
+                                        loading="lazy"
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).style.display = "none"
+                                          const parent = (e.target as HTMLImageElement).parentElement
+                                          if (parent) {
+                                            parent.innerHTML = `<div class="w-12 h-12 rounded-full flex items-center justify-center ${config.badgeClass} ring-2 ring-background shadow-sm"><svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>`
+                                          }
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${config.badgeClass} ring-2 ring-background shadow-sm`}>
+                                        <Icon className="h-5 w-5" />
+                                      </div>
                                     )}
                                   </div>
 
-                                  {/* Subtitle */}
-                                  {result.subtitle && (
-                                    <p className="text-xs text-muted-foreground truncate mb-1.5">
-                                      <HighlightedText text={result.subtitle} query={searchQuery} />
-                                    </p>
-                                  )}
-
-                                  {/* Meta */}
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 ${config.badgeClass}`}>
-                                      {config.label}
-                                    </Badge>
-                                    {result.location && (
-                                      <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
-                                        <MapPin className="h-2.5 w-2.5" />
-                                        <HighlightedText text={result.location} query={searchQuery} />
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  {/* Skills */}
-                                  {result.skills && result.skills.length > 0 && (
-                                    <div className="flex gap-1 mt-1.5 flex-wrap">
-                                      {result.skills.slice(0, 2).map((skill) => (
-                                        <Badge key={skill} variant="outline" className="text-[10px] px-1.5 py-0">
-                                          {resolveSkillName(skill)}
-                                        </Badge>
-                                      ))}
-                                      {result.skills.length > 2 && (
-                                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                          +{result.skills.length - 2}
-                                        </Badge>
+                                  <div className="flex-1 min-w-0">
+                                    {/* Title + verified */}
+                                    <div className="flex items-center gap-1.5 mb-0.5">
+                                      <h3 className="font-semibold text-foreground truncate group-hover:text-primary transition-colors text-sm">
+                                        <HighlightedText text={result.title} query={searchQuery} />
+                                      </h3>
+                                      {result.verified && (
+                                        <CheckCircle className="h-3.5 w-3.5 text-primary flex-shrink-0" fill="currentColor" strokeWidth={0} />
                                       )}
                                     </div>
-                                  )}
+
+                                    {/* Subtitle / headline */}
+                                    {result.subtitle && (
+                                      <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
+                                        <HighlightedText text={result.subtitle} query={searchQuery} />
+                                      </p>
+                                    )}
+
+                                    {/* Location + Rating row */}
+                                    <div className="flex items-center gap-2.5 flex-wrap">
+                                      {result.location && (
+                                        <span className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+                                          <MapPin className="h-2.5 w-2.5 flex-shrink-0" />
+                                          <HighlightedText text={result.location} query={searchQuery} />
+                                        </span>
+                                      )}
+                                      {result.rating && result.rating > 0 && (
+                                        <span className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-0.5 font-medium">
+                                          <Star className="h-2.5 w-2.5 fill-current" />
+                                          {result.rating.toFixed(1)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
+
+                                {/* Description snippet */}
+                                {descSnippet && (
+                                  <p className="text-[11px] text-muted-foreground mt-2.5 line-clamp-2 leading-relaxed">
+                                    {descSnippet}
+                                  </p>
+                                )}
+
+                                {/* Skills */}
+                                {result.skills && result.skills.length > 0 && (
+                                  <div className="flex gap-1 mt-2.5 flex-wrap">
+                                    {result.skills.slice(0, 3).map((skill) => (
+                                      <Badge key={skill} variant="outline" className="text-[10px] px-1.5 py-0.5 font-normal bg-muted/50">
+                                        {resolveSkillName(skill)}
+                                      </Badge>
+                                    ))}
+                                    {result.skills.length > 3 && (
+                                      <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 font-normal text-muted-foreground">
+                                        +{result.skills.length - 3}
+                                      </Badge>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Causes (for NGOs/opportunities) */}
+                                {result.causes && result.causes.length > 0 && !result.skills?.length && (
+                                  <div className="flex gap-1 mt-2.5 flex-wrap">
+                                    {result.causes.slice(0, 3).map((cause) => (
+                                      <Badge key={cause} variant="outline" className="text-[10px] px-1.5 py-0.5 font-normal bg-muted/50 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400">
+                                        {cause}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
                             </Link>
                           </motion.div>
