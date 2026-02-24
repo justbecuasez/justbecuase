@@ -13,8 +13,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Separator } from "@/components/ui/separator"
 import { Heart, Mail, Lock, Loader2 } from "lucide-react"
 import { signIn, getSession } from "@/lib/auth-client"
+import { useDictionary } from "@/components/dictionary-provider"
 
 export default function SignInPage() {
+  const dict = useDictionary()
+  const a = (dict as any).auth || {}
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [socialLoading, setSocialLoading] = useState<"google" | "linkedin" | null>(null)
@@ -110,8 +113,8 @@ export default function SignInPage() {
 
           <Card className="border-0 shadow-lg">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl">Welcome back</CardTitle>
-              <CardDescription>Sign in to your account to continue making an impact</CardDescription>
+              <CardTitle className="text-2xl">{a.welcomeBack || "Welcome back"}</CardTitle>
+              <CardDescription>{a.signInContinue || "Sign in to your account to continue making an impact"}</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -121,13 +124,13 @@ export default function SignInPage() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{a.email || "Email"}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       id="email"
                       type="email"
-                      placeholder="you@example.com"
+                      placeholder={a.emailPlaceholder || "you@example.com"}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-10"
@@ -138,9 +141,9 @@ export default function SignInPage() {
 
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">{a.password || "Password"}</Label>
                     <LocaleLink href="/auth/forgot-password" className="text-sm text-primary hover:underline">
-                      Forgot password?
+                      {a.forgotPasswordLink || "Forgot password?"}
                     </LocaleLink>
                   </div>
                   <div className="relative">
@@ -148,7 +151,7 @@ export default function SignInPage() {
                     <Input
                       id="password"
                       type="password"
-                      placeholder="Enter your password"
+                      placeholder={a.passwordPlaceholder || "Enter your password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10"
@@ -161,10 +164,10 @@ export default function SignInPage() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Signing in...
+                      {a.signingIn || "Signing in..."}
                     </>
                   ) : (
-                    "Sign In"
+                    a.signIn || "Sign In"
                   )}
                 </Button>
               </form>
@@ -172,7 +175,7 @@ export default function SignInPage() {
               <div className="relative my-6">
                 <Separator />
                 <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-                  or continue with
+                  {a.orContinueWith || "or continue with"}
                 </span>
               </div>
 
@@ -227,9 +230,9 @@ export default function SignInPage() {
               </div>
 
               <p className="mt-6 text-center text-sm text-muted-foreground">
-                {"Don't have an account? "}
+                {(a.dontHaveAccount || "Don't have an account?") + " "}
                 <LocaleLink href="/auth/signup" className="text-primary hover:underline font-medium">
-                  Sign up
+                  {a.signUp || "Sign up"}
                 </LocaleLink>
               </p>
             </CardContent>
@@ -240,28 +243,28 @@ export default function SignInPage() {
       {/* Right Side - Image/Info */}
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary to-primary/80 items-center justify-center p-12">
         <div className="max-w-md text-primary-foreground">
-          <h2 className="text-3xl font-bold mb-4">Make a Difference Today</h2>
+          <h2 className="text-3xl font-bold mb-4">{a.makeDifference || "Make a Difference Today"}</h2>
           <p className="text-primary-foreground/90 mb-8">
-            Join thousands of skilled professionals who are creating lasting impact in communities worldwide.
+            {a.makeDifferenceDesc || "Join thousands of skilled professionals who are creating lasting impact in communities worldwide."}
           </p>
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
                 <Heart className="h-5 w-5" />
               </div>
-              <span>Connect with meaningful opportunities</span>
+              <span>{a.connectOpportunities || "Connect with meaningful opportunities"}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
                 <Heart className="h-5 w-5" />
               </div>
-              <span>Use your skills for social good</span>
+              <span>{a.skillsForGood || "Use your skills for social good"}</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
                 <Heart className="h-5 w-5" />
               </div>
-              <span>Track your impact journey</span>
+              <span>{a.trackImpact || "Track your impact journey"}</span>
             </div>
           </div>
         </div>

@@ -6,41 +6,45 @@ import { Card, CardContent } from "@/components/ui/card";
 import LocaleLink from "@/components/locale-link";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useDictionary } from "@/components/dictionary-provider";
 
 export function HowItWorks() {
+  const dict = useDictionary();
+  const home = dict.home || {};
+
   const volunteerSteps = [
     {
       icon: UserPlus,
-      title: "Create Your Profile",
-      description: "Sign up and showcase your skills, experience, and the causes you care about.",
+      title: home.volStep1Title || "Create Your Profile",
+      description: home.volStep1Desc || "Sign up and showcase your skills, experience, and the causes you care about.",
     },
     {
       icon: Search,
-      title: "Discover Opportunities",
-      description: "Browse meaningful opportunities matched to your expertise. Filter by skills, time, and location.",
+      title: home.volStep2Title || "Discover Opportunities",
+      description: home.volStep2Desc || "Browse meaningful opportunities matched to your expertise. Filter by skills, time, and location.",
     },
     {
       icon: Rocket,
-      title: "Make an Impact",
-      description: "Complete opportunities, build your portfolio, and create lasting change for communities.",
+      title: home.volStep3Title || "Make an Impact",
+      description: home.volStep3Desc || "Complete opportunities, build your portfolio, and create lasting change for communities.",
     },
   ];
 
   const ngoSteps = [
     {
       icon: FileText,
-      title: "Post Your Opportunity",
-      description: "Describe your needs in just 5 minutes using our pre-scoped templates.",
+      title: home.ngoStep1Title || "Post Your Opportunity",
+      description: home.ngoStep1Desc || "Describe your needs in just 5 minutes using our pre-scoped templates.",
     },
     {
       icon: Users,
-      title: "Review Applications",
-      description: "Browse impact agent profiles, check ratings, and find the perfect match for your opportunity.",
+      title: home.ngoStep2Title || "Review Applications",
+      description: home.ngoStep2Desc || "Browse impact agent profiles, check ratings, and find the perfect match for your opportunity.",
     },
     {
       icon: CheckCircle,
-      title: "Get Expert Help",
-      description: "Collaborate with skilled impact agents and receive professional-quality deliverables.",
+      title: home.ngoStep3Title || "Get Expert Help",
+      description: home.ngoStep3Desc || "Collaborate with skilled impact agents and receive professional-quality deliverables.",
     },
   ];
 
@@ -77,14 +81,13 @@ export function HowItWorks() {
             viewport={{ once: true }}
           >
             <span className="inline-block px-4 py-1.5 mb-4 text-xs font-bold tracking-widest uppercase rounded-full bg-primary/10 text-primary">
-              The Ecosystem
+              {home.theEcosystem || "The Ecosystem"}
             </span>
             <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight text-foreground mb-6 text-balance">
-              The Global Purpose-Driven Exchange
+              {home.ecosystemTitle || "The Global Purpose-Driven Exchange"}
             </h2>
             <p className="text-xl text-muted-foreground leading-relaxed">
-              Where <span className="text-foreground font-semibold">"Time"</span> is the premium currency. 
-              Bridging the gap between world-class talent and social impact.
+              {home.ecosystemDesc || 'Where "Time" is the premium currency. Bridging the gap between world-class talent and social impact.'}
             </p>
           </motion.div>
         </div>
@@ -96,13 +99,13 @@ export function HowItWorks() {
                 value="volunteers" 
                 className="px-8 py-2.5 rounded-full text-sm font-semibold transition-all data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-md"
               >
-                For Impact Agents
+                {home.forImpactAgentsTab || "For Impact Agents"}
               </TabsTrigger>
               <TabsTrigger 
                 value="ngos" 
                 className="px-8 py-2.5 rounded-full text-sm font-semibold transition-all data-[state=active]:bg-background data-[state=active]:text-secondary data-[state=active]:shadow-md"
               >
-                For NGOs
+                {home.forNGOsTab || "For NGOs"}
               </TabsTrigger>
             </TabsList>
           </div>
@@ -149,7 +152,7 @@ export function HowItWorks() {
               className="mt-16 text-center"
             >
               <Button asChild size="lg" className="h-12 px-10 bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl shadow-primary/20 rounded-full transition-all hover:scale-105 active:scale-95">
-                <LocaleLink href="/for-volunteers">Join as an Impact Agent</LocaleLink>
+                <LocaleLink href="/for-volunteers">{home.joinAsImpactAgent || "Join as an Impact Agent"}</LocaleLink>
               </Button>
             </motion.div>
           </TabsContent>
@@ -196,7 +199,7 @@ export function HowItWorks() {
               className="mt-16 text-center"
             >
               <Button asChild size="lg" className="h-12 px-10 bg-secondary hover:bg-secondary/90 text-secondary-foreground shadow-xl shadow-secondary/20 rounded-full transition-all hover:scale-105 active:scale-95">
-                <LocaleLink href="/for-ngos">Register Organization</LocaleLink>
+                <LocaleLink href="/for-ngos">{home.registerOrganization || "Register Organization"}</LocaleLink>
               </Button>
             </motion.div>
           </TabsContent>

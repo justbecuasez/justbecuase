@@ -6,8 +6,11 @@ import Image from "next/image"
 import { NewsletterSubscribe } from "./newsletter-subscribe"
 import { usePlatformSettingsStore } from "@/lib/store"
 import LocaleLink from "@/components/locale-link"
+import { useDictionary } from "@/components/dictionary-provider"
 
 export function Footer() {
+  const dict = useDictionary()
+  const footer = dict.footer || {}
   // Get platform settings for branding and social links
   const platformSettings = usePlatformSettingsStore((state) => state.settings)
   const platformName = platformSettings?.platformName || "JustBeCause Network"
@@ -55,21 +58,21 @@ export function Footer() {
 
           {/* For Volunteers */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">For Impact Agents</h4>
+            <h4 className="font-semibold text-foreground mb-4">{footer.forImpactAgents || "For Impact Agents"}</h4>
             <ul className="space-y-3">
               <li>
                 <LocaleLink href="/projects" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Browse Opportunities
+                  {footer.browseOpportunities || "Browse Opportunities"}
                 </LocaleLink>
               </li>
               <li>
                 <LocaleLink href="/for-volunteers" className="text-muted-foreground hover:text-foreground transition-colors">
-                  How It Works
+                  {footer.howItWorks || "How It Works"}
                 </LocaleLink>
               </li>
               <li>
                 <LocaleLink href="/auth/signup" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Create Profile
+                  {footer.createProfile || "Create Profile"}
                 </LocaleLink>
               </li>
               <li>
@@ -77,7 +80,7 @@ export function Footer() {
                   href="/volunteer/dashboard"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Dashboard
+                  {footer.dashboard || "Dashboard"}
                 </LocaleLink>
               </li>
             </ul>
@@ -85,11 +88,11 @@ export function Footer() {
 
           {/* For NGOs */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">For NGOs</h4>
+            <h4 className="font-semibold text-foreground mb-4">{footer.forNGOs || "For NGOs"}</h4>
             <ul className="space-y-3">
               <li>
                 <LocaleLink href="/for-ngos" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Why Partner
+                  {footer.whyPartner || "Why Partner"}
                 </LocaleLink>
               </li>
               <li>
@@ -97,12 +100,12 @@ export function Footer() {
                   href="/ngo/post-project"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Post an Opportunity
+                  {footer.postOpportunity || "Post an Opportunity"}
                 </LocaleLink>
               </li>
               <li>
                 <LocaleLink href="/ngo/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Dashboard
+                  {footer.dashboard || "Dashboard"}
                 </LocaleLink>
               </li>
             </ul>
@@ -110,26 +113,26 @@ export function Footer() {
 
           {/* Company */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Company</h4>
+            <h4 className="font-semibold text-foreground mb-4">{footer.company || "Company"}</h4>
             <ul className="space-y-3">
               <li>
                 <LocaleLink href="/about" className="text-muted-foreground hover:text-foreground transition-colors">
-                  About Us
+                  {footer.aboutUs || "About Us"}
                 </LocaleLink>
               </li>
               <li>
                 <LocaleLink href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Blog
+                  {footer.blog || "Blog"}
                 </LocaleLink>
               </li>
               <li>
                 <LocaleLink href="/changelog" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Changelog
+                  {footer.changelog || "Changelog"}
                 </LocaleLink>
               </li>
               <li>
                 <LocaleLink href="/contact" className="text-muted-foreground hover:text-foreground transition-colors">
-                  Contact
+                  {footer.contactUs || "Contact"}
                 </LocaleLink>
               </li>
             </ul>
@@ -139,9 +142,9 @@ export function Footer() {
         <div className="border-t border-border mt-12 pt-8">
           {/* Newsletter */}
           <div className="max-w-md mx-auto mb-8">
-            <h4 className="font-semibold text-foreground mb-2 text-center">Stay Updated</h4>
+            <h4 className="font-semibold text-foreground mb-2 text-center">{footer.stayUpdated || "Stay Updated"}</h4>
             <p className="text-sm text-muted-foreground mb-4 text-center">
-              Get the latest opportunities and impact stories delivered to your inbox.
+              {footer.newsletterDesc || "Get the latest opportunities and impact stories delivered to your inbox."}
             </p>
             <NewsletterSubscribe />
           </div>
@@ -149,14 +152,14 @@ export function Footer() {
           {/* Bottom Bar */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} {platformName}. All rights reserved.
+              © {new Date().getFullYear()} {platformName}. {footer.rights || "All rights reserved."}
             </p>
             <div className="flex items-center gap-6">
               <LocaleLink href="/privacy" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Privacy Policy
+                {footer.privacyPolicy || "Privacy Policy"}
               </LocaleLink>
               <LocaleLink href="/terms" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Terms of Service
+                {footer.termsOfService || "Terms of Service"}
               </LocaleLink>
             </div>
           </div>

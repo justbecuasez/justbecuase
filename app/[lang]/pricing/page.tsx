@@ -15,8 +15,11 @@ import { formatPrice, getCurrencySymbol } from "@/lib/currency"
 import { Input } from "@/components/ui/input"
 import type { SupportedCurrency } from "@/lib/types"
 import { PricingPageSkeleton } from "@/components/ui/page-skeletons"
+import { useDictionary } from "@/components/dictionary-provider"
 
 export default function PricingPage() {
+  const dict = useDictionary()
+  const p = (dict as any).pricing || {}
   const { data: session } = client.useSession()
   const user = session?.user
   const userRole = user?.role as string | undefined
@@ -93,20 +96,20 @@ export default function PricingPage() {
   const ngoPlans = [
     {
       id: "ngo-free",
-      name: "Free",
-      description: "Perfect for small NGOs just getting started",
+      name: p.free || "Free",
+      description: p.ngoFreeDesc || "Perfect for small NGOs just getting started",
       price: 0,
       priceDisplay: `${currencySymbol}0`,
-      period: "forever",
+      period: p.forever || "forever",
       icon: Building2,
-      features: [
+      features: (p.ngoFreeFeatures || [
         `Post up to ${platformSettings?.ngoFreeProjectsPerMonth || 3} projects per month`,
         "Browse impact agent profiles",
         "View paid impact agent profiles",
         "Basic impact agent matching",
         "Email support",
-      ],
-      limitations: [
+      ]).map((f: string) => f.replace("{count}", String(platformSettings?.ngoFreeProjectsPerMonth || 3))),
+      limitations: p.ngoFreeLimitations || [
         "Cannot unlock FREE impact agent profiles",
         "Upgrade to Pro to unlock impact agents",
       ],
@@ -114,13 +117,13 @@ export default function PricingPage() {
     },
     {
       id: "ngo-pro",
-      name: "Pro",
-      description: "Unlock unlimited FREE impact agent profiles",
+      name: p.pro || "Pro",
+      description: p.ngoProDesc || "Unlock unlimited FREE impact agent profiles",
       price: ngoProPrice,
       priceDisplay: formatPrice(ngoProPrice, currency),
-      period: "per month",
+      period: p.perMonth || "per month",
       icon: Zap,
-      features: platformSettings?.ngoProFeatures || [
+      features: platformSettings?.ngoProFeatures || p.ngoProFeaturesDefault || [
         "Unlimited opportunities",
         "Unlock UNLIMITED free impact agent profiles",
         "View all paid impact agent profiles",
@@ -137,33 +140,33 @@ export default function PricingPage() {
   const volunteerPlans = [
     {
       id: "volunteer-free",
-      name: "Free",
-      description: "Start contributing and make an impact",
+      name: p.free || "Free",
+      description: p.volFreeDesc || "Start contributing and make an impact",
       price: 0,
       priceDisplay: `${currencySymbol}0`,
-      period: "forever",
+      period: p.forever || "forever",
       icon: User,
-      features: [
+      features: (p.volFreeFeatures || [
         "Browse all opportunities",
         `${platformSettings?.volunteerFreeApplicationsPerMonth || 3} applications per month`,
         "Basic profile visibility",
         "Email notifications",
         "Community access",
-      ],
-      limitations: [
+      ]).map((f: string) => f.replace("{count}", String(platformSettings?.volunteerFreeApplicationsPerMonth || 3))),
+      limitations: (p.volFreeLimitations || [
         `Limited to ${platformSettings?.volunteerFreeApplicationsPerMonth || 3} applications/month`,
-      ],
+      ]).map((f: string) => f.replace("{count}", String(platformSettings?.volunteerFreeApplicationsPerMonth || 3))),
       popular: false,
     },
     {
       id: "volunteer-pro",
-      name: "Pro",
-      description: "Apply to unlimited jobs",
+      name: p.pro || "Pro",
+      description: p.volProDesc || "Apply to unlimited jobs",
       price: volunteerProPrice,
       priceDisplay: formatPrice(volunteerProPrice, currency),
-      period: "per month",
+      period: p.perMonth || "per month",
       icon: Sparkles,
-      features: platformSettings?.volunteerProFeatures || [
+      features: platformSettings?.volunteerProFeatures || p.volProFeaturesDefault || [
         "Unlimited job applications",
         "Featured profile badge",
         "Priority in search results",
@@ -285,7 +288,7 @@ export default function PricingPage() {
         {plan.popular && (
           <div className="absolute -top-3 left-1/2 -translate-x-1/2">
             <Badge className="bg-primary text-primary-foreground">
-              Recommended
+              {p.recommended || "Recommended"}
             </Badge>
           </div>
         )}
@@ -311,7 +314,7 @@ export default function PricingPage() {
           </ul>
           {plan.limitations.length > 0 && (
             <div className="mt-4 pt-4 border-t">
-              <p className="text-xs text-muted-foreground mb-2">Limitations:</p>
+              <p className="text-xs text-muted-foreground mb-2">{p.limitations || "Limitations:"}</p>
               {plan.limitations.map((limit, i) => (
                 <p key={i} className="text-xs text-amber-600">{limit}</p>
               ))}
@@ -329,8 +332,8 @@ export default function PricingPage() {
                     <span className="font-medium text-green-700 dark:text-green-400">{appliedCoupon.code}</span>
                     <span className="text-green-600 dark:text-green-500">
                       ({appliedCoupon.discountType === "percentage" 
-                        ? `${appliedCoupon.discountValue}% off` 
-                        : `${currencySymbol}${appliedCoupon.discountAmount} off`})
+                        ? `${appliedCoupon.discountValue}% ${p.off || "off"}` 
+                        : `${currencySymbol}${appliedCoupon.discountAmount} ${p.off || "off"}`})
                     </span>
                   </div>
                   <button onClick={clearCoupon} className="text-green-600 hover:text-green-800 dark:hover:text-green-300">
@@ -340,7 +343,7 @@ export default function PricingPage() {
               ) : (
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Coupon code"
+                    placeholder={p.couponPlaceholder || "Coupon code"}
                     value={couponInput}
                     onChange={(e) => { setCouponInput(e.target.value); setCouponError("") }}
                     className="h-8 text-sm uppercase"
@@ -353,7 +356,7 @@ export default function PricingPage() {
                     disabled={!couponInput.trim() || couponLoading}
                     onClick={() => handleApplyCoupon(plan.id)}
                   >
-                    {couponLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Apply"}
+                    {couponLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : (p.applyCoupon || "Apply")}
                   </Button>
                 </div>
               )}
@@ -365,7 +368,7 @@ export default function PricingPage() {
                   <span className="line-through">{formatPrice(appliedCoupon.originalAmount, currency)}</span>
                   {" → "}
                   <span className="font-semibold text-primary">{formatPrice(appliedCoupon.finalAmount, currency)}</span>
-                  <span className="text-muted-foreground">/month</span>
+                  <span className="text-muted-foreground">/{p.month || "month"}</span>
                 </div>
               )}
             </div>
@@ -379,14 +382,14 @@ export default function PricingPage() {
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Processing...
+                {p.processing || "Processing..."}
               </>
             ) : isCurrentPlan ? (
-              "Current Plan"
+              p.currentPlan || "Current Plan"
             ) : plan.price === 0 ? (
-              "Get Started Free"
+              p.getStartedFree || "Get Started Free"
             ) : (
-              `Upgrade to ${plan.name}`
+              (p.upgradeTo || "Upgrade to {plan}").replace("{plan}", plan.name)
             )}
           </Button>
         </CardFooter>
@@ -402,12 +405,12 @@ export default function PricingPage() {
         {/* Header */}
         <section className="py-16 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
           <div className="container mx-auto px-4 md:px-6 text-center">
-            <Badge className="mb-4">Pricing</Badge>
+            <Badge className="mb-4">{p.badge || "Pricing"}</Badge>
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Simple, transparent pricing
+              {p.title || "Simple, transparent pricing"}
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Choose the perfect plan for your needs. Upgrade anytime.
+              {p.subtitle || "Choose the perfect plan for your needs. Upgrade anytime."}
             </p>
           </div>
         </section>
@@ -425,10 +428,11 @@ export default function PricingPage() {
             {user && forcedTab && (
               <div className="text-center mb-8 p-4 bg-muted/50 rounded-lg max-w-2xl mx-auto">
                 <p className="text-muted-foreground">
-                  You're logged in as {userRole === "ngo" ? "an NGO" : "an impact agent"}. 
+                  {(p.loggedInAs || "You're logged in as {role}.").replace("{role}", userRole === "ngo" ? (p.anNGO || "an NGO") : (p.anImpactAgent || "an impact agent"))}
+                  {" "}
                   {userRole === "ngo" 
-                    ? " Upgrade your NGO subscription below."
-                    : " Upgrade your impact agent subscription below."}
+                    ? (p.ngoUpgradeHint || "Upgrade your NGO subscription below.")
+                    : (p.volunteerUpgradeHint || "Upgrade your impact agent subscription below.")}
                 </p>
               </div>
             )}
@@ -440,11 +444,11 @@ export default function PricingPage() {
                   <TabsList className="grid w-full max-w-md grid-cols-2">
                     <TabsTrigger value="ngo" className="flex items-center gap-2">
                       <Building2 className="h-4 w-4" />
-                      For NGOs
+                      {p.forNGOs || "For NGOs"}
                     </TabsTrigger>
                     <TabsTrigger value="volunteer" className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      For Impact Agents
+                      {p.forImpactAgents || "For Impact Agents"}
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -457,10 +461,10 @@ export default function PricingPage() {
                 
                 <div className="mt-12 text-center">
                   <p className="text-muted-foreground mb-4">
-                    Need a custom solution for your large organization?
+                    {p.contactSalesDesc || "Need a custom solution for your large organization?"}
                   </p>
                   <Button variant="outline" asChild>
-                    <a href="/contact">Contact Sales</a>
+                    <a href="/contact">{p.contactSales || "Contact Sales"}</a>
                   </Button>
                 </div>
               </TabsContent>
@@ -478,38 +482,34 @@ export default function PricingPage() {
         {/* FAQ Section */}
         <section className="py-16 bg-muted/50">
           <div className="container mx-auto px-4 md:px-6 max-w-3xl">
-            <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+            <h2 className="text-3xl font-bold text-center mb-12">{p.faq || "Frequently Asked Questions"}</h2>
             
             <div className="space-y-6">
               <div className="p-6 bg-background rounded-lg border">
-                <h3 className="font-semibold text-foreground mb-2">What is a profile unlock? (NGOs)</h3>
+                <h3 className="font-semibold text-foreground mb-2">{p.faqProfileUnlock || "What is a profile unlock? (NGOs)"}</h3>
                 <p className="text-muted-foreground">
-                  When you find a FREE impact agent you&apos;d like to connect with, you need to unlock their profile 
-                  to view their contact information. NGO Pro subscribers can unlock <strong>unlimited</strong> free impact agent profiles.
-                  Free plan NGOs must upgrade to Pro to unlock any profiles.
+                  {p.faqProfileUnlockAnswer || "When you find a FREE impact agent you'd like to connect with, you need to unlock their profile to view their contact information. NGO Pro subscribers can unlock unlimited free impact agent profiles. Free plan NGOs must upgrade to Pro to unlock any profiles."}
                 </p>
               </div>
               
               <div className="p-6 bg-background rounded-lg border">
-                <h3 className="font-semibold text-foreground mb-2">What counts as an application? (Impact Agents)</h3>
+                <h3 className="font-semibold text-foreground mb-2">{p.faqApplication || "What counts as an application? (Impact Agents)"}</h3>
                 <p className="text-muted-foreground">
-                  Each time you apply to a project/opportunity, it counts as one application. 
-                  Free plan includes {platformSettings?.volunteerFreeApplicationsPerMonth || 3} applications per month.
+                  {(p.faqApplicationAnswer || "Each time you apply to a project/opportunity, it counts as one application. Free plan includes {count} applications per month.").replace("{count}", String(platformSettings?.volunteerFreeApplicationsPerMonth || 3))}
                 </p>
               </div>
               
               <div className="p-6 bg-background rounded-lg border">
-                <h3 className="font-semibold text-foreground mb-2">Can I change plans anytime?</h3>
+                <h3 className="font-semibold text-foreground mb-2">{p.faqChangePlan || "Can I change plans anytime?"}</h3>
                 <p className="text-muted-foreground">
-                  Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately.
+                  {p.faqChangePlanAnswer || "Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately."}
                 </p>
               </div>
               
               <div className="p-6 bg-background rounded-lg border">
-                <h3 className="font-semibold text-foreground mb-2">Do unused limits roll over?</h3>
+                <h3 className="font-semibold text-foreground mb-2">{p.faqRollover || "Do unused limits roll over?"}</h3>
                 <p className="text-muted-foreground">
-                  No, unused applications or unlocks do not roll over to the next month. 
-                  Counters reset on the 1st of each month.
+                  {p.faqRolloverAnswer || "No, unused applications or unlocks do not roll over to the next month. Counters reset on the 1st of each month."}
                 </p>
               </div>
             </div>

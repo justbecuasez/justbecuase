@@ -12,8 +12,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Lock, Loader2, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import { AuthPageSkeleton } from "@/components/ui/page-skeletons"
+import { useDictionary } from "@/components/dictionary-provider"
 
 function ResetPasswordForm() {
+  const dict = useDictionary()
+  const a = (dict as any).auth || {}
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
@@ -81,7 +84,7 @@ function ResetPasswordForm() {
         <Card className="border-0 shadow-lg">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl">
-              {isSuccess ? "Password Reset!" : "Set New Password"}
+              {isSuccess ? (a.passwordReset || "Password Reset!") : (a.setNewPassword || "Set New Password")}
             </CardTitle>
             <CardDescription>
               {isSuccess
@@ -95,13 +98,13 @@ function ResetPasswordForm() {
                 <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">All done!</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{a.allDone || "All done!"}</h3>
                 <p className="text-muted-foreground mb-6">
-                  Your password has been reset successfully. You can now sign in with your new password.
+                  {a.passwordResetSuccess || "Your password has been reset successfully. You can now sign in with your new password."}
                 </p>
                 <Button asChild className="w-full bg-primary hover:bg-primary/90">
                   <LocaleLink href="/auth/signin">
-                    Sign In
+                    {a.signIn || "Sign In"}
                   </LocaleLink>
                 </Button>
               </div>
@@ -110,13 +113,13 @@ function ResetPasswordForm() {
                 <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
                   <AlertCircle className="h-8 w-8 text-destructive" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Invalid Link</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{a.invalidLink || "Invalid Link"}</h3>
                 <p className="text-muted-foreground mb-6">
-                  This password reset link is invalid or has expired.
+                  {a.invalidLink ? a.invalidLink : "This password reset link is invalid or has expired."}
                 </p>
                 <Button asChild className="w-full">
                   <LocaleLink href="/auth/forgot-password">
-                    Request New Reset Link
+                    {a.requestNewResetLink || "Request New Reset Link"}
                   </LocaleLink>
                 </Button>
               </div>
@@ -129,7 +132,7 @@ function ResetPasswordForm() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">New Password</Label>
+                  <Label htmlFor="password">{a.newPassword || "New Password"}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -146,7 +149,7 @@ function ResetPasswordForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                  <Label htmlFor="confirmPassword">{a.confirmNewPassword || "Confirm New Password"}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -175,7 +178,7 @@ function ResetPasswordForm() {
                 <Button asChild variant="ghost" className="w-full">
                   <LocaleLink href="/auth/signin">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to sign in
+                    {a.backToSignIn || "Back to sign in"}
                   </LocaleLink>
                 </Button>
               </form>

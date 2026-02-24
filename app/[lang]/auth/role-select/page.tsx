@@ -8,9 +8,12 @@ import { Heart, Building2, Loader2 } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
 import { selectRole } from "@/lib/actions"
 import { AuthPageSkeleton } from "@/components/ui/page-skeletons"
+import { useDictionary } from "@/components/dictionary-provider"
 
 function RoleSelectContent() {
   const router = useRouter()
+  const dict = useDictionary()
+  const a = (dict as any).auth || {}
   
   const [isLoading, setIsLoading] = useState(false)
   const [selectedRole, setSelectedRole] = useState<"volunteer" | "ngo" | null>(null)
@@ -93,9 +96,9 @@ function RoleSelectContent() {
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center p-4">
       <div className="w-full max-w-3xl">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-foreground mb-3">Welcome to JustBeCause Network</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-3">{a.welcomePlatform || "Welcome to JustBeCause Network"}</h1>
           <p className="text-lg text-muted-foreground">
-            How would you like to use the platform?
+            {a.howToUse || "How would you like to use the platform?"}
           </p>
         </div>
 
@@ -117,17 +120,17 @@ function RoleSelectContent() {
               <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
                 <Heart className="h-10 w-10 text-primary" />
               </div>
-              <CardTitle className="text-xl">I'm an Impact Agent</CardTitle>
+              <CardTitle className="text-xl">{a.imImpactAgent || "I'm an Impact Agent"}</CardTitle>
               <CardDescription>
-                Share your skills and make an impact
+                {a.shareSkills || "Share your skills and make an impact"}
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
               <ul className="text-sm text-muted-foreground space-y-2 mb-6">
-                <li>✓ Create your skills-based profile</li>
-                <li>✓ Browse impact agent opportunities</li>
-                <li>✓ Connect with NGOs</li>
-                <li>✓ Track your social impact</li>
+                <li>✓ {a.agentBullet1 || "Create your skills-based profile"}</li>
+                <li>✓ {a.agentBullet2 || "Browse impact agent opportunities"}</li>
+                <li>✓ {a.agentBullet3 || "Connect with NGOs"}</li>
+                <li>✓ {a.trackImpact || "Track your social impact"}</li>
               </ul>
               <Button
                 className="w-full"
@@ -157,17 +160,17 @@ function RoleSelectContent() {
               <div className="w-20 h-20 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
                 <Building2 className="h-10 w-10 text-secondary" />
               </div>
-              <CardTitle className="text-xl">I'm an NGO</CardTitle>
+              <CardTitle className="text-xl">{a.imNGO || "I'm an NGO"}</CardTitle>
               <CardDescription>
-                Find skilled impact agents for your cause
+                {a.findProfessionals || "Find skilled impact agents for your cause"}
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center">
               <ul className="text-sm text-muted-foreground space-y-2 mb-6">
-                <li>✓ Create your organization profile</li>
-                <li>✓ Post impact agent opportunities</li>
-                <li>✓ Browse skilled impact agents</li>
-                <li>✓ Manage applications</li>
+                <li>✓ {a.ngoBullet1 || "Create your organization profile"}</li>
+                <li>✓ {a.ngoBullet2 || "Post impact agent opportunities"}</li>
+                <li>✓ {a.ngoBullet3 || "Browse skilled impact agents"}</li>
+                <li>✓ {a.trackImpact || "Manage applications"}</li>
               </ul>
               <Button
                 className="w-full"
@@ -186,10 +189,6 @@ function RoleSelectContent() {
             </CardContent>
           </Card>
         </div>
-
-        <p className="text-center text-sm text-muted-foreground mt-8">
-          You can always update this later in your settings
-        </p>
       </div>
     </div>
   )

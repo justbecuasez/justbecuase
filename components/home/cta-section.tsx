@@ -9,6 +9,13 @@ export function CTASection() {
   const dict = useDictionary()
   const home = dict.home || {}
 
+  const stats = [
+    { value: home.ctaStat1Value || "1 min", label: home.ctaStat1Label || "To sign up" },
+    { value: home.ctaStat2Value || "100%", label: home.ctaStat2Label || "Free for impact agents" },
+    { value: home.ctaStat3Value || "24/7", label: home.ctaStat3Label || "Support available" },
+    { value: home.ctaStat4Value || "120+", label: home.ctaStat4Label || "Partner NGOs" },
+  ]
+
   return (
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4 md:px-6">
@@ -23,14 +30,13 @@ export function CTASection() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-primary-foreground mb-6">
                 <Heart className="h-4 w-4" fill="currentColor" />
-                <span>Ready to make a difference?</span>
+                <span>{home.ctaReadyBadge || "Ready to make a difference?"}</span>
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-primary-foreground mb-4 text-balance">
-                Your Skills Can Change Lives. Start Today.
+                {home.ctaTitle || "Your Skills Can Change Lives. Start Today."}
               </h2>
               <p className="text-primary-foreground/80 text-lg mb-8">
-                Join thousands of skilled professionals who are using their expertise to support causes they care about.
-                It takes just 5 minutes to get started.
+                {home.ctaDesc || "Join thousands of skilled professionals who are using their expertise to support causes they care about. It takes just 5 minutes to get started."}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button asChild size="lg" variant="secondary" className="bg-white text-primary hover:bg-white/90">
@@ -45,19 +51,14 @@ export function CTASection() {
                   variant="outline"
                   className="border-white/30 text-primary-foreground hover:bg-white/10 bg-transparent"
                 >
-                  <LocaleLink href="/for-ngos">Partner as an NGO</LocaleLink>
+                  <LocaleLink href="/for-ngos">{home.ctaPartnerNGO || "Partner as an NGO"}</LocaleLink>
                 </Button>
               </div>
             </div>
 
             <div className="hidden md:flex justify-center">
               <div className="grid grid-cols-2 gap-4">
-                {[
-                  { value: "1 min", label: "To sign up" },
-                  { value: "100%", label: "Free for impact agents" },
-                  { value: "24/7", label: "Support available" },
-                  { value: "120+", label: "Partner NGOs" },
-                ].map((stat) => (
+                {stats.map((stat) => (
                   <div key={stat.label} className="p-6 rounded-2xl bg-white/10 text-center">
                     <div className="text-2xl font-bold text-primary-foreground">{stat.value}</div>
                     <div className="text-sm text-primary-foreground/70">{stat.label}</div>

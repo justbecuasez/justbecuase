@@ -2,9 +2,11 @@ import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import Link from "next/link"
+import LocaleLink from "@/components/locale-link"
 import { Calendar, User, ArrowRight } from "lucide-react"
 import { getPublishedBlogPosts } from "@/lib/actions"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import type { Locale } from "@/lib/i18n-config"
 
 // Fallback posts shown when no DB posts exist
 const fallbackPosts = [
@@ -39,7 +41,10 @@ const fallbackPosts = [
 
 export const revalidate = 300
 
-export default async function BlogPage() {
+export default async function BlogPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
+  const dict = await getDictionary(lang as Locale)
+  const b = (dict as any).blog || {}
   const result = await getPublishedBlogPosts(50)
   const dbPosts = result.success ? (result.data || []) : []
 
@@ -69,17 +74,17 @@ export default async function BlogPage() {
           {/* Header */}
           <div className="max-w-3xl mx-auto text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">
-              Blog
+              {b.title || "Blog"}
             </h1>
             <p className="text-xl text-muted-foreground">
-              Stories, insights, and updates from the JustBeCause Network community
+              {b.subtitle || "Stories, insights, and updates from the JustBeCause Network community"}
             </p>
           </div>
 
           {/* Blog Posts Grid */}
           <div className="max-w-5xl mx-auto grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {posts.map((post: any) => (
-              <Link key={post.slug} href={`/blog/${post.slug}`}>
+              <LocaleLink key={post.slug} href={`/blog/${post.slug}`}>
                 <Card className="h-full hover:shadow-lg transition-shadow cursor-pointer">
                   <CardHeader>
                     <div className="flex items-center gap-2 mb-3">
@@ -108,7 +113,7 @@ export default async function BlogPage() {
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
+              </LocaleLink>
             ))}
           </div>
 
@@ -117,18 +122,18 @@ export default async function BlogPage() {
             <Card className="bg-muted/30">
               <CardContent className="py-12">
                 <h2 className="text-2xl font-bold text-foreground mb-3">
-                  More Content Coming Soon
+                  {b.comingSoon || "More Content Coming Soon"}
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  We&apos;re working on publishing more stories, guides, and insights. Subscribe to stay updated.
+                  {b.comingSoonDesc || "We're working on publishing more stories, guides, and insights. Subscribe to stay updated."}
                 </p>
-                <Link 
+                <LocaleLink 
                   href="/auth/signup" 
                   className="inline-flex items-center text-primary hover:underline font-medium"
                 >
-                  Join Our Community
+                  {b.joinCommunity || "Join Our Community"}
                   <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+                </LocaleLink>
               </CardContent>
             </Card>
           </div>

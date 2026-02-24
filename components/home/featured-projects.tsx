@@ -6,8 +6,11 @@ import { ProjectCard } from "@/components/project-card"
 import { browseProjects } from "@/lib/actions"
 import { ArrowRight } from "lucide-react"
 import { resolveSkillName } from "@/lib/skills-data"
+import { useDictionary } from "@/components/dictionary-provider"
 
 export function FeaturedProjects() {
+  const dict = useDictionary()
+  const home = dict.home || {}
   const [featuredProjects, setFeaturedProjects] = useState<Awaited<ReturnType<typeof browseProjects>>>([]);
 
   useEffect(() => {
@@ -30,14 +33,13 @@ export function FeaturedProjects() {
         <header className="flex flex-col md:flex-row md:items-end justify-between mb-20 border-b border-slate-100 pb-8">
           <div className="max-w-2xl">
             <span className="text-[10px] uppercase tracking-widest text-slate-400 font-bold mb-4 block">
-              Selection . 01
+              {home.featuredSelection || "Selection . 01"}
             </span>
             <h2 className="text-4xl md:text-5xl font-medium text-slate-900 tracking-tighter mb-6">
-              Featured Opportunities
+              {home.featuredProjects || "Featured Opportunities"}
             </h2>
             <p className="text-slate-500 leading-relaxed">
-              A curated directory of high-impact opportunities from verified NGOs worldwide. 
-              Designed for architects of social change.
+              {home.featuredProjectsDesc || "A curated directory of high-impact opportunities from verified NGOs worldwide. Designed for architects of social change."}
             </p>
           </div>
 
@@ -46,7 +48,7 @@ export function FeaturedProjects() {
               href="/projects" 
               className="group flex items-center gap-3 text-xs uppercase tracking-widest font-bold text-slate-900 transition-all"
             >
-              Browse All Opportunities
+              {home.browseAllOpportunities || "Browse All Opportunities"}
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-3" />
             </LocaleLink>
           </div>
@@ -55,7 +57,7 @@ export function FeaturedProjects() {
         {/* Asymmetric Grid */}
         {featuredProjects.length === 0 ? (
           <div className="text-center py-24 border border-dashed border-slate-200">
-            <p className="text-slate-400 uppercase tracking-widest text-xs">No entries found</p>
+            <p className="text-slate-400 uppercase tracking-widest text-xs">{home.noEntries || "No entries found"}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-12 gap-y-20 gap-x-12">

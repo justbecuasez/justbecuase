@@ -26,6 +26,7 @@ import {
   MessageCircle,
 } from "lucide-react"
 import { toast } from "sonner"
+import { useDictionary } from "@/components/dictionary-provider"
 
 interface ShareButtonProps {
   url?: string
@@ -44,6 +45,8 @@ export function ShareButton({
 }: ShareButtonProps) {
   const [showDialog, setShowDialog] = useState(false)
   const [copied, setCopied] = useState(false)
+  const dict = useDictionary()
+  const t = (dict as any).common || {}
   
   // Use current URL if not provided
   const shareUrl = url || (typeof window !== "undefined" ? window.location.href : "")
@@ -68,10 +71,10 @@ export function ShareButton({
       }
       await navigator.clipboard.writeText(shareUrl)
       setCopied(true)
-      toast.success("Link copied to clipboard!")
+      toast.success(t.linkCopied || "Link copied to clipboard!")
       setTimeout(() => setCopied(false), 2000)
     } catch (error) {
-      toast.error("Failed to copy link")
+      toast.error(t.copyFailed || "Failed to copy link")
     }
   }
 
@@ -102,13 +105,13 @@ export function ShareButton({
         onClick={handleNativeShare}
       >
         <Share2 className="h-4 w-4 mr-2" />
-        Share
+        {t.share || "Share"}
       </Button>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Share this content</DialogTitle>
+            <DialogTitle>{t.shareContent || "Share this content"}</DialogTitle>
           </DialogHeader>
           
           <div className="grid grid-cols-5 gap-4 py-4">

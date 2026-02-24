@@ -11,8 +11,11 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Mail, Loader2, ArrowLeft, CheckCircle } from "lucide-react"
 import { authClient } from "@/lib/auth-client"
+import { useDictionary } from "@/components/dictionary-provider"
 
 export default function ForgotPasswordPage() {
+  const dict = useDictionary()
+  const a = (dict as any).auth || {}
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
@@ -95,11 +98,11 @@ export default function ForgotPasswordPage() {
 
         <Card className="border-0 shadow-lg">
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl">Reset your password</CardTitle>
+            <CardTitle className="text-2xl">{a.resetPassword || "Reset your password"}</CardTitle>
             <CardDescription>
               {isSubmitted
-                ? "Check your email for reset instructions"
-                : "Enter your email and we'll send you a reset link"}
+                ? (a.checkEmail || "Check your email for reset instructions")
+                : (a.resetPasswordDesc || "Enter your email and we'll send you a reset link")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -108,7 +111,7 @@ export default function ForgotPasswordPage() {
                 <div className="w-16 h-16 rounded-full bg-success-light flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="h-8 w-8 text-success" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-2">Enter verification code</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-2">{a.enterVerificationCode || "Enter verification code"}</h3>
                 <p className="text-muted-foreground mb-4">We emailed a 6-digit code to <strong>{email}</strong>. Enter it below to continue.</p>
 
                 <div className="space-y-3">
@@ -125,7 +128,7 @@ export default function ForgotPasswordPage() {
                   {error && <div className="text-sm text-destructive">{error}</div>}
                   <div className="flex gap-2">
                     <Button onClick={() => handleVerifyCode(codeInput)} className="flex-1" disabled={isLoading}>
-                      {isLoading ? 'Verifying...' : 'Verify Code'}
+                      {isLoading ? (a.signingIn ? a.signingIn.replace('...', '') + '...' : 'Verifying...') : (a.verifyCode || 'Verify Code')}
                     </Button>
                     <Button asChild variant="ghost">
                       <LocaleLink href="/auth/signin">
@@ -144,7 +147,7 @@ export default function ForgotPasswordPage() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{a.email || "Email"}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -173,7 +176,7 @@ export default function ForgotPasswordPage() {
                 <Button asChild variant="ghost" className="w-full">
                   <LocaleLink href="/auth/signin">
                     <ArrowLeft className="mr-2 h-4 w-4" />
-                    Back to sign in
+                    {a.backToSignIn || "Back to sign in"}
                   </LocaleLink>
                 </Button>
               </form>

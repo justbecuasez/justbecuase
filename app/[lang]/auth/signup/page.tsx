@@ -13,6 +13,7 @@ import { Separator } from "@/components/ui/separator"
 import { Mail, Lock, User, Building2, Loader2, ArrowRight, ArrowLeft, CheckCircle, MailCheck, ShieldCheck } from "lucide-react"
 import { signUp, signIn, getSession } from "@/lib/auth-client"
 import { selectRole, applyReferralCode } from "@/lib/actions"
+import { useDictionary } from "@/components/dictionary-provider"
 
 // Helper to wait for session with retry
 async function waitForSession(maxRetries = 5, delay = 500): Promise<boolean> {
@@ -40,6 +41,8 @@ function SignUpPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const referralCode = searchParams.get("ref") || ""
+  const dict = useDictionary()
+  const a = (dict as any).auth || {}
   const [step, setStep] = useState(1) // 1: account type, 2: email/name, 3: OTP verification, 4: password
   const [accountType, setAccountType] = useState<AccountType>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -295,7 +298,7 @@ function SignUpPageInner() {
   const renderStep1 = () => (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <h2 className="text-xl font-semibold text-foreground mb-2">Choose your account type</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{a.chooseAccountType || "Choose your account type"}</h2>
         <p className="text-muted-foreground">Select how you'd like to use JustBeCause Network</p>
       </div>
 
@@ -315,9 +318,9 @@ function SignUpPageInner() {
               <User className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-foreground mb-1">I'm an Impact Agent</h3>
+              <h3 className="font-semibold text-foreground mb-1">{a.imImpactAgent || "I'm an Impact Agent"}</h3>
               <p className="text-sm text-muted-foreground">
-                I want to contribute my skills and expertise to help NGOs and nonprofits.
+                {a.imImpactAgentDesc || "I want to contribute my skills and expertise to help NGOs and nonprofits."}
               </p>
             </div>
             <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
@@ -339,9 +342,9 @@ function SignUpPageInner() {
               <Building2 className="h-6 w-6 text-secondary" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-foreground mb-1">I'm an NGO / Nonprofit</h3>
+              <h3 className="font-semibold text-foreground mb-1">{a.imNGO || "I'm an NGO / Nonprofit"}</h3>
               <p className="text-sm text-muted-foreground">
-                I want to find skilled impact agents to help with opportunities and grow our capacity.
+                {a.imNGODesc || "I want to find skilled impact agents to help with opportunities and grow our capacity."}
               </p>
             </div>
             <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-secondary transition-colors" />
@@ -372,7 +375,7 @@ function SignUpPageInner() {
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="name">{accountType === "volunteer" ? "Full Name" : "Contact Person Name"}</Label>
+        <Label htmlFor="name">{accountType === "volunteer" ? (a.fullName || "Full Name") : (a.contactPersonName || "Contact Person Name")}</Label>
         <div className="relative">
           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -387,13 +390,13 @@ function SignUpPageInner() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+        <Label htmlFor="email">{a.email || "Email"}</Label>
         <div className="relative">
           <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="email"
             type="email"
-            placeholder="you@example.com"
+            placeholder={a.emailPlaceholder || "you@example.com"}
             value={formData.email}
             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             className="pl-10"
@@ -419,7 +422,7 @@ function SignUpPageInner() {
         ) : (
           <>
             <Mail className="mr-2 h-4 w-4" />
-            Send Verification Code
+            {a.sendVerificationCode || "Send Verification Code"}
           </>
         )}
       </Button>
@@ -433,7 +436,7 @@ function SignUpPageInner() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h2 className="font-semibold text-foreground">Verify your email</h2>
+          <h2 className="font-semibold text-foreground">{a.verifyEmail || "Verify your email"}</h2>
           <p className="text-sm text-muted-foreground">Enter the 6-digit code sent to {formData.email}</p>
         </div>
       </div>
@@ -480,7 +483,7 @@ function SignUpPageInner() {
           ) : (
             <>
               <CheckCircle className="mr-2 h-4 w-4" />
-              Verify Email
+              {a.verifyCode || "Verify Email"}
             </>
           )}
         </Button>
@@ -496,7 +499,7 @@ function SignUpPageInner() {
               onClick={sendOTP}
               disabled={isLoading}
             >
-              Resend Code
+              {a.resendCode || "Resend Code"}
             </button>
           )}
         </p>
@@ -511,7 +514,7 @@ function SignUpPageInner() {
           <CheckCircle className="h-5 w-5 text-green-600" />
         </div>
         <div>
-          <h2 className="font-semibold text-foreground">Email Verified!</h2>
+          <h2 className="font-semibold text-foreground">{a.emailVerified || "Email Verified!"}</h2>
           <p className="text-sm text-muted-foreground">Create a password to complete signup</p>
         </div>
       </div>
@@ -530,7 +533,7 @@ function SignUpPageInner() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+        <Label htmlFor="password">{a.password || "Password"}</Label>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -548,7 +551,7 @@ function SignUpPageInner() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm Password</Label>
+        <Label htmlFor="confirmPassword">{a.confirmPasswordLabel || "Confirm Password"}</Label>
         <div className="relative">
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -587,7 +590,7 @@ function SignUpPageInner() {
         ) : (
           <>
             <CheckCircle className="mr-2 h-4 w-4" />
-            Create Account & Continue
+            {a.createAccountContinue || "Create Account & Continue"}
           </>
         )}
       </Button>
@@ -605,7 +608,7 @@ function SignUpPageInner() {
 
           <Card className="border-0 shadow-lg">
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl">Create an account</CardTitle>
+              <CardTitle className="text-2xl">{a.createAccount || "Create an account"}</CardTitle>
               <CardDescription>Join thousands of impact agents and NGOs making an impact</CardDescription>
             </CardHeader>
             <CardContent>
@@ -657,7 +660,7 @@ function SignUpPageInner() {
                   <div className="relative my-6">
                     <Separator />
                     <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
-                      or continue with
+                      {a.orContinueWith || "or continue with"}
                     </span>
                   </div>
 
@@ -714,9 +717,9 @@ function SignUpPageInner() {
               )}
 
               <p className="mt-6 text-center text-sm text-muted-foreground">
-                Already have an account?{" "}
+                {(a.alreadyHaveAccount || "Already have an account?") + " "}
                 <LocaleLink href="/auth/signin" className="text-primary hover:underline font-medium">
-                  Sign in
+                  {a.signIn || "Sign in"}
                 </LocaleLink>
               </p>
                 </>
@@ -729,10 +732,9 @@ function SignUpPageInner() {
       {/* Right Side - Image/Info */}
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-primary to-primary/80 items-center justify-center p-12">
         <div className="max-w-md text-primary-foreground">
-          <h2 className="text-3xl font-bold mb-4">Turn Your Skills Into Impact</h2>
+          <h2 className="text-3xl font-bold mb-4">{a.skillsIntoImpact || "Turn Your Skills Into Impact"}</h2>
           <p className="text-primary-foreground/90 mb-8">
-            Whether you're a skilled professional looking to give back or an NGO seeking expert help, JustBeCause Network
-            connects you with opportunities that matter.
+            {a.skillsIntoImpactDesc || "Whether you're a skilled professional looking to give back or an NGO seeking expert help, JustBeCause Network connects you with opportunities that matter."}
           </p>
           <div className="grid grid-cols-2 gap-6">
             <div className="text-center">

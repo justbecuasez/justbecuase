@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { resolveSkillName } from "@/lib/skills-data"
 import { motion, AnimatePresence } from "motion/react"
+import { useDictionary } from "@/app/[lang]/dictionary-provider"
 
 // ============================================
 // TYPES
@@ -173,6 +174,8 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
 
 export function GlobalSearchSection() {
   const router = useRouter()
+  const dict = useDictionary()
+  const s = (dict as any).search || {}
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("")
@@ -489,10 +492,10 @@ export function GlobalSearchSection() {
           {/* Header */}
           <div className="text-center mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-              Find What You&apos;re Looking For
+              {s.findTitle || "Find What You're Looking For"}
             </h2>
             <p className="text-muted-foreground text-sm md:text-base">
-              Search across opportunities, skilled impact agents, and NGOs — instantly
+              {s.findSubtitle || "Search across opportunities, skilled impact agents, and NGOs — instantly"}
             </p>
           </div>
 
@@ -513,7 +516,7 @@ export function GlobalSearchSection() {
                   }`}
                 >
                   {Icon && <Icon className="h-3.5 w-3.5" />}
-                  {type === "all" ? "All" : config?.pluralLabel || type}
+                  {type === "all" ? (s.all || "All") : type === "volunteer" ? (s.impactAgents || "Impact Agents") : type === "ngo" ? (s.ngos || "NGOs") : (s.opportunities || "Opportunities")}
                 </button>
               )
             })}
@@ -528,12 +531,12 @@ export function GlobalSearchSection() {
                 type="text"
                 placeholder={
                   searchType === "volunteer"
-                    ? "Search skills, location, or name..."
+                    ? (s.placeholderVolunteer || "Search skills, location, or name...")
                     : searchType === "ngo"
-                    ? "Search organizations..."
+                    ? (s.placeholderNgo || "Search organizations...")
                     : searchType === "opportunity"
-                    ? "Search opportunities..."
-                    : "Search opportunities, skills, people, causes..."
+                    ? (s.placeholderOpportunity || "Search opportunities...")
+                    : (s.placeholderAll || "Search opportunities, skills, people, causes...")
                 }
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -605,7 +608,7 @@ export function GlobalSearchSection() {
                         <div className="py-1">
                           <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                             <Sparkles className="h-3 w-3" />
-                            Suggestions
+                            {s.suggestions || "Suggestions"}
                           </div>
                           {suggestions.map((suggestion, index) => {
                             const config = TYPE_CONFIG[suggestion.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.opportunity
@@ -655,7 +658,7 @@ export function GlobalSearchSection() {
                           >
                             <Search className="h-4 w-4 text-primary" />
                             <span className="text-sm">
-                              Search for &quot;<span className="font-semibold text-primary">{searchQuery}</span>&quot;
+                              {s.searchFor || "Search for"} &quot;<span className="font-semibold text-primary">{searchQuery}</span>&quot;
                             </span>
                           </button>
                         </div>
@@ -663,7 +666,7 @@ export function GlobalSearchSection() {
 
                       {!isSuggestionsLoading && suggestions.length === 0 && searchQuery.trim().length >= 2 && (
                         <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-                          No suggestions found. Press Enter to search.
+                          {s.noSuggestions || "No suggestions found. Press Enter to search."}
                         </div>
                       )}
                     </>
@@ -675,13 +678,13 @@ export function GlobalSearchSection() {
                       <div className="px-3 py-1.5 flex items-center justify-between">
                         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                           <Clock className="h-3 w-3" />
-                          Recent Searches
+                          {s.recentSearches || "Recent Searches"}
                         </span>
                         <button
                           onClick={clearRecentSearches}
                           className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                         >
-                          Clear All
+                          {s.clearAll || "Clear All"}
                         </button>
                       </div>
                       {recentSearches.map((search, index) => {
@@ -714,7 +717,7 @@ export function GlobalSearchSection() {
                     <div className="py-1">
                       <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                         <TrendingUp className="h-3 w-3" />
-                        Trending Searches
+                        {s.trendingSearches || "Trending Searches"}
                       </div>
                       {POPULAR_SEARCHES.map((item, index) => {
                         const isSelected = selectedIndex === index
@@ -748,7 +751,7 @@ export function GlobalSearchSection() {
           {/* Quick Search Tags (only when not searched yet) */}
           {!hasSearched && (
             <div className="flex flex-wrap justify-center gap-2 mb-8">
-              <span className="text-sm text-muted-foreground mr-1">Popular:</span>
+              <span className="text-sm text-muted-foreground mr-1">{s.popular || "Popular:"}</span>
               {POPULAR_SEARCHES.map((item) => (
                 <button
                   key={item.query}
@@ -798,19 +801,19 @@ export function GlobalSearchSection() {
                   /* Empty state */
                   <div className="text-center py-12 bg-background rounded-xl border">
                     <Search className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                    <p className="text-foreground font-medium mb-2">No results found for &quot;{searchQuery}&quot;</p>
+                    <p className="text-foreground font-medium mb-2">{s.noResultsFor || "No results found for"} &quot;{searchQuery}&quot;</p>
                     <p className="text-sm text-muted-foreground mb-4">
-                      Try different keywords, check spelling, or browse categories
+                      {s.tryDifferent || "Try different keywords, check spelling, or browse categories"}
                     </p>
                     <div className="flex flex-wrap justify-center gap-2">
                       <Button asChild variant="outline" size="sm">
-                        <LocaleLink href="/projects">Browse Opportunities</LocaleLink>
+                        <LocaleLink href="/projects">{s.browseOpportunities || "Browse Opportunities"}</LocaleLink>
                       </Button>
                       <Button asChild variant="outline" size="sm">
-                        <LocaleLink href="/volunteers">Browse Impact Agents</LocaleLink>
+                        <LocaleLink href="/volunteers">{s.browseImpactAgents || "Browse Impact Agents"}</LocaleLink>
                       </Button>
                       <Button asChild variant="outline" size="sm">
-                        <LocaleLink href="/ngos">Browse NGOs</LocaleLink>
+                        <LocaleLink href="/ngos">{s.browseNGOs || "Browse NGOs"}</LocaleLink>
                       </Button>
                     </div>
                   </div>
@@ -821,7 +824,7 @@ export function GlobalSearchSection() {
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <p className="text-sm text-muted-foreground">
-                          <span className="font-semibold text-foreground">{totalResultCount}</span> result{totalResultCount !== 1 ? "s" : ""}
+                          <span className="font-semibold text-foreground">{totalResultCount}</span> {totalResultCount !== 1 ? (s.results || "results") : (s.result || "result")}
                           {isSearching && <Loader2 className="inline h-3 w-3 animate-spin ml-2" />}
                         </p>
                         {/* Category pills showing counts */}
@@ -838,7 +841,7 @@ export function GlobalSearchSection() {
                       </div>
                       <Button asChild variant="ghost" size="sm" className="text-primary">
                         <LocaleLink href={getViewAllLink()}>
-                          View All <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                          {s.viewAll || "View All"} <ArrowRight className="ml-1 h-3.5 w-3.5" />
                         </LocaleLink>
                       </Button>
                     </div>
@@ -849,11 +852,11 @@ export function GlobalSearchSection() {
                         const config = TYPE_CONFIG[result.type as keyof typeof TYPE_CONFIG] || TYPE_CONFIG.opportunity
                         const Icon = config.icon
                         // Format work mode label
-                        const workModeLabel = result.workMode === "remote" ? "Remote" : result.workMode === "onsite" ? "On-site" : result.workMode === "hybrid" ? "Hybrid" : null
+                        const workModeLabel = result.workMode === "remote" ? (s.remote || "Remote") : result.workMode === "onsite" ? (s.onsite || "On-site") : result.workMode === "hybrid" ? (s.hybrid || "Hybrid") : null
                         // Format volunteer type label
-                        const pricingLabel = result.volunteerType === "free" ? "Pro Bono" : result.volunteerType === "paid" ? "Paid" : null
+                        const pricingLabel = result.volunteerType === "free" ? (s.proBono || "Pro Bono") : result.volunteerType === "paid" ? (s.paid || "Paid") : null
                         // Format experience level label
-                        const expLabel = result.experienceLevel === "expert" ? "Expert" : result.experienceLevel === "advanced" ? "Advanced" : result.experienceLevel === "intermediate" ? "Intermediate" : result.experienceLevel === "beginner" ? "Beginner" : null
+                        const expLabel = result.experienceLevel === "expert" ? (s.expert || "Expert") : result.experienceLevel === "advanced" ? (s.advanced || "Advanced") : result.experienceLevel === "intermediate" ? (s.intermediate || "Intermediate") : result.experienceLevel === "beginner" ? (s.beginner || "Beginner") : null
                         const expColor = result.experienceLevel === "expert" ? "border-violet-300 text-violet-700 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/20" : result.experienceLevel === "advanced" ? "border-blue-300 text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20" : result.experienceLevel === "intermediate" ? "border-cyan-300 text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/20" : "border-slate-300 text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/20"
                         // Description snippet — strip HTML and truncate
                         const descSnippet = result.description

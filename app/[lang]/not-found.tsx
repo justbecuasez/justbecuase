@@ -1,10 +1,17 @@
+"use client"
+
 import LocaleLink from "@/components/locale-link"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Home, Search, ArrowLeft, HelpCircle } from "lucide-react"
+import { useDictionary } from "@/app/[lang]/dictionary-provider"
 
 export default function NotFound() {
+  const dict = useDictionary()
+  const e = (dict as any).errors || {}
+  const nav = (dict as any).nav || {}
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
@@ -16,43 +23,42 @@ export default function NotFound() {
           </div>
           
           <h2 className="text-2xl font-bold text-foreground mb-4">
-            Page Not Found
+            {e.notFound || "Page Not Found"}
           </h2>
           
           <p className="text-muted-foreground mb-8">
-            Sorry, we couldn&apos;t find the page you&apos;re looking for. 
-            It might have been moved, deleted, or maybe it never existed.
+            {e.notFoundDesc || "Sorry, we couldn't find the page you're looking for. It might have been moved, deleted, or maybe it never existed."}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button asChild>
               <LocaleLink href="/">
                 <Home className="h-4 w-4 mr-2" />
-                Go Home
+                {e.goHome || "Go Home"}
               </LocaleLink>
             </Button>
             <Button asChild variant="outline">
               <LocaleLink href="/projects">
                 <Search className="h-4 w-4 mr-2" />
-                Browse Opportunities
+                {e.browseOpportunities || "Browse Opportunities"}
               </LocaleLink>
             </Button>
           </div>
 
           <div className="mt-8 pt-8 border-t border-border">
             <p className="text-sm text-muted-foreground mb-4">
-              Need help? Here are some useful links:
+              {e.needHelp || "Need help? Here are some useful links:"}
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-sm">
               <LocaleLink href="/contact" className="text-primary hover:underline flex items-center gap-1">
                 <HelpCircle className="h-3 w-3" />
-                Contact Support
+                {e.contactSupport || "Contact Support"}
               </LocaleLink>
               <LocaleLink href="/for-volunteers" className="text-primary hover:underline">
-                For Impact Agents
+                {nav.forImpactAgents || "For Impact Agents"}
               </LocaleLink>
               <LocaleLink href="/for-ngos" className="text-primary hover:underline">
-                For NGOs
+                {nav.forNGOs || "For NGOs"}
               </LocaleLink>
             </div>
           </div>

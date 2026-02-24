@@ -4,8 +4,11 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Loader2, CheckCircle } from "lucide-react"
+import { useDictionary } from "@/components/dictionary-provider"
 
 export function NewsletterSubscribe() {
+  const dict = useDictionary()
+  const nl = (dict as any).footer || {}
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isSubscribed, setIsSubscribed] = useState(false)
@@ -16,7 +19,7 @@ export function NewsletterSubscribe() {
     setError("")
     
     if (!email || !email.includes("@")) {
-      setError("Please enter a valid email")
+      setError(nl.invalidEmail || "Please enter a valid email")
       return
     }
 
@@ -32,14 +35,14 @@ export function NewsletterSubscribe() {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || "Failed to subscribe")
+        setError(data.error || (nl.subscribeFailed || "Failed to subscribe"))
         setIsLoading(false)
         return
       }
 
       setIsSubscribed(true)
     } catch (err: any) {
-      setError("Something went wrong. Please try again.")
+      setError(nl.somethingWrong || "Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -49,7 +52,7 @@ export function NewsletterSubscribe() {
     return (
       <div className="flex items-center justify-center gap-2 text-primary">
         <CheckCircle className="h-5 w-5" />
-        <span>Thanks for subscribing!</span>
+        <span>{nl.thanksSubscribing || "Thanks for subscribing!"}</span>
       </div>
     )
   }
@@ -59,7 +62,7 @@ export function NewsletterSubscribe() {
       <div className="flex gap-2">
         <Input 
           type="email" 
-          placeholder="Enter your email" 
+          placeholder={nl.emailPlaceholder || "Enter your email"} 
           className="bg-background"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -69,7 +72,7 @@ export function NewsletterSubscribe() {
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            "Subscribe"
+            nl.subscribeButton || "Subscribe"
           )}
         </Button>
       </div>

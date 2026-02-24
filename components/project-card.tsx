@@ -1,7 +1,10 @@
+"use client"
+
 import LocaleLink from "@/components/locale-link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Clock, MapPin, Users, CheckCircle } from "lucide-react"
+import { useDictionary } from "@/components/dictionary-provider"
 
 interface Project {
   id: string
@@ -23,6 +26,8 @@ interface Project {
 }
 
 export function ProjectCard({ project }: { project: Project }) {
+  const dict = useDictionary()
+  const t = (dict as any).common || {}
   const projectTypeColors: { [key: string]: string } = {
     consultation: "bg-purple-100 text-purple-700",
     "short-term": "bg-blue-100 text-blue-700",
@@ -35,12 +40,12 @@ export function ProjectCard({ project }: { project: Project }) {
       <div className="flex items-center gap-3 mb-4">
         <img
           src={project.ngo?.logo || "/placeholder.svg"}
-          alt={project.ngo?.name || "Organization"}
+          alt={project.ngo?.name || (t.organization || "Organization")}
           className="w-10 h-10 rounded-lg object-cover bg-muted"
         />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-sm font-medium text-foreground truncate">{project.ngo?.name || "Unknown"}</p>
+            <p className="text-sm font-medium text-foreground truncate">{project.ngo?.name || (t.unknown || "Unknown")}</p>
             {project.ngo?.verified && <CheckCircle className="h-4 w-4 text-primary flex-shrink-0" />}
           </div>
         </div>
@@ -86,15 +91,15 @@ export function ProjectCard({ project }: { project: Project }) {
       <div className="flex items-center justify-between pt-4 border-t border-border">
         <div className="flex items-center gap-2">
           <Badge className={`text-xs ${projectTypeColors[project.projectType] || "bg-gray-100 text-gray-700"}`}>
-            {project.projectType === "consultation" ? "1-hour call" : project.projectType}
+            {project.projectType === "consultation" ? (t.oneHourCall || "1-hour call") : project.projectType}
           </Badge>
           <span className="text-xs text-muted-foreground">
             <Users className="h-3 w-3 inline mr-1" />
-            {project.applicants} applied
+            {project.applicants} {t.applied || "applied"}
           </span>
         </div>
         <Button asChild size="sm" variant="ghost" className="text-primary hover:text-primary hover:bg-primary/10">
-          <LocaleLink href={`/projects/${project.id}`}>Apply Ã¢â€ â€™</LocaleLink>
+          <LocaleLink href={`/projects/${project.id}`}>{t.apply || "Apply"} →</LocaleLink>
         </Button>
       </div>
     </div>

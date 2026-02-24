@@ -7,6 +7,7 @@ import { UserPlus, UserCheck, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 import { followUser, unfollowUser } from "@/lib/actions"
+import { useDictionary } from "@/components/dictionary-provider"
 
 interface FollowButtonProps {
   /** The user ID to follow/unfollow */
@@ -39,6 +40,8 @@ export function FollowButton({
   const [isHovering, setIsHovering] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
+  const dict = useDictionary()
+  const t = (dict as any).common || {}
 
   const handleToggle = useCallback(() => {
     startTransition(async () => {
@@ -84,9 +87,9 @@ export function FollowButton({
     ? ""
     : isFollowing
       ? isHovering
-        ? "Unfollow"
-        : "Following"
-      : "Follow"
+        ? (t.unfollow || "Unfollow")
+        : (t.following || "Following")
+      : (t.follow || "Follow")
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
@@ -129,7 +132,7 @@ export function FollowButton({
         <span className="text-sm text-muted-foreground tabular-nums">
           <span className="font-semibold text-foreground">{formatCount(followersCount)}</span>
           {" "}
-          {followersCount === 1 ? "follower" : "followers"}
+          {followersCount === 1 ? (t.follower || "follower") : (t.followers || "followers")}
         </span>
       )}
     </div>

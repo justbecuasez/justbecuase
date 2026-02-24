@@ -1,7 +1,13 @@
+"use client"
+
 import { testimonials } from "@/lib/data"
 import { Quote, ShieldCheck, Zap, Globe } from "lucide-react"
+import { useDictionary } from "@/components/dictionary-provider"
 
 export function Testimonials() {
+  const dict = useDictionary()
+  const home = dict.home || {}
+
   return (
     <section className="py-24 bg-[#FCFDFF]">
       <div className="container mx-auto px-6">
@@ -9,13 +15,13 @@ export function Testimonials() {
         <div className="max-w-3xl mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 mb-6">
             <Zap className="h-3 w-3 text-slate-900 fill-slate-900" />
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">The Network Effect</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-600">{home.theNetworkEffect || "The Network Effect"}</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-semibold text-slate-900 tracking-tight mb-6">
-            Trusted by the architects <br /> of social change.
+            {home.testimonialsTitle || "Trusted by the architects of social change."}
           </h2>
           <p className="text-lg text-slate-500 font-light">
-            Real stories from professional impact agents and the NGOs they&apos;ve helped scale.
+            {home.testimonialsSubtitle || "Real stories from professional impact agents and the NGOs they've helped scale."}
           </p>
         </div>
 
@@ -36,12 +42,12 @@ export function Testimonials() {
                   <div className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100">
                     <ShieldCheck className="h-4 w-4 text-slate-900" />
                   </div>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Verified {testimonial.type}</span>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{home.verified || "Verified"} {testimonial.type}</span>
                 </div>
                 {index === 0 && (
                   <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md">
                     <Globe className="h-3 w-3" />
-                    <span className="text-[9px] font-bold uppercase">Regional Impact</span>
+                    <span className="text-[9px] font-bold uppercase">{home.regionalImpact || "Regional Impact"}</span>
                   </div>
                 )}
               </div>
@@ -91,7 +97,7 @@ export function Testimonials() {
         {/* CTA Link - To keep users moving */}
         <div className="mt-16 text-center">
           <button className="text-sm font-bold text-slate-900 border-b-2 border-slate-900 pb-1 hover:text-slate-500 hover:border-slate-500 transition-all">
-            See more success stories →
+            {home.seeMoreStories || "See more success stories →"}
           </button>
         </div>
       </div>
