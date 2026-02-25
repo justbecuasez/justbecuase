@@ -2,6 +2,7 @@
 
 import LocaleLink from "@/components/locale-link"
 import { usePathname } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import {
   LayoutDashboard,
   PlusCircle,
@@ -55,6 +56,7 @@ const navGroups = [
 
 export function NGOAppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  const locale = useLocale()
 
   return (
     <Sidebar variant="inset" collapsible="icon" {...props}>
@@ -83,8 +85,8 @@ export function NGOAppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map((item) => {
-                  const isActive = pathname === item.href ||
-                    (item.href.includes("?") && pathname === item.href.split("?")[0])
+                  const isActive = pathname === localePath(item.href, locale) ||
+                    (item.href.includes("?") && pathname === localePath(item.href.split("?")[0], locale))
                   return (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton

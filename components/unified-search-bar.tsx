@@ -150,8 +150,9 @@ function useRecentSearches() {
 // ============================================
 
 function HighlightedText({ text, query }: { text: string; query: string }) {
-  if (!query || query.length < 1 || !text) return <>{text}</>
+  if (!query || query.trim().length < 1 || !text) return <>{text}</>
   const terms = query.trim().split(/\s+/).filter(Boolean)
+  if (terms.length === 0) return <>{text}</>
   const escapedTerms = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
   const regex = new RegExp(`(${escapedTerms.join("|")})`, "gi")
   const parts = text.split(regex)

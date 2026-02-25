@@ -2,6 +2,7 @@
 
 import LocaleLink from "@/components/locale-link"
 import { usePathname } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import {
   LayoutDashboard,
   FolderKanban,
@@ -52,6 +53,7 @@ const navGroups = [
 
 export function VolunteerAppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
+  const locale = useLocale()
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -80,7 +82,7 @@ export function VolunteerAppSidebar({ ...props }: React.ComponentProps<typeof Si
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map((item) => {
-                  const isActive = pathname === item.href
+                  const isActive = pathname === localePath(item.href, locale)
                   return (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton

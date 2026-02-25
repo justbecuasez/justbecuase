@@ -2,6 +2,7 @@
 
 import LocaleLink from "@/components/locale-link"
 import { usePathname } from "next/navigation"
+import { useLocale, localePath } from "@/hooks/use-locale"
 import { cn } from "@/lib/utils"
 import {
   LayoutDashboard,
@@ -83,6 +84,7 @@ const navItems = [
 
 export function AdminSidebar() {
   const pathname = usePathname()
+  const locale = useLocale()
 
   return (
     <aside className="fixed left-0 top-16 w-64 h-[calc(100vh-4rem)] bg-background border-r hidden lg:block overflow-y-auto">
@@ -94,7 +96,7 @@ export function AdminSidebar() {
 
         <nav className="space-y-1">
           {navItems.map((item) => {
-            const isActive = pathname === item.href
+            const isActive = pathname === localePath(item.href, locale)
             return (
               <LocaleLink
                 key={item.href}

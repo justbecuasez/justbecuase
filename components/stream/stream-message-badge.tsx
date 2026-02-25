@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useChatContext } from "stream-chat-react";
 import { useRouter } from "next/navigation";
 import { useLocale, localePath } from "@/hooks/use-locale";
 import { MessageSquare } from "lucide-react";

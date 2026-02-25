@@ -3,6 +3,7 @@
 import { useCallback, useState, useEffect, useRef } from "react";
 import { useChatContext } from "stream-chat-react";
 import { useStreamVideoClient } from "@stream-io/video-react-sdk";
+import { useStream } from "./stream-provider";
 import { Phone, Video, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
