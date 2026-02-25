@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { toast } from "sonner"
+import { useDictionary } from "@/components/dictionary-provider"
 import { AdminTableSkeleton } from "@/components/ui/page-skeletons"
 import {
   getTeamMembers,
@@ -50,6 +51,7 @@ import {
 import type { TeamMember } from "@/lib/types"
 
 export default function AdminTeamPage() {
+  const dict = useDictionary();
   const [members, setMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [showDialog, setShowDialog] = useState(false)
@@ -86,7 +88,7 @@ export default function AdminTeamPage() {
     if (result.success && result.data) {
       setMembers(result.data)
     } else {
-      toast.error("Failed to load team members")
+      toast.error(dict.admin?.team?.toasts?.failedToLoad || "Failed to load team members")
     }
     setLoading(false)
   }
@@ -156,7 +158,7 @@ export default function AdminTeamPage() {
 
   async function handleSubmit() {
     if (!formData.name.trim() || !formData.role.trim()) {
-      toast.error("Name and role are required")
+      toast.error(dict.admin?.team?.toasts?.nameRoleRequired || "Name and role are required")
       return
     }
 
@@ -172,10 +174,10 @@ export default function AdminTeamPage() {
         })
         if (result.url) {
           avatarUrl = result.url
-          toast.success("Photo uploaded successfully")
+          toast.success(dict.admin?.team?.toasts?.photoUploaded || "Photo uploaded successfully")
         }
       } catch (error) {
-        toast.error("Failed to upload photo")
+        toast.error(dict.admin?.team?.toasts?.photoUploadFailed || "Failed to upload photo")
         setSaving(false)
         setUploadingAvatar(false)
         return
@@ -195,11 +197,11 @@ export default function AdminTeamPage() {
       })
 
       if (result.success) {
-        toast.success("Team member updated successfully")
+        toast.success(dict.admin?.team?.toasts?.memberUpdated || "Team member updated successfully")
         setShowDialog(false)
         loadMembers()
       } else {
-        toast.error(result.error || "Failed to update team member")
+        toast.error(result.error || (dict.admin?.team?.toasts?.failedToUpdate || "Failed to update team member"))
       }
     } else {
       const result = await createTeamMember({
@@ -214,11 +216,11 @@ export default function AdminTeamPage() {
       })
 
       if (result.success) {
-        toast.success("Team member added successfully")
+        toast.success(dict.admin?.team?.toasts?.memberAdded || "Team member added successfully")
         setShowDialog(false)
         loadMembers()
       } else {
-        toast.error(result.error || "Failed to add team member")
+        toast.error(result.error || (dict.admin?.team?.toasts?.failedToAdd || "Failed to add team member"))
       }
     }
 
@@ -232,12 +234,12 @@ export default function AdminTeamPage() {
     const result = await deleteTeamMember(deletingMember._id.toString())
 
     if (result.success) {
-      toast.success("Team member deleted successfully")
+      toast.success(dict.admin?.team?.toasts?.memberDeleted || "Team member deleted successfully")
       setShowDeleteDialog(false)
       setDeletingMember(null)
       loadMembers()
     } else {
-      toast.error(result.error || "Failed to delete team member")
+      toast.error(result.error || (dict.admin?.team?.toasts?.failedToDelete || "Failed to delete team member"))
     }
 
     setSaving(false)
@@ -253,12 +255,12 @@ export default function AdminTeamPage() {
     if (result.success) {
       toast.success(
         member.isActive
-          ? "Team member hidden from about page"
-          : "Team member visible on about page"
+          ? (dict.admin?.team?.toasts?.memberHidden || "Team member hidden from about page")
+          : (dict.admin?.team?.toasts?.memberVisible || "Team member visible on about page")
       )
       loadMembers()
     } else {
-      toast.error("Failed to update team member")
+      toast.error(dict.admin?.team?.toasts?.failedToUpdate || "Failed to update team member")
     }
   }
 
@@ -266,14 +268,14 @@ export default function AdminTeamPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Team Members</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{dict.admin?.team?.title || "Team Members"}</h1>
           <p className="text-muted-foreground">
-            Manage team members displayed on the About page
+            {dict.admin?.team?.subtitle || "Manage team members displayed on the About page"}
           </p>
         </div>
         <Button onClick={openCreateDialog}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Member
+          {dict.admin?.team?.addMember || "Add Member"}
         </Button>
       </div>
 
@@ -286,7 +288,7 @@ export default function AdminTeamPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{members.length}</p>
-              <p className="text-sm text-muted-foreground">Total Members</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.team?.totalMembers || "Total Members"}</p>
             </div>
           </CardContent>
         </Card>
@@ -299,7 +301,7 @@ export default function AdminTeamPage() {
               <p className="text-2xl font-bold text-foreground">
                 {members.filter((m) => m.isActive).length}
               </p>
-              <p className="text-sm text-muted-foreground">Active</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.common?.active || "Active"}</p>
             </div>
           </CardContent>
         </Card>
@@ -312,7 +314,7 @@ export default function AdminTeamPage() {
               <p className="text-2xl font-bold text-foreground">
                 {members.filter((m) => !m.isActive).length}
               </p>
-              <p className="text-sm text-muted-foreground">Hidden</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.team?.hidden || "Hidden"}</p>
             </div>
           </CardContent>
         </Card>
@@ -321,7 +323,7 @@ export default function AdminTeamPage() {
       {/* Team Members List */}
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg">All Team Members</CardTitle>
+          <CardTitle className="text-lg">{dict.admin?.team?.allTeamMembers || "All Team Members"}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -354,7 +356,7 @@ export default function AdminTeamPage() {
                         variant={member.isActive ? "default" : "secondary"}
                         className="text-xs"
                       >
-                        {member.isActive ? "Active" : "Hidden"}
+                        {member.isActive ? (dict.admin?.common?.active || "Active") : (dict.admin?.team?.hidden || "Hidden")}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground truncate">
@@ -392,18 +394,18 @@ export default function AdminTeamPage() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => openEditDialog(member)}>
                         <Pencil className="h-4 w-4 mr-2" />
-                        Edit
+                        {dict.admin?.common?.edit || "Edit"}
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => toggleActive(member)}>
                         <User className="h-4 w-4 mr-2" />
-                        {member.isActive ? "Hide" : "Show"}
+                        {member.isActive ? (dict.admin?.team?.hide || "Hide") : (dict.admin?.team?.show || "Show")}
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => openDeleteDialog(member)}
                         className="text-destructive"
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
+                        {dict.admin?.common?.delete || "Delete"}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -413,13 +415,13 @@ export default function AdminTeamPage() {
           ) : (
             <div className="text-center py-12">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No team members yet</p>
+              <p className="text-muted-foreground">{dict.admin?.team?.noTeamMembersYet || "No team members yet"}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Add team members to display on the About page
+                {dict.admin?.team?.noTeamMembersDescription || "Add team members to display on the About page"}
               </p>
               <Button onClick={openCreateDialog} className="mt-4">
                 <Plus className="h-4 w-4 mr-2" />
-                Add First Member
+                {dict.admin?.team?.addFirstMember || "Add First Member"}
               </Button>
             </div>
           )}
@@ -431,17 +433,17 @@ export default function AdminTeamPage() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editingMember ? "Edit Team Member" : "Add Team Member"}
+              {editingMember ? (dict.admin?.team?.editTeamMember || "Edit Team Member") : (dict.admin?.team?.addTeamMember || "Add Team Member")}
             </DialogTitle>
             <DialogDescription>
               {editingMember
-                ? "Update team member details"
-                : "Add a new team member to display on the About page"}
+                ? (dict.admin?.team?.updateTeamMemberDetails || "Update team member details")
+                : (dict.admin?.team?.addTeamMemberDescription || "Add a new team member to display on the About page")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">{dict.admin?.team?.nameLabel || "Name *"}</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -452,7 +454,7 @@ export default function AdminTeamPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">Role / Designation *</Label>
+              <Label htmlFor="role">{dict.admin?.team?.roleLabel || "Role / Designation *"}</Label>
               <Input
                 id="role"
                 value={formData.role}
@@ -463,19 +465,19 @@ export default function AdminTeamPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
+              <Label htmlFor="bio">{dict.admin?.team?.bioLabel || "Bio"}</Label>
               <Textarea
                 id="bio"
                 value={formData.bio}
                 onChange={(e) =>
                   setFormData({ ...formData, bio: e.target.value })
                 }
-                placeholder="Brief description about the team member..."
+                placeholder={dict.admin?.team?.bioPlaceholder || "Brief description about the team member..."}
                 rows={3}
               />
             </div>
             <div className="space-y-2">
-              <Label>Photo</Label>
+              <Label>{dict.admin?.team?.photoLabel || "Photo"}</Label>
               <div className="flex items-start gap-4">
                 {/* Photo Preview */}
                 <div className="relative">
@@ -519,16 +521,16 @@ export default function AdminTeamPage() {
                     className="w-full"
                   >
                     <Upload className="h-4 w-4 mr-2" />
-                    {avatarPreview ? "Change Photo" : "Upload Photo"}
+                    {avatarPreview ? (dict.admin?.team?.changePhoto || "Change Photo") : (dict.admin?.team?.uploadPhoto || "Upload Photo")}
                   </Button>
                   <p className="text-xs text-muted-foreground">
-                    JPG, PNG or WebP. Max 5MB.
+                    {dict.admin?.team?.photoHint || "JPG, PNG or WebP. Max 5MB."}
                   </p>
                   {uploadingAvatar && (
                     <div className="space-y-1">
                       <Progress value={uploadProgress} className="h-2" />
                       <p className="text-xs text-muted-foreground text-center">
-                        Uploading... {uploadProgress}%
+                        {(dict.admin?.team?.uploadingProgress || "Uploading... {progress}%").replace("{progress}", String(uploadProgress))}
                       </p>
                     </div>
                   )}
@@ -537,7 +539,7 @@ export default function AdminTeamPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="linkedin">LinkedIn URL</Label>
+                <Label htmlFor="linkedin">{dict.admin?.team?.linkedinUrl || "LinkedIn URL"}</Label>
                 <Input
                   id="linkedin"
                   value={formData.linkedinUrl}
@@ -548,7 +550,7 @@ export default function AdminTeamPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="twitter">Twitter URL</Label>
+                <Label htmlFor="twitter">{dict.admin?.team?.twitterUrl || "Twitter URL"}</Label>
                 <Input
                   id="twitter"
                   value={formData.twitterUrl}
@@ -561,9 +563,9 @@ export default function AdminTeamPage() {
             </div>
             <div className="flex items-center justify-between py-2">
               <div>
-                <Label htmlFor="active">Show on About Page</Label>
+                <Label htmlFor="active">{dict.admin?.team?.showOnAboutPage || "Show on About Page"}</Label>
                 <p className="text-sm text-muted-foreground">
-                  When enabled, this member will be visible on the About page
+                  {dict.admin?.team?.showOnAboutPageHint || "When enabled, this member will be visible on the About page"}
                 </p>
               </div>
               <Switch
@@ -581,11 +583,11 @@ export default function AdminTeamPage() {
               onClick={() => setShowDialog(false)}
               disabled={saving || uploadingAvatar}
             >
-              Cancel
+              {dict.admin?.common?.cancel || "Cancel"}
             </Button>
             <Button onClick={handleSubmit} disabled={saving || uploadingAvatar}>
               {(saving || uploadingAvatar) && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {uploadingAvatar ? "Uploading..." : (editingMember ? "Update" : "Add")} Member
+              {uploadingAvatar ? (dict.admin?.team?.uploading || "Uploading...") : (editingMember ? (dict.admin?.common?.update || "Update") : (dict.admin?.common?.add || "Add"))} {dict.admin?.team?.member || "Member"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -595,10 +597,9 @@ export default function AdminTeamPage() {
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Team Member</DialogTitle>
+            <DialogTitle>{dict.admin?.team?.deleteTeamMember || "Delete Team Member"}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &quot;{deletingMember?.name}&quot;?
-              This action cannot be undone.
+              {(dict.admin?.team?.deleteConfirmation || "Are you sure you want to delete \"{name}\"? This action cannot be undone.").replace("{name}", deletingMember?.name || "")}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -607,7 +608,7 @@ export default function AdminTeamPage() {
               onClick={() => setShowDeleteDialog(false)}
               disabled={saving}
             >
-              Cancel
+              {dict.admin?.common?.cancel || "Cancel"}
             </Button>
             <Button
               variant="destructive"
@@ -615,7 +616,7 @@ export default function AdminTeamPage() {
               disabled={saving}
             >
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Delete
+              {dict.admin?.common?.delete || "Delete"}
             </Button>
           </DialogFooter>
         </DialogContent>

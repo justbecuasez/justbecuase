@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/table"
 import { Plus, Trash2, Tag, Copy, Loader2, Pencil } from "lucide-react"
 import { toast } from "sonner"
+import { useDictionary } from "@/components/dictionary-provider"
 
 interface Coupon {
   _id: string
@@ -51,6 +52,7 @@ const PLAN_OPTIONS = [
 ]
 
 export default function AdminCouponsPage() {
+  const dict = useDictionary();
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -80,7 +82,7 @@ export default function AdminCouponsPage() {
         setCoupons(data.data)
       }
     } catch {
-      toast.error("Failed to load coupons")
+      toast.error(dict.admin?.coupons?.toasts?.failedToLoad || "Failed to load coupons")
     } finally {
       setLoading(false)
     }
@@ -109,15 +111,15 @@ export default function AdminCouponsPage() {
 
   const handleSave = async () => {
     if (!formData.code.trim()) {
-      toast.error("Coupon code is required")
+      toast.error(dict.admin?.coupons?.toasts?.codeRequired || "Coupon code is required")
       return
     }
     if (formData.discountValue <= 0) {
-      toast.error("Discount value must be greater than 0")
+      toast.error(dict.admin?.coupons?.toasts?.discountRequired || "Discount value must be greater than 0")
       return
     }
     if (formData.discountType === "percentage" && formData.discountValue > 100) {
-      toast.error("Percentage discount cannot exceed 100%")
+      toast.error(dict.admin?.coupons?.toasts?.percentageExceeded || "Percentage discount cannot exceed 100%")
       return
     }
 
@@ -142,7 +144,7 @@ export default function AdminCouponsPage() {
         throw new Error(data.error || "Failed to save coupon")
       }
 
-      toast.success(editingId ? "Coupon updated" : "Coupon created")
+      toast.success(editingId ? (dict.admin?.coupons?.toasts?.couponUpdated || "Coupon updated") : (dict.admin?.coupons?.toasts?.couponCreated || "Coupon created"))
       setDialogOpen(false)
       resetForm()
       fetchCoupons()
@@ -154,14 +156,14 @@ export default function AdminCouponsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this coupon?")) return
+    if (!confirm(dict.admin?.coupons?.toasts?.deleteConfirm || "Are you sure you want to delete this coupon?")) return
     try {
       const res = await fetch(`/api/admin/coupons/${id}`, { method: "DELETE" })
       if (!res.ok) throw new Error("Failed to delete")
-      toast.success("Coupon deleted")
+      toast.success(dict.admin?.coupons?.toasts?.couponDeleted || "Coupon deleted")
       fetchCoupons()
     } catch {
-      toast.error("Failed to delete coupon")
+      toast.error(dict.admin?.coupons?.toasts?.failedToDelete || "Failed to delete coupon")
     }
   }
 
@@ -175,7 +177,7 @@ export default function AdminCouponsPage() {
       if (!res.ok) throw new Error("Failed to update")
       fetchCoupons()
     } catch {
-      toast.error("Failed to toggle coupon status")
+      toast.error(dict.admin?.coupons?.toasts?.failedToToggle || "Failed to toggle coupon status")
     }
   }
 
@@ -199,41 +201,41 @@ export default function AdminCouponsPage() {
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code)
-    toast.success(`Copied ${code}`)
+    toast.success((dict.admin?.coupons?.toasts?.copied || "Copied {code}").replace("{code}", code))
   }
 
   const isExpired = (date: string) => new Date(date) < new Date()
 
   const planLabels: Record<string, string> = {
-    "ngo-pro": "NGO Pro",
-    "volunteer-pro": "Agent Pro",
+    "ngo-pro": dict.admin?.coupons?.ngoPro || "NGO Pro",
+    "volunteer-pro": dict.admin?.coupons?.agentPro || "Agent Pro",
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Coupon Codes</h1>
-          <p className="text-muted-foreground">Create and manage discount coupons for subscriptions</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{dict.admin?.coupons?.title || "Coupon Codes"}</h1>
+          <p className="text-muted-foreground">{dict.admin?.coupons?.subtitle || "Create and manage discount coupons for subscriptions"}</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm() }}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Create Coupon
+              {dict.admin?.coupons?.createCoupon || "Create Coupon"}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>{editingId ? "Edit Coupon" : "Create Coupon"}</DialogTitle>
+              <DialogTitle>{editingId ? (dict.admin?.coupons?.editCoupon || "Edit Coupon") : (dict.admin?.coupons?.createCoupon || "Create Coupon")}</DialogTitle>
               <DialogDescription>
-                {editingId ? "Update the coupon details below." : "Set up a new discount coupon for subscriptions."}
+                {editingId ? (dict.admin?.coupons?.editCouponDescription || "Update the coupon details below.") : (dict.admin?.coupons?.createCouponDescription || "Set up a new discount coupon for subscriptions.")}
               </DialogDescription>
             </DialogHeader>
 
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="code">Coupon Code</Label>
+                <Label htmlFor="code">{dict.admin?.coupons?.couponCode || "Coupon Code"}</Label>
                 <Input
                   id="code"
                   placeholder="e.g., LAUNCH50"
@@ -245,7 +247,7 @@ export default function AdminCouponsPage() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="description">Description (internal)</Label>
+                <Label htmlFor="description">{dict.admin?.coupons?.descriptionInternal || "Description (internal)"}</Label>
                 <Input
                   id="description"
                   placeholder="e.g., Launch promo — 50% off"
@@ -256,7 +258,7 @@ export default function AdminCouponsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label>Discount Type</Label>
+                  <Label>{dict.admin?.coupons?.discountType || "Discount Type"}</Label>
                   <Select
                     value={formData.discountType}
                     onValueChange={(val) => setFormData(prev => ({ ...prev, discountType: val as "percentage" | "fixed" }))}
@@ -265,14 +267,14 @@ export default function AdminCouponsPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="percentage">Percentage (%)</SelectItem>
-                      <SelectItem value="fixed">Fixed Amount</SelectItem>
+                      <SelectItem value="percentage">{dict.admin?.coupons?.percentage || "Percentage (%)"}</SelectItem>
+                      <SelectItem value="fixed">{dict.admin?.coupons?.fixedAmount || "Fixed Amount"}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="discountValue">
-                    {formData.discountType === "percentage" ? "Discount (%)" : "Discount Amount"}
+                    {formData.discountType === "percentage" ? (dict.admin?.coupons?.discountPercent || "Discount (%)") : (dict.admin?.coupons?.discountAmount || "Discount Amount")}
                   </Label>
                   <Input
                     id="discountValue"
@@ -287,7 +289,7 @@ export default function AdminCouponsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="maxUses">Max Total Uses (0 = unlimited)</Label>
+                  <Label htmlFor="maxUses">{dict.admin?.coupons?.maxTotalUses || "Max Total Uses (0 = unlimited)"}</Label>
                   <Input
                     id="maxUses"
                     type="number"
@@ -297,7 +299,7 @@ export default function AdminCouponsPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="maxUsesPerUser">Max Per User (0 = unlimited)</Label>
+                  <Label htmlFor="maxUsesPerUser">{dict.admin?.coupons?.maxPerUser || "Max Per User (0 = unlimited)"}</Label>
                   <Input
                     id="maxUsesPerUser"
                     type="number"
@@ -309,7 +311,7 @@ export default function AdminCouponsPage() {
               </div>
 
               <div className="grid gap-2">
-                <Label>Applicable Plans</Label>
+                <Label>{dict.admin?.coupons?.applicablePlans || "Applicable Plans"}</Label>
                 <div className="flex gap-2 flex-wrap">
                   {PLAN_OPTIONS.map((plan) => {
                     const selected = formData.applicablePlans.includes(plan.value)
@@ -332,12 +334,12 @@ export default function AdminCouponsPage() {
                     )
                   })}
                 </div>
-                <p className="text-xs text-muted-foreground">Leave empty to apply to all plans</p>
+                <p className="text-xs text-muted-foreground">{dict.admin?.coupons?.applicablePlansHint || "Leave empty to apply to all plans"}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="validFrom">Valid From</Label>
+                  <Label htmlFor="validFrom">{dict.admin?.coupons?.validFrom || "Valid From"}</Label>
                   <Input
                     id="validFrom"
                     type="datetime-local"
@@ -346,7 +348,7 @@ export default function AdminCouponsPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="validUntil">Valid Until</Label>
+                  <Label htmlFor="validUntil">{dict.admin?.coupons?.validUntil || "Valid Until"}</Label>
                   <Input
                     id="validUntil"
                     type="datetime-local"
@@ -361,17 +363,17 @@ export default function AdminCouponsPage() {
                   checked={formData.isActive}
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
                 />
-                <Label>Active</Label>
+                <Label>{dict.admin?.common?.active || "Active"}</Label>
               </div>
             </div>
 
             <DialogFooter>
               <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm() }}>
-                Cancel
+                {dict.admin?.common?.cancel || "Cancel"}
               </Button>
               <Button onClick={handleSave} disabled={saving}>
                 {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-                {editingId ? "Update" : "Create"} Coupon
+                {editingId ? (dict.admin?.coupons?.updateCoupon || "Update Coupon") : (dict.admin?.coupons?.createCouponButton || "Create Coupon")}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -382,7 +384,7 @@ export default function AdminCouponsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Coupons</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{dict.admin?.coupons?.totalCoupons || "Total Coupons"}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{coupons.length}</div>
@@ -390,7 +392,7 @@ export default function AdminCouponsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Coupons</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{dict.admin?.coupons?.activeCoupons || "Active Coupons"}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
@@ -400,7 +402,7 @@ export default function AdminCouponsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Total Redemptions</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{dict.admin?.coupons?.totalRedemptions || "Total Redemptions"}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">
@@ -413,8 +415,8 @@ export default function AdminCouponsPage() {
       {/* Coupons Table */}
       <Card>
         <CardHeader>
-          <CardTitle>All Coupons</CardTitle>
-          <CardDescription>Manage discount codes for your subscription plans</CardDescription>
+          <CardTitle>{dict.admin?.coupons?.allCoupons || "All Coupons"}</CardTitle>
+          <CardDescription>{dict.admin?.coupons?.allCouponsDescription || "Manage discount codes for your subscription plans"}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -424,21 +426,21 @@ export default function AdminCouponsPage() {
           ) : coupons.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <Tag className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No coupons created yet</p>
-              <p className="text-sm">Create your first coupon to get started</p>
+              <p>{dict.admin?.coupons?.noCouponsYet || "No coupons created yet"}</p>
+              <p className="text-sm">{dict.admin?.coupons?.noCouponsDescription || "Create your first coupon to get started"}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Code</TableHead>
-                    <TableHead>Discount</TableHead>
-                    <TableHead>Plans</TableHead>
-                    <TableHead>Usage</TableHead>
-                    <TableHead>Valid Until</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{dict.admin?.coupons?.tableCode || "Code"}</TableHead>
+                    <TableHead>{dict.admin?.coupons?.tableDiscount || "Discount"}</TableHead>
+                    <TableHead>{dict.admin?.coupons?.tablePlans || "Plans"}</TableHead>
+                    <TableHead>{dict.admin?.coupons?.tableUsage || "Usage"}</TableHead>
+                    <TableHead>{dict.admin?.coupons?.tableValidUntil || "Valid Until"}</TableHead>
+                    <TableHead>{dict.admin?.coupons?.tableStatus || "Status"}</TableHead>
+                    <TableHead className="text-right">{dict.admin?.coupons?.tableActions || "Actions"}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -467,7 +469,7 @@ export default function AdminCouponsPage() {
                         </TableCell>
                         <TableCell>
                           {coupon.applicablePlans.length === 0 ? (
-                            <Badge variant="secondary">All Plans</Badge>
+                            <Badge variant="secondary">{dict.admin?.coupons?.allPlans || "All Plans"}</Badge>
                           ) : (
                             <div className="flex gap-1 flex-wrap">
                               {coupon.applicablePlans.map(p => (

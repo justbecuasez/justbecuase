@@ -40,6 +40,7 @@ import {
 } from "lucide-react"
 import { getAdminSettings, updateAdminSettings } from "@/lib/actions"
 import { toast } from "sonner"
+import { useDictionary } from "@/app/[lang]/dictionaries"
 import type { AdminSettings, SupportedCurrency, PaymentGatewayType } from "@/lib/types"
 import { SettingsPageSkeleton } from "@/components/ui/page-skeletons"
 import { usePlatformSettingsStore } from "@/lib/store"
@@ -55,6 +56,7 @@ const CURRENCIES: { value: SupportedCurrency; label: string; symbol: string }[] 
 ]
 
 export default function AdminSettingsPage() {
+  const dict = useDictionary();
   const [settings, setSettings] = useState<AdminSettings | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -184,13 +186,13 @@ export default function AdminSettingsPage() {
       })
       const data = await response.json()
       if (response.ok) {
-        toast.success("Payment gateway configuration saved successfully")
+        toast.success(dict.admin?.settings?.toasts?.paymentConfigSaved || "Payment gateway configuration saved successfully")
         loadPaymentConfig()
       } else {
-        toast.error(data.error || "Failed to save payment configuration")
+        toast.error(data.error || (dict.admin?.settings?.toasts?.paymentConfigFailed || "Failed to save payment configuration"))
       }
     } catch (error) {
-      toast.error("Failed to save payment configuration")
+      toast.error(dict.admin?.settings?.toasts?.paymentConfigFailed || "Failed to save payment configuration")
     } finally {
       setPaymentSaving(false)
     }
@@ -209,10 +211,10 @@ export default function AdminSettingsPage() {
         toast.success(data.message)
         loadPaymentConfig()
       } else {
-        toast.error(data.error || data.message || "Failed to test payment gateway")
+        toast.error(data.error || data.message || (dict.admin?.settings?.toasts?.paymentTestFailed || "Failed to test payment gateway"))
       }
     } catch (error) {
-      toast.error("Failed to test payment gateway")
+      toast.error(dict.admin?.settings?.toasts?.paymentTestFailed || "Failed to test payment gateway")
     } finally {
       setPaymentTesting(false)
     }
@@ -230,15 +232,15 @@ export default function AdminSettingsPage() {
       const data = await response.json()
       console.log("[Admin] Save response:", data)
       if (response.ok) {
-        toast.success("SMS configuration saved successfully")
+        toast.success(dict.admin?.settings?.toasts?.smsConfigSaved || "SMS configuration saved successfully")
         loadSmsConfig()
       } else {
         console.error("[Admin] Save failed:", data.error)
-        toast.error(data.error || "Failed to save SMS configuration")
+        toast.error(data.error || (dict.admin?.settings?.toasts?.smsConfigFailed || "Failed to save SMS configuration"))
       }
     } catch (error) {
       console.error("[Admin] Save error:", error)
-      toast.error("Failed to save SMS configuration")
+      toast.error(dict.admin?.settings?.toasts?.smsConfigFailed || "Failed to save SMS configuration")
     } finally {
       setSmsSaving(false)
     }
@@ -246,7 +248,7 @@ export default function AdminSettingsPage() {
 
   const testSmsConfig = async () => {
     if (!smsTestPhone) {
-      toast.error("Please enter a phone number to test")
+      toast.error(dict.admin?.settings?.toasts?.smsTestPhoneRequired || "Please enter a phone number to test")
       return
     }
     setSmsTesting(true)
@@ -260,10 +262,10 @@ export default function AdminSettingsPage() {
       if (data.success) {
         toast.success(data.message)
       } else {
-        toast.error(data.error || "Failed to send test SMS")
+        toast.error(data.error || (dict.admin?.settings?.toasts?.smsTestFailed || "Failed to send test SMS"))
       }
     } catch (error) {
-      toast.error("Failed to send test SMS")
+      toast.error(dict.admin?.settings?.toasts?.smsTestFailed || "Failed to send test SMS")
     } finally {
       setSmsTesting(false)
     }
@@ -276,7 +278,7 @@ export default function AdminSettingsPage() {
     if (result.success) {
       // Invalidate the cached platform settings so all pages refresh
       usePlatformSettingsStore.getState().invalidate()
-      toast.success("Settings saved successfully — changes will propagate to all users within minutes")
+      toast.success(dict.admin?.settings?.toasts?.settingsSaved || "Settings saved successfully — changes will propagate to all users within minutes")
     } else {
       toast.error(result.error || "Failed to save settings")
     }
@@ -329,9 +331,9 @@ export default function AdminSettingsPage() {
   if (!settings) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Failed to load settings</p>
+        <p className="text-muted-foreground">{dict.admin?.settings?.failedToLoadSettings || "Failed to load settings"}</p>
         <Button onClick={loadSettings} className="mt-4">
-          Retry
+          {dict.admin?.common?.retry || "Retry"}
         </Button>
       </div>
     )
@@ -341,21 +343,21 @@ export default function AdminSettingsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Platform Settings</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{dict.admin?.settings?.title || "Platform Settings"}</h1>
           <p className="text-muted-foreground">
-            Configure all platform settings, pricing, and subscription plans
+            {dict.admin?.settings?.subtitle || "Configure all platform settings, pricing, and subscription plans"}
           </p>
         </div>
         <Button onClick={handleSave} disabled={isSaving}>
           {isSaving ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Saving...
+              {dict.admin?.common?.saving || "Saving..."}
             </>
           ) : (
             <>
               <Save className="h-4 w-4 mr-2" />
-              Save All Changes
+              {dict.admin?.settings?.saveAllChanges || "Save All Changes"}
             </>
           )}
         </Button>
@@ -365,31 +367,31 @@ export default function AdminSettingsPage() {
         <TabsList className="flex flex-wrap h-auto gap-1">
           <TabsTrigger value="general" className="flex items-center gap-2">
             <Globe className="h-4 w-4" />
-            General
+            {dict.admin?.settings?.tabs?.general || "General"}
           </TabsTrigger>
           <TabsTrigger value="payment" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
-            Payment
+            {dict.admin?.settings?.tabs?.payment || "Payment"}
           </TabsTrigger>
           <TabsTrigger value="volunteer-plans" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            Impact Agent Plans
+            {dict.admin?.settings?.tabs?.volunteerPlans || "Impact Agent Plans"}
           </TabsTrigger>
           <TabsTrigger value="ngo-plans" className="flex items-center gap-2">
             <Building2 className="h-4 w-4" />
-            NGO Plans
+            {dict.admin?.settings?.tabs?.ngoPlans || "NGO Plans"}
           </TabsTrigger>
           <TabsTrigger value="features" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            Features
+            {dict.admin?.settings?.tabs?.features || "Features"}
           </TabsTrigger>
           <TabsTrigger value="integrations" className="flex items-center gap-2">
             <Phone className="h-4 w-4" />
-            SMS & Integrations
+            {dict.admin?.settings?.tabs?.integrations || "SMS & Integrations"}
           </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Shield className="h-4 w-4" />
-            Security
+            {dict.admin?.settings?.tabs?.security || "Security"}
           </TabsTrigger>
         </TabsList>
 
@@ -397,15 +399,15 @@ export default function AdminSettingsPage() {
         <TabsContent value="general" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Platform Information</CardTitle>
+              <CardTitle>{dict.admin?.settings?.general?.platformInformation || "Platform Information"}</CardTitle>
               <CardDescription>
-                Basic information about your platform displayed across the site
+                {dict.admin?.settings?.general?.platformInformationDescription || "Basic information about your platform displayed across the site"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="platformName">Platform Name</Label>
+                  <Label htmlFor="platformName">{dict.admin?.settings?.general?.platformName || "Platform Name"}</Label>
                   <Input
                     id="platformName"
                     value={settings.platformName}
@@ -415,11 +417,11 @@ export default function AdminSettingsPage() {
                     placeholder="JustBeCause Network"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Displayed in navbar, emails, and meta tags
+                    {dict.admin?.settings?.general?.platformNameHint || "Displayed in navbar, emails, and meta tags"}
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="supportEmail">Support Email</Label>
+                  <Label htmlFor="supportEmail">{dict.admin?.settings?.general?.supportEmail || "Support Email"}</Label>
                   <Input
                     id="supportEmail"
                     type="email"
@@ -432,7 +434,7 @@ export default function AdminSettingsPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="platformDescription">Platform Description</Label>
+                <Label htmlFor="platformDescription">{dict.admin?.settings?.general?.platformDescription || "Platform Description"}</Label>
                 <Textarea
                   id="platformDescription"
                   value={settings.platformDescription}
@@ -445,7 +447,7 @@ export default function AdminSettingsPage() {
               </div>
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="platformLogo">Logo URL</Label>
+                  <Label htmlFor="platformLogo">{dict.admin?.settings?.general?.logoUrl || "Logo URL"}</Label>
                   <Input
                     id="platformLogo"
                     value={settings.platformLogo || ""}
@@ -456,7 +458,7 @@ export default function AdminSettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="platformFavicon">Favicon URL</Label>
+                  <Label htmlFor="platformFavicon">{dict.admin?.settings?.general?.faviconUrl || "Favicon URL"}</Label>
                   <Input
                     id="platformFavicon"
                     value={settings.platformFavicon || ""}
@@ -472,14 +474,14 @@ export default function AdminSettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>SEO Settings</CardTitle>
+              <CardTitle>{dict.admin?.settings?.general?.seoSettings || "SEO Settings"}</CardTitle>
               <CardDescription>
-                Search engine optimization settings
+                {dict.admin?.settings?.general?.seoSettingsDescription || "Search engine optimization settings"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="metaTitle">Meta Title</Label>
+                <Label htmlFor="metaTitle">{dict.admin?.settings?.general?.metaTitle || "Meta Title"}</Label>
                 <Input
                   id="metaTitle"
                   value={settings.metaTitle}
@@ -489,7 +491,7 @@ export default function AdminSettingsPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="metaDescription">Meta Description</Label>
+                <Label htmlFor="metaDescription">{dict.admin?.settings?.general?.metaDescription || "Meta Description"}</Label>
                 <Textarea
                   id="metaDescription"
                   value={settings.metaDescription}
@@ -504,15 +506,15 @@ export default function AdminSettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Social Links</CardTitle>
+              <CardTitle>{dict.admin?.settings?.general?.socialLinks || "Social Links"}</CardTitle>
               <CardDescription>
-                Social media links displayed in the footer
+                {dict.admin?.settings?.general?.socialLinksDescription || "Social media links displayed in the footer"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="facebook">Facebook</Label>
+                  <Label htmlFor="facebook">{dict.admin?.settings?.general?.facebook || "Facebook"}</Label>
                   <Input
                     id="facebook"
                     value={settings.socialLinks?.facebook || ""}
@@ -526,7 +528,7 @@ export default function AdminSettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="twitter">Twitter/X</Label>
+                  <Label htmlFor="twitter">{dict.admin?.settings?.general?.twitterX || "Twitter/X"}</Label>
                   <Input
                     id="twitter"
                     value={settings.socialLinks?.twitter || ""}
@@ -540,7 +542,7 @@ export default function AdminSettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="instagram">Instagram</Label>
+                  <Label htmlFor="instagram">{dict.admin?.settings?.general?.instagram || "Instagram"}</Label>
                   <Input
                     id="instagram"
                     value={settings.socialLinks?.instagram || ""}
@@ -554,7 +556,7 @@ export default function AdminSettingsPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="linkedin">LinkedIn</Label>
+                  <Label htmlFor="linkedin">{dict.admin?.settings?.general?.linkedin || "LinkedIn"}</Label>
                   <Input
                     id="linkedin"
                     value={settings.socialLinks?.linkedin || ""}
@@ -573,17 +575,17 @@ export default function AdminSettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Maintenance Mode</CardTitle>
+              <CardTitle>{dict.admin?.settings?.general?.maintenanceMode || "Maintenance Mode"}</CardTitle>
               <CardDescription>
-                Put the site in maintenance mode when needed
+                {dict.admin?.settings?.general?.maintenanceModeDescription || "Put the site in maintenance mode when needed"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Enable Maintenance Mode</p>
+                  <p className="font-medium">{dict.admin?.settings?.general?.enableMaintenanceMode || "Enable Maintenance Mode"}</p>
                   <p className="text-sm text-muted-foreground">
-                    Users will see a maintenance message instead of the site
+                    {dict.admin?.settings?.general?.enableMaintenanceModeHint || "Users will see a maintenance message instead of the site"}
                   </p>
                 </div>
                 <Switch
@@ -595,7 +597,7 @@ export default function AdminSettingsPage() {
               </div>
               {settings.maintenanceMode && (
                 <div className="space-y-2">
-                  <Label htmlFor="maintenanceMessage">Maintenance Message</Label>
+                  <Label htmlFor="maintenanceMessage">{dict.admin?.settings?.general?.maintenanceMessage || "Maintenance Message"}</Label>
                   <Textarea
                     id="maintenanceMessage"
                     value={settings.maintenanceMessage || ""}
@@ -618,34 +620,34 @@ export default function AdminSettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Zap className="h-5 w-5" />
-                Payment Gateway Configuration
+                {dict.admin?.settings?.payment?.paymentGatewayConfiguration || "Payment Gateway Configuration"}
               </CardTitle>
               <CardDescription>
-                Configure your payment gateway (Stripe or Razorpay). Keys are stored securely in the database.
+                {dict.admin?.settings?.payment?.paymentGatewayConfigurationDescription || "Configure your payment gateway (Stripe or Razorpay). Keys are stored securely in the database."}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Current Status */}
               <div className="p-4 rounded-lg bg-muted/50">
-                <p className="text-sm font-medium mb-2">Current Status</p>
+                <p className="text-sm font-medium mb-2">{dict.admin?.settings?.payment?.currentStatus || "Current Status"}</p>
                 <div className="flex flex-wrap gap-2">
                   {paymentConfig?.gateway === "none" || !paymentConfig?.gateway ? (
                     <Badge variant="outline" className="text-yellow-600 border-yellow-600">
                       <AlertCircle className="h-3 w-3 mr-1" />
-                      No Payment Gateway Configured
+                      {dict.admin?.settings?.payment?.noPaymentGatewayConfigured || "No Payment Gateway Configured"}
                     </Badge>
                   ) : (
                     <>
                       <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
                         <Check className="h-3 w-3 mr-1" />
-                        {paymentConfig.gateway.charAt(0).toUpperCase() + paymentConfig.gateway.slice(1)} Active
+                        {(dict.admin?.settings?.payment?.gatewayActive || "{gateway} Active").replace("{gateway}", paymentConfig.gateway.charAt(0).toUpperCase() + paymentConfig.gateway.slice(1))}
                       </Badge>
                       <Badge variant={paymentConfig.isLive ? "default" : "secondary"}>
-                        {paymentConfig.isLive ? "🔴 LIVE MODE" : "🟡 Test Mode"}
+                        {paymentConfig.isLive ? ("🔴 " + (dict.admin?.settings?.payment?.liveMode || "LIVE MODE")) : ("🟡 " + (dict.admin?.settings?.payment?.testMode || "Test Mode"))}
                       </Badge>
                       {paymentConfig.testSuccessful !== undefined && (
                         <Badge variant={paymentConfig.testSuccessful ? "outline" : "destructive"}>
-                          {paymentConfig.testSuccessful ? "✓ Connection Verified" : "✗ Connection Failed"}
+                          {paymentConfig.testSuccessful ? ("✓ " + (dict.admin?.settings?.payment?.connectionVerified || "Connection Verified")) : ("✗ " + (dict.admin?.settings?.payment?.connectionFailed || "Connection Failed"))}
                         </Badge>
                       )}
                     </>
@@ -653,14 +655,14 @@ export default function AdminSettingsPage() {
                 </div>
                 {paymentConfig?.lastTestedAt && (
                   <p className="text-xs text-muted-foreground mt-2">
-                    Last tested: {new Date(paymentConfig.lastTestedAt).toLocaleString()}
+                    {(dict.admin?.settings?.payment?.lastTested || "Last tested: {date}").replace("{date}", new Date(paymentConfig.lastTestedAt).toLocaleString())}
                   </p>
                 )}
               </div>
 
               {/* Gateway Selection */}
               <div className="space-y-2">
-                <Label>Active Payment Gateway</Label>
+                <Label>{dict.admin?.settings?.payment?.activePaymentGateway || "Active Payment Gateway"}</Label>
                 <Select 
                   value={paymentForm.gateway} 
                   onValueChange={(value: PaymentGatewayType) => setPaymentForm({ ...paymentForm, gateway: value })}
@@ -669,9 +671,9 @@ export default function AdminSettingsPage() {
                     <SelectValue placeholder="Select payment gateway" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None (Payments Disabled)</SelectItem>
-                    <SelectItem value="stripe">Stripe (Global)</SelectItem>
-                    <SelectItem value="razorpay">Razorpay (India)</SelectItem>
+                    <SelectItem value="none">{dict.admin?.settings?.payment?.nonePaymentsDisabled || "None (Payments Disabled)"}</SelectItem>
+                    <SelectItem value="stripe">{dict.admin?.settings?.payment?.stripeGlobal || "Stripe (Global)"}</SelectItem>
+                    <SelectItem value="razorpay">{dict.admin?.settings?.payment?.razorpayIndia || "Razorpay (India)"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -679,9 +681,9 @@ export default function AdminSettingsPage() {
               {/* Live Mode Toggle */}
               <div className="flex items-center justify-between p-3 rounded-lg border">
                 <div>
-                  <p className="font-medium">Live Mode</p>
+                  <p className="font-medium">{dict.admin?.settings?.payment?.liveModeLabel || "Live Mode"}</p>
                   <p className="text-sm text-muted-foreground">
-                    Enable to process real payments. Keep disabled for testing.
+                    {dict.admin?.settings?.payment?.liveModeHint || "Enable to process real payments. Keep disabled for testing."}
                   </p>
                 </div>
                 <Switch
@@ -697,11 +699,11 @@ export default function AdminSettingsPage() {
                 <div className="space-y-4">
                   <h4 className="font-medium flex items-center gap-2">
                     <CreditCard className="h-4 w-4" />
-                    Stripe Configuration
+                    {dict.admin?.settings?.payment?.stripeConfiguration || "Stripe Configuration"}
                   </h4>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="stripePublishableKey">Publishable Key</Label>
+                      <Label htmlFor="stripePublishableKey">{dict.admin?.settings?.payment?.publishableKey || "Publishable Key"}</Label>
                       <Input
                         id="stripePublishableKey"
                         value={paymentForm.stripePublishableKey}
@@ -709,11 +711,11 @@ export default function AdminSettingsPage() {
                         placeholder={paymentConfig?.stripePublishableKey || "pk_live_... or pk_test_..."}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Safe to expose - used on frontend
+                        {dict.admin?.settings?.payment?.publishableKeyHint || "Safe to expose - used on frontend"}
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="stripeSecretKey">Secret Key</Label>
+                      <Label htmlFor="stripeSecretKey">{dict.admin?.settings?.payment?.secretKey || "Secret Key"}</Label>
                       <div className="relative">
                         <Input
                           id="stripeSecretKey"
@@ -733,17 +735,17 @@ export default function AdminSettingsPage() {
                         </Button>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Keep secret - stored encrypted in database
+                        {dict.admin?.settings?.payment?.secretKeyHint || "Keep secret - stored encrypted in database"}
                       </p>
                     </div>
                   </div>
                   <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-sm">
-                    <p className="font-medium mb-2">Get Stripe Keys:</p>
+                    <p className="font-medium mb-2">{dict.admin?.settings?.payment?.getStripeKeys || "Get Stripe Keys:"}</p>
                     <ol className="list-decimal ml-4 space-y-1 text-xs text-muted-foreground">
-                      <li>Go to <a href="https://dashboard.stripe.com/apikeys" target="_blank" className="text-blue-600 hover:underline">Stripe Dashboard → API Keys</a></li>
-                      <li>Copy your Publishable key (pk_live_... or pk_test_...)</li>
-                      <li>Reveal and copy your Secret key (sk_live_... or sk_test_...)</li>
-                      <li>For testing, use test mode keys first</li>
+                      <li>{dict.admin?.settings?.payment?.stripeStep1 || "Go to "}<a href="https://dashboard.stripe.com/apikeys" target="_blank" className="text-blue-600 hover:underline">Stripe Dashboard → API Keys</a></li>
+                      <li>{dict.admin?.settings?.payment?.stripeStep2 || "Copy your Publishable key (pk_live_... or pk_test_...)"}</li>
+                      <li>{dict.admin?.settings?.payment?.stripeStep3 || "Reveal and copy your Secret key (sk_live_... or sk_test_...)"}</li>
+                      <li>{dict.admin?.settings?.payment?.stripeStep4 || "For testing, use test mode keys first"}</li>
                     </ol>
                   </div>
                 </div>
@@ -754,11 +756,11 @@ export default function AdminSettingsPage() {
                 <div className="space-y-4">
                   <h4 className="font-medium flex items-center gap-2">
                     <CreditCard className="h-4 w-4" />
-                    Razorpay Configuration
+                    {dict.admin?.settings?.payment?.razorpayConfiguration || "Razorpay Configuration"}
                   </h4>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="razorpayKeyId">Key ID</Label>
+                      <Label htmlFor="razorpayKeyId">{dict.admin?.settings?.payment?.keyId || "Key ID"}</Label>
                       <Input
                         id="razorpayKeyId"
                         value={paymentForm.razorpayKeyId}
@@ -767,7 +769,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="razorpayKeySecret">Key Secret</Label>
+                      <Label htmlFor="razorpayKeySecret">{dict.admin?.settings?.payment?.keySecret || "Key Secret"}</Label>
                       <div className="relative">
                         <Input
                           id="razorpayKeySecret"
@@ -789,11 +791,11 @@ export default function AdminSettingsPage() {
                     </div>
                   </div>
                   <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-sm">
-                    <p className="font-medium mb-2">Get Razorpay Keys:</p>
+                    <p className="font-medium mb-2">{dict.admin?.settings?.payment?.getRazorpayKeys || "Get Razorpay Keys:"}</p>
                     <ol className="list-decimal ml-4 space-y-1 text-xs text-muted-foreground">
-                      <li>Go to <a href="https://dashboard.razorpay.com/app/keys" target="_blank" className="text-blue-600 hover:underline">Razorpay Dashboard → API Keys</a></li>
-                      <li>Generate new keys or copy existing ones</li>
-                      <li>Use test mode keys for development</li>
+                      <li>{dict.admin?.settings?.payment?.razorpayStep1 || "Go to "}<a href="https://dashboard.razorpay.com/app/keys" target="_blank" className="text-blue-600 hover:underline">Razorpay Dashboard → API Keys</a></li>
+                      <li>{dict.admin?.settings?.payment?.razorpayStep2 || "Generate new keys or copy existing ones"}</li>
+                      <li>{dict.admin?.settings?.payment?.razorpayStep3 || "Use test mode keys for development"}</li>
                     </ol>
                   </div>
                 </div>
@@ -805,12 +807,12 @@ export default function AdminSettingsPage() {
                   {paymentSaving ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
+                      {dict.admin?.common?.saving || "Saving..."}
                     </>
                   ) : (
                     <>
                       <Save className="h-4 w-4 mr-2" />
-                      Save Payment Configuration
+                      {dict.admin?.settings?.payment?.savePaymentConfiguration || "Save Payment Configuration"}
                     </>
                   )}
                 </Button>
@@ -819,12 +821,12 @@ export default function AdminSettingsPage() {
                     {paymentTesting ? (
                       <>
                         <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Testing...
+                        {dict.admin?.settings?.payment?.testing || "Testing..."}
                       </>
                     ) : (
                       <>
                         <TestTube className="h-4 w-4 mr-2" />
-                        Test Connection
+                        {dict.admin?.settings?.payment?.testConnection || "Test Connection"}
                       </>
                     )}
                   </Button>
@@ -839,17 +841,16 @@ export default function AdminSettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <CreditCard className="h-5 w-5" />
-                  Test Payment ($1)
+                  {dict.admin?.settings?.payment?.testPaymentTitle || "Test Payment ($1)"}
                 </CardTitle>
                 <CardDescription>
-                  Create a test payment to verify your payment gateway is working correctly.
-                  This will create a real payment intent but won't charge unless completed.
+                  {dict.admin?.settings?.payment?.testPaymentDescription || "Create a test payment to verify your payment gateway is working correctly. This will create a real payment intent but won't charge unless completed."}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Test Amount</Label>
+                    <Label>{dict.admin?.settings?.payment?.testAmount || "Test Amount"}</Label>
                     <div className="flex items-center gap-2">
                       <span className="text-muted-foreground">{getCurrencySymbol()}</span>
                       <Input
@@ -862,7 +863,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Minimum $1 for testing
+                      {dict.admin?.settings?.payment?.testAmountHint || "Minimum $1 for testing"}
                     </p>
                   </div>
                 </div>
@@ -884,18 +885,18 @@ export default function AdminSettingsPage() {
                         toast.success(`Test payment created: ${data.message}`);
                         console.log("Test payment details:", data);
                       } else {
-                        toast.error(data.error || "Failed to create test payment");
+                        toast.error(data.error || (dict.admin?.settings?.toasts?.testPaymentFailed || "Failed to create test payment"));
                       }
                     } catch (error) {
-                      toast.error("Failed to create test payment");
+                      toast.error(dict.admin?.settings?.toasts?.testPaymentFailed || "Failed to create test payment");
                     }
                   }}
                 >
                   <CreditCard className="h-4 w-4 mr-2" />
-                  Create Test Payment
+                  {dict.admin?.settings?.payment?.createTestPayment || "Create Test Payment"}
                 </Button>
                 <p className="text-xs text-muted-foreground">
-                  This creates a PaymentIntent. Check the browser console for details.
+                  {dict.admin?.settings?.payment?.testPaymentHint || "This creates a PaymentIntent. Check the browser console for details."}
                 </p>
               </CardContent>
             </Card>
@@ -903,15 +904,15 @@ export default function AdminSettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Currency & Pricing</CardTitle>
+              <CardTitle>{dict.admin?.settings?.payment?.currencyAndPricing || "Currency & Pricing"}</CardTitle>
               <CardDescription>
-                Configure your payment currency and default pricing
+                {dict.admin?.settings?.payment?.currencyAndPricingDescription || "Configure your payment currency and default pricing"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
+                  <Label htmlFor="currency">{dict.admin?.settings?.payment?.currency || "Currency"}</Label>
                   <Select
                     value={settings?.currency}
                     onValueChange={(value: SupportedCurrency) =>
@@ -930,7 +931,7 @@ export default function AdminSettingsPage() {
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
-                    All prices will be displayed in this currency
+                    {dict.admin?.settings?.payment?.currencyHint || "All prices will be displayed in this currency"}
                   </p>
                 </div>
               </div>
@@ -939,9 +940,9 @@ export default function AdminSettingsPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Business Model Info</CardTitle>
+              <CardTitle>{dict.admin?.settings?.payment?.businessModelInfo || "Business Model Info"}</CardTitle>
               <CardDescription>
-                How the subscription system works
+                {dict.admin?.settings?.payment?.businessModelInfoDescription || "How the subscription system works"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -949,27 +950,24 @@ export default function AdminSettingsPage() {
                 <div className="flex items-start gap-2">
                   <Building2 className="h-5 w-5 text-primary mt-0.5" />
                   <div>
-                    <p className="font-medium">NGO Pro Subscription</p>
+                    <p className="font-medium">{dict.admin?.settings?.payment?.ngoProSubscription || "NGO Pro Subscription"}</p>
                     <p className="text-sm text-muted-foreground">
-                      NGOs with Pro subscription can unlock <strong>unlimited FREE impact agent profiles</strong>.
-                      NGOs can view paid impact agent profiles without subscription.
+                      {dict.admin?.settings?.payment?.ngoProSubscriptionDescription || "NGOs with Pro subscription can unlock unlimited FREE impact agent profiles. NGOs can view paid impact agent profiles without subscription."}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-2">
                   <Users className="h-5 w-5 text-primary mt-0.5" />
                   <div>
-                    <p className="font-medium">Impact Agent Pro Subscription</p>
+                    <p className="font-medium">{dict.admin?.settings?.payment?.impactAgentProSubscription || "Impact Agent Pro Subscription"}</p>
                     <p className="text-sm text-muted-foreground">
-                      Impact Agents with Pro subscription can apply to <strong>unlimited jobs</strong>.
-                      Free impact agents are limited to {settings?.volunteerFreeApplicationsPerMonth || 3} applications/month.
+                      {(dict.admin?.settings?.payment?.impactAgentProSubscriptionDescription || "Impact Agents with Pro subscription can apply to unlimited jobs. Free impact agents are limited to {count} applications/month.").replace("{count}", String(settings?.volunteerFreeApplicationsPerMonth || 3))}
                     </p>
                   </div>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Note: Individual profile unlock payments are not part of the business model. 
-                NGOs must upgrade to Pro to unlock impact agent profiles.
+                {dict.admin?.settings?.payment?.businessModelNote || "Note: Individual profile unlock payments are not part of the business model. NGOs must upgrade to Pro to unlock impact agent profiles."}
               </p>
             </CardContent>
           </Card>
@@ -981,16 +979,16 @@ export default function AdminSettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Badge variant="secondary">Free Plan</Badge>
-                Impact Agent Free Plan Limits
+                {dict.admin?.settings?.volunteerPlans?.freePlanTitle || "Impact Agent Free Plan Limits"}
               </CardTitle>
               <CardDescription>
-                Configure limits for impact agents on the free plan
+                {dict.admin?.settings?.volunteerPlans?.freePlanDescription || "Configure limits for impact agents on the free plan"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="volunteerFreeApps">Applications per Month</Label>
+                  <Label htmlFor="volunteerFreeApps">{dict.admin?.settings?.volunteerPlans?.applicationsPerMonth || "Applications per Month"}</Label>
                   <Input
                     id="volunteerFreeApps"
                     type="number"
@@ -1003,7 +1001,7 @@ export default function AdminSettingsPage() {
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Number of opportunity applications allowed per month
+                    {dict.admin?.settings?.volunteerPlans?.applicationsPerMonthHint || "Number of opportunity applications allowed per month"}
                   </p>
                 </div>
                 <div className="space-y-2 flex items-center gap-4 pt-6">
@@ -1014,9 +1012,9 @@ export default function AdminSettingsPage() {
                     }
                   />
                   <div>
-                    <Label>Profile Visibility</Label>
+                    <Label>{dict.admin?.settings?.volunteerPlans?.profileVisibility || "Profile Visibility"}</Label>
                     <p className="text-xs text-muted-foreground">
-                      Allow free plan impact agents to be visible in search
+                      {dict.admin?.settings?.volunteerPlans?.profileVisibilityHint || "Allow free plan impact agents to be visible in search"}
                     </p>
                   </div>
                 </div>
@@ -1028,15 +1026,15 @@ export default function AdminSettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Badge className="bg-primary">Pro Plan</Badge>
-                Impact Agent Pro Plan
+                {dict.admin?.settings?.volunteerPlans?.proPlanTitle || "Impact Agent Pro Plan"}
               </CardTitle>
               <CardDescription>
-                Configure pricing and features for the impact agent pro plan
+                {dict.admin?.settings?.volunteerPlans?.proPlanDescription || "Configure pricing and features for the impact agent pro plan"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2 max-w-xs">
-                <Label htmlFor="volunteerProPrice">Monthly Price</Label>
+                <Label htmlFor="volunteerProPrice">{dict.admin?.settings?.volunteerPlans?.monthlyPrice || "Monthly Price"}</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                     {getCurrencySymbol()}
@@ -1059,12 +1057,10 @@ export default function AdminSettingsPage() {
               <Separator />
 
               <div className="space-y-4">
-                <Label>Pro Plan Features</Label>
+                <Label>{dict.admin?.settings?.volunteerPlans?.proPlanFeatures || "Pro Plan Features"}</Label>
                 <p className="text-sm text-muted-foreground">
-                  These features are displayed on the pricing page
-                </p>
-                <div className="space-y-2">
-                  {settings.volunteerProFeatures?.map((feature, index) => (
+                  {dict.admin?.settings?.volunteerPlans?.proPlanFeaturesHint || "These features are displayed on the pricing page"}
+                </p>?.map((feature, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <Input
                         value={feature}
@@ -1089,7 +1085,7 @@ export default function AdminSettingsPage() {
                   <Input
                     value={newVolunteerFeature}
                     onChange={(e) => setNewVolunteerFeature(e.target.value)}
-                    placeholder="Add a feature..."
+                    placeholder={dict.admin?.settings?.volunteerPlans?.addFeaturePlaceholder || "Add a feature..."}
                     onKeyDown={(e) => e.key === "Enter" && addVolunteerFeature()}
                   />
                   <Button variant="outline" onClick={addVolunteerFeature}>
@@ -1107,16 +1103,16 @@ export default function AdminSettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Badge variant="secondary">Free Plan</Badge>
-                NGO Free Plan Limits
+                {dict.admin?.settings?.ngoPlans?.freePlanTitle || "NGO Free Plan Limits"}
               </CardTitle>
               <CardDescription>
-                Configure limits for NGOs on the free plan
+                {dict.admin?.settings?.ngoPlans?.freePlanDescription || "Configure limits for NGOs on the free plan"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="ngoFreeProjects">Opportunities per Month</Label>
+                  <Label htmlFor="ngoFreeProjects">{dict.admin?.settings?.ngoPlans?.opportunitiesPerMonth || "Opportunities per Month"}</Label>
                   <Input
                     id="ngoFreeProjects"
                     type="number"
@@ -1129,11 +1125,11 @@ export default function AdminSettingsPage() {
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Number of opportunities NGOs can post per month
+                    {dict.admin?.settings?.ngoPlans?.opportunitiesPerMonthHint || "Number of opportunities NGOs can post per month"}
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="ngoFreeUnlocks">Profile Unlocks per Month</Label>
+                  <Label htmlFor="ngoFreeUnlocks">{dict.admin?.settings?.ngoPlans?.profileUnlocksPerMonth || "Profile Unlocks per Month"}</Label>
                   <Input
                     id="ngoFreeUnlocks"
                     type="number"
@@ -1146,7 +1142,7 @@ export default function AdminSettingsPage() {
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Free profile unlocks (0 = must upgrade to Pro)
+                    {dict.admin?.settings?.ngoPlans?.profileUnlocksPerMonthHint || "Free profile unlocks (0 = must upgrade to Pro)"}
                   </p>
                 </div>
               </div>
@@ -1157,16 +1153,16 @@ export default function AdminSettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Badge className="bg-primary">Pro Plan</Badge>
-                NGO Pro Plan
+                {dict.admin?.settings?.ngoPlans?.proPlanTitle || "NGO Pro Plan"}
               </CardTitle>
               <CardDescription>
-                Configure pricing and features for the NGO pro plan
+                {dict.admin?.settings?.ngoPlans?.proPlanDescription || "Configure pricing and features for the NGO pro plan"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="ngoProPrice">Monthly Price</Label>
+                  <Label htmlFor="ngoProPrice">{dict.admin?.settings?.ngoPlans?.monthlyPrice || "Monthly Price"}</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                       {getCurrencySymbol()}
@@ -1192,7 +1188,7 @@ export default function AdminSettingsPage() {
                       setSettings({ ...settings, ngoProProjectsUnlimited: checked })
                     }
                   />
-                  <Label>Unlimited Opportunities</Label>
+                  <Label>{dict.admin?.settings?.ngoPlans?.unlimitedOpportunities || "Unlimited Opportunities"}</Label>
                 </div>
                 <div className="space-y-2 flex items-center gap-2 pt-6">
                   <Switch
@@ -1201,19 +1197,17 @@ export default function AdminSettingsPage() {
                       setSettings({ ...settings, ngoProUnlocksUnlimited: checked })
                     }
                   />
-                  <Label>Unlimited Unlocks</Label>
+                  <Label>{dict.admin?.settings?.ngoPlans?.unlimitedUnlocks || "Unlimited Unlocks"}</Label>
                 </div>
               </div>
 
               <Separator />
 
               <div className="space-y-4">
-                <Label>Pro Plan Features</Label>
+                <Label>{dict.admin?.settings?.ngoPlans?.proPlanFeatures || "Pro Plan Features"}</Label>
                 <p className="text-sm text-muted-foreground">
-                  These features are displayed on the pricing page
-                </p>
-                <div className="space-y-2">
-                  {settings.ngoProFeatures?.map((feature, index) => (
+                  {dict.admin?.settings?.ngoPlans?.proPlanFeaturesHint || "These features are displayed on the pricing page"}
+                </p>?.map((feature, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <Input
                         value={feature}
@@ -1238,7 +1232,7 @@ export default function AdminSettingsPage() {
                   <Input
                     value={newNGOFeature}
                     onChange={(e) => setNewNGOFeature(e.target.value)}
-                    placeholder="Add a feature..."
+                    placeholder={dict.admin?.settings?.ngoPlans?.addFeaturePlaceholder || "Add a feature..."}
                     onKeyDown={(e) => e.key === "Enter" && addNGOFeature()}
                   />
                   <Button variant="outline" onClick={addNGOFeature}>
@@ -1254,17 +1248,17 @@ export default function AdminSettingsPage() {
         <TabsContent value="features" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Feature Toggles</CardTitle>
+              <CardTitle>{dict.admin?.settings?.features?.featureToggles || "Feature Toggles"}</CardTitle>
               <CardDescription>
-                Enable or disable platform features globally
+                {dict.admin?.settings?.features?.featureTogglesDescription || "Enable or disable platform features globally"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Payments</p>
+                  <p className="font-medium">{dict.admin?.settings?.features?.paymentsFeature || "Payments"}</p>
                   <p className="text-sm text-muted-foreground">
-                    Enable payment processing for subscriptions and profile unlocks
+                    {dict.admin?.settings?.features?.paymentsFeatureHint || "Enable payment processing for subscriptions and profile unlocks"}
                   </p>
                 </div>
                 <Switch
@@ -1277,9 +1271,9 @@ export default function AdminSettingsPage() {
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Messaging</p>
+                  <p className="font-medium">{dict.admin?.settings?.features?.messagingFeature || "Messaging"}</p>
                   <p className="text-sm text-muted-foreground">
-                    Allow users to send messages to each other
+                    {dict.admin?.settings?.features?.messagingFeatureHint || "Allow users to send messages to each other"}
                   </p>
                 </div>
                 <Switch
@@ -1292,9 +1286,9 @@ export default function AdminSettingsPage() {
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Notifications</p>
+                  <p className="font-medium">{dict.admin?.settings?.features?.notificationsFeature || "Notifications"}</p>
                   <p className="text-sm text-muted-foreground">
-                    Send email and in-app notifications to users
+                    {dict.admin?.settings?.features?.notificationsFeatureHint || "Send email and in-app notifications to users"}
                   </p>
                 </div>
                 <Switch
@@ -1314,26 +1308,26 @@ export default function AdminSettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Phone className="h-5 w-5" />
-                SMS Provider Configuration
+                {dict.admin?.settings?.integrations?.smsProviderConfiguration || "SMS Provider Configuration"}
               </CardTitle>
               <CardDescription>
-                Configure SMS provider for phone number verification during onboarding
+                {dict.admin?.settings?.integrations?.smsProviderConfigurationDescription || "Configure SMS provider for phone number verification during onboarding"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Current Status */}
               <div className="p-4 rounded-lg bg-muted/50">
-                <p className="text-sm font-medium mb-2">Current Status</p>
+                <p className="text-sm font-medium mb-2">{dict.admin?.settings?.integrations?.currentStatus || "Current Status"}</p>
                 <div className="flex flex-wrap gap-2">
                   {smsConfig?.provider === "none" ? (
                     <Badge variant="outline" className="text-yellow-600 border-yellow-600">
                       <AlertCircle className="h-3 w-3 mr-1" />
-                      No SMS Provider Configured (Dev Mode)
+                      {dict.admin?.settings?.integrations?.noSmsProviderConfigured || "No SMS Provider Configured (Dev Mode)"}
                     </Badge>
                   ) : (
                     <Badge className="bg-green-100 text-green-700">
                       <Check className="h-3 w-3 mr-1" />
-                      {smsConfig?.provider?.toUpperCase()} Configured
+                      {(dict.admin?.settings?.integrations?.providerConfigured || "{provider} Configured").replace("{provider}", smsConfig?.provider?.toUpperCase() || "")}
                     </Badge>
                   )}
                 </div>
@@ -1341,7 +1335,7 @@ export default function AdminSettingsPage() {
 
               {/* Provider Selection */}
               <div className="space-y-2">
-                <Label>SMS Provider</Label>
+                <Label>{dict.admin?.settings?.integrations?.smsProvider || "SMS Provider"}</Label>
                 <Select 
                   value={smsForm.provider} 
                   onValueChange={(value) => setSmsForm({ ...smsForm, provider: value })}
@@ -1350,15 +1344,15 @@ export default function AdminSettingsPage() {
                     <SelectValue placeholder="Select SMS provider" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">None (Development Mode)</SelectItem>
-                    <SelectItem value="twilio">Twilio</SelectItem>
-                    <SelectItem value="vonage">Vonage (Nexmo)</SelectItem>
-                    <SelectItem value="msg91">MSG91 (India)</SelectItem>
-                    <SelectItem value="textlocal">TextLocal</SelectItem>
+                    <SelectItem value="none">{dict.admin?.settings?.integrations?.noneDevelopmentMode || "None (Development Mode)"}</SelectItem>
+                    <SelectItem value="twilio">{dict.admin?.settings?.integrations?.twilio || "Twilio"}</SelectItem>
+                    <SelectItem value="vonage">{dict.admin?.settings?.integrations?.vonageNexmo || "Vonage (Nexmo)"}</SelectItem>
+                    <SelectItem value="msg91">{dict.admin?.settings?.integrations?.msg91India || "MSG91 (India)"}</SelectItem>
+                    <SelectItem value="textlocal">{dict.admin?.settings?.integrations?.textLocal || "TextLocal"}</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  In development mode, OTP codes are shown in console/browser
+                  {dict.admin?.settings?.integrations?.devModeHint || "In development mode, OTP codes are shown in console/browser"}
                 </p>
               </div>
 
@@ -1369,11 +1363,11 @@ export default function AdminSettingsPage() {
                 <div className="space-y-4">
                   <h4 className="font-medium flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
-                    Twilio Configuration
+                    {dict.admin?.settings?.integrations?.twilioConfiguration || "Twilio Configuration"}
                   </h4>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="twilioAccountSid">Account SID</Label>
+                      <Label htmlFor="twilioAccountSid">{dict.admin?.settings?.integrations?.accountSid || "Account SID"}</Label>
                       <Input
                         id="twilioAccountSid"
                         value={smsForm.twilioAccountSid}
@@ -1382,7 +1376,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="twilioAuthToken">Auth Token</Label>
+                      <Label htmlFor="twilioAuthToken">{dict.admin?.settings?.integrations?.authToken || "Auth Token"}</Label>
                       <Input
                         id="twilioAuthToken"
                         type="password"
@@ -1393,7 +1387,7 @@ export default function AdminSettingsPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="twilioPhoneNumber">Twilio Phone Number</Label>
+                    <Label htmlFor="twilioPhoneNumber">{dict.admin?.settings?.integrations?.twilioPhoneNumber || "Twilio Phone Number"}</Label>
                     <Input
                       id="twilioPhoneNumber"
                       value={smsForm.twilioPhoneNumber}
@@ -1401,7 +1395,7 @@ export default function AdminSettingsPage() {
                       placeholder="+1234567890"
                     />
                     <p className="text-xs text-muted-foreground">
-                      The phone number SMS messages will be sent from
+                      {dict.admin?.settings?.integrations?.twilioPhoneNumberHint || "The phone number SMS messages will be sent from"}
                     </p>
                   </div>
                 </div>
@@ -1412,11 +1406,11 @@ export default function AdminSettingsPage() {
                 <div className="space-y-4">
                   <h4 className="font-medium flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
-                    Vonage (Nexmo) Configuration
+                    {dict.admin?.settings?.integrations?.vonageConfiguration || "Vonage (Nexmo) Configuration"}
                   </h4>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="vonageApiKey">API Key</Label>
+                      <Label htmlFor="vonageApiKey">{dict.admin?.settings?.integrations?.apiKey || "API Key"}</Label>
                       <Input
                         id="vonageApiKey"
                         value={smsForm.vonageApiKey}
@@ -1425,7 +1419,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="vonageApiSecret">API Secret</Label>
+                      <Label htmlFor="vonageApiSecret">{dict.admin?.settings?.integrations?.apiSecret || "API Secret"}</Label>
                       <Input
                         id="vonageApiSecret"
                         type="password"
@@ -1436,7 +1430,7 @@ export default function AdminSettingsPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="vonageFromNumber">From Number / Brand Name</Label>
+                    <Label htmlFor="vonageFromNumber">{dict.admin?.settings?.integrations?.fromNumberBrandName || "From Number / Brand Name"}</Label>
                     <Input
                       id="vonageFromNumber"
                       value={smsForm.vonageFromNumber}
@@ -1444,16 +1438,16 @@ export default function AdminSettingsPage() {
                       placeholder="JustBecause or +1234567890"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Can be a brand name (alphanumeric) or phone number. Brand names work in most countries.
+                      {dict.admin?.settings?.integrations?.fromNumberBrandNameHint || "Can be a brand name (alphanumeric) or phone number. Brand names work in most countries."}
                     </p>
                   </div>
                   <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-sm">
-                    <p className="font-medium mb-2">Get Vonage Credentials:</p>
+                    <p className="font-medium mb-2">{dict.admin?.settings?.integrations?.getVonageCredentials || "Get Vonage Credentials:"}</p>
                     <ol className="list-decimal ml-4 space-y-1 text-xs text-muted-foreground">
-                      <li>Login: <a href="https://dashboard.nexmo.com" target="_blank" className="text-blue-600 hover:underline">dashboard.nexmo.com</a></li>
-                      <li>Go to Settings → API Settings</li>
-                      <li>Copy your API Key and API Secret</li>
-                      <li>Current Balance: $9.00</li>
+                      <li>{dict.admin?.settings?.integrations?.vonageStep1 || "Login: "}<a href="https://dashboard.nexmo.com" target="_blank" className="text-blue-600 hover:underline">dashboard.nexmo.com</a></li>
+                      <li>{dict.admin?.settings?.integrations?.vonageStep2 || "Go to Settings → API Settings"}</li>
+                      <li>{dict.admin?.settings?.integrations?.vonageStep3 || "Copy your API Key and API Secret"}</li>
+                      <li>{dict.admin?.settings?.integrations?.vonageStep4 || "Current Balance: $9.00"}</li>
                     </ol>
                   </div>
                 </div>
@@ -1464,11 +1458,11 @@ export default function AdminSettingsPage() {
                 <div className="space-y-4">
                   <h4 className="font-medium flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
-                    MSG91 Configuration
+                    {dict.admin?.settings?.integrations?.msg91Configuration || "MSG91 Configuration"}
                   </h4>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="msg91AuthKey">Auth Key</Label>
+                      <Label htmlFor="msg91AuthKey">{dict.admin?.settings?.integrations?.msg91AuthKey || "Auth Key"}</Label>
                       <Input
                         id="msg91AuthKey"
                         type="password"
@@ -1478,7 +1472,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="msg91SenderId">Sender ID</Label>
+                      <Label htmlFor="msg91SenderId">{dict.admin?.settings?.integrations?.msg91SenderId || "Sender ID"}</Label>
                       <Input
                         id="msg91SenderId"
                         value={smsForm.msg91SenderId}
@@ -1488,7 +1482,7 @@ export default function AdminSettingsPage() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="msg91TemplateId">Template ID (Optional)</Label>
+                    <Label htmlFor="msg91TemplateId">{dict.admin?.settings?.integrations?.msg91TemplateId || "Template ID (Optional)"}</Label>
                     <Input
                       id="msg91TemplateId"
                       value={smsForm.msg91TemplateId}
@@ -1496,7 +1490,7 @@ export default function AdminSettingsPage() {
                       placeholder="DLT approved template ID"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Required for Indian DLT compliance
+                      {dict.admin?.settings?.integrations?.msg91TemplateIdHint || "Required for Indian DLT compliance"}
                     </p>
                   </div>
                 </div>
@@ -1507,11 +1501,11 @@ export default function AdminSettingsPage() {
                 <div className="space-y-4">
                   <h4 className="font-medium flex items-center gap-2">
                     <MessageSquare className="h-4 w-4" />
-                    TextLocal Configuration
+                    {dict.admin?.settings?.integrations?.textLocalConfiguration || "TextLocal Configuration"}
                   </h4>
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="textlocalApiKey">API Key</Label>
+                      <Label htmlFor="textlocalApiKey">{dict.admin?.settings?.integrations?.textLocalApiKey || "API Key"}</Label>
                       <Input
                         id="textlocalApiKey"
                         type="password"
@@ -1521,7 +1515,7 @@ export default function AdminSettingsPage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="textlocalSender">Sender Name</Label>
+                      <Label htmlFor="textlocalSender">{dict.admin?.settings?.integrations?.textLocalSenderName || "Sender Name"}</Label>
                       <Input
                         id="textlocalSender"
                         value={smsForm.textlocalSender}
@@ -1538,12 +1532,12 @@ export default function AdminSettingsPage() {
                 {smsSaving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
+                    {dict.admin?.common?.saving || "Saving..."}
                   </>
                 ) : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    Save SMS Configuration
+                    {dict.admin?.settings?.integrations?.saveSmsConfiguration || "Save SMS Configuration"}
                   </>
                 )}
               </Button>
@@ -1553,15 +1547,15 @@ export default function AdminSettingsPage() {
           {/* Test SMS */}
           <Card>
             <CardHeader>
-              <CardTitle>Test SMS Configuration</CardTitle>
+              <CardTitle>{dict.admin?.settings?.integrations?.testSmsConfiguration || "Test SMS Configuration"}</CardTitle>
               <CardDescription>
-                Send a test SMS to verify your configuration is working
+                {dict.admin?.settings?.integrations?.testSmsConfigurationDescription || "Send a test SMS to verify your configuration is working"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex gap-2">
                 <Input
-                  placeholder="Enter phone number (e.g., +919876543210)"
+                  placeholder={dict.admin?.settings?.integrations?.testPhonePlaceholder || "Enter phone number (e.g., +919876543210)"}
                   value={smsTestPhone}
                   onChange={(e) => setSmsTestPhone(e.target.value)}
                 />
@@ -1571,14 +1565,14 @@ export default function AdminSettingsPage() {
                   ) : (
                     <>
                       <Send className="h-4 w-4 mr-2" />
-                      Send Test
+                      {dict.admin?.settings?.integrations?.sendTest || "Send Test"}
                     </>
                   )}
                 </Button>
               </div>
               {smsForm.provider === "none" && (
                 <p className="text-sm text-yellow-600">
-                  Configure an SMS provider above before testing
+                  {dict.admin?.settings?.integrations?.configureProviderFirst || "Configure an SMS provider above before testing"}
                 </p>
               )}
             </CardContent>
@@ -1587,17 +1581,17 @@ export default function AdminSettingsPage() {
           {/* Phone Verification Toggle */}
           <Card>
             <CardHeader>
-              <CardTitle>Phone Verification Settings</CardTitle>
+              <CardTitle>{dict.admin?.settings?.integrations?.phoneVerificationSettings || "Phone Verification Settings"}</CardTitle>
               <CardDescription>
-                Control phone verification requirements
+                {dict.admin?.settings?.integrations?.phoneVerificationSettingsDescription || "Control phone verification requirements"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Require Phone Verification</p>
+                  <p className="font-medium">{dict.admin?.settings?.integrations?.requirePhoneVerification || "Require Phone Verification"}</p>
                   <p className="text-sm text-muted-foreground">
-                    Require impact agents to verify their phone number during onboarding
+                    {dict.admin?.settings?.integrations?.requirePhoneVerificationHint || "Require impact agents to verify their phone number during onboarding"}
                   </p>
                 </div>
                 <Switch
@@ -1615,17 +1609,17 @@ export default function AdminSettingsPage() {
         <TabsContent value="security" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Verification Requirements</CardTitle>
+              <CardTitle>{dict.admin?.settings?.security?.verificationRequirements || "Verification Requirements"}</CardTitle>
               <CardDescription>
-                Set verification requirements for users
+                {dict.admin?.settings?.security?.verificationRequirementsDescription || "Set verification requirements for users"}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">Email Verification</p>
+                  <p className="font-medium">{dict.admin?.settings?.security?.emailVerification || "Email Verification"}</p>
                   <p className="text-sm text-muted-foreground">
-                    Require users to verify their email address before using the platform
+                    {dict.admin?.settings?.security?.emailVerificationHint || "Require users to verify their email address before using the platform"}
                   </p>
                 </div>
                 <Switch
@@ -1638,9 +1632,9 @@ export default function AdminSettingsPage() {
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium">NGO Verification</p>
+                  <p className="font-medium">{dict.admin?.settings?.security?.ngoVerification || "NGO Verification"}</p>
                   <p className="text-sm text-muted-foreground">
-                    Require NGOs to be verified by admin before they can post opportunities
+                    {dict.admin?.settings?.security?.ngoVerificationHint || "Require NGOs to be verified by admin before they can post opportunities"}
                   </p>
                 </div>
                 <Switch
