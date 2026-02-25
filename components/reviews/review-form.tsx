@@ -189,6 +189,7 @@ function StarDisplay({ rating }: { rating: number }) {
 }
 
 export function ReviewsList({ reviews }: ReviewDisplayProps) {
+  const locale = useLocale()
   if (reviews.length === 0) {
     return (
       <p className="text-sm text-muted-foreground py-4 text-center">

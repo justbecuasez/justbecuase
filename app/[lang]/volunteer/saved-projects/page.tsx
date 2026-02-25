@@ -27,7 +27,7 @@ function getSkillName(categoryId: string, subskillId: string): string {
 
 export default async function SavedProjectsPage({ params }: { params: Promise<{ lang: Locale }> }) {
   const { lang } = await params
-  const dict = await getDictionary(lang)
+  const dict = await getDictionary(lang) as any
   const session = await auth.api.getSession({
     headers: await headers(),
   })

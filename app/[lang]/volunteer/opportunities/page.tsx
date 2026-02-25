@@ -22,7 +22,7 @@ import {
 
 export default async function VolunteerOpportunitiesPage({ params }: { params: Promise<{ lang: string }> }) {
   const { lang } = await params
-  const dict = await getDictionary(lang as Locale)
+  const dict = await getDictionary(lang as Locale) as any
   const session = await auth.api.getSession({
     headers: await headers(),
   })
