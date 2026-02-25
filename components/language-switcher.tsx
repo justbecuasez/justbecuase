@@ -18,6 +18,8 @@ const localeLabels: Record<Locale, string> = {
   hi: "हिन्दी",
   pa: "ਪੰਜਾਬੀ",
   ur: "اردو",
+  fr: "Français",
+  ta: "தமிழ்",
 }
 
 const localeFlags: Record<Locale, string> = {
@@ -25,6 +27,8 @@ const localeFlags: Record<Locale, string> = {
   hi: "🇮🇳",
   pa: "🇮🇳",
   ur: "🇵🇰",
+  fr: "🇫🇷",
+  ta: "🇮🇳",
 }
 
 export function LanguageSwitcher() {
