@@ -16,11 +16,15 @@ import {
 const localeLabels: Record<Locale, string> = {
   en: "English",
   hi: "हिन्दी",
+  pa: "ਪੰਜਾਬੀ",
+  ur: "اردو",
 }
 
 const localeFlags: Record<Locale, string> = {
   en: "🇬🇧",
   hi: "🇮🇳",
+  pa: "🇮🇳",
+  ur: "🇵🇰",
 }
 
 export function LanguageSwitcher() {

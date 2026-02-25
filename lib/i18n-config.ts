@@ -7,7 +7,7 @@
 
 export const i18n = {
   defaultLocale: "en" as const,
-  locales: ["en", "hi"] as const,
+  locales: ["en", "hi", "pa", "ur"] as const,
   /** Locales that use right-to-left text direction */
   rtlLocales: ["ar", "ur", "he"] as const,
 } satisfies {

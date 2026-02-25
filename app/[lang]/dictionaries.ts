@@ -5,6 +5,8 @@ import type { Locale } from "@/lib/i18n-config"
 const dictionaries: Record<Locale, () => Promise<Record<string, unknown>>> = {
   en: () => import("./dictionaries/en.json").then((m) => m.default),
   hi: () => import("./dictionaries/hi.json").then((m) => m.default),
+  pa: () => import("./dictionaries/pa.json").then((m) => m.default),
+  ur: () => import("./dictionaries/ur.json").then((m) => m.default),
 }
 
 export const getDictionary = async (locale: Locale) => {
