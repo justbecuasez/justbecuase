@@ -413,6 +413,20 @@ export async function updateVolunteerProfile(
     } else if (filteredUpdates.volunteerType === "paid") {
       filteredUpdates.freeHoursPerMonth = undefined
     }
+
+    // Validate pricing data (IA-013 / IA-014)
+    if (filteredUpdates.volunteerType) {
+      const { validatePricingData } = await import("./validation")
+      const pricingValidation = validatePricingData({
+        volunteerType: filteredUpdates.volunteerType,
+        hourlyRate: filteredUpdates.hourlyRate,
+        discountedRate: filteredUpdates.discountedRate,
+        freeHoursPerMonth: filteredUpdates.freeHoursPerMonth,
+      })
+      if (!pricingValidation.valid) {
+        return { success: false, error: pricingValidation.errors.join(". ") }
+      }
+    }
     
     if (Object.keys(filteredUpdates).length === 0) {
       return { success: false, error: "No valid fields to update" }

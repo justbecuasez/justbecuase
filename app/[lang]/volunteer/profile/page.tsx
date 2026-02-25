@@ -22,6 +22,7 @@ import { uploadToCloudinary, validateImageFile, uploadDocumentToCloudinary, vali
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AIBioGenerator } from "@/components/ai/bio-generator"
 import { VolunteerProfileSkeleton } from "@/components/ui/page-skeletons"
+import { ImageCropper } from "@/components/ui/image-cropper"
 import { useDictionary } from "@/components/dictionary-provider"
 
 export default function VolunteerProfileEditPage() {
@@ -37,6 +38,8 @@ export default function VolunteerProfileEditPage() {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [uploadingResume, setUploadingResume] = useState(false)
   const [isGettingLocation, setIsGettingLocation] = useState(false)
+  const [cropperOpen, setCropperOpen] = useState(false)
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
 
   const [formData, setFormData] = useState({
     name: "",
@@ -163,12 +166,29 @@ export default function VolunteerProfileEditPage() {
       return
     }
 
+    // Create a preview URL and open the cropper
+    const reader = new FileReader()
+    reader.onload = () => {
+      setCropImageSrc(reader.result as string)
+      setCropperOpen(true)
+    }
+    reader.readAsDataURL(file)
+    // Reset the input so the same file can be re-selected
+    e.target.value = ""
+  }
+
+  const handleCroppedPhoto = async (croppedBlob: Blob) => {
+    setCropperOpen(false)
+    setCropImageSrc(null)
     setUploadingPhoto(true)
     toast.loading("Uploading photo...", { id: "photo-upload" })
 
     try {
+      // Convert blob to File for the upload function
+      const croppedFile = new File([croppedBlob], "avatar.jpg", { type: "image/jpeg" })
+
       // Upload with signed request
-      const uploadResult = await uploadToCloudinary(file, "volunteer_avatars", {
+      const uploadResult = await uploadToCloudinary(croppedFile, "volunteer_avatars", {
         onProgress: (percent) => {
           // Could show progress here if needed
         },
@@ -379,6 +399,22 @@ export default function VolunteerProfileEditPage() {
                           <p className="text-sm text-muted-foreground">{dict.volunteer?.profile?.photoHint || "JPG or PNG. Max 5MB."}</p>
                         </div>
                       </div>
+
+                      {/* Image Cropper Dialog */}
+                      {cropImageSrc && (
+                        <ImageCropper
+                          open={cropperOpen}
+                          onClose={() => {
+                            setCropperOpen(false)
+                            setCropImageSrc(null)
+                          }}
+                          imageSrc={cropImageSrc}
+                          onCropComplete={handleCroppedPhoto}
+                          aspectRatio={1}
+                          title={dict.volunteer?.profile?.adjustPhoto || "Adjust Photo"}
+                          description={dict.volunteer?.profile?.cropDescription || "Drag to reposition and resize the crop area"}
+                        />
+                      )}
 
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">

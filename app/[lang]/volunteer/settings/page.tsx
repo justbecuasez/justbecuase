@@ -64,6 +64,7 @@ export default function VolunteerSettingsPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [pricingErrors, setPricingErrors] = useState<Record<string, string>>({})
   
   // Skills state
   const [skills, setSkills] = useState<SkillWithName[]>([])
@@ -1011,18 +1012,36 @@ export default function VolunteerSettingsPage() {
                               <Input
                                 id="hourlyRate"
                                 type="number"
+                                min="1"
                                 placeholder="e.g. 50"
-                                className="pl-8"
-                                value={profile?.hourlyRate || ""}
-                                onChange={(e) =>
-                                  setProfile({
-                                    ...profile,
-                                    hourlyRate: parseInt(e.target.value) || 0,
-                                  })
-                                }
+                                className={`pl-8 ${pricingErrors.hourlyRate ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                                value={profile?.hourlyRate ?? ""}
+                                onChange={(e) => {
+                                  const val = e.target.value === "" ? undefined : parseInt(e.target.value)
+                                  const numVal = val ?? 0
+                                  setProfile({ ...profile, hourlyRate: val })
+                                  if (numVal <= 0 && e.target.value !== "") {
+                                    setPricingErrors(prev => ({ ...prev, hourlyRate: "Hourly rate must be greater than zero" }))
+                                  } else {
+                                    setPricingErrors(prev => { const { hourlyRate, ...rest } = prev; return rest })
+                                  }
+                                  // Re-validate discounted rate against new hourly rate
+                                  if (profile?.discountedRate && numVal > 0 && profile.discountedRate >= numVal) {
+                                    setPricingErrors(prev => ({ ...prev, discountedRate: "Discounted rate must be less than the hourly rate" }))
+                                  } else if (profile?.discountedRate > 0) {
+                                    setPricingErrors(prev => { const { discountedRate, ...rest } = prev; return rest })
+                                  }
+                                }}
                               />
                             </div>
-                            <p className="text-xs text-muted-foreground">{dict.volunteer?.common?.hourlyRateDesc || "Your standard hourly rate"}</p>
+                            {pricingErrors.hourlyRate ? (
+                              <p className="text-sm text-red-500 flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" />
+                                {pricingErrors.hourlyRate}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">{dict.volunteer?.common?.hourlyRateDesc || "Your standard hourly rate"}</p>
+                            )}
                           </div>
                           
                           <div className="space-y-2">
@@ -1034,18 +1053,32 @@ export default function VolunteerSettingsPage() {
                               <Input
                                 id="discountedRate"
                                 type="number"
+                                min="0"
                                 placeholder="e.g. 30"
-                                className="pl-8"
-                                value={profile?.discountedRate || ""}
-                                onChange={(e) =>
-                                  setProfile({
-                                    ...profile,
-                                    discountedRate: parseInt(e.target.value) || 0,
-                                  })
-                                }
+                                className={`pl-8 ${pricingErrors.discountedRate ? "border-red-500 focus-visible:ring-red-500" : ""}`}
+                                value={profile?.discountedRate ?? ""}
+                                onChange={(e) => {
+                                  const val = e.target.value === "" ? undefined : parseInt(e.target.value)
+                                  const numVal = val ?? 0
+                                  setProfile({ ...profile, discountedRate: val })
+                                  if (numVal < 0) {
+                                    setPricingErrors(prev => ({ ...prev, discountedRate: "Discounted rate cannot be negative" }))
+                                  } else if (profile?.hourlyRate && numVal > 0 && numVal >= profile.hourlyRate) {
+                                    setPricingErrors(prev => ({ ...prev, discountedRate: "Discounted rate must be less than the hourly rate" }))
+                                  } else {
+                                    setPricingErrors(prev => { const { discountedRate, ...rest } = prev; return rest })
+                                  }
+                                }}
                               />
                             </div>
-                            <p className="text-xs text-muted-foreground">{dict.volunteer?.common?.discountedRateDesc || "Special discounted rate for non-profits (Low Bono)"}</p>
+                            {pricingErrors.discountedRate ? (
+                              <p className="text-sm text-red-500 flex items-center gap-1">
+                                <AlertCircle className="h-3 w-3" />
+                                {pricingErrors.discountedRate}
+                              </p>
+                            ) : (
+                              <p className="text-xs text-muted-foreground">{dict.volunteer?.common?.discountedRateDesc || "Special discounted rate for non-profits (Low Bono)"}</p>
+                            )}
                           </div>
                         </div>
                         
@@ -1062,6 +1095,33 @@ export default function VolunteerSettingsPage() {
 
                     <Button 
                       onClick={async () => {
+                        // Client-side validation (IA-013 / IA-014)
+                        const errors: Record<string, string> = {}
+                        const isPaid = profile?.volunteerType === "paid" || profile?.volunteerType === "both"
+                        const isBoth = profile?.volunteerType === "both"
+
+                        if (isPaid) {
+                          if (profile?.hourlyRate !== undefined && profile?.hourlyRate <= 0) {
+                            errors.hourlyRate = "Hourly rate must be greater than zero"
+                          }
+                          if (profile?.discountedRate !== undefined && profile?.discountedRate < 0) {
+                            errors.discountedRate = "Discounted rate cannot be negative"
+                          }
+                          if (profile?.hourlyRate > 0 && profile?.discountedRate > 0 && profile.discountedRate >= profile.hourlyRate) {
+                            errors.discountedRate = "Discounted rate must be less than the hourly rate"
+                          }
+                        }
+                        if (isBoth && profile?.freeHoursPerMonth !== undefined && profile?.freeHoursPerMonth < 0) {
+                          errors.freeHours = "Free hours cannot be negative"
+                        }
+
+                        if (Object.keys(errors).length > 0) {
+                          setPricingErrors(errors)
+                          toast.error("Please fix the validation errors before saving")
+                          return
+                        }
+                        setPricingErrors({})
+
                         setIsSaving(true)
                         try {
                           const result = await updateVolunteerProfile({
@@ -1082,7 +1142,7 @@ export default function VolunteerSettingsPage() {
                           setIsSaving(false)
                         }
                       }}
-                      disabled={isSaving}
+                      disabled={isSaving || Object.keys(pricingErrors).length > 0}
                     >
                       {isSaving ? (
                         <>

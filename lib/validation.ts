@@ -157,6 +157,67 @@ export function validateNGOProfileData(data: {
 }
 
 /**
+ * Validate volunteer pricing data
+ * IA-013: hourlyRate must be > 0 for paid/both
+ * IA-014: freeHoursPerMonth must be >= 0 for both
+ */
+export function validatePricingData(data: {
+  volunteerType?: string
+  hourlyRate?: number
+  discountedRate?: number
+  freeHoursPerMonth?: number
+}): { valid: boolean; errors: string[] } {
+  const errors: string[] = []
+
+  const isPaid = data.volunteerType === "paid" || data.volunteerType === "both"
+  const isBoth = data.volunteerType === "both"
+
+  if (isPaid) {
+    if (data.hourlyRate !== undefined && data.hourlyRate !== null) {
+      if (typeof data.hourlyRate !== "number" || !isFinite(data.hourlyRate)) {
+        errors.push("Hourly rate must be a valid number")
+      } else if (data.hourlyRate <= 0) {
+        errors.push("Hourly rate must be greater than zero")
+      } else if (data.hourlyRate > 10000) {
+        errors.push("Hourly rate cannot exceed 10,000")
+      }
+    }
+
+    if (data.discountedRate !== undefined && data.discountedRate !== null) {
+      if (typeof data.discountedRate !== "number" || !isFinite(data.discountedRate)) {
+        errors.push("Discounted rate must be a valid number")
+      } else if (data.discountedRate < 0) {
+        errors.push("Discounted rate cannot be negative")
+      } else if (data.discountedRate > 10000) {
+        errors.push("Discounted rate cannot exceed 10,000")
+      }
+    }
+
+    if (
+      typeof data.hourlyRate === "number" && data.hourlyRate > 0 &&
+      typeof data.discountedRate === "number" && data.discountedRate > 0 &&
+      data.discountedRate >= data.hourlyRate
+    ) {
+      errors.push("Discounted rate must be less than the hourly rate")
+    }
+  }
+
+  if (isBoth) {
+    if (data.freeHoursPerMonth !== undefined && data.freeHoursPerMonth !== null) {
+      if (typeof data.freeHoursPerMonth !== "number" || !isFinite(data.freeHoursPerMonth)) {
+        errors.push("Free hours must be a valid number")
+      } else if (data.freeHoursPerMonth < 0) {
+        errors.push("Free hours per month cannot be negative")
+      } else if (data.freeHoursPerMonth > 744) {
+        errors.push("Free hours per month cannot exceed 744")
+      }
+    }
+  }
+
+  return { valid: errors.length === 0, errors }
+}
+
+/**
  * Validate skills array
  */
 export function validateSkills(skills: Array<{ categoryId: string; subskillId: string }>): { valid: boolean; errors: string[] } {
