@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useDictionary } from "@/components/dictionary-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getBanRecords } from "@/lib/actions"
@@ -9,6 +10,7 @@ import type { BanRecord } from "@/lib/types"
 import { AdminBanTableSkeleton } from "@/components/ui/page-skeletons"
 
 export default function AdminBansPage() {
+  const dict = useDictionary();
   const [records, setRecords] = useState<BanRecord[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -30,9 +32,9 @@ export default function AdminBansPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Ban History</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-2">{dict.admin?.bans?.title || "Ban History"}</h1>
         <p className="text-muted-foreground">
-          View and manage banned users
+          {dict.admin?.bans?.subtitle || "View and manage banned users"}
         </p>
       </div>
 
@@ -45,7 +47,7 @@ export default function AdminBansPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{activeCount}</p>
-              <p className="text-sm text-muted-foreground">Currently Banned</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.bans?.currentlyBanned || "Currently Banned"}</p>
             </div>
           </CardContent>
         </Card>
@@ -56,7 +58,7 @@ export default function AdminBansPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{records.length}</p>
-              <p className="text-sm text-muted-foreground">Total Ban Records</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.bans?.totalBanRecords || "Total Ban Records"}</p>
             </div>
           </CardContent>
         </Card>
@@ -69,7 +71,7 @@ export default function AdminBansPage() {
               <p className="text-2xl font-bold text-foreground">
                 {records.length - activeCount}
               </p>
-              <p className="text-sm text-muted-foreground">Unbanned</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.bans?.unbanned || "Unbanned"}</p>
             </div>
           </CardContent>
         </Card>
@@ -78,7 +80,7 @@ export default function AdminBansPage() {
       {/* Ban Records List */}
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg">All Ban Records</CardTitle>
+          <CardTitle className="text-lg">{dict.admin?.bans?.allBanRecords || "All Ban Records"}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -88,12 +90,12 @@ export default function AdminBansPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">User</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Type</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Reason</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Status</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Banned At</th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Unbanned At</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{dict.admin?.bans?.tableUser || "User"}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{dict.admin?.bans?.tableType || "Type"}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{dict.admin?.bans?.tableReason || "Reason"}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{dict.admin?.bans?.tableStatus || "Status"}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{dict.admin?.bans?.tableBannedAt || "Banned At"}</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">{dict.admin?.bans?.tableUnbannedAt || "Unbanned At"}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -125,7 +127,7 @@ export default function AdminBansPage() {
                         <Badge 
                           variant={record.isActive ? "destructive" : "secondary"}
                         >
-                          {record.isActive ? "Banned" : "Unbanned"}
+                          {record.isActive ? (dict.admin?.bans?.statusBanned || "Banned") : (dict.admin?.bans?.statusUnbanned || "Unbanned")}
                         </Badge>
                       </td>
                       <td className="py-3 px-4 text-sm text-muted-foreground">
@@ -153,9 +155,9 @@ export default function AdminBansPage() {
           ) : (
             <div className="text-center py-12">
               <Ban className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No ban records found</p>
+              <p className="text-muted-foreground">{dict.admin?.bans?.noBanRecords || "No ban records found"}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Ban records will appear here when users are banned
+                {dict.admin?.bans?.noBanRecordsDescription || "Ban records will appear here when users are banned"}
               </p>
             </div>
           )}

@@ -10,8 +10,12 @@ import {
 } from "lucide-react"
 import { getAdminAnalytics, getAllVolunteers, getAllNGOs, getAllProjects } from "@/lib/actions"
 import { ReportsGenerator } from "@/components/admin/reports-generator"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import type { Locale } from "@/lib/i18n-config"
 
-export default async function AdminReportsPage() {
+export default async function AdminReportsPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
+  const dict = await getDictionary(lang as Locale) as any
   const [analytics, volunteersData, ngosData, projectsData] = await Promise.all([
     getAdminAnalytics(),
     getAllVolunteers(1, 100),
@@ -56,14 +60,14 @@ export default async function AdminReportsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Reports & Analytics</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{dict.admin?.reports?.title || "Reports & Analytics"}</h1>
           <p className="text-muted-foreground">
-            View platform analytics and generate reports
+            {dict.admin?.reports?.subtitle || "View platform analytics and generate reports"}
           </p>
         </div>
         <Button variant="outline">
           <Download className="h-4 w-4 mr-2" />
-          Download Report
+          {dict.admin?.reports?.downloadReport || "Download Report"}
         </Button>
       </div>
 
@@ -73,7 +77,7 @@ export default async function AdminReportsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">New Users (This Month)</p>
+                <p className="text-sm text-muted-foreground">{dict.admin?.reports?.newUsersThisMonth || "New Users (This Month)"}</p>
                 <p className="text-2xl font-bold text-foreground">{totalNewUsersThisMonth}</p>
               </div>
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -86,7 +90,7 @@ export default async function AdminReportsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">New NGOs (This Month)</p>
+                <p className="text-sm text-muted-foreground">{dict.admin?.reports?.newNgosThisMonth || "New NGOs (This Month)"}</p>
                 <p className="text-2xl font-bold text-foreground">{newNGOsThisMonth}</p>
               </div>
               <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
@@ -99,7 +103,7 @@ export default async function AdminReportsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">New Opportunities (This Month)</p>
+                <p className="text-sm text-muted-foreground">{dict.admin?.reports?.newOpportunitiesThisMonth || "New Opportunities (This Month)"}</p>
                 <p className="text-2xl font-bold text-foreground">{newProjectsThisMonth}</p>
               </div>
               <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
@@ -112,7 +116,7 @@ export default async function AdminReportsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Conversion Rate</p>
+                <p className="text-sm text-muted-foreground">{dict.admin?.reports?.conversionRate || "Conversion Rate"}</p>
                 <p className="text-2xl font-bold text-foreground">{conversionRate}%</p>
               </div>
               <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -129,13 +133,13 @@ export default async function AdminReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
-              User Growth
+              {dict.admin?.reports?.userGrowth || "User Growth"}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64 flex items-center justify-center bg-muted/50 rounded-lg">
               <p className="text-muted-foreground text-sm">
-                Chart will appear when there's data
+                {dict.admin?.reports?.chartPlaceholder || "Chart will appear when there's data"}
               </p>
             </div>
           </CardContent>
@@ -145,13 +149,13 @@ export default async function AdminReportsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-secondary" />
-              Opportunity Activity
+              {dict.admin?.reports?.opportunityActivity || "Opportunity Activity"}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-64 flex items-center justify-center bg-muted/50 rounded-lg">
               <p className="text-muted-foreground text-sm">
-                Chart will appear when there's data
+                {dict.admin?.reports?.chartPlaceholder || "Chart will appear when there's data"}
               </p>
             </div>
           </CardContent>

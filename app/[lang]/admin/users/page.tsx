@@ -7,8 +7,12 @@ import {
   Building2,
   Shield,
 } from "lucide-react"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import type { Locale } from "@/lib/i18n-config"
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
+  const dict = await getDictionary(lang as Locale) as any
   // Fetch real data - get more users for better search experience
   const stats = await getAdminStats()
   const volunteersData = await getAllVolunteers(1, 100)
@@ -46,9 +50,9 @@ export default async function AdminUsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">All Users</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{dict.admin?.users?.title || "All Users"}</h1>
           <p className="text-muted-foreground">
-            Manage all registered users on the platform
+            {dict.admin?.users?.subtitle || "Manage all registered users on the platform"}
           </p>
         </div>
       </div>
@@ -64,7 +68,7 @@ export default async function AdminUsersPage() {
               <p className="text-2xl font-bold text-foreground">
                 {stats.totalVolunteers + stats.totalNGOs}
               </p>
-              <p className="text-sm text-muted-foreground">Total Users</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.users?.totalUsers || "Total Users"}</p>
             </div>
           </CardContent>
         </Card>
@@ -75,7 +79,7 @@ export default async function AdminUsersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{stats.totalVolunteers}</p>
-              <p className="text-sm text-muted-foreground">Impact Agents</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.users?.impactAgents || "Impact Agents"}</p>
             </div>
           </CardContent>
         </Card>
@@ -86,7 +90,7 @@ export default async function AdminUsersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{stats.totalNGOs}</p>
-              <p className="text-sm text-muted-foreground">NGOs</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.users?.ngos || "NGOs"}</p>
             </div>
           </CardContent>
         </Card>
@@ -97,7 +101,7 @@ export default async function AdminUsersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">1</p>
-              <p className="text-sm text-muted-foreground">Admins</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.users?.admins || "Admins"}</p>
             </div>
           </CardContent>
         </Card>
@@ -106,7 +110,7 @@ export default async function AdminUsersPage() {
       {/* Searchable Users List */}
       <UsersSearchableList 
         users={allUsers} 
-        title="Registered Users"
+        title={dict.admin?.users?.registeredUsers || "Registered Users"}
         showRoleColumn={true}
       />
     </div>

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useDictionary } from "@/components/dictionary-provider"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -52,6 +53,7 @@ interface SupportTicket {
 }
 
 export default function AdminSupportPage() {
+  const dict = useDictionary();
   const [tickets, setTickets] = useState<SupportTicket[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null)
@@ -207,9 +209,9 @@ export default function AdminSupportPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Support Tickets</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-2">{dict.admin?.support?.title || "Support Tickets"}</h1>
         <p className="text-muted-foreground">
-          Manage and respond to user support requests
+          {dict.admin?.support?.subtitle || "Manage and respond to user support requests"}
         </p>
       </div>
 
@@ -222,7 +224,7 @@ export default function AdminSupportPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{stats.total}</p>
-              <p className="text-sm text-muted-foreground">Total Tickets</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.support?.totalTickets || "Total Tickets"}</p>
             </div>
           </CardContent>
         </Card>
@@ -233,7 +235,7 @@ export default function AdminSupportPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{stats.open}</p>
-              <p className="text-sm text-muted-foreground">Open</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.support?.open || "Open"}</p>
             </div>
           </CardContent>
         </Card>
@@ -244,7 +246,7 @@ export default function AdminSupportPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{stats.inProgress}</p>
-              <p className="text-sm text-muted-foreground">In Progress</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.support?.inProgress || "In Progress"}</p>
             </div>
           </CardContent>
         </Card>
@@ -255,7 +257,7 @@ export default function AdminSupportPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{stats.resolved}</p>
-              <p className="text-sm text-muted-foreground">Resolved</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.support?.resolved || "Resolved"}</p>
             </div>
           </CardContent>
         </Card>
@@ -268,7 +270,7 @@ export default function AdminSupportPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by subject, name, or email..."
+                placeholder={dict.admin?.support?.searchPlaceholder || "Search by subject, name, or email..."}
                 className="pl-9"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -280,10 +282,10 @@ export default function AdminSupportPage() {
                 value={filter}
                 onChange={(e) => setFilter(e.target.value as any)}
               >
-                <option value="all">All Status</option>
-                <option value="open">Open</option>
-                <option value="in-progress">In Progress</option>
-                <option value="resolved">Resolved</option>
+                <option value="all">{dict.admin?.support?.filterAllStatus || "All Status"}</option>
+                <option value="open">{dict.admin?.support?.filterOpen || "Open"}</option>
+                <option value="in-progress">{dict.admin?.support?.filterInProgress || "In Progress"}</option>
+                <option value="resolved">{dict.admin?.support?.filterResolved || "Resolved"}</option>
               </select>
             </div>
           </div>
@@ -293,7 +295,7 @@ export default function AdminSupportPage() {
       {/* Tickets List */}
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg">Tickets ({filteredTickets.length})</CardTitle>
+          <CardTitle className="text-lg">{(dict.admin?.support?.ticketsCount || "Tickets ({count})").replace("{count}", String(filteredTickets.length))}</CardTitle>
         </CardHeader>
         <CardContent>
           {filteredTickets.length > 0 ? (
@@ -334,13 +336,13 @@ export default function AdminSupportPage() {
                         {ticket.responses.length > 0 && (
                           <span className="flex items-center gap-1">
                             <MessageSquare className="h-3 w-3" />
-                            {ticket.responses.length} responses
+                            {(dict.admin?.support?.responsesCount || "{count} responses").replace("{count}", String(ticket.responses.length))}
                           </span>
                         )}
                       </div>
                     </div>
                     <Button size="sm" variant="outline">
-                      View
+                      {dict.admin?.support?.view || "View"}
                     </Button>
                   </div>
                 </div>
@@ -349,7 +351,7 @@ export default function AdminSupportPage() {
           ) : (
             <div className="text-center py-12">
               <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No support tickets found</p>
+              <p className="text-muted-foreground">{dict.admin?.support?.noTicketsFound || "No support tickets found"}</p>
             </div>
           )}
         </CardContent>
@@ -373,7 +375,7 @@ export default function AdminSupportPage() {
                       {selectedTicket.status}
                     </Badge>
                     <span className="text-xs">
-                      Category: {selectedTicket.category}
+                      {(dict.admin?.support?.category || "Category: {category}").replace("{category}", selectedTicket.category)}
                     </span>
                   </div>
                 </DialogDescription>
@@ -398,7 +400,7 @@ export default function AdminSupportPage() {
                 {/* Original Message */}
                 <div className="p-4 border rounded-lg">
                   <p className="text-sm font-medium text-muted-foreground mb-2">
-                    Original Request - {new Date(selectedTicket.createdAt).toLocaleString()}
+                    {(dict.admin?.support?.originalRequest || "Original Request - {date}").replace("{date}", new Date(selectedTicket.createdAt).toLocaleString())}
                   </p>
                   <p className="text-foreground">{selectedTicket.description}</p>
                 </div>
@@ -407,7 +409,7 @@ export default function AdminSupportPage() {
                 {selectedTicket.responses.length > 0 && (
                   <div className="space-y-3">
                     <p className="text-sm font-medium text-muted-foreground">
-                      Conversation History
+                      {dict.admin?.support?.conversationHistory || "Conversation History"}
                     </p>
                     {selectedTicket.responses.map((response) => (
                       <div
@@ -419,7 +421,7 @@ export default function AdminSupportPage() {
                         }`}
                       >
                         <p className="text-xs text-muted-foreground mb-1">
-                          {response.isAdmin ? "Admin" : selectedTicket.userName} -{" "}
+                          {response.isAdmin ? (dict.admin?.support?.admin || "Admin") : selectedTicket.userName} -{" "}
                           {new Date(response.createdAt).toLocaleString()}
                         </p>
                         <p className="text-foreground">{response.message}</p>
@@ -431,7 +433,7 @@ export default function AdminSupportPage() {
                 {/* Reply Form */}
                 <div className="space-y-3">
                   <Textarea
-                    placeholder="Type your response..."
+                    placeholder={dict.admin?.support?.responsePlaceholder || "Type your response..."}
                     value={responseText}
                     onChange={(e) => setResponseText(e.target.value)}
                     rows={3}
@@ -444,14 +446,14 @@ export default function AdminSupportPage() {
                         onClick={() => handleUpdateStatus(selectedTicket.id, "resolved")}
                       >
                         <CheckCircle className="h-4 w-4 mr-1" />
-                        Mark Resolved
+                        {dict.admin?.support?.markResolved || "Mark Resolved"}
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         onClick={() => handleUpdateStatus(selectedTicket.id, "closed")}
                       >
-                        Close Ticket
+                        {dict.admin?.support?.closeTicket || "Close Ticket"}
                       </Button>
                     </div>
                     <Button onClick={handleSendResponse} disabled={!responseText.trim() || submitting}>
@@ -460,7 +462,7 @@ export default function AdminSupportPage() {
                       ) : (
                         <Send className="h-4 w-4 mr-2" />
                       )}
-                      Send Response
+                      {dict.admin?.support?.sendResponse || "Send Response"}
                     </Button>
                   </div>
                 </div>

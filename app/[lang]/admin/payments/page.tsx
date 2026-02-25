@@ -1,4 +1,6 @@
 import { Suspense } from "react"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import { Locale } from "@/lib/i18n-config"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -14,7 +16,10 @@ import {
   XCircle,
 } from "lucide-react"
 
-export default async function AdminPaymentsPage() {
+export default async function AdminPaymentsPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params;
+  const dict = await getDictionary(lang as Locale) as any;
+
   const [stats, { data: transactions }] = await Promise.all([
     getPaymentStats(),
     getAllTransactions(),
@@ -38,14 +43,14 @@ export default async function AdminPaymentsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Payments & Transactions</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{dict.admin?.payments?.title || "Payments & Transactions"}</h1>
           <p className="text-muted-foreground">
-            View all payment transactions and revenue
+            {dict.admin?.payments?.subtitle || "View all payment transactions and revenue"}
           </p>
         </div>
         <Button variant="outline">
           <Download className="h-4 w-4 mr-2" />
-          Export Report
+          {dict.admin?.payments?.exportReport || "Export Report"}
         </Button>
       </div>
 
@@ -55,12 +60,12 @@ export default async function AdminPaymentsPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <DollarSign className="h-4 w-4 text-green-600" />
-              <span className="text-sm text-muted-foreground">Total Revenue</span>
+              <span className="text-sm text-muted-foreground">{dict.admin?.payments?.totalRevenue || "Total Revenue"}</span>
             </div>
             <p className="text-2xl font-bold text-foreground">${stats.totalRevenue.toLocaleString()}</p>
             <p className="text-xs text-green-600 flex items-center gap-1">
               <TrendingUp className="h-3 w-3" />
-              {stats.completedTransactions} completed transactions
+              {(dict.admin?.payments?.completedTransactions || "{count} completed transactions").replace("{count}", `${stats.completedTransactions}`)}
             </p>
           </CardContent>
         </Card>
@@ -68,34 +73,34 @@ export default async function AdminPaymentsPage() {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <CreditCard className="h-4 w-4 text-primary" />
-              <span className="text-sm text-muted-foreground">Profile Unlocks</span>
+              <span className="text-sm text-muted-foreground">{dict.admin?.payments?.profileUnlocks || "Profile Unlocks"}</span>
             </div>
             <p className="text-2xl font-bold text-foreground">${stats.profileUnlockRevenue.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">From profile unlock payments</p>
+            <p className="text-xs text-muted-foreground">{dict.admin?.payments?.fromProfileUnlockPayments || "From profile unlock payments"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle className="h-4 w-4 text-blue-600" />
-              <span className="text-sm text-muted-foreground">Total Transactions</span>
+              <span className="text-sm text-muted-foreground">{dict.admin?.payments?.totalTransactions || "Total Transactions"}</span>
             </div>
             <p className="text-2xl font-bold text-foreground">{stats.totalTransactions}</p>
-            <p className="text-xs text-muted-foreground">All time</p>
+            <p className="text-xs text-muted-foreground">{dict.admin?.payments?.allTime || "All time"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <RefreshCcw className="h-4 w-4 text-yellow-600" />
-              <span className="text-sm text-muted-foreground">Success Rate</span>
+              <span className="text-sm text-muted-foreground">{dict.admin?.payments?.successRate || "Success Rate"}</span>
             </div>
             <p className="text-2xl font-bold text-foreground">
               {stats.totalTransactions > 0 
                 ? Math.round((stats.completedTransactions / stats.totalTransactions) * 100) 
                 : 0}%
             </p>
-            <p className="text-xs text-muted-foreground">Of all transactions</p>
+            <p className="text-xs text-muted-foreground">{dict.admin?.payments?.ofAllTransactions || "Of all transactions"}</p>
           </CardContent>
         </Card>
       </div>
@@ -103,15 +108,15 @@ export default async function AdminPaymentsPage() {
       {/* Transactions Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Recent Transactions</CardTitle>
+          <CardTitle className="text-lg">{dict.admin?.payments?.recentTransactions || "Recent Transactions"}</CardTitle>
         </CardHeader>
         <CardContent>
           {transactions.length === 0 ? (
             <div className="text-center py-12">
               <DollarSign className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No transactions yet</p>
+              <p className="text-muted-foreground">{dict.admin?.payments?.noTransactionsYet || "No transactions yet"}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Transactions will appear here when NGOs start unlocking profiles
+                {dict.admin?.payments?.noTransactionsDescription || "Transactions will appear here when NGOs start unlocking profiles"}
               </p>
             </div>
           ) : (
@@ -119,11 +124,11 @@ export default async function AdminPaymentsPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b text-left">
-                    <th className="pb-3 font-medium text-muted-foreground">Transaction ID</th>
-                    <th className="pb-3 font-medium text-muted-foreground">Type</th>
-                    <th className="pb-3 font-medium text-muted-foreground">Amount</th>
-                    <th className="pb-3 font-medium text-muted-foreground">Status</th>
-                    <th className="pb-3 font-medium text-muted-foreground">Date</th>
+                    <th className="pb-3 font-medium text-muted-foreground">{dict.admin?.payments?.transactionId || "Transaction ID"}</th>
+                    <th className="pb-3 font-medium text-muted-foreground">{dict.admin?.payments?.type || "Type"}</th>
+                    <th className="pb-3 font-medium text-muted-foreground">{dict.admin?.payments?.amount || "Amount"}</th>
+                    <th className="pb-3 font-medium text-muted-foreground">{dict.admin?.common?.status || "Status"}</th>
+                    <th className="pb-3 font-medium text-muted-foreground">{dict.admin?.payments?.date || "Date"}</th>
                   </tr>
                 </thead>
                 <tbody>

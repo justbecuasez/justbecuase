@@ -1,5 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import type { Locale } from "@/lib/i18n-config"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -24,8 +26,9 @@ function getSkillName(categoryId: string, subskillId: string): string {
   return subskill?.name || subskillId
 }
 
-export default async function VolunteerProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export default async function VolunteerProfilePage({ params }: { params: Promise<{ id: string; lang: string }> }) {
+  const { id, lang } = await params
+  const dict = await getDictionary(lang as Locale) as any
   
   // Get volunteer profile with visibility rules applied
   const volunteer = await getVolunteerProfileView(id)
@@ -65,7 +68,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                 {volunteer.avatar && !isLocked ? (
                   <img
                     src={volunteer.avatar}
-                    alt={volunteer.name || "Impact Agent"}
+                    alt={volunteer.name || (dict.volunteerDetail?.impactAgent || "Impact Agent")}
                     className="w-32 h-32 rounded-full object-cover border-4 border-background shadow-xl"
                   />
                 ) : (
@@ -84,10 +87,10 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                   {isLocked ? (
                     <span className="flex items-center gap-2 justify-center md:justify-start">
                       <Lock className="h-5 w-5" />
-                      Profile Locked
+                      {dict.volunteerDetail?.profileLocked || "Profile Locked"}
                     </span>
                   ) : (
-                    volunteer.name || "Impact Agent"
+                    volunteer.name || (dict.volunteerDetail?.impactAgent || "Impact Agent")
                   )}
                 </h1>
 
@@ -101,27 +104,27 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                 <div className="flex flex-wrap justify-center md:justify-start items-center gap-4 mb-4">
                   <div className="flex items-center gap-1 text-foreground">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
-                    {volunteer.location || "Location not specified"}
+                    {volunteer.location || (dict.volunteerDetail?.locationNotSpecified || "Location not specified")}
                   </div>
                   <div className="flex items-center gap-1 text-foreground">
                     <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                    {volunteer.rating.toFixed(1)} rating
+                    {(dict.volunteerDetail?.ratingLabel || "{rating} rating").replace("{rating}", volunteer.rating.toFixed(1))}
                   </div>
                   <div className="flex items-center gap-1 text-foreground">
                     <CheckCircle className="h-4 w-4 text-success" />
-                    {volunteer.completedProjects} opportunities completed
+                    {(dict.volunteerDetail?.opportunitiesCompleted || "{count} opportunities completed").replace("{count}", String(volunteer.completedProjects))}
                   </div>
                   {volunteer.volunteerType === "paid" && (
-                    <Badge variant="secondary">Paid</Badge>
+                    <Badge variant="secondary">{dict.volunteerDetail?.paidBadge || "Paid"}</Badge>
                   )}
                   {volunteer.volunteerType === "free" && (
-                    <Badge className="bg-green-100 text-green-800">Pro Bono</Badge>
+                    <Badge className="bg-green-100 text-green-800">{dict.volunteerDetail?.proBonoLabel || "Pro Bono"}</Badge>
                   )}
                   {volunteer.volunteerType === "both" && (
-                    <Badge className="bg-blue-100 text-blue-800">Free & Paid</Badge>
+                    <Badge className="bg-blue-100 text-blue-800">{dict.volunteerDetail?.freeAndPaid || "Free & Paid"}</Badge>
                   )}
                   {volunteer.volunteerType === "both" && volunteer.freeHoursPerMonth && (
-                    <Badge variant="outline">{volunteer.freeHoursPerMonth} hrs/month free</Badge>
+                    <Badge variant="outline">{(dict.volunteerDetail?.freeHoursMonth || "{hours} hrs/month free").replace("{hours}", String(volunteer.freeHoursPerMonth))}</Badge>
                   )}
                 </div>
 
@@ -133,7 +136,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                     </Badge>
                   ))}
                   {volunteer.skills.length > 6 && (
-                    <Badge variant="outline">+{volunteer.skills.length - 6} more</Badge>
+                    <Badge variant="outline">{(dict.volunteerDetail?.plusMore || "+{count} more").replace("{count}", String(volunteer.skills.length - 6))}</Badge>
                   )}
                 </div>
               </div>
@@ -143,7 +146,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                 {!isLocked && (
                   <FollowButton
                     targetId={id}
-                    targetName={volunteer.name || "Impact Agent"}
+                    targetName={volunteer.name || (dict.volunteerDetail?.impactAgent || "Impact Agent")}
                     isFollowing={followStats.isFollowing}
                     followersCount={followStats.followersCount}
                     showCount={false}
@@ -161,20 +164,20 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                   <Button asChild className="w-full">
                     <Link href="/pricing">
                       <Crown className="h-4 w-4 mr-2" />
-                      Subscribe to View
+                      {dict.volunteerDetail?.subscribeToView || "Subscribe to View"}
                     </Link>
                   </Button>
                 ) : volunteer.canMessage ? (
                   <ContactVolunteerButton
                     volunteerId={volunteer.id}
-                    volunteerName={volunteer.name || "Impact Agent"}
+                    volunteerName={volunteer.name || (dict.volunteerDetail?.impactAgent || "Impact Agent")}
                     className="w-full bg-primary hover:bg-primary/90"
                   />
                 ) : null}
                 <ShareButton
                   url={`/volunteers/${id}`}
-                  title={isLocked ? "Skilled Impact Agent on JustBeCause" : `${volunteer.name} - Impact Agent Profile`}
-                  description={`Discover this talented impact agent with ${volunteer.completedProjects} completed projects and a ${volunteer.rating.toFixed(1)} rating.`}
+                  title={isLocked ? (dict.volunteerDetail?.shareTitle || "Skilled Impact Agent on JustBeCause") : (dict.volunteerDetail?.shareTitleWithName || "{name} - Impact Agent Profile").replace("{name}", volunteer.name)}
+                  description={(dict.volunteerDetail?.shareDescription || "Discover this talented impact agent with {projects} completed projects and a {rating} rating.").replace("{projects}", String(volunteer.completedProjects)).replace("{rating}", volunteer.rating.toFixed(1))}
                   variant="outline"
                   className="w-full"
                 />
@@ -195,15 +198,14 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                       <Crown className="h-8 w-8 text-amber-600 flex-shrink-0" />
                       <div>
                         <h3 className="font-semibold text-foreground mb-2">
-                          Pro Subscription Required
+                          {dict.volunteerDetail?.proRequired || "Pro Subscription Required"}
                         </h3>
                         <p className="text-muted-foreground mb-4">
-                          This is a free impact agent. Subscribe to our Pro plan to view their full profile,
-                          contact details, portfolio, and connect with them directly.
+                          {dict.volunteerDetail?.proRequiredDesc || "This is a free impact agent. Subscribe to our Pro plan to view their full profile, contact details, portfolio, and connect with them directly."}
                         </p>
                         <Button asChild>
                           <Link href="/pricing">
-                            Upgrade to Pro
+                            {dict.volunteerDetail?.upgradeToPro || "Upgrade to Pro"}
                           </Link>
                         </Button>
                       </div>
@@ -215,7 +217,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
               {/* About */}
               <Card>
                 <CardHeader>
-                  <CardTitle>About</CardTitle>
+                  <CardTitle>{dict.volunteerDetail?.aboutTitle || "About"}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {isLocked ? (
@@ -225,7 +227,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                       <div className="h-4 bg-muted rounded w-4/5 animate-pulse" />
                       <p className="text-sm text-muted-foreground mt-4 flex items-center gap-2">
                         <Lock className="h-4 w-4" />
-                        Subscribe to Pro to view full bio
+                        {dict.volunteerDetail?.subscribeToBio || "Subscribe to Pro to view full bio"}
                       </p>
                     </div>
                   ) : volunteer.bio ? (
@@ -234,7 +236,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                     </p>
                   ) : (
                     <p className="text-muted-foreground italic">
-                      No bio provided yet.
+                      {dict.volunteerDetail?.noBioYet || "No bio provided yet."}
                     </p>
                   )}
                 </CardContent>
@@ -243,7 +245,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
               {/* Skills & Expertise with Endorsements */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Skills & Expertise</CardTitle>
+                  <CardTitle>{dict.volunteerDetail?.skillsExpertise || "Skills & Expertise"}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -259,7 +261,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                     ))}
                     {volunteer.skills.length === 0 && (
                       <p className="text-muted-foreground italic">
-                        No skills listed yet.
+                        {dict.volunteerDetail?.noSkillsYet || "No skills listed yet."}
                       </p>
                     )}
                   </div>
@@ -286,7 +288,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <MessageSquare className="h-5 w-5 text-primary" />
-                      Reviews & Ratings
+                      {dict.volunteerDetail?.reviewsRatings || "Reviews & Ratings"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -298,7 +300,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
               {/* Causes */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Causes They Care About</CardTitle>
+                  <CardTitle>{dict.volunteerDetail?.causesCareAbout || "Causes They Care About"}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
@@ -309,7 +311,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                     ))}
                     {volunteer.causes.length === 0 && (
                       <p className="text-muted-foreground italic">
-                        No causes specified yet.
+                        {dict.volunteerDetail?.noCausesYet || "No causes specified yet."}
                       </p>
                     )}
                   </div>
@@ -324,20 +326,20 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5 text-primary" />
-                    Impact Summary
+                    {dict.volunteerDetail?.impactSummary || "Impact Summary"}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <span className="text-sm text-muted-foreground">Hours Contributed</span>
+                    <span className="text-sm text-muted-foreground">{dict.volunteerDetail?.hoursContributed || "Hours Contributed"}</span>
                     <span className="font-semibold text-foreground">{volunteer.hoursContributed}</span>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <span className="text-sm text-muted-foreground">Projects Completed</span>
+                    <span className="text-sm text-muted-foreground">{dict.volunteerDetail?.projectsCompleted || "Projects Completed"}</span>
                     <span className="font-semibold text-foreground">{volunteer.completedProjects}</span>
                   </div>
                   <div className="flex items-center justify-between p-3 rounded-lg bg-primary/10">
-                    <span className="text-sm text-primary">Estimated Value</span>
+                    <span className="text-sm text-primary">{dict.volunteerDetail?.estimatedValue || "Estimated Value"}</span>
                     <span className="font-semibold text-primary">
                       ${(volunteer.hoursContributed * 2000).toLocaleString()}
                     </span>
@@ -348,20 +350,20 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
               {/* Work Preferences */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Work Preferences</CardTitle>
+                  <CardTitle>{dict.volunteerDetail?.workPreferences || "Work Preferences"}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Work Mode</span>
+                    <span className="text-sm text-muted-foreground">{dict.volunteerDetail?.workModeLabel || "Work Mode"}</span>
                     <Badge variant="outline" className="capitalize">{volunteer.workMode}</Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Hours/Week</span>
+                    <span className="text-sm text-muted-foreground">{dict.volunteerDetail?.hoursPerWeek || "Hours/Week"}</span>
                     <span className="text-sm font-medium">{volunteer.hoursPerWeek}</span>
                   </div>
                   {volunteer.hourlyRate && !isLocked && volunteer.volunteerType !== "free" && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Hourly Rate</span>
+                      <span className="text-sm text-muted-foreground">{dict.volunteerDetail?.hourlyRate || "Hourly Rate"}</span>
                       <span className="text-sm font-medium">
                         {getCurrencySymbol(volunteer.currency || "USD")}{volunteer.hourlyRate}/hr
                       </span>
@@ -369,7 +371,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                   )}
                   {volunteer.discountedRate && !isLocked && volunteer.volunteerType !== "free" && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">NGO Discounted Rate</span>
+                      <span className="text-sm text-muted-foreground">{dict.volunteerDetail?.ngoDiscountRate || "NGO Discounted Rate"}</span>
                       <span className="text-sm font-medium text-green-600">
                         {getCurrencySymbol(volunteer.currency || "USD")}{volunteer.discountedRate}/hr
                       </span>
@@ -383,7 +385,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Award className="h-5 w-5 text-secondary" />
-                    Achievements
+                    {dict.volunteerDetail?.achievements || "Achievements"}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -393,8 +395,8 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                         <Star className="h-5 w-5 text-yellow-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">Top Rated</p>
-                        <p className="text-xs text-muted-foreground">{volunteer.rating.toFixed(1)}+ rating</p>
+                        <p className="font-medium text-foreground">{dict.volunteerDetail?.topRated || "Top Rated"}</p>
+                        <p className="text-xs text-muted-foreground">{(dict.volunteerDetail?.topRatedDesc || "{rating}+ rating").replace("{rating}", volunteer.rating.toFixed(1))}</p>
                       </div>
                     </div>
                   )}
@@ -404,8 +406,8 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                         <Clock className="h-5 w-5 text-blue-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">100+ Hours</p>
-                        <p className="text-xs text-muted-foreground">Impact Agent milestone</p>
+                        <p className="font-medium text-foreground">{dict.volunteerDetail?.hours100 || "100+ Hours"}</p>
+                        <p className="text-xs text-muted-foreground">{dict.volunteerDetail?.hours100Desc || "Impact Agent milestone"}</p>
                       </div>
                     </div>
                   )}
@@ -415,8 +417,8 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                         <CheckCircle className="h-5 w-5 text-green-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">10+ Projects</p>
-                        <p className="text-xs text-muted-foreground">Completed milestone</p>
+                        <p className="font-medium text-foreground">{dict.volunteerDetail?.projects10 || "10+ Projects"}</p>
+                        <p className="text-xs text-muted-foreground">{dict.volunteerDetail?.projects10Desc || "Completed milestone"}</p>
                       </div>
                     </div>
                   )}
@@ -426,14 +428,14 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                         <CheckCircle className="h-5 w-5 text-purple-600" />
                       </div>
                       <div>
-                        <p className="font-medium text-foreground">Verified</p>
-                        <p className="text-xs text-muted-foreground">Identity confirmed</p>
+                        <p className="font-medium text-foreground">{dict.volunteerDetail?.verified || "Verified"}</p>
+                        <p className="text-xs text-muted-foreground">{dict.volunteerDetail?.verifiedDesc || "Identity confirmed"}</p>
                       </div>
                     </div>
                   )}
                   {volunteer.rating < 4.5 && volunteer.hoursContributed < 100 && volunteer.completedProjects < 10 && !volunteer.isVerified && (
                     <p className="text-muted-foreground italic text-sm">
-                      No achievements yet. Complete projects to earn badges!
+                      {dict.volunteerDetail?.noAchievements || "No achievements yet. Complete projects to earn badges!"}
                     </p>
                   )}
                 </CardContent>
@@ -443,14 +445,14 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
               {!isLocked && (volunteer.linkedinUrl || volunteer.portfolioUrl) && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Connect</CardTitle>
+                    <CardTitle>{dict.volunteerDetail?.connect || "Connect"}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     {volunteer.linkedinUrl && (
                       <Button asChild variant="outline" className="w-full justify-start bg-transparent">
                         <Link href={volunteer.linkedinUrl} target="_blank">
                           <ExternalLink className="h-4 w-4 mr-2" />
-                          LinkedIn Profile
+                          {dict.volunteerDetail?.linkedInProfile || "LinkedIn Profile"}
                         </Link>
                       </Button>
                     )}
@@ -458,7 +460,7 @@ export default async function VolunteerProfilePage({ params }: { params: Promise
                       <Button asChild variant="outline" className="w-full justify-start bg-transparent">
                         <Link href={volunteer.portfolioUrl} target="_blank">
                           <ExternalLink className="h-4 w-4 mr-2" />
-                          Portfolio Website
+                          {dict.volunteerDetail?.portfolioWebsite || "Portfolio Website"}
                         </Link>
                       </Button>
                     )}

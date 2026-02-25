@@ -26,6 +26,7 @@ import {
   Calendar,
 } from "lucide-react"
 import { AdminTableSkeleton } from "@/components/ui/page-skeletons"
+import { useDictionary } from "@/components/dictionary-provider"
 
 interface Admin {
   id: string
@@ -36,6 +37,7 @@ interface Admin {
 }
 
 export default function AdminManagementPage() {
+  const dict = useDictionary();
   const [admins, setAdmins] = useState<Admin[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isCreating, setIsCreating] = useState(false)
@@ -108,9 +110,9 @@ export default function AdminManagementPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Admin Management</h1>
+          <h1 className="text-2xl font-bold text-foreground">{dict.admin?.admins?.title || "Admin Management"}</h1>
           <p className="text-muted-foreground">
-            Manage administrator accounts for the platform
+            {dict.admin?.admins?.subtitle || "Manage administrator accounts for the platform"}
           </p>
         </div>
 
@@ -118,14 +120,14 @@ export default function AdminManagementPage() {
           <DialogTrigger asChild>
             <Button>
               <UserPlus className="h-4 w-4 mr-2" />
-              Add Admin
+              {dict.admin?.admins?.addAdmin || "Add Admin"}
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create New Admin Account</DialogTitle>
+              <DialogTitle>{dict.admin?.admins?.createNewAdminAccount || "Create New Admin Account"}</DialogTitle>
               <DialogDescription>
-                Add a new administrator who will have full access to the admin panel.
+                {dict.admin?.admins?.createNewAdminAccountDescription || "Add a new administrator who will have full access to the admin panel."}
               </DialogDescription>
             </DialogHeader>
 
@@ -138,7 +140,7 @@ export default function AdminManagementPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">{dict.admin?.admins?.fullName || "Full Name"}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -153,7 +155,7 @@ export default function AdminManagementPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">{dict.admin?.admins?.emailAddress || "Email Address"}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -169,7 +171,7 @@ export default function AdminManagementPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{dict.admin?.admins?.password || "Password"}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -192,18 +194,18 @@ export default function AdminManagementPage() {
                   onClick={() => setDialogOpen(false)}
                   className="flex-1"
                 >
-                  Cancel
+                  {dict.admin?.common?.cancel || "Cancel"}
                 </Button>
                 <Button type="submit" disabled={isCreating} className="flex-1">
                   {isCreating ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creating...
+                      {dict.admin?.admins?.creating || "Creating..."}
                     </>
                   ) : (
                     <>
                       <UserPlus className="h-4 w-4 mr-2" />
-                      Create Admin
+                      {dict.admin?.admins?.createAdmin || "Create Admin"}
                     </>
                   )}
                 </Button>
@@ -224,10 +226,10 @@ export default function AdminManagementPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Administrator Accounts
+            {dict.admin?.admins?.administratorAccounts || "Administrator Accounts"}
           </CardTitle>
           <CardDescription>
-            These users have full access to the admin panel and can manage all aspects of the platform.
+            {dict.admin?.admins?.administratorAccountsDescription || "These users have full access to the admin panel and can manage all aspects of the platform."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -236,8 +238,8 @@ export default function AdminManagementPage() {
           ) : admins.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No admin accounts found</p>
-              <p className="text-sm mt-1">Create the first admin account to get started</p>
+              <p>{dict.admin?.admins?.noAdminAccounts || "No admin accounts found"}</p>
+              <p className="text-sm mt-1">{dict.admin?.admins?.noAdminAccountsDescription || "Create the first admin account to get started"}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -263,7 +265,7 @@ export default function AdminManagementPage() {
                       </div>
                     </div>
                     <Badge variant={admin.banned ? "destructive" : "default"}>
-                      {admin.banned ? "Banned" : "Active"}
+                      {admin.banned ? (dict.admin?.admins?.statusBanned || "Banned") : (dict.admin?.admins?.statusActive || "Active")}
                     </Badge>
                   </div>
                 </div>
@@ -275,20 +277,20 @@ export default function AdminManagementPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Security Note</CardTitle>
+          <CardTitle>{dict.admin?.admins?.securityNote || "Security Note"}</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground space-y-2">
           <p>
-            • Admin accounts have full access to all platform data and settings.
+            • {dict.admin?.admins?.securityNote1 || "Admin accounts have full access to all platform data and settings."}
           </p>
           <p>
-            • Admin accounts cannot be created through the normal signup flow.
+            • {dict.admin?.admins?.securityNote2 || "Admin accounts cannot be created through the normal signup flow."}
           </p>
           <p>
-            • Only existing admins can create new admin accounts.
+            • {dict.admin?.admins?.securityNote3 || "Only existing admins can create new admin accounts."}
           </p>
           <p>
-            • For the first admin, use the seed script: <code className="bg-muted px-2 py-1 rounded">npx tsx lib/admin-seed.ts</code>
+            • {dict.admin?.admins?.securityNote4 || "For the first admin, use the seed script:"} <code className="bg-muted px-2 py-1 rounded">npx tsx lib/admin-seed.ts</code>
           </p>
         </CardContent>
       </Card>

@@ -1,5 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import type { Locale } from "@/lib/i18n-config"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -31,8 +33,9 @@ function getSkillName(categoryId: string, subskillId: string): string {
   return subskill?.name || subskillId
 }
 
-export default async function NGOProfilePage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export default async function NGOProfilePage({ params }: { params: Promise<{ id: string; lang: string }> }) {
+  const { lang, id } = await params
+  const dict = await getDictionary(lang as Locale) as any;
   
   // Get NGO profile from database
   const ngo = await getNGOById(id)
@@ -87,7 +90,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                   )}
                   <div className="flex items-center gap-1 text-foreground">
                     <FolderKanban className="h-4 w-4 text-muted-foreground" />
-                    {ngo.projectsPosted} projects posted
+                    {(dict.ngoDetail?.projectsPosted || "{count} projects posted").replace("{count}", String(ngo.projectsPosted))}
                   </div>
                 </div>
 
@@ -116,7 +119,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                 <ShareButton
                   url={`/ngos/${id}`}
                   title={ngo.orgName}
-                  description={ngo.description || `Discover ${ngo.orgName} and their impactful projects on JustBeCause.`}
+                  description={ngo.description || (dict.ngoDetail?.shareDescription || "Discover {name} and their impactful projects on JustBeCause.").replace("{name}", ngo.orgName)}
                   variant="outline"
                   className="w-full"
                 />
@@ -124,7 +127,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                   <Button asChild variant="outline" className="w-full bg-transparent">
                     <Link href={ngo.website} target="_blank">
                       <Globe className="h-4 w-4 mr-2" />
-                      Visit Website
+                      {dict.ngoDetail?.visitWebsite || "Visit Website"}
                     </Link>
                   </Button>
                 )}
@@ -140,15 +143,15 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
               {/* About */}
               <Card>
                 <CardHeader>
-                  <CardTitle>About {ngo.orgName}</CardTitle>
+                  <CardTitle>{(dict.ngoDetail?.aboutOrg || "About {name}").replace("{name}", ngo.orgName)}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-foreground leading-relaxed whitespace-pre-line">
-                    {ngo.description || `${ngo.orgName} is a registered nonprofit organization working to create positive change in communities.`}
+                    {ngo.description || (dict.ngoDetail?.orgFallbackDesc || "{name} is a registered nonprofit organization working to create positive change in communities.").replace("{name}", ngo.orgName)}
                   </p>
                   {ngo.mission && (
                     <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Mission</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">{dict.ngoDetail?.mission || "Mission"}</p>
                       <p className="text-foreground">{ngo.mission}</p>
                     </div>
                   )}
@@ -159,9 +162,9 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
               {ngoProjects.length > 0 ? (
                 <div>
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl font-bold text-foreground">Open Projects ({ngoProjects.length})</h2>
+                    <h2 className="text-xl font-bold text-foreground">{(dict.ngoDetail?.openProjects || "Open Projects ({count})").replace("{count}", String(ngoProjects.length))}</h2>
                     <Button asChild variant="outline" className="bg-transparent">
-                      <Link href={`/projects?ngo=${id}`}>View All</Link>
+                      <Link href={`/projects?ngo=${id}`}>{dict.ngoDetail?.viewAll || "View All"}</Link>
                     </Button>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-6">
@@ -190,7 +193,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                             </div>
                             <div className="flex items-center justify-between mt-4 pt-4 border-t border-border text-sm text-muted-foreground">
                               <span>{project.timeCommitment}</span>
-                              <span>{project.applicantsCount} applicants</span>
+                              <span>{(dict.ngoDetail?.applicantsCount || "{count} applicants").replace("{count}", String(project.applicantsCount))}</span>
                             </div>
                           </CardContent>
                         </Card>
@@ -202,9 +205,9 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                 <Card>
                   <CardContent className="py-12 text-center">
                     <FolderKanban className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                    <h3 className="font-semibold text-foreground mb-2">No Open Opportunities</h3>
+                    <h3 className="font-semibold text-foreground mb-2">{dict.ngoDetail?.noOpenOpportunities || "No Open Opportunities"}</h3>
                     <p className="text-muted-foreground">
-                      This organization doesn&apos;t have any open opportunities at the moment.
+                      {dict.ngoDetail?.noOpenOpportunitiesDesc || "This organization doesn't have any open opportunities at the moment."}
                     </p>
                   </CardContent>
                 </Card>
@@ -214,7 +217,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
               {ngo.typicalSkillsNeeded && ngo.typicalSkillsNeeded.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Skills They&apos;re Looking For</CardTitle>
+                    <CardTitle>{dict.ngoDetail?.skillsLookingFor || "Skills They're Looking For"}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
@@ -234,23 +237,23 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
               {/* Impact Stats */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Impact</CardTitle>
+                  <CardTitle>{dict.ngoDetail?.impact || "Impact"}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="text-center p-4 rounded-lg bg-primary/10">
                     <p className="text-3xl font-bold text-primary">{ngo.projectsPosted}</p>
-                    <p className="text-sm text-muted-foreground">Projects Posted</p>
+                    <p className="text-sm text-muted-foreground">{dict.ngoDetail?.projectsPostedStat || "Projects Posted"}</p>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 rounded-lg bg-muted/50">
                       <p className="text-xl font-bold text-foreground">{ngo.volunteersEngaged}</p>
-                      <p className="text-xs text-muted-foreground">Impact Agents</p>
+                      <p className="text-xs text-muted-foreground">{dict.ngoDetail?.impactAgents || "Impact Agents"}</p>
                     </div>
                     <div className="text-center p-3 rounded-lg bg-muted/50">
                       <p className="text-xl font-bold text-foreground">
                         ${((ngo.volunteersEngaged || 0) * 50000).toLocaleString()}
                       </p>
-                      <p className="text-xs text-muted-foreground">Value Created</p>
+                      <p className="text-xs text-muted-foreground">{dict.ngoDetail?.valueCreated || "Value Created"}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -259,30 +262,30 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
               {/* Organization Info */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Organization Details</CardTitle>
+                  <CardTitle>{dict.ngoDetail?.orgDetails || "Organization Details"}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {ngo.registrationNumber && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Registration</span>
+                      <span className="text-sm text-muted-foreground">{dict.ngoDetail?.registration || "Registration"}</span>
                       <span className="text-sm font-medium text-foreground">{ngo.registrationNumber}</span>
                     </div>
                   )}
                   {ngo.teamSize && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Team Size</span>
+                      <span className="text-sm text-muted-foreground">{dict.ngoDetail?.teamSize || "Team Size"}</span>
                       <span className="text-sm font-medium text-foreground capitalize">{ngo.teamSize}</span>
                     </div>
                   )}
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Status</span>
+                    <span className="text-sm text-muted-foreground">{dict.ngoDetail?.status || "Status"}</span>
                     <Badge className={ngo.isVerified ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}>
-                      {ngo.isVerified ? "Verified" : "Pending Verification"}
+                      {ngo.isVerified ? (dict.ngoDetail?.verifiedBadge || "Verified") : (dict.ngoDetail?.pendingVerification || "Pending Verification")}
                     </Badge>
                   </div>
                   {ngo.createdAt && (
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">Member Since</span>
+                      <span className="text-sm text-muted-foreground">{dict.ngoDetail?.memberSince || "Member Since"}</span>
                       <span className="text-sm font-medium text-foreground flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
                         {new Date(ngo.createdAt).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}
@@ -295,14 +298,14 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
               {/* Contact */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Connect</CardTitle>
+                  <CardTitle>{dict.ngoDetail?.connect || "Connect"}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   {ngo.website && (
                     <Button asChild variant="outline" className="w-full justify-start bg-transparent">
                       <Link href={ngo.website} target="_blank">
                         <Globe className="h-4 w-4 mr-2" />
-                        Website
+                        {dict.ngoDetail?.website || "Website"}
                       </Link>
                     </Button>
                   )}
@@ -310,7 +313,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                     <Button asChild variant="outline" className="w-full justify-start bg-transparent">
                       <Link href={`mailto:${ngo.contactEmail}`}>
                         <Mail className="h-4 w-4 mr-2" />
-                        Email
+                        {dict.ngoDetail?.email || "Email"}
                       </Link>
                     </Button>
                   )}
@@ -318,7 +321,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                     <Button asChild variant="outline" className="w-full justify-start bg-transparent">
                       <Link href={`tel:${ngo.contactPhone}`}>
                         <Phone className="h-4 w-4 mr-2" />
-                        Phone
+                        {dict.ngoDetail?.phone || "Phone"}
                       </Link>
                     </Button>
                   )}
@@ -326,7 +329,7 @@ export default async function NGOProfilePage({ params }: { params: Promise<{ id:
                     <Button asChild variant="outline" className="w-full justify-start bg-transparent">
                       <Link href={ngo.socialLinks.linkedin} target="_blank">
                         <ExternalLink className="h-4 w-4 mr-2" />
-                        LinkedIn
+                        {dict.ngoDetail?.linkedin || "LinkedIn"}
                       </Link>
                     </Button>
                   )}

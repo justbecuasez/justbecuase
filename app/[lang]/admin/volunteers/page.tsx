@@ -2,8 +2,12 @@ import { Card, CardContent } from "@/components/ui/card"
 import { getAllVolunteers, getAdminStats } from "@/lib/actions"
 import { VolunteersSearchableList } from "@/components/admin/volunteers-searchable-list"
 import { Heart, CheckCircle, Clock, Ban } from "lucide-react"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import type { Locale } from "@/lib/i18n-config"
 
-export default async function AdminVolunteersPage() {
+export default async function AdminVolunteersPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
+  const dict = await getDictionary(lang as Locale) as any
   const [stats, volunteersData] = await Promise.all([
     getAdminStats(),
     getAllVolunteers(1, 100)
@@ -19,9 +23,9 @@ export default async function AdminVolunteersPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Manage Impact Agents</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-2">{dict.admin?.volunteers?.title || "Manage Impact Agents"}</h1>
         <p className="text-muted-foreground">
-          View and manage all impact agent profiles
+          {dict.admin?.volunteers?.subtitle || "View and manage all impact agent profiles"}
         </p>
       </div>
 
@@ -34,7 +38,7 @@ export default async function AdminVolunteersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground">{total}</p>
-              <p className="text-sm text-muted-foreground">Total Impact Agents</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.volunteers?.totalImpactAgents || "Total Impact Agents"}</p>
             </div>
           </CardContent>
         </Card>
@@ -45,7 +49,7 @@ export default async function AdminVolunteersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-green-600">{verifiedCount}</p>
-              <p className="text-sm text-muted-foreground">Verified</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.volunteers?.verified || "Verified"}</p>
             </div>
           </CardContent>
         </Card>
@@ -56,7 +60,7 @@ export default async function AdminVolunteersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
-              <p className="text-sm text-muted-foreground">Pending</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.volunteers?.pending || "Pending"}</p>
             </div>
           </CardContent>
         </Card>
@@ -67,7 +71,7 @@ export default async function AdminVolunteersPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-red-600">{bannedCount}</p>
-              <p className="text-sm text-muted-foreground">Banned</p>
+              <p className="text-sm text-muted-foreground">{dict.admin?.volunteers?.banned || "Banned"}</p>
             </div>
           </CardContent>
         </Card>
@@ -76,7 +80,7 @@ export default async function AdminVolunteersPage() {
       {/* Searchable Volunteers List */}
       <VolunteersSearchableList 
         volunteers={volunteers} 
-        title="All Impact Agents"
+        title={dict.admin?.volunteers?.allImpactAgents || "All Impact Agents"}
       />
     </div>
   )

@@ -27,9 +27,11 @@ import { skillCategories, causes } from "@/lib/skills-data"
 import { SlidersHorizontal, X, Loader2 } from "lucide-react"
 import { UnifiedSearchBar } from "@/components/unified-search-bar"
 import { BrowseGridSkeleton } from "@/components/ui/page-skeletons"
+import { useDictionary } from "@/app/[lang]/dictionaries"
 import type { VolunteerProfileView } from "@/lib/types"
 
 export default function VolunteersPage() {
+  const dict = useDictionary()
   const [volunteers, setVolunteers] = useState<VolunteerProfileView[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -232,7 +234,7 @@ export default function VolunteersPage() {
     <div className="space-y-6">
       {/* Volunteer Type */}
       <div>
-        <Label className="text-sm font-semibold text-foreground mb-3 block">Impact Agent Type</Label>
+        <Label className="text-sm font-semibold text-foreground mb-3 block">{dict.volunteersListing?.impactAgentType || "Impact Agent Type"}</Label>
         <RadioGroup
           value={selectedVolunteerType || "all"}
           onValueChange={(value) => setSelectedVolunteerType(value === "all" ? "" : value)}
@@ -240,25 +242,25 @@ export default function VolunteersPage() {
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="all" id="type-all" />
             <Label htmlFor="type-all" className="text-sm font-normal cursor-pointer">
-              All Impact Agents
+              {dict.volunteersListing?.allImpactAgents || "All Impact Agents"}
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="free" id="type-free" />
             <Label htmlFor="type-free" className="text-sm font-normal cursor-pointer">
-              Pro Bono
+              {dict.volunteersListing?.proBono || "Pro Bono"}
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="paid" id="type-paid" />
             <Label htmlFor="type-paid" className="text-sm font-normal cursor-pointer">
-              Paid
+              {dict.volunteersListing?.paid || "Paid"}
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="both" id="type-both" />
             <Label htmlFor="type-both" className="text-sm font-normal cursor-pointer">
-              Open to Both
+              {dict.volunteersListing?.openToBoth || "Open to Both"}
             </Label>
           </div>
         </RadioGroup>
@@ -266,7 +268,7 @@ export default function VolunteersPage() {
 
       {/* Work Mode */}
       <div>
-        <Label className="text-sm font-semibold text-foreground mb-3 block">Work Mode</Label>
+        <Label className="text-sm font-semibold text-foreground mb-3 block">{dict.volunteersListing?.workMode || "Work Mode"}</Label>
         <RadioGroup
           value={selectedWorkMode || "all"}
           onValueChange={(value) => setSelectedWorkMode(value === "all" ? "" : value)}
@@ -274,25 +276,25 @@ export default function VolunteersPage() {
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="all" id="mode-all" />
             <Label htmlFor="mode-all" className="text-sm font-normal cursor-pointer">
-              Any
+              {dict.volunteersListing?.any || "Any"}
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="remote" id="mode-remote" />
             <Label htmlFor="mode-remote" className="text-sm font-normal cursor-pointer">
-              Remote
+              {dict.volunteersListing?.remote || "Remote"}
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="onsite" id="mode-onsite" />
             <Label htmlFor="mode-onsite" className="text-sm font-normal cursor-pointer">
-              On-site
+              {dict.volunteersListing?.onSite || "On-site"}
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="hybrid" id="mode-hybrid" />
             <Label htmlFor="mode-hybrid" className="text-sm font-normal cursor-pointer">
-              Hybrid
+              {dict.volunteersListing?.hybridMode || "Hybrid"}
             </Label>
           </div>
         </RadioGroup>
@@ -300,7 +302,7 @@ export default function VolunteersPage() {
 
       {/* Skills */}
       <div>
-        <Label className="text-sm font-semibold text-foreground mb-3 block">Skills</Label>
+        <Label className="text-sm font-semibold text-foreground mb-3 block">{dict.volunteersListing?.skills || "Skills"}</Label>
         <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
           {skillCategories.map((category) => (
             <div key={category.id} className="space-y-1">
@@ -327,7 +329,7 @@ export default function VolunteersPage() {
 
       {/* Causes */}
       <div>
-        <Label className="text-sm font-semibold text-foreground mb-3 block">Causes</Label>
+        <Label className="text-sm font-semibold text-foreground mb-3 block">{dict.volunteersListing?.causes || "Causes"}</Label>
         <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
           {causes.map((cause) => (
             <div key={cause.id} className="flex items-center space-x-2">
@@ -351,7 +353,7 @@ export default function VolunteersPage() {
       {hasActiveFilters && (
         <Button variant="outline" className="w-full bg-transparent" onClick={clearFilters}>
           <X className="h-4 w-4 mr-2" />
-          Clear all filters
+          {dict.volunteersListing?.clearAllFilters || "Clear all filters"}
         </Button>
       )}
     </div>
@@ -367,10 +369,10 @@ export default function VolunteersPage() {
           <div className="container mx-auto px-4 md:px-6">
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                Find Skilled Impact Agents
+                {dict.volunteersListing?.title || "Find Skilled Impact Agents"}
               </h1>
               <p className="text-lg text-muted-foreground mb-8">
-                Connect with talented professionals ready to contribute their skills to your cause
+                {dict.volunteersListing?.subtitle || "Connect with talented professionals ready to contribute their skills to your cause"}
               </p>
             </div>
           </div>
@@ -383,7 +385,7 @@ export default function VolunteersPage() {
               <UnifiedSearchBar
                 defaultType="volunteer"
                 variant="default"
-                placeholder="Search by skills, location, or name..."
+                placeholder={dict.volunteersListing?.searchPlaceholder || "Search by skills, location, or name..."}
                 value={searchQuery}
                 onSearchChange={setSearchQuery}
                 navigateOnSelect={false}
@@ -396,7 +398,7 @@ export default function VolunteersPage() {
                 <SheetTrigger asChild>
                   <Button variant="outline" className="lg:hidden bg-transparent">
                     <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    Filters
+                    {dict.volunteersListing?.filters || "Filters"}
                     {hasActiveFilters && (
                       <Badge className="ml-2 bg-primary text-primary-foreground">
                         {selectedSkills.length +
@@ -409,7 +411,7 @@ export default function VolunteersPage() {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80 bg-background">
                   <SheetHeader>
-                    <SheetTitle>Filters</SheetTitle>
+                    <SheetTitle>{dict.volunteersListing?.filters || "Filters"}</SheetTitle>
                   </SheetHeader>
                   <div className="mt-6">
                     <FilterContent />
@@ -419,13 +421,13 @@ export default function VolunteersPage() {
 
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-44">
-                  <SelectValue placeholder="Sort by" />
+                  <SelectValue placeholder={dict.volunteersListing?.sortBy || "Sort by"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="best-match">Best Match</SelectItem>
-                  <SelectItem value="rating">Highest Rated</SelectItem>
-                  <SelectItem value="experienced">Most Experienced</SelectItem>
-                  <SelectItem value="hours">Most Hours</SelectItem>
+                  <SelectItem value="best-match">{dict.volunteersListing?.bestMatch || "Best Match"}</SelectItem>
+                  <SelectItem value="rating">{dict.volunteersListing?.highestRated || "Highest Rated"}</SelectItem>
+                  <SelectItem value="experienced">{dict.volunteersListing?.mostExperienced || "Most Experienced"}</SelectItem>
+                  <SelectItem value="hours">{dict.volunteersListing?.mostHours || "Most Hours"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -434,7 +436,7 @@ export default function VolunteersPage() {
           {/* Active Filters Display */}
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-2 mb-6">
-              <span className="text-sm text-muted-foreground">Active filters:</span>
+              <span className="text-sm text-muted-foreground">{dict.volunteersListing?.activeFilters || "Active filters:"}</span>
               {selectedSkills.map((skillId) => {
                 let skillName = skillId
                 for (const category of skillCategories) {
@@ -464,10 +466,10 @@ export default function VolunteersPage() {
               {selectedVolunteerType && (
                 <Badge variant="secondary" className="flex items-center gap-1">
                   {selectedVolunteerType === "free"
-                    ? "Pro Bono"
+                    ? (dict.volunteersListing?.proBono || "Pro Bono")
                     : selectedVolunteerType === "paid"
-                    ? "Paid"
-                    : "Both"}
+                    ? (dict.volunteersListing?.paid || "Paid")
+                    : (dict.volunteersListing?.both || "Both")}
                   <button onClick={() => setSelectedVolunteerType("")}>
                     <X className="h-3 w-3" />
                   </button>
@@ -488,7 +490,7 @@ export default function VolunteersPage() {
             {/* Desktop Sidebar */}
             <aside className="hidden lg:block w-64 flex-shrink-0">
               <div className="sticky top-24 bg-card border border-border rounded-xl p-6">
-                <h3 className="font-semibold text-foreground mb-4">Filters</h3>
+                <h3 className="font-semibold text-foreground mb-4">{dict.volunteersListing?.filters || "Filters"}</h3>
                 <FilterContent />
               </div>
             </aside>
@@ -497,9 +499,9 @@ export default function VolunteersPage() {
             <div className="flex-1">
               <div className="flex items-center justify-between mb-6">
                 <p className="text-muted-foreground">
-                  Showing{" "}
-                  <span className="font-medium text-foreground">{filteredVolunteers.length}</span>{" "}
-                  of {volunteers.length} impact agents
+                  {(dict.volunteersListing?.showingTemplate || "Showing {shown} of {total} impact agents")
+                    .replace("{shown}", String(filteredVolunteers.length))
+                    .replace("{total}", String(volunteers.length))}
                   {isUnifiedSearching && (
                     <Loader2 className="inline h-4 w-4 animate-spin ml-2" />
                   )}
@@ -510,15 +512,15 @@ export default function VolunteersPage() {
                 <BrowseGridSkeleton columns={3} count={6} />
               ) : filteredVolunteers.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">No impact agents found</p>
+                  <p className="text-muted-foreground">{dict.volunteersListing?.noAgentsFound || "No impact agents found"}</p>
                   <p className="text-sm text-muted-foreground mt-1">
                     {hasActiveFilters || searchQuery
-                      ? "Try adjusting your filters or search terms"
-                      : "Check back later for new impact agents"}
+                      ? (dict.volunteersListing?.tryAdjusting || "Try adjusting your filters or search terms")
+                      : (dict.volunteersListing?.checkBackLater || "Check back later for new impact agents")}
                   </p>
                   {(hasActiveFilters || searchQuery) && (
                     <Button variant="outline" className="mt-4" onClick={clearFilters}>
-                      Clear Filters
+                      {dict.volunteersListing?.clearFilters || "Clear Filters"}
                     </Button>
                   )}
                 </div>

@@ -11,6 +11,7 @@ import { useSubscriptionStore, usePlatformSettingsStore } from "@/lib/store"
 import { formatPrice, getCurrencySymbol } from "@/lib/currency"
 import type { SupportedCurrency } from "@/lib/types"
 import { toast } from "sonner"
+import { useDictionary } from "@/app/[lang]/dictionaries"
 import {
   Loader2, Tag, X, Sparkles, Zap, CheckCircle2, Shield, CreditCard, ArrowLeft, AlertTriangle,
 } from "lucide-react"
@@ -59,6 +60,7 @@ interface AppliedCoupon {
 function CheckoutOrchestrator() {
   const router = useRouter()
   const locale = useLocale()
+  const dict = useDictionary()
   const searchParams = useSearchParams()
   const planId = searchParams.get("plan")
 
@@ -122,16 +124,16 @@ function CheckoutOrchestrator() {
     if (planId === "ngo-pro") {
       return {
         id: "ngo-pro",
-        name: "NGO Pro Plan",
-        description: "Unlimited projects and profile unlocks for your organization",
+        name: dict.checkout?.ngoPlanName || "NGO Pro Plan",
+        description: dict.checkout?.ngoPlanDesc || "Unlimited projects and profile unlocks for your organization",
         price: ngoProPrice,
         features: platformSettings?.ngoProFeatures || [
-          "Unlimited projects",
-          "Unlimited profile unlocks",
-          "Advanced AI-powered matching",
-          "Priority support",
-          "Project analytics & reports",
-          "Featured NGO badge",
+          dict.checkout?.ngoFeature1 || "Unlimited projects",
+          dict.checkout?.ngoFeature2 || "Unlimited profile unlocks",
+          dict.checkout?.ngoFeature3 || "Advanced AI-powered matching",
+          dict.checkout?.ngoFeature4 || "Priority support",
+          dict.checkout?.ngoFeature5 || "Project analytics & reports",
+          dict.checkout?.ngoFeature6 || "Featured NGO badge",
         ],
         icon: Zap,
       }
@@ -139,23 +141,23 @@ function CheckoutOrchestrator() {
     if (planId === "volunteer-pro") {
       return {
         id: "volunteer-pro",
-        name: "Impact Agent Pro Plan",
-        description: "Unlimited applications and premium features",
+        name: dict.checkout?.agentPlanName || "Impact Agent Pro Plan",
+        description: dict.checkout?.agentPlanDesc || "Unlimited applications and premium features",
         price: volunteerProPrice,
         features: platformSettings?.volunteerProFeatures || [
-          "Unlimited job applications",
-          "Featured profile badge",
-          "Priority in search results",
-          "Direct message NGOs",
-          "Early access to opportunities",
-          "Profile analytics",
-          "Certificate downloads",
+          dict.checkout?.agentFeature1 || "Unlimited job applications",
+          dict.checkout?.agentFeature2 || "Featured profile badge",
+          dict.checkout?.agentFeature3 || "Priority in search results",
+          dict.checkout?.agentFeature4 || "Direct message NGOs",
+          dict.checkout?.agentFeature5 || "Early access to opportunities",
+          dict.checkout?.agentFeature6 || "Profile analytics",
+          dict.checkout?.agentFeature7 || "Certificate downloads",
         ],
         icon: Sparkles,
       }
     }
     return null
-  }, [planId, ngoProPrice, volunteerProPrice, platformSettings])
+  }, [planId, ngoProPrice, volunteerProPrice, platformSettings, dict])
 
   const currentPlan = planId?.startsWith("ngo-")
     ? ngoSubscription?.plan
@@ -186,7 +188,7 @@ function CheckoutOrchestrator() {
       })
       const data = await res.json()
       if (!data.valid) {
-        setCouponError(data.error || "Invalid coupon code")
+        setCouponError(data.error || (dict.checkout?.invalidCoupon || "Invalid coupon code"))
         setAppliedCoupon(null)
       } else {
         setAppliedCoupon({
@@ -201,15 +203,15 @@ function CheckoutOrchestrator() {
         // Reset any existing PaymentIntent so a new one is created with the coupon
         setClientSecret(null)
         setPaymentIntentId(null)
-        toast.success("Coupon applied!", {
+        toast.success(dict.checkout?.couponApplied || "Coupon applied!", {
           description:
             data.discountType === "percentage"
-              ? `${data.discountValue}% off applied`
-              : `${currencySymbol}${data.discountAmount} off applied`,
+              ? (dict.checkout?.percentOff || "{percent}% off applied").replace("{percent}", String(data.discountValue))
+              : (dict.checkout?.amountOff || "{symbol}{amount} off applied").replace("{symbol}", currencySymbol).replace("{amount}", String(data.discountAmount)),
         })
       }
     } catch {
-      setCouponError("Failed to validate coupon")
+      setCouponError(dict.checkout?.couponValidateFailed || "Failed to validate coupon")
     } finally {
       setCouponLoading(false)
     }
@@ -240,7 +242,7 @@ function CheckoutOrchestrator() {
       const data = await res.json()
 
       if (!res.ok) {
-        setIntentError(data.error || "Failed to initialise payment")
+        setIntentError(data.error || (dict.checkout?.paymentInitFailed || "Failed to initialise payment"))
         return
       }
 
@@ -254,7 +256,7 @@ function CheckoutOrchestrator() {
       setPublishableKey(data.publishableKey)
       setPaymentIntentId(data.paymentIntentId)
     } catch {
-      setIntentError("Network error — please try again")
+      setIntentError(dict.checkout?.networkError || "Network error — please try again")
     } finally {
       setIntentLoading(false)
     }
@@ -288,15 +290,15 @@ function CheckoutOrchestrator() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto" />
-          <h2 className="text-xl font-semibold">Invalid Plan</h2>
+          <h2 className="text-xl font-semibold">{dict.checkout?.invalidPlan || "Invalid Plan"}</h2>
           <p className="text-muted-foreground">
-            No plan selected. Please choose a plan from the pricing page.
+            {dict.checkout?.noPlanSelected || "No plan selected. Please choose a plan from the pricing page."}
           </p>
           <button
             className="px-6 py-2 bg-primary text-primary-foreground rounded-lg"
             onClick={() => router.push(localePath("/pricing", locale))}
           >
-            View Pricing
+            {dict.checkout?.viewPricing || "View Pricing"}
           </button>
         </div>
       </div>
@@ -304,20 +306,20 @@ function CheckoutOrchestrator() {
   }
 
   if (!roleMatchesPlan) {
-    const expected = planId.startsWith("ngo-") ? "NGO" : "Impact Agent"
+    const expected = planId.startsWith("ngo-") ? (dict.checkout?.roleNGO || "NGO") : (dict.checkout?.roleAgent || "Impact Agent")
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto" />
-          <h2 className="text-xl font-semibold">Role Mismatch</h2>
+          <h2 className="text-xl font-semibold">{dict.checkout?.roleMismatch || "Role Mismatch"}</h2>
           <p className="text-muted-foreground">
-            This plan is for {expected}s. Your role doesn&apos;t match.
+            {(dict.checkout?.roleMismatchDesc || "This plan is for {expected}s. Your role doesn't match.").replace("{expected}", expected)}
           </p>
           <button
             className="px-6 py-2 bg-primary text-primary-foreground rounded-lg"
             onClick={() => router.push(localePath("/pricing", locale))}
           >
-            View Pricing
+            {dict.checkout?.viewPricing || "View Pricing"}
           </button>
         </div>
       </div>
@@ -330,15 +332,15 @@ function CheckoutOrchestrator() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto" />
-          <h2 className="text-xl font-semibold">Already Subscribed</h2>
+          <h2 className="text-xl font-semibold">{dict.checkout?.alreadySubscribed || "Already Subscribed"}</h2>
           <p className="text-muted-foreground">
-            You&apos;re already on the Pro plan!
+            {dict.checkout?.alreadySubscribedDesc || "You're already on the Pro plan!"}
           </p>
           <button
             className="px-6 py-2 bg-primary text-primary-foreground rounded-lg"
             onClick={() => router.push(localePath(dashPath, locale))}
           >
-            Go to Dashboard
+            {dict.checkout?.goToDashboard || "Go to Dashboard"}
           </button>
         </div>
       </div>
@@ -358,7 +360,7 @@ function CheckoutOrchestrator() {
           onClick={() => router.push(localePath("/pricing", locale))}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
         >
-          <ArrowLeft className="h-4 w-4" /> Back to Pricing
+          <ArrowLeft className="h-4 w-4" /> {dict.checkout?.backToPricing || "Back to Pricing"}
         </button>
 
         <div className="grid md:grid-cols-5 gap-8">
@@ -389,7 +391,7 @@ function CheckoutOrchestrator() {
             {/* Coupon section */}
             <div className="rounded-xl border bg-card p-6 space-y-3 shadow-sm">
               <h4 className="font-medium flex items-center gap-2">
-                <Tag className="h-4 w-4" /> Have a coupon code?
+                <Tag className="h-4 w-4" /> {dict.checkout?.haveCoupon || "Have a coupon code?"}
               </h4>
 
               {appliedCoupon ? (
@@ -400,8 +402,8 @@ function CheckoutOrchestrator() {
                     </span>
                     <span className="text-sm text-green-600 dark:text-green-500 ml-2">
                       {appliedCoupon.discountType === "percentage"
-                        ? `${appliedCoupon.discountValue}% off`
-                        : `${currencySymbol}${appliedCoupon.discountAmount} off`}
+                        ? (dict.checkout?.percentOffLabel || "{percent}% off").replace("{percent}", String(appliedCoupon.discountValue))
+                        : (dict.checkout?.amountOffLabel || "{symbol}{amount} off").replace("{symbol}", currencySymbol).replace("{amount}", String(appliedCoupon.discountAmount))}
                     </span>
                   </div>
                   <button
@@ -415,7 +417,7 @@ function CheckoutOrchestrator() {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="Enter code"
+                    placeholder={dict.checkout?.enterCode || "Enter code"}
                     value={couponInput}
                     onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                     onKeyDown={(e) => e.key === "Enter" && handleApplyCoupon()}
@@ -429,7 +431,7 @@ function CheckoutOrchestrator() {
                     {couponLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      "Apply"
+                      dict.checkout?.apply || "Apply"
                     )}
                   </button>
                 </div>
@@ -439,34 +441,34 @@ function CheckoutOrchestrator() {
               )}
               {appliedCoupon && savings > 0 && (
                 <p className="text-sm text-green-600 dark:text-green-400">
-                  You save {formatPrice(savings, currency)} on this order!
+                  {(dict.checkout?.youSave || "You save {amount} on this order!").replace("{amount}", formatPrice(savings, currency))}
                 </p>
               )}
             </div>
 
             {/* Price summary */}
             <div className="rounded-xl border bg-card p-6 space-y-3 shadow-sm">
-              <h4 className="font-medium">Order Summary</h4>
+              <h4 className="font-medium">{dict.checkout?.orderSummary || "Order Summary"}</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">{plan.name}</span>
-                  <span>{formatPrice(originalAmount, currency)}/mo</span>
+                  <span>{formatPrice(originalAmount, currency)}{dict.checkout?.perMonth || "/mo"}</span>
                 </div>
                 {savings > 0 && (
                   <div className="flex justify-between text-green-600">
-                    <span>Coupon ({appliedCoupon?.code})</span>
+                    <span>{(dict.checkout?.couponLabel || "Coupon ({code})").replace("{code}", appliedCoupon?.code || "")}</span>
                     <span>-{formatPrice(savings, currency)}</span>
                   </div>
                 )}
                 <div className="border-t pt-2 flex justify-between items-center">
-                  <span className="font-medium">Total</span>
+                  <span className="font-medium">{dict.checkout?.total || "Total"}</span>
                   <span className="text-2xl font-bold">
                     {formatPrice(finalAmount, currency)}
                   </span>
                 </div>
                 {savings > 0 && (
                   <p className="text-xs text-green-600 dark:text-green-400">
-                    You save {formatPrice(savings, currency)} with coupon!
+                    {(dict.checkout?.youSaveCoupon || "You save {amount} with coupon!").replace("{amount}", formatPrice(savings, currency))}
                   </p>
                 )}
               </div>
@@ -477,7 +479,7 @@ function CheckoutOrchestrator() {
           <div className="md:col-span-3">
             <div className="rounded-xl border bg-card p-6 shadow-sm space-y-4">
               <h2 className="text-xl font-semibold flex items-center gap-2">
-                <CreditCard className="h-5 w-5" /> Payment Details
+                <CreditCard className="h-5 w-5" /> {dict.checkout?.paymentDetails || "Payment Details"}
               </h2>
 
               {intentError && (
@@ -487,7 +489,7 @@ function CheckoutOrchestrator() {
                     onClick={createPaymentIntent}
                     className="ml-2 underline font-medium"
                   >
-                    Retry
+                    {dict.checkout?.retry || "Retry"}
                   </button>
                 </div>
               )}
@@ -501,7 +503,7 @@ function CheckoutOrchestrator() {
               {intentLoading && !clientSecret && (
                 <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
                   <Loader2 className="h-8 w-8 animate-spin" />
-                  <span>Preparing secure payment…</span>
+                  <span>{dict.checkout?.preparingPayment || "Preparing secure payment\u2026"}</span>
                 </div>
               )}
 
@@ -532,10 +534,10 @@ function CheckoutOrchestrator() {
               {/* Trust badges */}
               <div className="flex items-center gap-4 pt-4 border-t text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
-                  <Shield className="h-3.5 w-3.5" /> SSL Encrypted
+                  <Shield className="h-3.5 w-3.5" /> {dict.checkout?.sslEncrypted || "SSL Encrypted"}
                 </div>
                 <div className="flex items-center gap-1">
-                  <CreditCard className="h-3.5 w-3.5" /> Powered by Stripe
+                  <CreditCard className="h-3.5 w-3.5" /> {dict.checkout?.poweredByStripe || "Powered by Stripe"}
                 </div>
               </div>
             </div>
@@ -567,6 +569,7 @@ function StripePaymentForm({
   const stripe = useStripe()
   const elements = useElements()
   const router = useRouter()
+  const dict = useDictionary()
 
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentError, setPaymentError] = useState("")
@@ -591,7 +594,7 @@ function StripePaymentForm({
 
       if (error) {
         setPaymentError(
-          error.message || "Payment failed. Please check your details and try again."
+          error.message || (dict.checkout?.paymentFailed || "Payment failed. Please check your details and try again.")
         )
         setIsProcessing(false)
         return
@@ -599,7 +602,7 @@ function StripePaymentForm({
 
       if (paymentIntent && paymentIntent.status === "succeeded") {
         // Confirm with server → activate subscription
-        toast.loading("Activating your subscription…")
+        toast.loading(dict.checkout?.activating || "Activating your subscription…")
 
         const confirmRes = await fetch("/api/payments/confirm-payment", {
           method: "POST",
@@ -611,8 +614,8 @@ function StripePaymentForm({
         toast.dismiss()
 
         if (confirmData.success) {
-          toast.success("Payment successful!", {
-            description: "Your Pro plan is now active.",
+          toast.success(dict.checkout?.paymentSuccessful || "Payment successful!", {
+            description: dict.checkout?.proActive || "Your Pro plan is now active.",
           })
           const dashboard = localePath(
             confirmData.dashboardPath || (planId.startsWith("ngo-") ? "/ngo/dashboard" : "/volunteer/dashboard"),
@@ -621,16 +624,16 @@ function StripePaymentForm({
           router.push(`${dashboard}?subscription=success`)
         } else {
           setPaymentError(
-            confirmData.error || "Payment succeeded but activation failed. Please contact support."
+            confirmData.error || (dict.checkout?.activationFailed || "Payment succeeded but activation failed. Please contact support.")
           )
         }
       } else {
         setPaymentError(
-          `Unexpected payment status: ${paymentIntent?.status || "unknown"}. Please contact support.`
+          (dict.checkout?.unexpectedStatus || "Unexpected payment status: {status}. Please contact support.").replace("{status}", paymentIntent?.status || "unknown")
         )
       }
     } catch (err: any) {
-      setPaymentError(err.message || "An unexpected error occurred")
+      setPaymentError(err.message || (dict.checkout?.unexpectedError || "An unexpected error occurred"))
     } finally {
       setIsProcessing(false)
     }
@@ -658,11 +661,11 @@ function StripePaymentForm({
       >
         {isProcessing ? (
           <>
-            <Loader2 className="h-4 w-4 animate-spin" /> Processing…
+            <Loader2 className="h-4 w-4 animate-spin" /> {dict.checkout?.processing || "Processing…"}
           </>
         ) : (
           <>
-            <CreditCard className="h-4 w-4" /> Pay {formatPrice(finalAmount, currency)}
+            <CreditCard className="h-4 w-4" /> {(dict.checkout?.payAmount || "Pay {amount}").replace("{amount}", formatPrice(finalAmount, currency))}
           </>
         )}
       </button>

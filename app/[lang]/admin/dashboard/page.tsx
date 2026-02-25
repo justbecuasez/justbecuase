@@ -1,5 +1,7 @@
 import { Suspense } from "react"
 import Link from "next/link"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import { Locale } from "@/lib/i18n-config"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -28,30 +30,33 @@ import {
   Clock,
 } from "lucide-react"
 
-export default async function AdminDashboard() {
+export default async function AdminDashboard({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params;
+  const dict = await getDictionary(lang as Locale) as any;
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{dict.admin?.dashboard?.title || "Dashboard"}</h1>
           <p className="text-muted-foreground">
-            Real-time overview of your platform&apos;s performance
+            {dict.admin?.dashboard?.subtitle || "Real-time overview of your platform's performance"}
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar className="h-4 w-4" />
-          <span>Last updated: {new Date().toLocaleString()}</span>
+          <span>{(dict.admin?.dashboard?.lastUpdated || "Last updated: {date}").replace("{date}", new Date().toLocaleString())}</span>
         </div>
       </div>
 
       <Suspense fallback={<DashboardSkeleton />}>
-        <DashboardContent />
+        <DashboardContent dict={dict} />
       </Suspense>
     </div>
   )
 }
 
-async function DashboardContent() {
+async function DashboardContent({ dict }: { dict: any }) {
   const analytics = await getAdminAnalytics()
 
   return (
@@ -59,42 +64,42 @@ async function DashboardContent() {
       {/* Key Metrics Row */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <MetricCard
-          title="Total Impact Agents"
+          title={dict.admin?.dashboard?.totalImpactAgents || "Total Impact Agents"}
           value={analytics.totalVolunteers}
           icon={Users}
-          subtext={`+${analytics.recentVolunteers} this month`}
+          subtext={(dict.admin?.dashboard?.thisMonth || "+{count} this month").replace("{count}", `${analytics.recentVolunteers}`)}
           trend="up"
           trendValue={analytics.recentVolunteers > 0 ? `+${Math.round((analytics.recentVolunteers / Math.max(analytics.totalVolunteers - analytics.recentVolunteers, 1)) * 100)}%` : "0%"}
         />
         <MetricCard
-          title="Total NGOs"
+          title={dict.admin?.dashboard?.totalNgos || "Total NGOs"}
           value={analytics.totalNGOs}
           icon={Building2}
-          subtext={`+${analytics.recentNGOs} this month`}
+          subtext={(dict.admin?.dashboard?.thisMonth || "+{count} this month").replace("{count}", `${analytics.recentNGOs}`)}
           trend="up"
           trendValue={analytics.recentNGOs > 0 ? `+${Math.round((analytics.recentNGOs / Math.max(analytics.totalNGOs - analytics.recentNGOs, 1)) * 100)}%` : "0%"}
         />
         <MetricCard
-          title="Active Opportunities"
+          title={dict.admin?.dashboard?.activeOpportunities || "Active Opportunities"}
           value={analytics.activeProjects}
           icon={FolderKanban}
-          subtext={`${analytics.completedProjects} completed`}
+          subtext={(dict.admin?.dashboard?.completed || "{count} completed").replace("{count}", `${analytics.completedProjects}`)}
           trend="up"
           trendValue={`+${analytics.recentProjects}`}
         />
         <MetricCard
-          title="Applications"
+          title={dict.admin?.dashboard?.applications || "Applications"}
           value={analytics.totalApplications}
           icon={FileText}
-          subtext={`${analytics.pendingApplications} pending`}
+          subtext={(dict.admin?.dashboard?.pending || "{count} pending").replace("{count}", `${analytics.pendingApplications}`)}
           trend="up"
           trendValue={`+${analytics.recentApplications}`}
         />
         <MetricCard
-          title="Total Revenue"
+          title={dict.admin?.dashboard?.totalRevenue || "Total Revenue"}
           value={`$${analytics.totalRevenue.toLocaleString()}`}
           icon={DollarSign}
-          subtext={`$${analytics.monthlyRevenue.toLocaleString()} this month`}
+          subtext={(dict.admin?.dashboard?.revenueThisMonth || "${amount} this month").replace("{amount}", analytics.monthlyRevenue.toLocaleString())}
           trend="up"
           trendValue={analytics.totalRevenue > 0 ? `+${Math.round((analytics.monthlyRevenue / analytics.totalRevenue) * 100)}%` : "0%"}
         />
@@ -107,13 +112,13 @@ async function DashboardContent() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-green-600" />
-                <span className="font-medium">NGO Verification Rate</span>
+                <span className="font-medium">{dict.admin?.dashboard?.ngoVerificationRate || "NGO Verification Rate"}</span>
               </div>
               <span className="text-2xl font-bold text-green-600">{analytics.ngoVerificationRate}%</span>
             </div>
             <Progress value={analytics.ngoVerificationRate} className="h-2" />
             <p className="text-xs text-muted-foreground mt-2">
-              {analytics.verifiedNGOs} of {analytics.totalNGOs} NGOs verified
+              {(dict.admin?.dashboard?.ngosVerified || "{verified} of {total} NGOs verified").replace("{verified}", `${analytics.verifiedNGOs}`).replace("{total}", `${analytics.totalNGOs}`)}
             </p>
           </CardContent>
         </Card>
@@ -123,13 +128,13 @@ async function DashboardContent() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Target className="h-5 w-5 text-blue-600" />
-                <span className="font-medium">Project Success Rate</span>
+                <span className="font-medium">{dict.admin?.dashboard?.projectSuccessRate || "Project Success Rate"}</span>
               </div>
               <span className="text-2xl font-bold text-blue-600">{analytics.projectSuccessRate}%</span>
             </div>
             <Progress value={analytics.projectSuccessRate} className="h-2" />
             <p className="text-xs text-muted-foreground mt-2">
-              {analytics.completedProjects} of {analytics.totalProjects} projects completed
+              {(dict.admin?.dashboard?.projectsCompleted || "{completed} of {total} projects completed").replace("{completed}", `${analytics.completedProjects}`).replace("{total}", `${analytics.totalProjects}`)}
             </p>
           </CardContent>
         </Card>
@@ -139,13 +144,13 @@ async function DashboardContent() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Zap className="h-5 w-5 text-purple-600" />
-                <span className="font-medium">Application Accept Rate</span>
+                <span className="font-medium">{dict.admin?.dashboard?.applicationAcceptRate || "Application Accept Rate"}</span>
               </div>
               <span className="text-2xl font-bold text-purple-600">{analytics.applicationAcceptRate}%</span>
             </div>
             <Progress value={analytics.applicationAcceptRate} className="h-2" />
             <p className="text-xs text-muted-foreground mt-2">
-              {analytics.acceptedApplications} of {analytics.totalApplications} applications accepted
+              {(dict.admin?.dashboard?.applicationsAccepted || "{accepted} of {total} applications accepted").replace("{accepted}", `${analytics.acceptedApplications}`).replace("{total}", `${analytics.totalApplications}`)}
             </p>
           </CardContent>
         </Card>
@@ -158,9 +163,9 @@ async function DashboardContent() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-primary" />
-              Recent Activity
+              {dict.admin?.dashboard?.recentActivity || "Recent Activity"}
             </CardTitle>
-            <CardDescription>Real-time platform activity feed</CardDescription>
+            <CardDescription>{dict.admin?.dashboard?.recentActivityDescription || "Real-time platform activity feed"}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -184,7 +189,7 @@ async function DashboardContent() {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-muted-foreground py-8">No recent activity</p>
+                <p className="text-center text-muted-foreground py-8">{dict.admin?.dashboard?.noRecentActivity || "No recent activity"}</p>
               )}
             </div>
           </CardContent>
@@ -195,9 +200,9 @@ async function DashboardContent() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-yellow-500" />
-              Action Items
+              {dict.admin?.dashboard?.actionItems || "Action Items"}
             </CardTitle>
-            <CardDescription>Tasks requiring your attention</CardDescription>
+            <CardDescription>{dict.admin?.dashboard?.actionItemsDescription || "Tasks requiring your attention"}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -207,8 +212,8 @@ async function DashboardContent() {
                     <div className="flex items-center gap-3">
                       <AlertCircle className="h-5 w-5 text-yellow-600" />
                       <div>
-                        <p className="font-medium text-foreground">Pending NGO Verifications</p>
-                        <p className="text-sm text-muted-foreground">Review and verify</p>
+                        <p className="font-medium text-foreground">{dict.admin?.dashboard?.pendingNgoVerifications || "Pending NGO Verifications"}</p>
+                        <p className="text-sm text-muted-foreground">{dict.admin?.dashboard?.reviewAndVerify || "Review and verify"}</p>
                       </div>
                     </div>
                     <Badge variant="secondary">{analytics.pendingNGOVerifications}</Badge>
@@ -222,8 +227,8 @@ async function DashboardContent() {
                     <div className="flex items-center gap-3">
                       <Clock className="h-5 w-5 text-blue-600" />
                       <div>
-                        <p className="font-medium text-foreground">Pending Applications</p>
-                        <p className="text-sm text-muted-foreground">Awaiting NGO response</p>
+                        <p className="font-medium text-foreground">{dict.admin?.dashboard?.pendingApplications || "Pending Applications"}</p>
+                        <p className="text-sm text-muted-foreground">{dict.admin?.dashboard?.awaitingNgoResponse || "Awaiting NGO response"}</p>
                       </div>
                     </div>
                     <Badge variant="secondary">{analytics.pendingApplications}</Badge>
@@ -237,8 +242,8 @@ async function DashboardContent() {
                     <div className="flex items-center gap-3">
                       <MessageSquare className="h-5 w-5 text-purple-600" />
                       <div>
-                        <p className="font-medium text-foreground">Support Tickets</p>
-                        <p className="text-sm text-muted-foreground">User requests</p>
+                        <p className="font-medium text-foreground">{dict.admin?.dashboard?.supportTickets || "Support Tickets"}</p>
+                        <p className="text-sm text-muted-foreground">{dict.admin?.dashboard?.userRequests || "User requests"}</p>
                       </div>
                     </div>
                     <Badge variant="secondary">3</Badge>
@@ -252,8 +257,8 @@ async function DashboardContent() {
                     <div className="flex items-center gap-3">
                       <Eye className="h-5 w-5 text-red-600" />
                       <div>
-                        <p className="font-medium text-foreground">Reports to Review</p>
-                        <p className="text-sm text-muted-foreground">Content/user reports</p>
+                        <p className="font-medium text-foreground">{dict.admin?.dashboard?.reportsToReview || "Reports to Review"}</p>
+                        <p className="text-sm text-muted-foreground">{dict.admin?.dashboard?.contentUserReports || "Content/user reports"}</p>
                       </div>
                     </div>
                     <Badge variant="secondary">2</Badge>
@@ -272,9 +277,9 @@ async function DashboardContent() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
-              Skills in Demand
+              {dict.admin?.dashboard?.skillsInDemand || "Skills in Demand"}
             </CardTitle>
-            <CardDescription>Most requested skills from active opportunities</CardDescription>
+            <CardDescription>{dict.admin?.dashboard?.skillsInDemandDescription || "Most requested skills from active opportunities"}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -292,7 +297,7 @@ async function DashboardContent() {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-muted-foreground py-4">No data available</p>
+                <p className="text-center text-muted-foreground py-4">{dict.admin?.dashboard?.noDataAvailable || "No data available"}</p>
               )}
             </div>
           </CardContent>
@@ -303,9 +308,9 @@ async function DashboardContent() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PieChart className="h-5 w-5 text-primary" />
-              Top Causes
+              {dict.admin?.dashboard?.topCauses || "Top Causes"}
             </CardTitle>
-            <CardDescription>Most popular cause categories</CardDescription>
+            <CardDescription>{dict.admin?.dashboard?.topCausesDescription || "Most popular cause categories"}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -323,7 +328,7 @@ async function DashboardContent() {
                   </div>
                 ))
               ) : (
-                <p className="text-center text-muted-foreground py-4">No data available</p>
+                <p className="text-center text-muted-foreground py-4">{dict.admin?.dashboard?.noDataAvailable || "No data available"}</p>
               )}
             </div>
           </CardContent>
@@ -333,7 +338,7 @@ async function DashboardContent() {
       {/* Quick Navigation */}
       <Card>
         <CardHeader>
-          <CardTitle>Quick Navigation</CardTitle>
+          <CardTitle>{dict.admin?.dashboard?.quickNavigation || "Quick Navigation"}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
@@ -341,7 +346,7 @@ async function DashboardContent() {
               <Button variant="outline" className="w-full justify-between">
                 <span className="flex items-center gap-2">
                   <Users className="h-4 w-4" />
-                  Manage Users
+                  {dict.admin?.dashboard?.manageUsers || "Manage Users"}
                 </span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -350,7 +355,7 @@ async function DashboardContent() {
               <Button variant="outline" className="w-full justify-between">
                 <span className="flex items-center gap-2">
                   <FolderKanban className="h-4 w-4" />
-                  All Projects
+                  {dict.admin?.dashboard?.allProjects || "All Projects"}
                 </span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -359,7 +364,7 @@ async function DashboardContent() {
               <Button variant="outline" className="w-full justify-between">
                 <span className="flex items-center gap-2">
                   <DollarSign className="h-4 w-4" />
-                  Payments
+                  {dict.admin?.dashboard?.payments || "Payments"}
                 </span>
                 <ArrowRight className="h-4 w-4" />
               </Button>
@@ -368,7 +373,7 @@ async function DashboardContent() {
               <Button variant="outline" className="w-full justify-between">
                 <span className="flex items-center gap-2">
                   <Target className="h-4 w-4" />
-                  Settings
+                  {dict.admin?.dashboard?.settings || "Settings"}
                 </span>
                 <ArrowRight className="h-4 w-4" />
               </Button>

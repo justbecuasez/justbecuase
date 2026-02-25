@@ -26,10 +26,12 @@ import {
   AlertCircle,
   Info,
 } from "lucide-react"
+import { useDictionary } from "@/components/dictionary-provider"
 
 type NotificationType = "system" | "new_application" | "application_accepted" | "application_rejected" | "profile_viewed" | "profile_unlocked" | "project_match"
 
 export default function AdminNotificationsPage() {
+  const dict = useDictionary();
   const [title, setTitle] = useState("")
   const [message, setMessage] = useState("")
   const [userType, setUserType] = useState<string>("all")
@@ -42,12 +44,12 @@ export default function AdminNotificationsPage() {
 
   const handleSend = async () => {
     if (!title.trim() || !message.trim()) {
-      toast.error("Title and message are required")
+      toast.error(dict.admin?.notifications?.toasts?.titleMessageRequired || "Title and message are required")
       return
     }
 
     if (userType === "specific" && !specificUserIds.trim()) {
-      toast.error("Please enter user IDs for specific targeting")
+      toast.error(dict.admin?.notifications?.toasts?.userIdsRequired || "Please enter user IDs for specific targeting")
       return
     }
 
@@ -71,17 +73,17 @@ export default function AdminNotificationsPage() {
       const data = await response.json()
 
       if (response.ok) {
-        toast.success(`Successfully sent ${data.count} notifications`)
+        toast.success((dict.admin?.notifications?.toasts?.sentSuccess || "Successfully sent {count} notifications").replace("{count}", data.count))
         setTitle("")
         setMessage("")
         setLink("")
         setSpecificUserIds("")
         loadRecentNotifications()
       } else {
-        toast.error(data.error || "Failed to send notifications")
+        toast.error(data.error || (dict.admin?.notifications?.toasts?.sendFailed || "Failed to send notifications"))
       }
     } catch (error) {
-      toast.error("Failed to send notifications")
+      toast.error(dict.admin?.notifications?.toasts?.sendFailed || "Failed to send notifications")
     } finally {
       setSending(false)
     }
@@ -105,9 +107,9 @@ export default function AdminNotificationsPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-foreground mb-2">Send Notifications</h1>
+        <h1 className="text-2xl font-bold text-foreground mb-2">{dict.admin?.notifications?.title || "Send Notifications"}</h1>
         <p className="text-muted-foreground">
-          Send notifications to users, impact agents, or NGOs
+          {dict.admin?.notifications?.subtitle || "Send notifications to users, impact agents, or NGOs"}
         </p>
       </div>
 
@@ -117,43 +119,43 @@ export default function AdminNotificationsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Bell className="h-5 w-5 text-primary" />
-              New Notification
+              {dict.admin?.notifications?.newNotification || "New Notification"}
             </CardTitle>
             <CardDescription>
-              Compose and send a notification to selected users
+              {dict.admin?.notifications?.newNotificationDescription || "Compose and send a notification to selected users"}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Target Audience */}
             <div className="space-y-2">
-              <Label>Target Audience</Label>
+              <Label>{dict.admin?.notifications?.targetAudience || "Target Audience"}</Label>
               <Select value={userType} onValueChange={setUserType}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select audience" />
+                  <SelectValue placeholder={dict.admin?.notifications?.selectAudience || "Select audience"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      All Users
+                      {dict.admin?.notifications?.allUsers || "All Users"}
                     </div>
                   </SelectItem>
                   <SelectItem value="volunteers">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      All Impact Agents
+                      {dict.admin?.notifications?.allImpactAgents || "All Impact Agents"}
                     </div>
                   </SelectItem>
                   <SelectItem value="ngos">
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4" />
-                      All NGOs
+                      {dict.admin?.notifications?.allNgos || "All NGOs"}
                     </div>
                   </SelectItem>
                   <SelectItem value="specific">
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
-                      Specific Users
+                      {dict.admin?.notifications?.specificUsers || "Specific Users"}
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -162,7 +164,7 @@ export default function AdminNotificationsPage() {
 
             {userType === "specific" && (
               <div className="space-y-2">
-                <Label>User IDs (comma-separated)</Label>
+                <Label>{dict.admin?.notifications?.userIdsLabel || "User IDs (comma-separated)"}</Label>
                 <Input
                   placeholder="user-id-1, user-id-2, ..."
                   value={specificUserIds}
@@ -173,28 +175,28 @@ export default function AdminNotificationsPage() {
 
             {/* Notification Type */}
             <div className="space-y-2">
-              <Label>Notification Type</Label>
+              <Label>{dict.admin?.notifications?.notificationType || "Notification Type"}</Label>
               <Select value={notificationType} onValueChange={(v) => setNotificationType(v as NotificationType)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select type" />
+                  <SelectValue placeholder={dict.admin?.notifications?.selectType || "Select type"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="system">System Announcement</SelectItem>
-                  <SelectItem value="new_application">New Application</SelectItem>
-                  <SelectItem value="application_accepted">Application Accepted</SelectItem>
-                  <SelectItem value="application_rejected">Application Rejected</SelectItem>
-                  <SelectItem value="profile_viewed">Profile Viewed</SelectItem>
-                  <SelectItem value="profile_unlocked">Profile Unlocked</SelectItem>
-                  <SelectItem value="project_match">Opportunity Match</SelectItem>
+                  <SelectItem value="system">{dict.admin?.notifications?.systemAnnouncement || "System Announcement"}</SelectItem>
+                  <SelectItem value="new_application">{dict.admin?.notifications?.newApplication || "New Application"}</SelectItem>
+                  <SelectItem value="application_accepted">{dict.admin?.notifications?.applicationAccepted || "Application Accepted"}</SelectItem>
+                  <SelectItem value="application_rejected">{dict.admin?.notifications?.applicationRejected || "Application Rejected"}</SelectItem>
+                  <SelectItem value="profile_viewed">{dict.admin?.notifications?.profileViewed || "Profile Viewed"}</SelectItem>
+                  <SelectItem value="profile_unlocked">{dict.admin?.notifications?.profileUnlocked || "Profile Unlocked"}</SelectItem>
+                  <SelectItem value="project_match">{dict.admin?.notifications?.opportunityMatch || "Opportunity Match"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Title */}
             <div className="space-y-2">
-              <Label>Title *</Label>
+              <Label>{dict.admin?.notifications?.titleLabel || "Title *"}</Label>
               <Input
-                placeholder="Notification title"
+                placeholder={dict.admin?.notifications?.titlePlaceholder || "Notification title"}
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={100}
@@ -203,44 +205,44 @@ export default function AdminNotificationsPage() {
 
             {/* Message */}
             <div className="space-y-2">
-              <Label>Message *</Label>
+              <Label>{dict.admin?.notifications?.messageLabel || "Message *"}</Label>
               <Textarea
-                placeholder="Write your notification message..."
+                placeholder={dict.admin?.notifications?.messagePlaceholder || "Write your notification message..."}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 rows={4}
                 maxLength={500}
               />
               <p className="text-xs text-muted-foreground text-right">
-                {message.length}/500
+                {(dict.admin?.notifications?.characterCount || "{count}/500").replace("{count}", String(message.length))}
               </p>
             </div>
 
             {/* Link (optional) */}
             <div className="space-y-2">
-              <Label>Link (optional)</Label>
+              <Label>{dict.admin?.notifications?.linkLabel || "Link (optional)"}</Label>
               <Input
-                placeholder="/volunteer/dashboard or https://..."
+                placeholder={dict.admin?.notifications?.linkPlaceholder || "/volunteer/dashboard or https://..."}
                 value={link}
                 onChange={(e) => setLink(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Users will be redirected to this link when they click the notification
+                {dict.admin?.notifications?.linkHint || "Users will be redirected to this link when they click the notification"}
               </p>
             </div>
 
             {/* Preview */}
             {(title || message) && (
               <div className="p-4 rounded-lg border bg-muted/50">
-                <p className="text-xs text-muted-foreground mb-2">Preview:</p>
+                <p className="text-xs text-muted-foreground mb-2">{dict.admin?.notifications?.preview || "Preview:"}</p>
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                     <Bell className="h-5 w-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">{title || "Notification Title"}</p>
+                    <p className="font-medium">{title || (dict.admin?.notifications?.previewTitle || "Notification Title")}</p>
                     <p className="text-sm text-muted-foreground">
-                      {message || "Your message will appear here..."}
+                      {message || (dict.admin?.notifications?.previewMessage || "Your message will appear here...")}
                     </p>
                   </div>
                 </div>
@@ -256,12 +258,12 @@ export default function AdminNotificationsPage() {
               {sending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Sending...
+                  {dict.admin?.notifications?.sending || "Sending..."}
                 </>
               ) : (
                 <>
                   <Send className="h-4 w-4 mr-2" />
-                  Send Notification
+                  {dict.admin?.notifications?.sendNotification || "Send Notification"}
                 </>
               )}
             </Button>
@@ -273,9 +275,9 @@ export default function AdminNotificationsPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Recent Notifications</CardTitle>
+                <CardTitle>{dict.admin?.notifications?.recentNotifications || "Recent Notifications"}</CardTitle>
                 <CardDescription>
-                  Recently sent notifications
+                  {dict.admin?.notifications?.recentNotificationsDescription || "Recently sent notifications"}
                 </CardDescription>
               </div>
               <Button 
@@ -287,7 +289,7 @@ export default function AdminNotificationsPage() {
                 {loadingHistory ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Refresh"
+                  dict.admin?.common?.refresh || "Refresh"
                 )}
               </Button>
             </div>
@@ -296,13 +298,13 @@ export default function AdminNotificationsPage() {
             {recentNotifications.length === 0 ? (
               <div className="py-12 text-center">
                 <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No recent notifications</p>
+                <p className="text-muted-foreground">{dict.admin?.notifications?.noRecentNotifications || "No recent notifications"}</p>
                 <Button 
                   variant="link" 
                   onClick={loadRecentNotifications}
                   className="mt-2"
                 >
-                  Load notifications
+                  {dict.admin?.notifications?.loadNotifications || "Load notifications"}
                 </Button>
               </div>
             ) : (
