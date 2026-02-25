@@ -91,9 +91,9 @@
     "billing": "بلنگ"
   },
   "hero": {
-    "missionLine": "مشن",
-    "im": "IM",
-    "possible": "ممکن",
+    "missionLine": "منز",
+    "im": "ل",
+    "possible": "منکن",
     "tagline": "آپ نے سالوں تک اپنے {skill} کو کامل کیا ہے؛ اب اسے {purpose} دے دیں۔",
     "skill": "ہنر",
     "purpose": "مقصد",
