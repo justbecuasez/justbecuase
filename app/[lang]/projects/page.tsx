@@ -15,6 +15,7 @@ import { skillCategories, resolveSkillName } from "@/lib/skills-data"
 import { SlidersHorizontal, Grid3X3, List, X, Loader2 } from "lucide-react"
 import { UnifiedSearchBar } from "@/components/unified-search-bar"
 import { BrowseGridSkeleton } from "@/components/ui/page-skeletons"
+import { useDictionary } from "@/app/[lang]/dictionaries"
 
 interface Project {
   _id?: { toString: () => string }
@@ -53,6 +54,7 @@ export default function ProjectsPage() {
 
 function ProjectsContent() {
   const searchParams = useSearchParams()
+  const dict = useDictionary()
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -146,6 +148,19 @@ function ProjectsContent() {
 
   const timeCommitments = ["1-5 hours/week", "5-10 hours/week", "10-20 hours/week", "20+ hours/week"]
   const locations = ["Remote", "On-site", "Hybrid"]
+
+  const timeCommitmentLabels: Record<string, string> = {
+    "1-5 hours/week": dict.projectsListing?.hours1to5 || "1-5 hours/week",
+    "5-10 hours/week": dict.projectsListing?.hours5to10 || "5-10 hours/week",
+    "10-20 hours/week": dict.projectsListing?.hours10to20 || "10-20 hours/week",
+    "20+ hours/week": dict.projectsListing?.hours20plus || "20+ hours/week",
+  }
+
+  const locationLabels: Record<string, string> = {
+    "Remote": dict.projectsListing?.remote || "Remote",
+    "On-site": dict.projectsListing?.onSite || "On-site",
+    "Hybrid": dict.projectsListing?.hybrid || "Hybrid",
+  }
 
   const toggleSkill = (skill: string) => {
     setSelectedSkills((prev) => (prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]))
@@ -264,7 +279,7 @@ function ProjectsContent() {
     <div className="space-y-6">
       {/* Skills */}
       <div>
-        <Label className="text-sm font-semibold text-foreground mb-3 block">Skills</Label>
+        <Label className="text-sm font-semibold text-foreground mb-3 block">{dict.projectsListing?.skills || "Skills"}</Label>
         <div className="space-y-2">
           {skillCategories.map((category) => (
             <div key={category.name} className="flex items-center space-x-2">
@@ -278,7 +293,7 @@ function ProjectsContent() {
                 className="text-sm text-foreground cursor-pointer flex-1 flex items-center justify-between"
               >
                 <span>{category.name}</span>
-                <span className="text-muted-foreground text-xs">({category.subskills.length} skills)</span>
+                <span className="text-muted-foreground text-xs">{(dict.projectsListing?.skillsCount || "({count} skills)").replace("{count}", category.subskills.length.toString())}</span>
               </label>
             </div>
           ))}
@@ -287,7 +302,7 @@ function ProjectsContent() {
 
       {/* Time Commitment */}
       <div>
-        <Label className="text-sm font-semibold text-foreground mb-3 block">Time Commitment</Label>
+        <Label className="text-sm font-semibold text-foreground mb-3 block">{dict.projectsListing?.timeCommitment || "Time Commitment"}</Label>
         <div className="space-y-2">
           {timeCommitments.map((time) => (
             <div key={time} className="flex items-center space-x-2">
@@ -297,7 +312,7 @@ function ProjectsContent() {
                 onCheckedChange={() => toggleTimeCommitment(time)}
               />
               <label htmlFor={time} className="text-sm text-foreground cursor-pointer">
-                {time}
+                {timeCommitmentLabels[time] || time}
               </label>
             </div>
           ))}
@@ -306,16 +321,16 @@ function ProjectsContent() {
 
       {/* Location */}
       <div>
-        <Label className="text-sm font-semibold text-foreground mb-3 block">Location</Label>
+        <Label className="text-sm font-semibold text-foreground mb-3 block">{dict.projectsListing?.location || "Location"}</Label>
         <Select value={selectedLocation} onValueChange={setSelectedLocation}>
           <SelectTrigger>
-            <SelectValue placeholder="All locations" />
+            <SelectValue placeholder={dict.projectsListing?.allLocations || "All locations"} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All locations</SelectItem>
+            <SelectItem value="all">{dict.projectsListing?.allLocations || "All locations"}</SelectItem>
             {locations.map((location) => (
               <SelectItem key={location} value={location}>
-                {location}
+                {locationLabels[location] || location}
               </SelectItem>
             ))}
           </SelectContent>
@@ -325,7 +340,7 @@ function ProjectsContent() {
       {hasActiveFilters && (
         <Button variant="outline" className="w-full bg-transparent" onClick={clearFilters}>
           <X className="h-4 w-4 mr-2" />
-          Clear all filters
+          {dict.projectsListing?.clearAllFilters || "Clear all filters"}
         </Button>
       )}
     </div>
@@ -339,8 +354,8 @@ function ProjectsContent() {
         {/* Header */}
         <div className="border-b border-border bg-muted/30">
           <div className="container mx-auto px-4 md:px-6 py-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">Browse Opportunities</h1>
-            <p className="text-muted-foreground">Find opportunities that match your skills and interests</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">{dict.projectsListing?.title || "Browse Opportunities"}</h1>
+            <p className="text-muted-foreground">{dict.projectsListing?.subtitle || "Find opportunities that match your skills and interests"}</p>
           </div>
         </div>
 
@@ -351,7 +366,7 @@ function ProjectsContent() {
               <UnifiedSearchBar
                 defaultType="opportunity"
                 variant="default"
-                placeholder="Search opportunities, skills, or organizations..."
+                placeholder={dict.projectsListing?.searchPlaceholder || "Search opportunities, skills, or organizations..."}
                 value={searchQuery}
                 onSearchChange={setSearchQuery}
                 navigateOnSelect={false}
@@ -364,7 +379,7 @@ function ProjectsContent() {
                 <SheetTrigger asChild>
                   <Button variant="outline" className="lg:hidden bg-transparent">
                     <SlidersHorizontal className="h-4 w-4 mr-2" />
-                    Filters
+                    {dict.projectsListing?.filters || "Filters"}
                     {hasActiveFilters && (
                       <Badge className="ml-2 bg-primary text-primary-foreground">
                         {selectedSkills.length + selectedTimeCommitment.length + (selectedLocation ? 1 : 0)}
@@ -374,7 +389,7 @@ function ProjectsContent() {
                 </SheetTrigger>
                 <SheetContent side="left" className="w-80 bg-background">
                   <SheetHeader>
-                    <SheetTitle>Filters</SheetTitle>
+                    <SheetTitle>{dict.projectsListing?.filters || "Filters"}</SheetTitle>
                   </SheetHeader>
                   <div className="mt-6">
                     <FilterContent />
@@ -384,13 +399,13 @@ function ProjectsContent() {
 
               <Select value={sortBy} onValueChange={setSortBy}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Sort by" />
+                  <SelectValue placeholder={dict.projectsListing?.sortBy || "Sort by"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="newest">Newest First</SelectItem>
-                  <SelectItem value="relevant">Most Relevant</SelectItem>
-                  <SelectItem value="closing">Closing Soon</SelectItem>
-                  <SelectItem value="popular">Most Popular</SelectItem>
+                  <SelectItem value="newest">{dict.projectsListing?.newestFirst || "Newest First"}</SelectItem>
+                  <SelectItem value="relevant">{dict.projectsListing?.mostRelevant || "Most Relevant"}</SelectItem>
+                  <SelectItem value="closing">{dict.projectsListing?.closingSoon || "Closing Soon"}</SelectItem>
+                  <SelectItem value="popular">{dict.projectsListing?.mostPopular || "Most Popular"}</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -416,7 +431,7 @@ function ProjectsContent() {
           {/* Active Filters Display */}
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-2 mb-6">
-              <span className="text-sm text-muted-foreground">Active filters:</span>
+              <span className="text-sm text-muted-foreground">{dict.projectsListing?.activeFilters || "Active filters:"}</span>
               {selectedSkills.map((skill) => (
                 <Badge key={skill} variant="secondary" className="flex items-center gap-1">
                   {skill}
@@ -427,7 +442,7 @@ function ProjectsContent() {
               ))}
               {selectedTimeCommitment.map((time) => (
                 <Badge key={time} variant="secondary" className="flex items-center gap-1">
-                  {time}
+                  {timeCommitmentLabels[time] || time}
                   <button onClick={() => toggleTimeCommitment(time)}>
                     <X className="h-3 w-3" />
                   </button>
@@ -435,7 +450,7 @@ function ProjectsContent() {
               ))}
               {selectedLocation && (
                 <Badge variant="secondary" className="flex items-center gap-1">
-                  {selectedLocation}
+                  {locationLabels[selectedLocation] || selectedLocation}
                   <button onClick={() => setSelectedLocation("")}>
                     <X className="h-3 w-3" />
                   </button>
@@ -448,7 +463,7 @@ function ProjectsContent() {
             {/* Desktop Sidebar */}
             <aside className="hidden lg:block w-64 flex-shrink-0">
               <div className="sticky top-24 bg-card border border-border rounded-xl p-6">
-                <h3 className="font-semibold text-foreground mb-4">Filters</h3>
+                <h3 className="font-semibold text-foreground mb-4">{dict.projectsListing?.filters || "Filters"}</h3>
                 <FilterContent />
               </div>
             </aside>
@@ -457,7 +472,7 @@ function ProjectsContent() {
             <div className="flex-1">
               <div className="flex items-center justify-between mb-6">
                 <p className="text-muted-foreground">
-                  Showing <span className="font-medium text-foreground">{filteredProjects.length}</span> of {projects.length} opportunities
+                  {(dict.projectsListing?.showingTemplate || "Showing {shown} of {total} opportunities").replace("{shown}", filteredProjects.length.toString()).replace("{total}", projects.length.toString())}
                 </p>
               </div>
 
@@ -465,13 +480,13 @@ function ProjectsContent() {
                 <BrowseGridSkeleton columns={3} count={6} />
               ) : filteredProjects.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">No opportunities found</p>
+                  <p className="text-muted-foreground">{dict.projectsListing?.noOpportunitiesFound || "No opportunities found"}</p>
                   <p className="text-sm text-muted-foreground mt-1">
-                    {hasActiveFilters ? "Try adjusting your filters" : "Check back later for new opportunities"}
+                    {hasActiveFilters ? (dict.projectsListing?.tryAdjustingFilters || "Try adjusting your filters") : (dict.projectsListing?.checkBackLater || "Check back later for new opportunities")}
                   </p>
                   {hasActiveFilters && (
                     <Button variant="outline" className="mt-4" onClick={clearFilters}>
-                      Clear Filters
+                      {dict.projectsListing?.clearFilters || "Clear Filters"}
                     </Button>
                   )}
                 </div>
@@ -483,12 +498,12 @@ function ProjectsContent() {
                       title: project.title,
                       description: project.description,
                       skills: (project.skills || project.skillsRequired?.map(s => s.subskillId) || []).map(resolveSkillName),
-                      location: project.workMode === "remote" ? "Remote" : project.location || "On-site",
+                      location: project.workMode === "remote" ? (dict.projectsListing?.remote || "Remote") : project.location || (dict.projectsListing?.onSite || "On-site"),
                       timeCommitment: project.timeCommitment,
                       applicants: project.applicantsCount || 0,
-                      postedAt: project.createdAt ? new Date(project.createdAt).toLocaleDateString() : "Recently",
+                      postedAt: project.createdAt ? new Date(project.createdAt).toLocaleDateString() : (dict.projectsListing?.recently || "Recently"),
                       projectType: project.projectType,
-                      ngo: project.ngo || { name: "NGO", verified: false }
+                      ngo: project.ngo || { name: dict.projectsListing?.ngoFallback || "NGO", verified: false }
                     }} />
                   ))}
                 </div>
@@ -498,7 +513,7 @@ function ProjectsContent() {
               {projects.length > 0 && (
                 <div className="mt-12 text-center">
                   <Button variant="outline" size="lg">
-                    Load More Opportunities
+                    {dict.projectsListing?.loadMore || "Load More Opportunities"}
                   </Button>
                 </div>
               )}

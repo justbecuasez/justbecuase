@@ -1,5 +1,7 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import type { Locale } from "@/lib/i18n-config"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -33,14 +35,15 @@ function getSkillName(categoryId: string, subskillId: string): string {
 }
 
 // Format date
-function formatDate(date?: Date | string): string {
-  if (!date) return "Flexible"
+function formatDate(date?: Date | string, flexibleText: string = "Flexible"): string {
+  if (!date) return flexibleText
   const d = new Date(date)
   return d.toLocaleDateString("en-IN", { month: "short", day: "numeric", year: "numeric" })
 }
 
-export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export default async function ProjectDetailPage({ params }: { params: Promise<{ id: string; lang: string }> }) {
+  const { id, lang } = await params
+  const dict = await getDictionary(lang as Locale) as any;
   
   // Get project from database
   const project = await getProject(id)
@@ -86,7 +89,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Opportunities
+              {dict.projectDetail?.backToOpportunities || "Back to Opportunities"}
             </Link>
           </div>
         </div>
@@ -143,7 +146,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                         {ngo.isVerified && <CheckCircle className="h-4 w-4 text-primary" />}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        {ngo.isVerified ? "Verified Organization" : "Organization"}
+                        {ngo.isVerified ? (dict.projectDetail?.verifiedOrganization || "Verified Organization") : (dict.projectDetail?.organization || "Organization")}
                       </p>
                     </div>
                   </div>
@@ -155,7 +158,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-5 w-5 text-primary" />
-                    Opportunity Description
+                    {dict.projectDetail?.opportunityDescription || "Opportunity Description"}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="prose prose-slate max-w-none">
@@ -168,7 +171,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               {/* Skills Required */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Skills Required</CardTitle>
+                  <CardTitle>{dict.projectDetail?.skillsRequired || "Skills Required"}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -186,14 +189,14 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                       </div>
                     ))}
                     {project.skillsRequired.length === 0 && (
-                      <p className="text-muted-foreground italic">No specific skills required</p>
+                      <p className="text-muted-foreground italic">{dict.projectDetail?.noSkillsRequired || "No specific skills required"}</p>
                     )}
                   </div>
                   
                   {project.experienceLevel && (
                     <div className="mt-4 pt-4 border-t border-border">
                       <div className="flex items-center justify-between">
-                        <span className="text-muted-foreground">Experience Level</span>
+                        <span className="text-muted-foreground">{dict.projectDetail?.experienceLevel || "Experience Level"}</span>
                         <Badge variant="secondary" className="capitalize">
                           {project.experienceLevel}
                         </Badge>
@@ -207,7 +210,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               {project.causes.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>Causes</CardTitle>
+                    <CardTitle>{dict.projectDetail?.causes || "Causes"}</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
@@ -231,7 +234,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <FileText className="h-5 w-5 text-primary" />
-                      Opportunity Documents
+                      {dict.projectDetail?.opportunityDocuments || "Opportunity Documents"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -271,7 +274,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Building2 className="h-5 w-5 text-primary" />
-                      About {ngo.orgName}
+                      {(dict.projectDetail?.aboutOrg || "About {name}").replace("{name}", ngo.orgName || "")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -289,7 +292,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                       </div>
                       <div>
                         <p className="text-foreground leading-relaxed">
-                          {ngo.description || `${ngo.orgName} is a registered nonprofit organization working to make a positive impact.`}
+                          {ngo.description || (dict.projectDetail?.orgFallbackDesc || "{name} is a registered nonprofit organization working to make a positive impact.").replace("{name}", ngo.orgName || "")}
                         </p>
                         {ngo.causes && ngo.causes.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-3">
@@ -302,7 +305,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                         )}
                         <Button asChild variant="link" className="px-0 mt-2 text-primary">
                           <Link href={`/ngos/${project.ngoId}`}>
-                            View Organization Profile →
+                            {dict.projectDetail?.viewOrgProfile || "View Organization Profile →"}
                           </Link>
                         </Button>
                       </div>
@@ -321,35 +324,35 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                     <div className="flex items-center justify-between py-3 border-b border-border">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Clock className="h-4 w-4" />
-                        <span>Time Commitment</span>
+                        <span>{dict.projectDetail?.timeCommitment || "Time Commitment"}</span>
                       </div>
-                      <span className="font-medium text-foreground">{project.timeCommitment || "Flexible"}</span>
+                      <span className="font-medium text-foreground">{project.timeCommitment || (dict.projectDetail?.flexible || "Flexible")}</span>
                     </div>
                     <div className="flex items-center justify-between py-3 border-b border-border">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Calendar className="h-4 w-4" />
-                        <span>Duration</span>
+                        <span>{dict.projectDetail?.duration || "Duration"}</span>
                       </div>
-                      <span className="font-medium text-foreground">{project.duration || "Flexible"}</span>
+                      <span className="font-medium text-foreground">{project.duration || (dict.projectDetail?.flexible || "Flexible")}</span>
                     </div>
                     <div className="flex items-center justify-between py-3 border-b border-border">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Calendar className="h-4 w-4" />
-                        <span>Deadline</span>
+                        <span>{dict.projectDetail?.deadline || "Deadline"}</span>
                       </div>
-                      <span className="font-medium text-foreground">{formatDate(project.deadline)}</span>
+                      <span className="font-medium text-foreground">{formatDate(project.deadline, dict.projectDetail?.flexible || "Flexible")}</span>
                     </div>
                     <div className="flex items-center justify-between py-3 border-b border-border">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Briefcase className="h-4 w-4" />
-                        <span>Work Mode</span>
+                        <span>{dict.projectDetail?.workMode || "Work Mode"}</span>
                       </div>
                       <span className="font-medium text-foreground capitalize">{project.workMode}</span>
                     </div>
                     <div className="flex items-center justify-between py-3">
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Users className="h-4 w-4" />
-                        <span>Applications</span>
+                        <span>{dict.projectDetail?.applications || "Applications"}</span>
                       </div>
                       <span className="font-medium text-foreground">{project.applicantsCount}</span>
                     </div>
@@ -368,9 +371,9 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                     />
                   ) : (
                     <Button className="w-full" disabled>
-                      {project.status === "completed" ? "Opportunity Completed" : 
-                       project.status === "closed" ? "Applications Closed" : 
-                       "Not Accepting Applications"}
+                      {project.status === "completed" ? (dict.projectDetail?.opportunityCompleted || "Opportunity Completed") : 
+                       project.status === "closed" ? (dict.projectDetail?.applicationsClosed || "Applications Closed") : 
+                       (dict.projectDetail?.notAccepting || "Not Accepting Applications")}
                     </Button>
                   )}
 
@@ -393,7 +396,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <Eye className="h-4 w-4" />
-                    <span>{project.viewsCount} people viewed this opportunity</span>
+                    <span>{(dict.projectDetail?.viewedCount || "{count} people viewed this opportunity").replace("{count}", String(project.viewsCount))}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -402,7 +405,7 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
               {similarProjects.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Similar Opportunities</CardTitle>
+                    <CardTitle className="text-lg">{dict.projectDetail?.similarOpportunities || "Similar Opportunities"}</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {similarProjects.map((p) => (
