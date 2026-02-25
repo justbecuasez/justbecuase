@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { useLocale, localePath } from "@/hooks/use-locale"
+import { useDictionary } from "@/components/dictionary-provider"
 import { motion, AnimatePresence } from "motion/react"
 import {
   Search,
@@ -65,49 +66,49 @@ const RECENT_SEARCHES_KEY = "jbc_recent_searches"
 const MAX_RECENT_SEARCHES = 5
 const DEBOUNCE_MS = 150
 
-const POPULAR_SEARCHES = [
-  { label: "Web Development", query: "web development", icon: "💻" },
-  { label: "Graphic Design", query: "graphic design", icon: "🎨" },
-  { label: "Marketing", query: "marketing", icon: "📈" },
-  { label: "Content Writing", query: "content writing", icon: "✍️" },
-  { label: "Data Analysis", query: "data analysis", icon: "📊" },
-  { label: "Education", query: "education", icon: "📚" },
+const POPULAR_SEARCHES_KEYS = [
+  { labelKey: "webDevelopment" as const, query: "web development", icon: "💻" },
+  { labelKey: "graphicDesign" as const, query: "graphic design", icon: "🎨" },
+  { labelKey: "marketing" as const, query: "marketing", icon: "📈" },
+  { labelKey: "contentWriting" as const, query: "content writing", icon: "✍️" },
+  { labelKey: "dataAnalysis" as const, query: "data analysis", icon: "📊" },
+  { labelKey: "education" as const, query: "education", icon: "📚" },
 ]
 
-const TYPE_CONFIG = {
+const TYPE_CONFIG_BASE = {
   volunteer: {
     icon: Users,
-    label: "Impact Agent",
+    labelKey: "impactAgent" as const,
     badgeClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   },
   ngo: {
     icon: Building2,
-    label: "NGO",
+    labelKey: "ngo" as const,
     badgeClass: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
   },
   opportunity: {
     icon: Briefcase,
-    label: "Opportunity",
+    labelKey: "opportunity" as const,
     badgeClass: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
   },
   blog: {
     icon: BookOpen,
-    label: "Blog",
+    labelKey: "blog" as const,
     badgeClass: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
   },
   page: {
     icon: FileText,
-    label: "Page",
+    labelKey: "page" as const,
     badgeClass: "bg-gray-100 text-gray-700 dark:bg-gray-900/30 dark:text-gray-400",
   },
   skill: {
     icon: Sparkles,
-    label: "Skill",
+    labelKey: "skill" as const,
     badgeClass: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400",
   },
   cause: {
     icon: TrendingUp,
-    label: "Cause",
+    labelKey: "cause" as const,
     badgeClass: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
   },
 } as const
@@ -187,6 +188,21 @@ export function UnifiedSearchBar({
 }: UnifiedSearchBarProps) {
   const router = useRouter()
   const locale = useLocale()
+  const dict = useDictionary()
+  const s = dict.search || {} as any
+
+  // Build translated popular searches and type config
+  const POPULAR_SEARCHES = useMemo(() =>
+    POPULAR_SEARCHES_KEYS.map(item => ({
+      ...item,
+      label: (s as any)[item.labelKey] || item.labelKey,
+    })),
+    [s]
+  )
+
+  const getTypeLabel = useCallback((key: string) => {
+    return (s as any)[key] || key
+  }, [s])
 
   // Search state
   const isControlled = externalValue !== undefined
@@ -422,12 +438,12 @@ export function UnifiedSearchBar({
   }
 
   const defaultPlaceholder = defaultType === "volunteer"
-    ? "Search skills, location, or name..."
+    ? s.placeholderVolunteer || "Search skills, location, or name..."
     : defaultType === "ngo"
-    ? "Search organizations..."
+    ? s.placeholderNgo || "Search organizations..."
     : defaultType === "opportunity"
-    ? "Search opportunities..."
-    : "Search volunteers, NGOs, opportunities, blog, anything..."
+    ? s.placeholderOpportunity || "Search opportunities..."
+    : s.placeholderDefault || "Search volunteers, NGOs, opportunities, blog, anything..."
 
   // ============================================
   // RENDER
@@ -515,10 +531,10 @@ export function UnifiedSearchBar({
                     <div className="py-1">
                       <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                         <Sparkles className="h-3 w-3" />
-                        Suggestions
+                        {s.suggestions || "Suggestions"}
                       </div>
                       {suggestions.map((suggestion, index) => {
-                        const config = TYPE_CONFIG[suggestion.type as keyof typeof TYPE_CONFIG] ?? TYPE_CONFIG.page
+                        const config = TYPE_CONFIG_BASE[suggestion.type as keyof typeof TYPE_CONFIG_BASE] ?? TYPE_CONFIG_BASE.page
                         const Icon = config.icon
                         const isSelected = selectedIndex === index
                         return (
@@ -548,7 +564,7 @@ export function UnifiedSearchBar({
                               )}
                             </div>
                             <Badge variant="secondary" className={`text-[10px] shrink-0 ${config.badgeClass}`}>
-                              {config.label}
+                              {getTypeLabel(config.labelKey)}
                             </Badge>
                             <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                           </button>
@@ -565,7 +581,7 @@ export function UnifiedSearchBar({
                       >
                         <Search className="h-4 w-4 text-primary" />
                         <span className="text-sm">
-                          Search for &quot;<span className="font-semibold text-primary">{searchQuery}</span>&quot;
+                          {s.searchFor || "Search for"} &quot;<span className="font-semibold text-primary">{searchQuery}</span>&quot;
                         </span>
                       </button>
                     </div>
@@ -573,7 +589,7 @@ export function UnifiedSearchBar({
 
                   {!isSuggestionsLoading && suggestions.length === 0 && searchQuery.trim().length >= 2 && (
                     <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-                      No suggestions found. Press Enter to search.
+                      {s.noSuggestions || "No suggestions found. Press Enter to search."}
                     </div>
                   )}
                 </>
@@ -585,13 +601,13 @@ export function UnifiedSearchBar({
                   <div className="px-3 py-1.5 flex items-center justify-between">
                     <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                       <Clock className="h-3 w-3" />
-                      Recent Searches
+                      {s.recentSearches || "Recent Searches"}
                     </span>
                     <button
                       onClick={clearRecentSearches}
                       className="text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      Clear All
+                      {s.clearAll || "Clear All"}
                     </button>
                   </div>
                   {recentSearches.map((search, index) => {
@@ -624,7 +640,7 @@ export function UnifiedSearchBar({
                 <div className="py-1">
                   <div className="px-3 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
                     <TrendingUp className="h-3 w-3" />
-                    Trending Searches
+                    {s.trendingSearches || "Trending Searches"}
                   </div>
                   {POPULAR_SEARCHES.map((item, index) => {
                     const isSelected = selectedIndex === index
@@ -658,7 +674,7 @@ export function UnifiedSearchBar({
       {/* Popular Tags (optional) */}
       {showPopularTags && (
         <div className="flex flex-wrap justify-center gap-2 mt-4">
-          <span className="text-sm text-muted-foreground mr-1">Popular:</span>
+          <span className="text-sm text-muted-foreground mr-1">{s.popular || "Popular:"}</span>
           {POPULAR_SEARCHES.map((item) => (
             <button
               key={item.query}

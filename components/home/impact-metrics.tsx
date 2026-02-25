@@ -2,9 +2,10 @@
 
 import { motion } from "motion/react";
 import { Users, CheckCircle2, Building2, Clock, DollarSign } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { useInView } from "motion/react";
 import { Box } from "@mui/material";
+import { useDictionary } from "@/components/dictionary-provider";
 
 const Counter = ({ value, prefix = "", suffix = "" }: { value: number; prefix?: string; suffix?: string }) => {
   const [displayValue, setDisplayValue] = useState(0);
@@ -33,13 +34,16 @@ const Counter = ({ value, prefix = "", suffix = "" }: { value: number; prefix?: 
 };
 
 export function ImpactMetrics({ impactMetrics }: { impactMetrics: any }) {
-  const metrics = [
-    { icon: Users, value: impactMetrics.volunteers, label: "Skilled Impact Agents" },
-    { icon: CheckCircle2, value: impactMetrics.projectsCompleted, label: "Opportunities Completed" },
-    { icon: Building2, value: impactMetrics.ngosSupported, label: "NGOs Supported" },
-    { icon: Clock, value: impactMetrics.hoursContributed, label: "Hours Contributed", suffix: "+" },
-    { icon: DollarSign, value: impactMetrics.valueGenerated, label: "Value Generated", prefix: "$" },
-  ];
+  const dict = useDictionary();
+  const h = dict.home || {} as any;
+
+  const metrics = useMemo(() => [
+    { icon: Users, value: impactMetrics.volunteers, label: h.metricAgents || "Skilled Impact Agents" },
+    { icon: CheckCircle2, value: impactMetrics.projectsCompleted, label: h.metricCompleted || "Opportunities Completed" },
+    { icon: Building2, value: impactMetrics.ngosSupported, label: h.metricNGOs || "NGOs Supported" },
+    { icon: Clock, value: impactMetrics.hoursContributed, label: h.metricHours || "Hours Contributed", suffix: "+" },
+    { icon: DollarSign, value: impactMetrics.valueGenerated, label: h.metricValue || "Value Generated", prefix: "$" },
+  ], [h, impactMetrics]);
 
   return (
     <section className="py-32 bg-background border-y border-border/40">
@@ -48,14 +52,14 @@ export function ImpactMetrics({ impactMetrics }: { impactMetrics: any }) {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-24 gap-8">
           <div className="max-w-xl">
             <h2 className="text-5xl md:text-7xl font-light tracking-tighter text-foreground mb-6">
-              Our <span className="font-semibold">Impact.</span>
+              {h.ourImpact || "Our Impact."}
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed border-l-2 border-primary pl-6">
-              Real numbers showing how skilled professionals are creating meaningful change across communities.
+              {h.impactDesc || "Real numbers showing how skilled professionals are creating meaningful change across communities."}
             </p>
           </div>
           <div className="text-right">
-            <span className="text-xs font-black uppercase tracking-[0.3em] text-primary/60">Annual Report 2025</span>
+            <span className="text-xs font-black uppercase tracking-[0.3em] text-primary/60">{h.annualReport || "Annual Report 2025"}</span>
           </div>
         </div>
 

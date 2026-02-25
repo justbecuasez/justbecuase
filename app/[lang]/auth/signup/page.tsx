@@ -106,7 +106,7 @@ function SignUpPageInner() {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.error || "Failed to send verification code")
+        setError(data.error || (a.failedSendCode || "Failed to send verification code"))
         setIsLoading(false)
         return false
       }
@@ -116,7 +116,7 @@ function SignUpPageInner() {
       setIsLoading(false)
       return true
     } catch (err: any) {
-      setError("Failed to send verification code. Please try again.")
+      setError(a.failedSendCodeRetry || "Failed to send verification code. Please try again.")
       setIsLoading(false)
       return false
     }
@@ -126,7 +126,7 @@ function SignUpPageInner() {
   const verifyOTP = async () => {
     const otpCode = otp.join("")
     if (otpCode.length !== 6) {
-      setError("Please enter the complete 6-digit code")
+      setError(a.enterCompleteCode || "Please enter the complete 6-digit code")
       return
     }
 
@@ -143,7 +143,7 @@ function SignUpPageInner() {
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        setError(data.error || "Invalid verification code")
+        setError(data.error || (a.invalidCode || "Invalid verification code"))
         setIsLoading(false)
         return
       }
@@ -151,7 +151,7 @@ function SignUpPageInner() {
       setEmailVerified(true)
       setStep(4) // Move to password step
     } catch (err: any) {
-      setError("Failed to verify code. Please try again.")
+      setError(a.failedVerifyCode || "Failed to verify code. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -200,12 +200,12 @@ function SignUpPageInner() {
     setError("")
 
     if (!formData.email || !formData.email.includes("@")) {
-      setError("Please enter a valid email address")
+      setError(a.invalidEmail || "Please enter a valid email address")
       return
     }
 
     if (!formData.name.trim()) {
-      setError("Please enter your name")
+      setError(a.enterName || "Please enter your name")
       return
     }
 
@@ -220,17 +220,17 @@ function SignUpPageInner() {
     setError("")
 
     if (!accountType) {
-      setError("Please select an account type")
+      setError(a.selectAccountType || "Please select an account type")
       return
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match")
+      setError(a.passwordsDoNotMatch || "Passwords do not match")
       return
     }
 
     if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters")
+      setError(a.passwordMinLength || "Password must be at least 8 characters")
       return
     }
 
@@ -245,7 +245,7 @@ function SignUpPageInner() {
       })
 
       if (signUpError) {
-        setError(signUpError.message || "Failed to create account")
+        setError(signUpError.message || (a.failedCreateAccount || "Failed to create account"))
         setIsLoading(false)
         return
       }
@@ -292,7 +292,7 @@ function SignUpPageInner() {
       // Redirect to onboarding
       router.push(localePath(accountType === "volunteer" ? "/volunteer/onboarding" : "/ngo/onboarding", locale))
     } catch (err: any) {
-      setError(err.message || "Something went wrong")
+      setError(err.message || (a.somethingWentWrong || "Something went wrong"))
       setIsLoading(false)
     }
   }
@@ -301,7 +301,7 @@ function SignUpPageInner() {
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-xl font-semibold text-foreground mb-2">{a.chooseAccountType || "Choose your account type"}</h2>
-        <p className="text-muted-foreground">Select how you'd like to use JustBeCause Network</p>
+        <p className="text-muted-foreground">{a.selectHowToUse || "Select how you'd like to use JustBeCause Network"}</p>
       </div>
 
       <div className="grid gap-4">
@@ -364,9 +364,9 @@ function SignUpPageInner() {
         </Button>
         <div>
           <h2 className="font-semibold text-foreground">
-            {accountType === "volunteer" ? "Create your impact agent account" : "Register your organization"}
+            {accountType === "volunteer" ? (a.createAgentAccount || "Create your impact agent account") : (a.registerOrganization || "Register your organization")}
           </h2>
-          <p className="text-sm text-muted-foreground">Enter your details to get started</p>
+          <p className="text-sm text-muted-foreground">{a.enterDetails || "Enter your details to get started"}</p>
         </div>
       </div>
 
@@ -382,7 +382,7 @@ function SignUpPageInner() {
           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="name"
-            placeholder="Your full name"
+            placeholder={a.fullNamePlaceholder || "Your full name"}
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className="pl-10"
@@ -408,7 +408,7 @@ function SignUpPageInner() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        We'll send a verification code to this email address
+        {a.willSendCode || "We will send a verification code to this email address"}
       </p>
 
       <Button
@@ -419,7 +419,7 @@ function SignUpPageInner() {
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Sending code...
+            {a.sendingCode || "Sending code..."}
           </>
         ) : (
           <>
@@ -439,7 +439,7 @@ function SignUpPageInner() {
         </Button>
         <div>
           <h2 className="font-semibold text-foreground">{a.verifyEmail || "Verify your email"}</h2>
-          <p className="text-sm text-muted-foreground">Enter the 6-digit code sent to {formData.email}</p>
+          <p className="text-sm text-muted-foreground">{(a.enterOtpSentTo || "Enter the 6-digit code sent to") + " " + formData.email}</p>
         </div>
       </div>
 
@@ -480,7 +480,7 @@ function SignUpPageInner() {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Verifying...
+              {a.verifying || "Verifying..."}
             </>
           ) : (
             <>
@@ -491,9 +491,9 @@ function SignUpPageInner() {
         </Button>
 
         <p className="text-sm text-muted-foreground">
-          Didn't receive the code?{" "}
+          {a.didntReceiveCode || "Didn't receive the code?"}{" "}
           {resendCooldown > 0 ? (
-            <span className="text-muted-foreground">Resend in {resendCooldown}s</span>
+            <span className="text-muted-foreground">{(a.resendIn || "Resend in {n}s").replace("{n}", String(resendCooldown))}</span>
           ) : (
             <button
               type="button"
@@ -517,7 +517,7 @@ function SignUpPageInner() {
         </div>
         <div>
           <h2 className="font-semibold text-foreground">{a.emailVerified || "Email Verified!"}</h2>
-          <p className="text-sm text-muted-foreground">Create a password to complete signup</p>
+          <p className="text-sm text-muted-foreground">{a.createPasswordToComplete || "Create a password to complete signup"}</p>
         </div>
       </div>
 
@@ -541,7 +541,7 @@ function SignUpPageInner() {
           <Input
             id="password"
             type="password"
-            placeholder="Create password (min 8 characters)"
+            placeholder={a.createPasswordPlaceholder || "Create password (min 8 characters)"}
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             className="pl-10"
@@ -559,7 +559,7 @@ function SignUpPageInner() {
           <Input
             id="confirmPassword"
             type="password"
-            placeholder="Confirm password"
+            placeholder={a.confirmPasswordPlaceholder || "Confirm password"}
             value={formData.confirmPassword}
             onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
             className="pl-10"
@@ -569,13 +569,13 @@ function SignUpPageInner() {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        By creating an account, you agree to our{" "}
+        {a.agreeToTerms || "By creating an account, you agree to our"}{" "}
         <LocaleLink href="/terms" className="text-primary hover:underline">
-          Terms of Service
+          {a.termsOfService || "Terms of Service"}
         </LocaleLink>{" "}
-        and{" "}
+        {dict.common?.and || "and"}{" "}
         <LocaleLink href="/privacy" className="text-primary hover:underline">
-          Privacy Policy
+          {a.privacyPolicy || "Privacy Policy"}
         </LocaleLink>
       </p>
 
@@ -587,7 +587,7 @@ function SignUpPageInner() {
         {isLoading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Creating account...
+            {a.creatingAccount || "Creating account..."}
           </>
         ) : (
           <>
@@ -611,7 +611,7 @@ function SignUpPageInner() {
           <Card className="border-0 shadow-lg">
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl">{a.createAccount || "Create an account"}</CardTitle>
-              <CardDescription>Join thousands of impact agents and NGOs making an impact</CardDescription>
+              <CardDescription>{a.joinThousands || "Join thousands of impact agents and NGOs making an impact"}</CardDescription>
             </CardHeader>
             <CardContent>
               {/* Email Verification Message */}
@@ -620,12 +620,12 @@ function SignUpPageInner() {
                   <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                     <MailCheck className="h-8 w-8 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-2">Check your email</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">{a.checkYourEmail || "Check your email"}</h3>
                   <p className="text-muted-foreground mb-4">
-                    We've sent a verification link to <strong>{formData.email}</strong>
+                    {(a.sentVerificationLink || "We've sent a verification link to") + " "}<strong>{formData.email}</strong>
                   </p>
                   <p className="text-sm text-muted-foreground mb-6">
-                    Click the link in the email to verify your account and continue with onboarding.
+                    {a.clickLinkToVerify || "Click the link in the email to verify your account and continue with onboarding."}
                   </p>
                   <div className="space-y-3">
                     <Button 
@@ -634,10 +634,10 @@ function SignUpPageInner() {
                       onClick={() => window.open("https://mail.google.com", "_blank")}
                     >
                       <Mail className="mr-2 h-4 w-4" />
-                      Open Gmail
+                      {a.openGmail || "Open Gmail"}
                     </Button>
                     <p className="text-xs text-muted-foreground">
-                      Didn't receive the email? Check your spam folder or{" "}
+                      {a.checkSpam || "Didn't receive the email? Check your spam folder or"}{" "}
                       <button 
                         className="text-primary hover:underline"
                         onClick={() => {
@@ -645,7 +645,7 @@ function SignUpPageInner() {
                           setStep(2)
                         }}
                       >
-                        try again
+                        {a.tryAgain || "try again"}
                       </button>
                     </p>
                   </div>
@@ -741,19 +741,19 @@ function SignUpPageInner() {
           <div className="grid grid-cols-2 gap-6">
             <div className="text-center">
               <p className="text-4xl font-bold mb-1">2,847</p>
-              <p className="text-sm text-primary-foreground/80">Impact Agents</p>
+              <p className="text-sm text-primary-foreground/80">{a.statImpactAgents || "Impact Agents"}</p>
             </div>
             <div className="text-center">
               <p className="text-4xl font-bold mb-1">456</p>
-              <p className="text-sm text-primary-foreground/80">Opportunities Completed</p>
+              <p className="text-sm text-primary-foreground/80">{a.statCompleted || "Opportunities Completed"}</p>
             </div>
             <div className="text-center">
               <p className="text-4xl font-bold mb-1">128</p>
-              <p className="text-sm text-primary-foreground/80">NGOs Supported</p>
+              <p className="text-sm text-primary-foreground/80">{a.statNGOs || "NGOs Supported"}</p>
             </div>
             <div className="text-center">
               <p className="text-4xl font-bold mb-1">$2.4M</p>
-              <p className="text-sm text-primary-foreground/80">Value Created</p>
+              <p className="text-sm text-primary-foreground/80">{a.statValue || "Value Created"}</p>
             </div>
           </div>
         </div>

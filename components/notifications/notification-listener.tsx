@@ -8,6 +8,7 @@ import { useBrowserNotification, useNotificationPermission } from "@/components/
 import { Button } from "@/components/ui/button"
 import { Bell, BellRing } from "lucide-react"
 import { toast } from "sonner"
+import { useDictionary } from "@/components/dictionary-provider"
 
 interface NotificationListenerProps {
   userId?: string
@@ -22,6 +23,7 @@ export function NotificationListener({
 }: NotificationListenerProps) {
   const router = useRouter()
   const locale = useLocale()
+  const dict = useDictionary()
   const { sendNotification, hasPermission } = useBrowserNotification()
   const { requestPermission } = useNotificationPermission()
   const { setUnreadCount, setNotifications, notifications, unreadCount } = useNotificationStore()
@@ -65,7 +67,7 @@ export function NotificationListener({
           toast(latestNotification.title, {
             description: latestNotification.message,
             action: notificationUrl ? {
-              label: "View",
+              label: dict.common?.view || "View",
               onClick: () => router.push(localePath(notificationUrl, locale)),
             } : undefined,
             duration: 5000,
@@ -128,12 +130,14 @@ function getNotificationUrl(type: string, userType: "volunteer" | "ngo"): string
 export function NotificationPermissionButton() {
   const { requestPermission } = useNotificationPermission()
   const hasPermission = useNotificationStore((state) => state.hasPermission)
+  const dict = useDictionary()
+  const n = (dict as any).notifications || {}
 
   if (hasPermission) {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <BellRing className="h-4 w-4 text-green-500" />
-        <span>Browser notifications enabled</span>
+        <span>{n.browserEnabled || "Browser notifications enabled"}</span>
       </div>
     )
   }
@@ -141,12 +145,12 @@ export function NotificationPermissionButton() {
   const handleRequest = async () => {
     const granted = await requestPermission()
     if (granted) {
-      toast.success("Notifications enabled!", {
-        description: "You'll receive browser notifications for important updates."
+      toast.success(n.enabled || "Notifications enabled!", {
+        description: n.enabledDesc || "You'll receive browser notifications for important updates."
       })
     } else {
-      toast.error("Permission denied", {
-        description: "You can enable notifications in your browser settings."
+      toast.error(n.permissionDenied || "Permission denied", {
+        description: n.enableInSettings || "You can enable notifications in your browser settings."
       })
     }
   }
@@ -154,7 +158,7 @@ export function NotificationPermissionButton() {
   return (
     <Button variant="outline" onClick={handleRequest}>
       <Bell className="h-4 w-4 mr-2" />
-      Enable Browser Notifications
+      {n.enableBrowser || "Enable Browser Notifications"}
     </Button>
   )
 }

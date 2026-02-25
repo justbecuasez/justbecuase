@@ -63,7 +63,7 @@ export default function Error({
             <Button asChild variant="ghost" size="sm">
               <LocaleLink href="/contact">
                 <Bug className="h-4 w-4 mr-2" />
-                Report Issue
+                {(dict as any).common?.reportIssue || "Report Issue"}
               </LocaleLink>
             </Button>
           </div>

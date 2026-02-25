@@ -29,7 +29,7 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     if (!token) {
-      setError("Invalid or missing reset token. Please request a new password reset link.")
+      setError(a.invalidResetToken || "Invalid or missing reset token. Please request a new password reset link.")
     }
   }, [token])
 
@@ -38,17 +38,17 @@ function ResetPasswordForm() {
     setError("")
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match")
+      setError(a.passwordsDoNotMatch || "Passwords do not match")
       return
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters")
+      setError(a.passwordMinLength || "Password must be at least 8 characters")
       return
     }
 
     if (!token) {
-      setError("Invalid reset token")
+      setError(a.invalidToken || "Invalid reset token")
       return
     }
 
@@ -61,14 +61,14 @@ function ResetPasswordForm() {
       })
 
       if (resetError) {
-        setError(resetError.message || "Failed to reset password")
+        setError(resetError.message || (a.failedResetPassword || "Failed to reset password"))
         setIsLoading(false)
         return
       }
 
       setIsSuccess(true)
     } catch (err: any) {
-      setError(err.message || "Something went wrong")
+      setError(err.message || (a.somethingWentWrong || "Something went wrong"))
     } finally {
       setIsLoading(false)
     }
@@ -88,8 +88,8 @@ function ResetPasswordForm() {
             </CardTitle>
             <CardDescription>
               {isSuccess
-                ? "Your password has been successfully reset"
-                : "Enter your new password below"}
+                ? (a.passwordResetDesc || "Your password has been successfully reset")
+                : (a.enterNewPasswordBelow || "Enter your new password below")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -115,7 +115,7 @@ function ResetPasswordForm() {
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">{a.invalidLink || "Invalid Link"}</h3>
                 <p className="text-muted-foreground mb-6">
-                  {a.invalidLink ? a.invalidLink : "This password reset link is invalid or has expired."}
+                  {a.resetLinkExpired || "This password reset link is invalid or has expired."}
                 </p>
                 <Button asChild className="w-full">
                   <LocaleLink href="/auth/forgot-password">
@@ -138,7 +138,7 @@ function ResetPasswordForm() {
                     <Input
                       id="password"
                       type="password"
-                      placeholder="Enter new password"
+                      placeholder={a.newPasswordPlaceholder || "Enter new password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       className="pl-10"
@@ -155,7 +155,7 @@ function ResetPasswordForm() {
                     <Input
                       id="confirmPassword"
                       type="password"
-                      placeholder="Confirm new password"
+                      placeholder={a.confirmNewPasswordPlaceholder || "Confirm new password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       className="pl-10"
@@ -168,10 +168,10 @@ function ResetPasswordForm() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Resetting...
+                      {a.resetting || "Resetting..."}
                     </>
                   ) : (
-                    "Reset Password"
+                    a.resetPasswordBtn || "Reset Password"
                   )}
                 </Button>
 

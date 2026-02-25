@@ -18,6 +18,7 @@ import { UnifiedSearchBar } from "@/components/unified-search-bar"
 import { useNotificationStore } from "@/lib/store"
 import { StreamMessageBadge } from "@/components/stream/stream-message-badge"
 import { signOut } from "@/lib/auth-client"
+import { useDictionary } from "@/components/dictionary-provider"
 
 interface DashboardContentHeaderProps {
   userType: "volunteer" | "ngo"
@@ -27,6 +28,8 @@ interface DashboardContentHeaderProps {
 
 export function DashboardContentHeader({ userType, userName, userAvatar }: DashboardContentHeaderProps) {
   const unreadCount = useNotificationStore((state) => state.unreadCount)
+  const dict = useDictionary()
+  const d = dict.dashboard || {} as any
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 md:px-6">
@@ -44,8 +47,8 @@ export function DashboardContentHeader({ userType, userName, userAvatar }: Dashb
         <UnifiedSearchBar
           variant="compact"
           placeholder={userType === "volunteer"
-            ? "Search opportunities or NGOs..."
-            : "Search impact agents, skills, or projects..."}
+            ? d.searchVolunteerPlaceholder || "Search opportunities or NGOs..."
+            : d.searchNgoPlaceholder || "Search impact agents, skills, or projects..."}
           allowedTypes={userType === "volunteer"
             ? ["opportunity", "ngo"]
             : ["volunteer", "opportunity"]}
@@ -82,18 +85,18 @@ export function DashboardContentHeader({ userType, userName, userAvatar }: Dashb
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel>{d.myAccount || "My Account"}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <LocaleLink href={userType === "volunteer" ? "/volunteer/profile" : "/ngo/profile"}>
                 <User className="mr-2 h-4 w-4" />
-                Profile
+                {d.profile || "Profile"}
               </LocaleLink>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <LocaleLink href={userType === "volunteer" ? "/volunteer/settings" : "/ngo/settings"}>
                 <Settings className="mr-2 h-4 w-4" />
-                Settings
+                {d.settings || "Settings"}
               </LocaleLink>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -105,7 +108,7 @@ export function DashboardContentHeader({ userType, userName, userAvatar }: Dashb
               className="text-destructive cursor-pointer"
             >
               <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
+              {d.signOut || "Sign Out"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

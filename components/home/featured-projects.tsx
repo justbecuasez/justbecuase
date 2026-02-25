@@ -84,12 +84,12 @@ export function FeaturedProjects() {
                       title: project.title,
                       description: project.description,
                       skills: project.skillsRequired?.map((s: any) => resolveSkillName(s.subskillId)) || [],
-                      location: project.workMode === "remote" ? "Remote" : project.location || "On-site",
+                      location: project.workMode === "remote" ? (dict.search?.remote || "Remote") : project.location || (dict.search?.onsite || "On-site"),
                       timeCommitment: project.timeCommitment,
                       applicants: project.applicantsCount || 0,
-                      postedAt: project.createdAt ? new Date(project.createdAt).toLocaleDateString() : "Recently",
+                      postedAt: project.createdAt ? new Date(project.createdAt).toLocaleDateString() : (dict.common?.recently || "Recently"),
                       projectType: project.projectType,
-                      ngo: { name: (project as any).ngoName || "Verified Partner", verified: true }
+                      ngo: { name: (project as any).ngoName || (dict.common?.verifiedPartner || "Verified Partner"), verified: true }
                     }} />
                   </div>
                 </div>

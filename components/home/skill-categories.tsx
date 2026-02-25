@@ -5,6 +5,7 @@ import { useState, useEffect } from "react"
 import LocaleLink from "@/components/locale-link"
 import { getSkillCategoryCounts } from "@/lib/actions"
 import { Megaphone, Code, Palette, Calculator, Target, Users, Heart } from "lucide-react"
+import { useDictionary } from "@/components/dictionary-provider"
 
 const iconMap: { [key: string]: React.ElementType } = {
   Megaphone,
@@ -18,6 +19,8 @@ const iconMap: { [key: string]: React.ElementType } = {
 
 export function SkillCategories() {
   const [categories, setCategories] = useState<Awaited<ReturnType<typeof getSkillCategoryCounts>>>([]);
+  const dict = useDictionary();
+  const h = dict.home || {} as any;
 
   useEffect(() => {
     getSkillCategoryCounts().then(setCategories);
@@ -27,9 +30,9 @@ export function SkillCategories() {
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4 md:px-6">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-4">Find Opportunities By Skill</h2>
+          <h2 className="text-3xl font-bold text-foreground mb-4">{h.findBySkill || "Find Opportunities By Skill"}</h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Browse opportunities that match your expertise. Every skill has the power to create change.
+            {h.findBySkillDesc || "Browse opportunities that match your expertise. Every skill has the power to create change."}
           </p>
         </div>
 
@@ -49,7 +52,7 @@ export function SkillCategories() {
                   <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
                     {category.name}
                   </h3>
-                  <p className="text-sm text-muted-foreground">{category.count} opportunities</p>
+                  <p className="text-sm text-muted-foreground">{(h.opportunitiesCount || "{count} opportunities").replace("{count}", category.count)}</p>
                 </div>
               </LocaleLink>
             )

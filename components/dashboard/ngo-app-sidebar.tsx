@@ -3,6 +3,8 @@
 import LocaleLink from "@/components/locale-link"
 import { usePathname } from "next/navigation"
 import { useLocale, localePath } from "@/hooks/use-locale"
+import { useDictionary } from "@/components/dictionary-provider"
+import { useMemo } from "react"
 import {
   LayoutDashboard,
   PlusCircle,
@@ -30,33 +32,35 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-const navGroups = [
-  {
-    label: "Main",
-    items: [
-      { title: "Dashboard", href: "/ngo/dashboard", icon: LayoutDashboard },
-      { title: "Post Requirement", href: "/ngo/post-project", icon: PlusCircle },
-      { title: "My Requirements", href: "/ngo/projects", icon: FolderKanban },
-      { title: "Applications", href: "/ngo/applications", icon: Users },
-      { title: "Find Talent", href: "/ngo/find-talent", icon: Search },
-      { title: "Messages", href: "/ngo/messages", icon: MessageSquare },
-    ],
-  },
-  {
-    label: "Account",
-    items: [
-      { title: "Notifications", href: "/ngo/notifications", icon: Bell },
-      { title: "Organization", href: "/ngo/profile", icon: Building2 },
-      { title: "Billing", href: "/ngo/settings?tab=billing", icon: CreditCard },
-      { title: "Upgrade Plan", href: "/pricing", icon: Sparkles, highlight: true },
-      { title: "Settings", href: "/ngo/settings", icon: Settings },
-    ],
-  },
-]
-
 export function NGOAppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const locale = useLocale()
+  const dict = useDictionary()
+  const d = dict.dashboard || {} as any
+
+  const navGroups = useMemo(() => [
+    {
+      label: d.main || "Main",
+      items: [
+        { title: d.dashboard || "Dashboard", href: "/ngo/dashboard", icon: LayoutDashboard },
+        { title: d.postRequirement || "Post Requirement", href: "/ngo/post-project", icon: PlusCircle },
+        { title: d.myRequirements || "My Requirements", href: "/ngo/projects", icon: FolderKanban },
+        { title: d.applications || "Applications", href: "/ngo/applications", icon: Users },
+        { title: d.findTalent || "Find Talent", href: "/ngo/find-talent", icon: Search },
+        { title: d.messages || "Messages", href: "/ngo/messages", icon: MessageSquare },
+      ],
+    },
+    {
+      label: d.account || "Account",
+      items: [
+        { title: d.notifications || "Notifications", href: "/ngo/notifications", icon: Bell },
+        { title: d.organization || "Organization", href: "/ngo/profile", icon: Building2 },
+        { title: d.billing || "Billing", href: "/ngo/settings?tab=billing", icon: CreditCard },
+        { title: d.upgradePlan || "Upgrade Plan", href: "/pricing", icon: Sparkles, highlight: true },
+        { title: d.settings || "Settings", href: "/ngo/settings", icon: Settings },
+      ],
+    },
+  ], [d])
 
   return (
     <Sidebar variant="inset" collapsible="icon" {...props}>
@@ -69,8 +73,8 @@ export function NGOAppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>
                   <Building2 className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">NGO Dashboard</span>
-                  <span className="truncate text-xs text-muted-foreground">Manage your organization</span>
+                  <span className="truncate font-semibold">{d.ngoDashboard || "NGO Dashboard"}</span>
+                  <span className="truncate text-xs text-muted-foreground">{d.manageOrganization || "Manage your organization"}</span>
                 </div>
               </LocaleLink>
             </SidebarMenuButton>

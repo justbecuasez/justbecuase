@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
 
       if (result.error) {
         console.log(`[ForgotPassword] Error:`, result.error)
-        setError(result.error.message || "Failed to send reset email")
+        setError(result.error.message || (a.failedSendResetEmail || "Failed to send reset email"))
         setIsLoading(false)
         return
       }
@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
       setIsSubmitted(true)
     } catch (err: any) {
       console.error(`[ForgotPassword] Exception:`, err)
-      setError(err.message || "Something went wrong")
+      setError(err.message || (a.somethingWentWrong || "Something went wrong"))
     } finally {
       setIsLoading(false)
     }
@@ -69,7 +69,7 @@ export default function ForgotPasswordPage() {
       console.log(`[ForgotPassword] Verify response:`, data)
       
       if (!data.success) {
-        setError(data.error || 'Invalid code')
+        setError(data.error || (a.invalidCode || 'Invalid code'))
         setIsLoading(false)
         return
       }
@@ -79,12 +79,12 @@ export default function ForgotPasswordPage() {
         console.log(`[ForgotPassword] Redirecting to: ${data.resetUrl}`)
         router.push(data.resetUrl)
       } else {
-        setError('No reset URL returned')
+        setError(a.noResetUrl || 'No reset URL returned')
         setIsLoading(false)
       }
     } catch (err: any) {
       console.error(`[ForgotPassword] Verify exception:`, err)
-      setError(err.message || 'Something went wrong')
+      setError(err.message || (a.somethingWentWrong || 'Something went wrong'))
       setIsLoading(false)
     }
   }
@@ -112,7 +112,7 @@ export default function ForgotPasswordPage() {
                   <CheckCircle className="h-8 w-8 text-success" />
                 </div>
                 <h3 className="text-lg font-semibold text-foreground mb-2">{a.enterVerificationCode || "Enter verification code"}</h3>
-                <p className="text-muted-foreground mb-4">We emailed a 6-digit code to <strong>{email}</strong>. Enter it below to continue.</p>
+                <p className="text-muted-foreground mb-4">{(a.emailedCodeTo || "We emailed a 6-digit code to") + " "}<strong>{email}</strong>{". "}{a.enterCodeBelow || "Enter it below to continue."}</p>
 
                 <div className="space-y-3">
                   <div className="flex gap-2">
@@ -122,18 +122,18 @@ export default function ForgotPasswordPage() {
                       onChange={(e) => setCodeInput(e.target.value)}
                       value={codeInput}
                       className="w-full px-4 py-2 border rounded"
-                      placeholder="Enter 6-digit code"
+                      placeholder={a.enterCodePlaceholder || "Enter 6-digit code"}
                     />
                   </div>
                   {error && <div className="text-sm text-destructive">{error}</div>}
                   <div className="flex gap-2">
                     <Button onClick={() => handleVerifyCode(codeInput)} className="flex-1" disabled={isLoading}>
-                      {isLoading ? (a.signingIn ? a.signingIn.replace('...', '') + '...' : 'Verifying...') : (a.verifyCode || 'Verify Code')}
+                      {isLoading ? (a.verifying || 'Verifying...') : (a.verifyCode || 'Verify Code')}
                     </Button>
                     <Button asChild variant="ghost">
                       <LocaleLink href="/auth/signin">
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Sign in
+                        {a.signIn || "Sign in"}
                       </LocaleLink>
                     </Button>
                   </div>
@@ -153,7 +153,7 @@ export default function ForgotPasswordPage() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="you@example.com"
+                      placeholder={a.emailPlaceholder || "you@example.com"}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       className="pl-10"
@@ -166,10 +166,10 @@ export default function ForgotPasswordPage() {
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Sending...
+                      {a.sending || "Sending..."}
                     </>
                   ) : (
-                    "Send Reset Link"
+                    a.sendResetLink || "Send Reset Link"
                   )}
                 </Button>
 

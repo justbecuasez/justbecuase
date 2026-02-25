@@ -51,7 +51,7 @@ export function FollowButton({
           : await followUser(targetId)
 
         if (!result.success) {
-          toast.error(result.error || "Failed to update follow status")
+          toast.error(result.error || (t.failedUpdateFollow || "Failed to update follow status"))
           return
         }
 
@@ -61,8 +61,8 @@ export function FollowButton({
 
         toast.success(
           newIsFollowing
-            ? `You are now following ${targetName}`
-            : `Unfollowed ${targetName}`,
+            ? (t.nowFollowing || "You are now following {name}").replace("{name}", targetName)
+            : (t.unfollowed || "Unfollowed {name}").replace("{name}", targetName),
           {
             icon: newIsFollowing ? "👥" : undefined,
           }
@@ -71,7 +71,7 @@ export function FollowButton({
         // Refresh server data so FollowStatsDisplay updates
         router.refresh()
       } catch {
-        toast.error("Something went wrong. Please try again.")
+        toast.error(t.somethingWrongRetry || "Something went wrong. Please try again.")
       }
     })
   }, [targetId, targetName, isFollowing, followersCount, router])

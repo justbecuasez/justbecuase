@@ -84,7 +84,7 @@ export function Navbar() {
     { href: "/about", label: dict.nav.aboutUs },
   ]
 
-  const adminLinks = [{ href: "/admin", label: "Admin Panel" }]
+  const adminLinks = [{ href: "/admin", label: dict.nav?.adminPanel || "Admin Panel" }]
   const ngoLinks = [{ href: "/ngo/dashboard", label: dict.nav.myDashboard }]
   const volunteerLinks = [{ href: "/volunteer/dashboard", label: dict.nav.myDashboard }]
 
@@ -188,14 +188,14 @@ export function Navbar() {
                     <DropdownMenuItem asChild>
                       <LocaleLink href="/ngo/settings?tab=billing" className="flex items-center gap-2">
                         <CreditCard className="h-4 w-4" />
-                        Billing & Payments
+                        {dict.nav?.billingPayments || "Billing & Payments"}
                       </LocaleLink>
                     </DropdownMenuItem>
                     {isPro ? (
                       <DropdownMenuItem disabled className="flex items-center gap-2 text-primary">
                         <Zap className="h-4 w-4" />
                         <span>{dict.common.pro}</span>
-                        <Badge variant="secondary" className="ml-auto text-xs">Active</Badge>
+                        <Badge variant="secondary" className="ml-auto text-xs">{dict.common?.active || "Active"}</Badge>
                       </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem asChild>
@@ -213,14 +213,14 @@ export function Navbar() {
                     <DropdownMenuItem asChild>
                       <LocaleLink href="/volunteer/settings?tab=billing" className="flex items-center gap-2">
                         <CreditCard className="h-4 w-4" />
-                        Billing
+                        {dict.nav?.billing || "Billing"}
                       </LocaleLink>
                     </DropdownMenuItem>
                     {isPro ? (
                       <DropdownMenuItem disabled className="flex items-center gap-2 text-primary">
                         <Zap className="h-4 w-4" />
                         <span>{dict.common.pro}</span>
-                        <Badge variant="secondary" className="ml-auto text-xs">Active</Badge>
+                        <Badge variant="secondary" className="ml-auto text-xs">{dict.common?.active || "Active"}</Badge>
                       </DropdownMenuItem>
                     ) : (
                       <DropdownMenuItem asChild>

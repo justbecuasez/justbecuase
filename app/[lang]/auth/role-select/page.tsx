@@ -34,7 +34,7 @@ function RoleSelectContent() {
       const result = await selectRole(role)
       
       if (!result.success) {
-        setError(result.error || "Failed to select role")
+        setError(result.error || (a.failedSelectRole || "Failed to select role"))
         setIsLoading(false)
         setSelectedRole(null)
         return
@@ -48,7 +48,7 @@ function RoleSelectContent() {
       }
     } catch (error) {
       console.error("Error updating role:", error)
-      setError("An error occurred. Please try again.")
+      setError(a.errorOccurred || "An error occurred. Please try again.")
       setIsLoading(false)
       setSelectedRole(null)
     }
@@ -142,10 +142,10 @@ function RoleSelectContent() {
                 {isLoading && selectedRole === "volunteer" ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Setting up...
+                    {a.settingUp || "Setting up..."}
                   </>
                 ) : (
-                  "Continue as Impact Agent"
+                  a.continueAsImpactAgent || "Continue as Impact Agent"
                 )}
               </Button>
             </CardContent>
@@ -182,10 +182,10 @@ function RoleSelectContent() {
                 {isLoading && selectedRole === "ngo" ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Setting up...
+                    {a.settingUp || "Setting up..."}
                   </>
                 ) : (
-                  "Continue as NGO"
+                  a.continueAsNGO || "Continue as NGO"
                 )}
               </Button>
             </CardContent>

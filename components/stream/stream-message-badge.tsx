@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, localePath } from "@/hooks/use-locale";
+import { useDictionary } from "@/components/dictionary-provider";
 import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +24,9 @@ export function StreamMessageBadge() {
   const { user } = useAuth();
   const router = useRouter();
   const locale = useLocale();
+  const dict = useDictionary();
+  const t = (dict as any).common || {};
+  const d = (dict as any).dashboard || {};
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -75,7 +79,7 @@ export function StreamMessageBadge() {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          {unreadCount > 0 ? `${unreadCount} unread message${unreadCount !== 1 ? "s" : ""}` : "Messages"}
+          {unreadCount > 0 ? (t.unreadMessages || "{count} unread message(s)").replace("{count}", String(unreadCount)) : (d.messages || "Messages")}
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

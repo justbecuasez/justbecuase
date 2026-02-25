@@ -3,6 +3,8 @@
 import LocaleLink from "@/components/locale-link"
 import { usePathname } from "next/navigation"
 import { useLocale, localePath } from "@/hooks/use-locale"
+import { useDictionary } from "@/components/dictionary-provider"
+import { useMemo } from "react"
 import {
   LayoutDashboard,
   FolderKanban,
@@ -28,32 +30,34 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-const navGroups = [
-  {
-    label: "Main",
-    items: [
-      { title: "Dashboard", href: "/volunteer/dashboard", icon: LayoutDashboard },
-      { title: "Impact Dashboard", href: "/volunteer/impact", icon: Trophy },
-      { title: "Opportunities", href: "/volunteer/opportunities", icon: Sparkles },
-      { title: "Applications", href: "/volunteer/applications", icon: FolderKanban },
-      { title: "Saved Opportunities", href: "/volunteer/saved-projects", icon: Bookmark },
-      { title: "Messages", href: "/volunteer/messages", icon: MessageSquare },
-    ],
-  },
-  {
-    label: "Account",
-    items: [
-      { title: "Notifications", href: "/volunteer/notifications", icon: Bell },
-      { title: "Refer & Earn", href: "/volunteer/referrals", icon: Gift },
-      { title: "My Profile", href: "/volunteer/profile", icon: User },
-      { title: "Settings", href: "/volunteer/settings", icon: Settings },
-    ],
-  },
-]
-
 export function VolunteerAppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const locale = useLocale()
+  const dict = useDictionary()
+  const d = dict.dashboard || {} as any
+
+  const navGroups = useMemo(() => [
+    {
+      label: d.main || "Main",
+      items: [
+        { title: d.dashboard || "Dashboard", href: "/volunteer/dashboard", icon: LayoutDashboard },
+        { title: d.impactDashboard || "Impact Dashboard", href: "/volunteer/impact", icon: Trophy },
+        { title: d.opportunities || "Opportunities", href: "/volunteer/opportunities", icon: Sparkles },
+        { title: d.applications || "Applications", href: "/volunteer/applications", icon: FolderKanban },
+        { title: d.savedOpportunities || "Saved Opportunities", href: "/volunteer/saved-projects", icon: Bookmark },
+        { title: d.messages || "Messages", href: "/volunteer/messages", icon: MessageSquare },
+      ],
+    },
+    {
+      label: d.account || "Account",
+      items: [
+        { title: d.notifications || "Notifications", href: "/volunteer/notifications", icon: Bell },
+        { title: d.referEarn || "Refer & Earn", href: "/volunteer/referrals", icon: Gift },
+        { title: d.myProfile || "My Profile", href: "/volunteer/profile", icon: User },
+        { title: d.settings || "Settings", href: "/volunteer/settings", icon: Settings },
+      ],
+    },
+  ], [d])
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -66,8 +70,8 @@ export function VolunteerAppSidebar({ ...props }: React.ComponentProps<typeof Si
                   <User className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Impact Agent</span>
-                  <span className="truncate text-xs text-muted-foreground">Dashboard</span>
+                  <span className="truncate font-semibold">{d.impactAgent || "Impact Agent"}</span>
+                  <span className="truncate text-xs text-muted-foreground">{d.dashboard || "Dashboard"}</span>
                 </div>
               </LocaleLink>
             </SidebarMenuButton>
