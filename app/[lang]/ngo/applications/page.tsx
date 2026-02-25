@@ -3,6 +3,8 @@ import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import Link from "next/link"
 import { auth } from "@/lib/auth"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import type { Locale } from "@/lib/i18n-config"
 import { getNGOProfile, getNGOApplicationsEnriched } from "@/lib/actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,7 +14,10 @@ import { Search, Clock, CheckCircle, XCircle, MessageSquare, ExternalLink, FileT
 import { skillCategories } from "@/lib/skills-data"
 import { ApplicationActions } from "./application-actions"
 
-export default async function ApplicationsPage() {
+export default async function ApplicationsPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
+  const dict = await getDictionary(lang as Locale) as any
+
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -42,18 +47,18 @@ export default async function ApplicationsPage() {
   return (
     <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">Applications</h1>
-            <p className="text-muted-foreground">Review and manage impact agent applications for your opportunities</p>
+            <h1 className="text-2xl font-bold text-foreground mb-2">{dict.ngo?.applications?.title || "Applications"}</h1>
+            <p className="text-muted-foreground">{dict.ngo?.applications?.subtitle || "Review and manage impact agent applications for your opportunities"}</p>
           </div>
 
           <Suspense fallback={<ApplicationsSkeleton />}>
-            <ApplicationsList />
+            <ApplicationsList dict={dict} />
           </Suspense>
     </main>
   )
 }
 
-async function ApplicationsList() {
+async function ApplicationsList({ dict }: { dict: any }) {
   // Use optimized batch query instead of N+1 individual queries
   const enrichedApplications = await getNGOApplicationsEnriched()
 
@@ -66,12 +71,12 @@ async function ApplicationsList() {
       <Card>
         <CardContent className="py-12 text-center">
           <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground mb-2">No applications yet</p>
+          <p className="text-muted-foreground mb-2">{dict.ngo?.applications?.noApplications || "No applications yet"}</p>
           <p className="text-sm text-muted-foreground">
-            When impact agents apply to your opportunities, they will appear here.
+            {dict.ngo?.applications?.noApplicationsDesc || "When impact agents apply to your opportunities, they will appear here."}
           </p>
           <Button variant="link" asChild className="mt-2">
-            <Link href="/ngo/post-project">Post an Opportunity</Link>
+            <Link href="/ngo/post-project">{dict.ngo?.common?.postOpportunity || "Post an Opportunity"}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -89,10 +94,10 @@ async function ApplicationsList() {
   return (
     <Tabs defaultValue="pending" className="w-full">
       <TabsList className="mb-6">
-        <TabsTrigger value="pending">Pending ({pendingCount})</TabsTrigger>
-        <TabsTrigger value="shortlisted">Shortlisted ({shortlistedCount})</TabsTrigger>
-        <TabsTrigger value="accepted">Accepted ({acceptedCount})</TabsTrigger>
-        <TabsTrigger value="all">All ({enrichedApplications.length})</TabsTrigger>
+        <TabsTrigger value="pending">{dict.ngo?.common?.pending || "Pending"} ({pendingCount})</TabsTrigger>
+        <TabsTrigger value="shortlisted">{dict.ngo?.common?.shortlisted || "Shortlisted"} ({shortlistedCount})</TabsTrigger>
+        <TabsTrigger value="accepted">{dict.ngo?.common?.accepted || "Accepted"} ({acceptedCount})</TabsTrigger>
+        <TabsTrigger value="all">{dict.ngo?.common?.all || "All"} ({enrichedApplications.length})</TabsTrigger>
       </TabsList>
 
       {["pending", "shortlisted", "accepted", "all"].map((tab) => (
@@ -115,10 +120,10 @@ async function ApplicationsList() {
                         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2">
                           <div>
                             <h3 className="font-semibold text-foreground">
-                              {application.volunteerProfile?.name || "Impact Agent"}
+                              {application.volunteerProfile?.name || (dict.ngo?.common?.impactAgent || "Impact Agent")}
                             </h3>
                             <p className="text-sm text-muted-foreground">
-                              {application.volunteerProfile?.location || "Location not specified"}
+                              {application.volunteerProfile?.location || (dict.ngo?.applications?.locationNotSpecified || "Location not specified")}
                             </p>
                           </div>
                           <Badge className={statusColors[application.status]}>
@@ -127,7 +132,7 @@ async function ApplicationsList() {
                         </div>
 
                         <p className="text-sm text-foreground mb-2">
-                          Applied for: <span className="font-medium">{application.project?.title || "Opportunity"}</span>
+                          {dict.ngo?.applications?.appliedFor || "Applied for: "}<span className="font-medium">{application.project?.title || (dict.ngo?.common?.opportunity || "Opportunity")}</span>
                         </p>
 
                         {application.coverMessage && (
@@ -142,7 +147,7 @@ async function ApplicationsList() {
                             {new Date(application.appliedAt).toLocaleDateString()}
                           </span>
                           <span>
-                            {application.volunteerProfile?.completedProjects || 0} tasks completed
+                            {application.volunteerProfile?.completedProjects || 0} {dict.ngo?.applications?.tasksCompleted || "tasks completed"}
                           </span>
                         </div>
 
@@ -162,7 +167,7 @@ async function ApplicationsList() {
                           <Button size="sm" variant="outline" asChild>
                             <Link href={`/volunteers/${application.volunteerId}`}>
                               <ExternalLink className="h-4 w-4 mr-1" />
-                              View Profile
+                              {dict.ngo?.common?.viewProfile || "View Profile"}
                             </Link>
                           </Button>
                           
@@ -181,7 +186,7 @@ async function ApplicationsList() {
           {enrichedApplications.filter((a) => tab === "all" || a.status === tab).length === 0 && (
             <Card>
               <CardContent className="py-8 text-center">
-                <p className="text-muted-foreground">No {tab} applications</p>
+                <p className="text-muted-foreground">{(dict.ngo?.applications?.noTabApplications || "No {tab} applications").replace("{tab}", tab)}</p>
               </CardContent>
             </Card>
           )}

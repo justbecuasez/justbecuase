@@ -2,6 +2,8 @@ import { redirect } from "next/navigation"
 import { Suspense } from "react"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import { Locale } from "@/lib/i18n-config"
 import { WelcomeToast } from "@/components/dashboard/welcome-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +12,10 @@ import { getNGOProfile, getMyProjectsAsNGO, getNGOApplications, getNGOSubscripti
 import { PlusCircle, FolderKanban, Users, CheckCircle2, Eye, MessageSquare, Clock, ArrowRight, CreditCard, Zap, Unlock, Star, Sparkles } from "lucide-react"
 import Link from "next/link"
 
-export default async function NGODashboard() {
+export default async function NGODashboard({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
+  const dict = await getDictionary(lang as Locale) as any;
+
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -55,14 +60,14 @@ export default async function NGODashboard() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
               <h1 className="text-2xl font-bold text-foreground mb-2">
-                Welcome, {ngoProfile?.organizationName || session.user.name}
+                {dict.ngo?.dashboard?.welcome || "Welcome, "}{ngoProfile?.organizationName || session.user.name}
               </h1>
-              <p className="text-muted-foreground">Manage your opportunities and connect with skilled impact agents.</p>
+              <p className="text-muted-foreground">{dict.ngo?.dashboard?.subtitle || "Manage your opportunities and connect with skilled impact agents."}</p>
             </div>
             <Button asChild className="bg-primary hover:bg-primary/90">
               <Link href="/ngo/post-project" className="flex items-center gap-2">
                 <PlusCircle className="h-4 w-4" />
-                Post New Opportunity
+                {dict.ngo?.common?.postNewOpportunity || "Post New Opportunity"}
               </Link>
             </Button>
           </div>
@@ -77,7 +82,7 @@ export default async function NGODashboard() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-foreground">{activeProjects.length}</p>
-                    <p className="text-sm text-muted-foreground">Active Opportunities</p>
+                    <p className="text-sm text-muted-foreground">{dict.ngo?.common?.activeOpportunities || "Active Opportunities"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -91,7 +96,7 @@ export default async function NGODashboard() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-foreground">{pendingApplications.length}</p>
-                    <p className="text-sm text-muted-foreground">Pending Applications</p>
+                    <p className="text-sm text-muted-foreground">{dict.ngo?.common?.pendingApplications || "Pending Applications"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -105,7 +110,7 @@ export default async function NGODashboard() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-foreground">{completedProjects.length}</p>
-                    <p className="text-sm text-muted-foreground">Completed</p>
+                    <p className="text-sm text-muted-foreground">{dict.ngo?.common?.completed || "Completed"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -119,7 +124,7 @@ export default async function NGODashboard() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-foreground">{applications.length}</p>
-                    <p className="text-sm text-muted-foreground">Total Applications</p>
+                    <p className="text-sm text-muted-foreground">{dict.ngo?.dashboard?.totalApplications || "Total Applications"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -132,9 +137,9 @@ export default async function NGODashboard() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle>Active Opportunities</CardTitle>
+                    <CardTitle>{dict.ngo?.common?.activeOpportunities || "Active Opportunities"}</CardTitle>
                     <Button asChild variant="outline" size="sm">
-                      <Link href="/ngo/projects">View All</Link>
+                      <Link href="/ngo/projects">{dict.ngo?.common?.viewAll || "View All"}</Link>
                     </Button>
                   </div>
                 </CardHeader>
@@ -142,9 +147,9 @@ export default async function NGODashboard() {
                   {activeProjects.length === 0 ? (
                     <div className="text-center py-8">
                       <FolderKanban className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">No active opportunities</p>
+                      <p className="text-muted-foreground">{dict.ngo?.dashboard?.noActiveOpportunities || "No active opportunities"}</p>
                       <Button variant="link" asChild>
-                        <Link href="/ngo/post-project">Create your first opportunity</Link>
+                        <Link href="/ngo/post-project">{dict.ngo?.dashboard?.createFirstOpportunity || "Create your first opportunity"}</Link>
                       </Button>
                     </div>
                   ) : (
@@ -162,7 +167,7 @@ export default async function NGODashboard() {
                               <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1">
                                   <Users className="h-4 w-4" />
-                                  {project.applicantsCount || 0} applications
+                                  {project.applicantsCount || 0} {dict.ngo?.common?.applications || "applications"}
                                 </span>
                                 <span className="flex items-center gap-1 capitalize">
                                   <Clock className="h-4 w-4" />
@@ -173,7 +178,7 @@ export default async function NGODashboard() {
                             <div className="flex items-center gap-2">
                               <Button variant="outline" size="sm" asChild>
                                 <Link href={`/ngo/applications?project=${project._id?.toString()}`}>
-                                  View Applications
+                                  {dict.ngo?.common?.viewApplications || "View Applications"}
                                 </Link>
                               </Button>
                             </div>
@@ -192,9 +197,9 @@ export default async function NGODashboard() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Recent Applications</CardTitle>
+                    <CardTitle className="text-lg">{dict.ngo?.dashboard?.recentApplications || "Recent Applications"}</CardTitle>
                     <Button asChild variant="ghost" size="sm">
-                      <Link href="/ngo/applications">View All</Link>
+                      <Link href="/ngo/applications">{dict.ngo?.common?.viewAll || "View All"}</Link>
                     </Button>
                   </div>
                 </CardHeader>
@@ -202,7 +207,7 @@ export default async function NGODashboard() {
                   {pendingApplications.length === 0 ? (
                     <div className="text-center py-6">
                       <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-sm text-muted-foreground">No pending applications</p>
+                      <p className="text-sm text-muted-foreground">{dict.ngo?.dashboard?.noPendingApplications || "No pending applications"}</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -213,14 +218,14 @@ export default async function NGODashboard() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">
-                              New Application
+                              {dict.ngo?.dashboard?.newApplication || "New Application"}
                             </p>
                             <p className="text-xs text-muted-foreground truncate">
                               {new Date(application.createdAt).toLocaleDateString()}
                             </p>
                           </div>
                           <Button size="sm" variant="ghost" className="text-primary" asChild>
-                            <Link href="/ngo/applications">View</Link>
+                            <Link href="/ngo/applications">{dict.ngo?.common?.view || "View"}</Link>
                           </Button>
                         </div>
                       ))}
@@ -235,10 +240,10 @@ export default async function NGODashboard() {
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <Sparkles className="h-5 w-5 text-primary" />
-                      Best Matches
+                      {dict.ngo?.dashboard?.bestMatches || "Best Matches"}
                     </CardTitle>
                     <Button asChild variant="ghost" size="sm">
-                      <Link href="/ngo/find-talent">Find More</Link>
+                      <Link href="/ngo/find-talent">{dict.ngo?.dashboard?.findMore || "Find More"}</Link>
                     </Button>
                   </div>
                 </CardHeader>
@@ -246,12 +251,12 @@ export default async function NGODashboard() {
                   {recommendedVolunteers.length === 0 ? (
                     <div className="text-center py-6">
                       <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                      <p className="text-sm text-muted-foreground">No matching impact agents yet</p>
+                      <p className="text-sm text-muted-foreground">{dict.ngo?.dashboard?.noMatchingAgents || "No matching impact agents yet"}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Post an opportunity to get matched
+                        {dict.ngo?.dashboard?.postToGetMatched || "Post an opportunity to get matched"}
                       </p>
                       <Button variant="link" size="sm" asChild>
-                        <Link href="/ngo/post-project">Post Opportunity</Link>
+                        <Link href="/ngo/post-project">{dict.ngo?.common?.postOpportunity || "Post Opportunity"}</Link>
                       </Button>
                     </div>
                   ) : (
@@ -273,10 +278,10 @@ export default async function NGODashboard() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">
-                              {match.volunteer.name || "Impact Agent"}
+                              {match.volunteer.name || dict.ngo?.common?.impactAgent || "Impact Agent"}
                             </p>
                             <p className="text-xs text-muted-foreground truncate">
-                              {match.volunteer.headline || "Skilled professional"}
+                              {match.volunteer.headline || dict.ngo?.dashboard?.skilledProfessional || "Skilled professional"}
                             </p>
                           </div>
                           <Badge
@@ -302,25 +307,25 @@ export default async function NGODashboard() {
               {/* Quick Actions */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Quick Actions</CardTitle>
+                  <CardTitle className="text-lg">{dict.ngo?.dashboard?.quickActions || "Quick Actions"}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <Button asChild variant="outline" className="w-full justify-start">
                     <Link href="/ngo/post-project">
                       <PlusCircle className="h-4 w-4 mr-2" />
-                      Post New Opportunity
+                      {dict.ngo?.common?.postNewOpportunity || "Post New Opportunity"}
                     </Link>
                   </Button>
                   <Button asChild variant="outline" className="w-full justify-start">
                     <Link href="/ngo/find-talent">
                       <Users className="h-4 w-4 mr-2" />
-                      Browse Impact Agents
+                      {dict.ngo?.dashboard?.browseImpactAgents || "Browse Impact Agents"}
                     </Link>
                   </Button>
                   <Button asChild variant="outline" className="w-full justify-start">
                     <Link href="/ngo/messages">
                       <MessageSquare className="h-4 w-4 mr-2" />
-                      Messages
+                      {dict.ngo?.common?.messages || "Messages"}
                     </Link>
                   </Button>
                 </CardContent>
@@ -332,12 +337,12 @@ export default async function NGODashboard() {
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <CreditCard className="h-5 w-5" />
-                      Subscription
+                      {dict.ngo?.dashboard?.subscription || "Subscription"}
                     </CardTitle>
                     {subscriptionStatus?.plan === "pro" && (
                       <Badge className="bg-gradient-to-r from-primary to-secondary text-white">
                         <Zap className="h-3 w-3 mr-1" />
-                        PRO
+                        {dict.ngo?.common?.pro || "PRO"}
                       </Badge>
                     )}
                   </div>
@@ -348,23 +353,23 @@ export default async function NGODashboard() {
                       <div className="p-4 rounded-lg bg-muted/50 border border-yellow-200">
                         <div className="flex items-center gap-2 text-yellow-600 mb-2">
                           <Unlock className="h-4 w-4" />
-                          <span className="text-sm font-medium">Free Plan - No Unlocks</span>
+                          <span className="text-sm font-medium">{dict.ngo?.dashboard?.freePlanNoUnlocks || "Free Plan - No Unlocks"}</span>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Upgrade to Pro to unlock impact agent profiles
+                          {dict.ngo?.dashboard?.upgradeToPro || "Upgrade to Pro to unlock impact agent profiles"}
                         </p>
                       </div>
                       <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
                         <p className="text-sm font-medium text-foreground mb-1">
-                          Upgrade to Pro for unlimited unlocks
+                          {dict.ngo?.dashboard?.upgradeForUnlimited || "Upgrade to Pro for unlimited unlocks"}
                         </p>
                         <p className="text-xs text-muted-foreground mb-3">
-                          View contact details of any impact agent
+                          {dict.ngo?.dashboard?.viewContactDetails || "View contact details of any impact agent"}
                         </p>
                         <Button asChild size="sm" className="w-full">
                           <Link href="/checkout?plan=ngo-pro">
                             <Zap className="h-4 w-4 mr-2" />
-                            Upgrade to Pro
+                            {dict.ngo?.common?.upgradeToPro || "Upgrade to Pro"}
                           </Link>
                         </Button>
                       </div>
@@ -373,14 +378,14 @@ export default async function NGODashboard() {
                     <div className="p-4 rounded-lg bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20">
                       <div className="flex items-center gap-2 mb-2">
                         <Zap className="h-5 w-5 text-primary" />
-                        <span className="font-medium text-foreground">Pro Plan Active</span>
+                        <span className="font-medium text-foreground">{dict.ngo?.dashboard?.proPlanActive || "Pro Plan Active"}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Unlimited impact agent profile unlocks
+                        {dict.ngo?.dashboard?.unlimitedUnlocks || "Unlimited impact agent profile unlocks"}
                       </p>
                       {subscriptionStatus?.expiryDate && (
                         <p className="text-xs text-muted-foreground mt-2">
-                          Renews: {new Date(subscriptionStatus.expiryDate).toLocaleDateString()}
+                          {dict.ngo?.dashboard?.renews || "Renews: "}{new Date(subscriptionStatus.expiryDate).toLocaleDateString()}
                         </p>
                       )}
                     </div>

@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Progress } from "@/components/ui/progress"
 import { useAuth } from "@/lib/auth-context"
+import { useDictionary } from "@/components/dictionary-provider"
 import { getNGOProfile, createProject } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
 import type { NGOProfile } from "@/lib/types"
@@ -61,6 +62,7 @@ export default function PostProjectPage() {
   const router = useRouter()
   const locale = useLocale()
   const { user, isLoading: authLoading } = useAuth()
+  const dict = useDictionary()
   const [ngoProfile, setNgoProfile] = useState<NGOProfile | null>(null)
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
@@ -83,6 +85,21 @@ export default function PostProjectPage() {
     causes: [] as string[],
     deliverables: "",
   })
+
+  const templateNames: Record<string, string> = {
+    "social-media": dict.ngo?.postProject?.templates?.socialMedia || "Social Media Strategy",
+    "website": dict.ngo?.postProject?.templates?.website || "Website Design/Development",
+    "branding": dict.ngo?.postProject?.templates?.branding || "Branding & Logo Design",
+    "grant-writing": dict.ngo?.postProject?.templates?.grantWriting || "Grant Writing Support",
+    "financial": dict.ngo?.postProject?.templates?.financial || "Financial Planning",
+    "legal": dict.ngo?.postProject?.templates?.legal || "Legal Document Review",
+    "content": dict.ngo?.postProject?.templates?.content || "Content Creation",
+    "fundraising": dict.ngo?.postProject?.templates?.fundraising || "Fundraising Strategy",
+    "hr": dict.ngo?.postProject?.templates?.hr || "HR & Training Support",
+    "strategy": dict.ngo?.postProject?.templates?.strategy || "Strategic Planning",
+    "consultation": dict.ngo?.postProject?.templates?.consultation || "One-Hour Consultation",
+    "presentation": dict.ngo?.postProject?.templates?.presentation || "Pitch Deck Creation",
+  }
 
   // Handle document upload
   const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,7 +150,7 @@ export default function PostProjectPage() {
       }
     } catch (err) {
       console.error('Upload error:', err)
-      setError('Failed to upload document')
+      setError(dict.ngo?.common?.uploadError || 'Failed to upload document')
     } finally {
       setUploadingDoc(false)
     }
@@ -184,7 +201,7 @@ export default function PostProjectPage() {
     if (template) {
       setFormData((prev) => ({
         ...prev,
-        title: template.name,
+        title: templateNames[templateId] || template.name,
         timeCommitment: template.time,
         projectType: templateId === "consultation" ? "consultation" : "short-term",
       }))
@@ -216,10 +233,10 @@ export default function PostProjectPage() {
       if (result.success) {
         router.push(localePath("/ngo/projects", locale))
       } else {
-        setError(result.error || "Failed to create opportunity")
+        setError(result.error || (dict.ngo?.postProject?.createError || "Failed to create opportunity"))
       }
     } catch (err) {
-      setError("An unexpected error occurred")
+      setError(dict.ngo?.common?.unexpectedError || "An unexpected error occurred")
     } finally {
       setIsLoading(false)
     }
@@ -237,9 +254,9 @@ export default function PostProjectPage() {
               className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              {dict.ngo?.common?.backToDashboard || "Back to Dashboard"}
             </LocaleLink>
-            <span className="text-sm text-muted-foreground">Step {step} of 3</span>
+            <span className="text-sm text-muted-foreground">{(dict.ngo?.postProject?.stepOf || "Step {step} of 3").replace("{step}", String(step))}</span>
           </div>
           <Progress value={progressPercent} className="h-2" />
         </div>
@@ -248,8 +265,8 @@ export default function PostProjectPage() {
         {step === 1 && (
           <div>
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-foreground mb-2">Post a New Requirement</h1>
-              <p className="text-muted-foreground">Choose a requirement type to get started quickly</p>
+              <h1 className="text-3xl font-bold text-foreground mb-2">{dict.ngo?.postProject?.title || "Post a New Requirement"}</h1>
+              <p className="text-muted-foreground">{dict.ngo?.postProject?.chooseTemplate || "Choose a requirement type to get started quickly"}</p>
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -262,8 +279,8 @@ export default function PostProjectPage() {
                   <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                     <template.icon className="h-6 w-6 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-foreground mb-1">{template.name}</h3>
-                  <p className="text-sm text-muted-foreground">Est. {template.time}</p>
+                  <h3 className="font-semibold text-foreground mb-1">{templateNames[template.id] || template.name}</h3>
+                  <p className="text-sm text-muted-foreground">{dict.ngo?.postProject?.estimated || "Est. "}{template.time}</p>
                 </button>
               ))}
             </div>
@@ -277,7 +294,7 @@ export default function PostProjectPage() {
                 }}
                 className="bg-transparent"
               >
-                Or create a custom opportunity
+                {dict.ngo?.postProject?.createCustom || "Or create a custom opportunity"}
               </Button>
             </div>
           </div>
@@ -292,8 +309,8 @@ export default function PostProjectPage() {
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
-                  <CardTitle>Opportunity Details</CardTitle>
-                  <CardDescription>Provide information about your opportunity</CardDescription>
+                  <CardTitle>{dict.ngo?.postProject?.opportunityDetails || "Opportunity Details"}</CardTitle>
+                  <CardDescription>{dict.ngo?.postProject?.provideInfo || "Provide information about your opportunity"}</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -306,10 +323,10 @@ export default function PostProjectPage() {
                 className="space-y-6"
               >
                 <div className="space-y-2">
-                  <Label htmlFor="title">Opportunity Title</Label>
+                  <Label htmlFor="title">{dict.ngo?.common?.opportunityTitle || "Opportunity Title"}</Label>
                   <Input
                     id="title"
-                    placeholder="e.g., Social Media Strategy for Environmental Campaign"
+                    placeholder={dict.ngo?.postProject?.titlePlaceholder || "e.g., Social Media Strategy for Environmental Campaign"}
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     required
@@ -317,10 +334,10 @@ export default function PostProjectPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Opportunity Description</Label>
+                  <Label htmlFor="description">{dict.ngo?.common?.opportunityDescription || "Opportunity Description"}</Label>
                   <Textarea
                     id="description"
-                    placeholder="Describe what you need help with, the background, and any specific requirements..."
+                    placeholder={dict.ngo?.postProject?.descriptionPlaceholder || "Describe what you need help with, the background, and any specific requirements..."}
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     rows={5}
@@ -345,7 +362,7 @@ export default function PostProjectPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Skills Required</Label>
+                  <Label>{dict.ngo?.common?.skillsRequired || "Skills Required"}</Label>
                   <div className="space-y-4">
                     {skillCategories.map((category) => (
                       <div key={category.id}>
@@ -373,27 +390,27 @@ export default function PostProjectPage() {
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="time">Time Commitment</Label>
+                    <Label htmlFor="time">{dict.ngo?.common?.timeCommitment || "Time Commitment"}</Label>
                     <Select
                       value={formData.timeCommitment}
                       onValueChange={(value) => setFormData({ ...formData, timeCommitment: value })}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select estimated hours" />
+                        <SelectValue placeholder={dict.ngo?.postProject?.selectHours || "Select estimated hours"} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="1-2 hours">1-2 hours (Consultation)</SelectItem>
-                        <SelectItem value="5-10 hours">5-10 hours</SelectItem>
-                        <SelectItem value="10-15 hours">10-15 hours</SelectItem>
-                        <SelectItem value="15-25 hours">15-25 hours</SelectItem>
-                        <SelectItem value="25-40 hours">25-40 hours</SelectItem>
-                        <SelectItem value="40+ hours">40+ hours</SelectItem>
+                        <SelectItem value="1-2 hours">{dict.ngo?.common?.hours1to2 || "1-2 hours (Consultation)"}</SelectItem>
+                        <SelectItem value="5-10 hours">{dict.ngo?.common?.hours5to10 || "5-10 hours"}</SelectItem>
+                        <SelectItem value="10-15 hours">{dict.ngo?.common?.hours10to15 || "10-15 hours"}</SelectItem>
+                        <SelectItem value="15-25 hours">{dict.ngo?.common?.hours15to25 || "15-25 hours"}</SelectItem>
+                        <SelectItem value="25-40 hours">{dict.ngo?.common?.hours25to40 || "25-40 hours"}</SelectItem>
+                        <SelectItem value="40+ hours">{dict.ngo?.common?.hours40plus || "40+ hours"}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="deadline">Application Deadline</Label>
+                    <Label htmlFor="deadline">{dict.ngo?.common?.applicationDeadline || "Application Deadline"}</Label>
                     <Input
                       id="deadline"
                       type="date"
@@ -405,28 +422,28 @@ export default function PostProjectPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="workMode">Work Mode</Label>
+                  <Label htmlFor="workMode">{dict.ngo?.common?.workMode || "Work Mode"}</Label>
                   <Select
                     value={formData.workMode}
                     onValueChange={(value: "remote" | "onsite" | "hybrid") => setFormData({ ...formData, workMode: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select work mode" />
+                      <SelectValue placeholder={dict.ngo?.postProject?.selectWorkMode || "Select work mode"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="remote">Remote</SelectItem>
-                      <SelectItem value="onsite">On-site</SelectItem>
-                      <SelectItem value="hybrid">Hybrid</SelectItem>
+                      <SelectItem value="remote">{dict.ngo?.common?.remote || "Remote"}</SelectItem>
+                      <SelectItem value="onsite">{dict.ngo?.common?.onsite || "On-site"}</SelectItem>
+                      <SelectItem value="hybrid">{dict.ngo?.common?.hybrid || "Hybrid"}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {formData.workMode !== "remote" && (
                   <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
+                    <Label htmlFor="location">{dict.ngo?.common?.location || "Location"}</Label>
                     <Input
                       id="location"
-                      placeholder="e.g., Mumbai, India"
+                      placeholder={dict.ngo?.common?.locationPlaceholder || "e.g., Mumbai, India"}
                       value={formData.location}
                       onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                     />
@@ -434,10 +451,10 @@ export default function PostProjectPage() {
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="deliverables">Expected Deliverables</Label>
+                  <Label htmlFor="deliverables">{dict.ngo?.postProject?.expectedDeliverables || "Expected Deliverables"}</Label>
                   <Textarea
                     id="deliverables"
-                    placeholder="List the specific outputs you expect from this opportunity..."
+                    placeholder={dict.ngo?.postProject?.deliverablesPlaceholder || "List the specific outputs you expect from this opportunity..."}
                     value={formData.deliverables}
                     onChange={(e) => setFormData({ ...formData, deliverables: e.target.value })}
                     rows={3}
@@ -445,7 +462,7 @@ export default function PostProjectPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="files">Supporting Documents (optional)</Label>
+                  <Label htmlFor="files">{dict.ngo?.postProject?.supportingDocs || "Supporting Documents (optional)"}</Label>
                   <div className="border-2 border-dashed border-border rounded-lg p-8 text-center hover:border-primary/50 transition-colors cursor-pointer relative">
                     <input
                       type="file"
@@ -459,13 +476,13 @@ export default function PostProjectPage() {
                     {uploadingDoc ? (
                       <>
                         <Loader2 className="h-8 w-8 mx-auto mb-2 text-primary animate-spin" />
-                        <p className="text-sm text-muted-foreground">Uploading...</p>
+                        <p className="text-sm text-muted-foreground">{dict.ngo?.common?.uploading || "Uploading..."}</p>
                       </>
                     ) : (
                       <>
                         <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                        <p className="text-sm text-muted-foreground">Drag and drop files here, or click to browse</p>
-                        <p className="text-xs text-muted-foreground mt-1">PDF, DOC, or images up to 10MB</p>
+                        <p className="text-sm text-muted-foreground">{dict.ngo?.postProject?.dragAndDrop || "Drag and drop files here, or click to browse"}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{dict.ngo?.common?.fileTypes || "PDF, DOC, or images up to 10MB"}</p>
                       </>
                     )}
                   </div>
@@ -486,7 +503,7 @@ export default function PostProjectPage() {
                             onClick={() => removeDocument(index)}
                             className="text-red-500 hover:text-red-700"
                           >
-                            Remove
+                            {dict.ngo?.common?.remove || "Remove"}
                           </Button>
                         </div>
                       ))}
@@ -496,10 +513,10 @@ export default function PostProjectPage() {
 
                 <div className="flex justify-end gap-4">
                   <Button type="button" variant="outline" onClick={() => setStep(1)} className="bg-transparent">
-                    Back
+                    {dict.ngo?.common?.back || "Back"}
                   </Button>
                   <Button type="submit" className="bg-primary hover:bg-primary/90">
-                    Review Opportunity
+                    {dict.ngo?.postProject?.reviewOpportunity || "Review Opportunity"}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </div>
@@ -517,24 +534,24 @@ export default function PostProjectPage() {
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
-                  <CardTitle>Review Your Opportunity</CardTitle>
-                  <CardDescription>Make sure everything looks good before posting</CardDescription>
+                  <CardTitle>{dict.ngo?.postProject?.reviewTitle || "Review Your Opportunity"}</CardTitle>
+                  <CardDescription>{dict.ngo?.postProject?.reviewSubtitle || "Make sure everything looks good before posting"}</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 <div className="p-6 rounded-xl border border-border bg-muted/30">
-                  <h3 className="text-xl font-semibold text-foreground mb-4">{formData.title || "Untitled Opportunity"}</h3>
+                  <h3 className="text-xl font-semibold text-foreground mb-4">{formData.title || (dict.ngo?.postProject?.untitled || "Untitled Opportunity")}</h3>
 
                   <div className="grid gap-4">
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">Description</p>
-                      <p className="text-foreground">{formData.description || "No description provided"}</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-1">{dict.ngo?.common?.description || "Description"}</p>
+                      <p className="text-foreground">{formData.description || (dict.ngo?.postProject?.noDescription || "No description provided")}</p>
                     </div>
 
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-2">Skills Required</p>
+                      <p className="text-sm font-medium text-muted-foreground mb-2">{dict.ngo?.common?.skillsRequired || "Skills Required"}</p>
                       <div className="flex flex-wrap gap-2">
                         {formData.selectedSkillNames.length > 0 ? (
                           formData.selectedSkillNames.map((skill) => (
@@ -543,29 +560,29 @@ export default function PostProjectPage() {
                             </Badge>
                           ))
                         ) : (
-                          <span className="text-muted-foreground">No skills selected</span>
+                          <span className="text-muted-foreground">{dict.ngo?.postProject?.noSkills || "No skills selected"}</span>
                         )}
                       </div>
                     </div>
 
                     <div className="grid sm:grid-cols-3 gap-4">
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-1">Time Commitment</p>
-                        <p className="text-foreground">{formData.timeCommitment || "Not specified"}</p>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">{dict.ngo?.common?.timeCommitment || "Time Commitment"}</p>
+                        <p className="text-foreground">{formData.timeCommitment || (dict.ngo?.common?.notSpecified || "Not specified")}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-1">Deadline</p>
-                        <p className="text-foreground">{formData.deadline || "Not specified"}</p>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">{dict.ngo?.common?.deadline || "Deadline"}</p>
+                        <p className="text-foreground">{formData.deadline || (dict.ngo?.common?.notSpecified || "Not specified")}</p>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-1">Work Mode</p>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">{dict.ngo?.common?.workMode || "Work Mode"}</p>
                         <p className="text-foreground capitalize">{formData.workMode}</p>
                       </div>
                     </div>
 
                     {formData.deliverables && (
                       <div>
-                        <p className="text-sm font-medium text-muted-foreground mb-1">Deliverables</p>
+                        <p className="text-sm font-medium text-muted-foreground mb-1">{dict.ngo?.common?.deliverables || "Deliverables"}</p>
                         <p className="text-foreground">{formData.deliverables}</p>
                       </div>
                     )}
@@ -580,18 +597,18 @@ export default function PostProjectPage() {
 
                 <div className="flex justify-end gap-4">
                   <Button type="button" variant="outline" onClick={() => setStep(2)} className="bg-transparent">
-                    Edit Opportunity
+                    {dict.ngo?.postProject?.editOpportunity || "Edit Opportunity"}
                   </Button>
                   <Button onClick={handleSubmit} className="bg-primary hover:bg-primary/90" disabled={isLoading}>
                     {isLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Posting...
+                        {dict.ngo?.postProject?.posting || "Posting..."}
                       </>
                     ) : (
                       <>
                         <CheckCircle className="mr-2 h-4 w-4" />
-                        Post Requirement
+                        {dict.ngo?.postProject?.postRequirement || "Post Requirement"}
                       </>
                     )}
                   </Button>

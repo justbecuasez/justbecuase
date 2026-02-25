@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react"
 import { useGeolocated } from "react-geolocated"
 import { useRouter } from "next/navigation"
 import { useLocale, localePath } from "@/hooks/use-locale"
+import { useDictionary } from "@/components/dictionary-provider"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -46,6 +47,7 @@ type RequiredSkill = {
 export default function NGOOnboardingPage() {
   const router = useRouter()
   const locale = useLocale()
+  const dict = useDictionary()
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
@@ -133,7 +135,7 @@ export default function NGOOnboardingPage() {
   // Phone verification functions
   const sendPhoneOtp = async () => {
     if (!orgDetails.phone || orgDetails.phone.length < 10) {
-      setError("Please enter a valid phone number")
+      setError(dict.ngo?.onboarding?.invalidPhone || "Please enter a valid phone number")
       return
     }
     
@@ -171,7 +173,7 @@ export default function NGOOnboardingPage() {
   const verifyPhoneOtp = async () => {
     const otpCode = phoneOtp.join("")
     if (otpCode.length !== 6) {
-      setError("Please enter the complete 6-digit code")
+      setError(dict.ngo?.onboarding?.enterCompleteCode || "Please enter the complete 6-digit code")
       return
     }
     
@@ -608,7 +610,7 @@ export default function NGOOnboardingPage() {
       router.push(localePath(`/ngo/dashboard?welcome=${encodeURIComponent(orgName)}`, locale))
     } catch (error) {
       console.error("Onboarding error:", error)
-      setError("Something went wrong. Please try again.")
+      setError(dict.ngo?.common?.somethingWentWrong || "Something went wrong. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -617,27 +619,27 @@ export default function NGOOnboardingPage() {
   const renderStep1 = () => (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">Organization Details</h2>
-        <p className="text-muted-foreground">Tell us about your NGO or nonprofit</p>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{dict.ngo?.onboarding?.orgDetails || "Organization Details"}</h2>
+        <p className="text-muted-foreground">{dict.ngo?.onboarding?.orgDetailsDesc || "Tell us about your NGO or nonprofit"}</p>
       </div>
 
       <div className="grid gap-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="orgName">Organization Name *</Label>
+            <Label htmlFor="orgName">{dict.ngo?.common?.organizationName || "Organization Name"} *</Label>
             <Input
               id="orgName"
-              placeholder="Your NGO name"
+              placeholder={dict.ngo?.onboarding?.orgNamePlaceholder || "Your NGO name"}
               value={orgDetails.orgName}
               onChange={(e) => setOrgDetails({ ...orgDetails, orgName: e.target.value })}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="registrationNumber">Registration Number *</Label>
+            <Label htmlFor="registrationNumber">{dict.ngo?.onboarding?.regNumberRequired || "Registration Number"} *</Label>
             <Input
               id="registrationNumber"
-              placeholder="NGO registration ID"
+              placeholder={dict.ngo?.onboarding?.regNumberPlaceholder || "NGO registration ID"}
               value={orgDetails.registrationNumber}
               onChange={(e) =>
                 setOrgDetails({ ...orgDetails, registrationNumber: e.target.value })
@@ -649,7 +651,7 @@ export default function NGOOnboardingPage() {
 
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="website">Website</Label>
+            <Label htmlFor="website">{dict.ngo?.common?.website || "Website"}</Label>
             <div className="relative">
               <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -664,7 +666,7 @@ export default function NGOOnboardingPage() {
           
           {/* Phone Number with Verification */}
           <div className="space-y-3">
-            <Label htmlFor="phone">Phone Number *</Label>
+            <Label htmlFor="phone">{dict.ngo?.common?.phoneNumber || "Phone Number"} *</Label>
             
             {phoneVerificationStep === "input" && (
               <div className="flex gap-2">
@@ -672,7 +674,7 @@ export default function NGOOnboardingPage() {
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="phone"
-                    placeholder="+91 98765 43210"
+                    placeholder={dict.ngo?.onboarding?.phoneRequired || "+91 98765 43210"}
                     value={orgDetails.phone}
                     onChange={(e) => setOrgDetails({ ...orgDetails, phone: e.target.value })}
                     className="pl-10"
@@ -687,7 +689,7 @@ export default function NGOOnboardingPage() {
                   {phoneOtpLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    "Verify"
+                    dict.ngo?.onboarding?.verify || "Verify"
                   )}
                 </Button>
               </div>
@@ -697,8 +699,8 @@ export default function NGOOnboardingPage() {
               <div className="p-4 rounded-lg border bg-muted/50 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium">Enter verification code</p>
-                    <p className="text-xs text-muted-foreground">Sent to {orgDetails.phone}</p>
+                    <p className="text-sm font-medium">{dict.ngo?.onboarding?.enterCode || "Enter verification code"}</p>
+                    <p className="text-xs text-muted-foreground">{(dict.ngo?.onboarding?.sentTo || "Sent to {phone}").replace("{phone}", orgDetails.phone)}</p>
                   </div>
                   <Button
                     type="button"
@@ -710,7 +712,7 @@ export default function NGOOnboardingPage() {
                       setDevOtp(null)
                     }}
                   >
-                    Change
+                    {dict.ngo?.common?.change || "Change"}
                   </Button>
                 </div>
                 
@@ -747,20 +749,20 @@ export default function NGOOnboardingPage() {
                     {phoneOtpLoading ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Verifying...
+                        {dict.ngo?.onboarding?.verifying || "Verifying..."}
                       </>
                     ) : (
                       <>
                         <ShieldCheck className="mr-2 h-4 w-4" />
-                        Verify Phone
+                        {dict.ngo?.onboarding?.verifyPhone || "Verify Phone"}
                       </>
                     )}
                   </Button>
                   
                   <p className="text-xs text-center text-muted-foreground">
-                    Didn't receive code?{" "}
+                    {dict.ngo?.onboarding?.didntReceiveCode || "Didn't receive code?"}{" "}
                     {phoneResendCooldown > 0 ? (
-                      <span>Resend in {phoneResendCooldown}s</span>
+                      <span>{(dict.ngo?.onboarding?.resendIn || "Resend in {n}s").replace("{n}", String(phoneResendCooldown))}</span>
                     ) : (
                       <button
                         type="button"
@@ -768,7 +770,7 @@ export default function NGOOnboardingPage() {
                         onClick={sendPhoneOtp}
                         disabled={phoneOtpLoading}
                       >
-                        Resend
+                        {dict.ngo?.onboarding?.resend || "Resend"}
                       </button>
                     )}
                   </p>
@@ -781,7 +783,7 @@ export default function NGOOnboardingPage() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
                 <div className="flex-1">
                   <p className="text-sm font-medium text-green-700 dark:text-green-400">{orgDetails.phone}</p>
-                  <p className="text-xs text-green-600 dark:text-green-500">Phone verified</p>
+                  <p className="text-xs text-green-600 dark:text-green-500">{dict.ngo?.onboarding?.phoneVerified || "Phone verified"}</p>
                 </div>
                 <Button
                   type="button"
@@ -793,7 +795,7 @@ export default function NGOOnboardingPage() {
                     setPhoneOtp(["", "", "", "", "", ""])
                   }}
                 >
-                  Change
+                  {dict.ngo?.common?.change || "Change"}
                 </Button>
               </div>
             )}
@@ -801,13 +803,13 @@ export default function NGOOnboardingPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="address">Address</Label>
+          <Label htmlFor="address">{dict.ngo?.common?.address || "Address"}</Label>
           <div className="flex gap-2">
             <div className="relative flex-1">
               <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Textarea
                 id="address"
-                placeholder="Full address"
+                placeholder={dict.ngo?.onboarding?.fullAddress || "Full address"}
                 value={orgDetails.address}
                 onChange={(e) => setOrgDetails({ ...orgDetails, address: e.target.value })}
                 className="pl-10 min-h-[80px]"
@@ -826,7 +828,7 @@ export default function NGOOnboardingPage() {
                 ) : (
                   <>
                     <Globe className="h-4 w-4 mr-2" />
-                    IP Location
+                    {dict.ngo?.onboarding?.ipLocation || "IP Location"}
                   </>
                 )}
               </Button>
@@ -842,7 +844,7 @@ export default function NGOOnboardingPage() {
                 ) : (
                   <>
                     <LocateFixed className="h-4 w-4 mr-2" />
-                    Use my location
+                    {dict.ngo?.onboarding?.useMyLocation || "Use my location"}
                   </>
                 )}
               </Button>
@@ -852,26 +854,26 @@ export default function NGOOnboardingPage() {
 
         <div className="grid sm:grid-cols-3 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="city">City *</Label>
+            <Label htmlFor="city">{dict.ngo?.common?.city || "City"} *</Label>
             <Input
               id="city"
-              placeholder="City"
+              placeholder={dict.ngo?.onboarding?.cityRequired || "City"}
               value={orgDetails.city}
               onChange={(e) => setOrgDetails({ ...orgDetails, city: e.target.value })}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="country">Country</Label>
+            <Label htmlFor="country">{dict.ngo?.common?.country || "Country"}</Label>
             <Input
               id="country"
-              placeholder="Country"
+              placeholder={dict.ngo?.common?.country || "Country"}
               value={orgDetails.country}
               onChange={(e) => setOrgDetails({ ...orgDetails, country: e.target.value })}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="yearFounded">Year Founded</Label>
+            <Label htmlFor="yearFounded">{dict.ngo?.common?.yearFounded || "Year Founded"}</Label>
             <Input
               id="yearFounded"
               placeholder="2010"
@@ -882,10 +884,10 @@ export default function NGOOnboardingPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="description">About Your Organization *</Label>
+          <Label htmlFor="description">{dict.ngo?.onboarding?.aboutOrg || "About Your Organization"} *</Label>
           <Textarea
             id="description"
-            placeholder="Describe what your organization does..."
+            placeholder={dict.ngo?.onboarding?.aboutOrgPlaceholder || "Describe what your organization does..."}
             value={orgDetails.description}
             onChange={(e) => setOrgDetails({ ...orgDetails, description: e.target.value })}
             rows={4}
@@ -894,10 +896,10 @@ export default function NGOOnboardingPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="mission">Mission Statement</Label>
+          <Label htmlFor="mission">{dict.ngo?.common?.missionStatement || "Mission Statement"}</Label>
           <Textarea
             id="mission"
-            placeholder="Your organization's mission..."
+            placeholder={dict.ngo?.profile?.missionPlaceholder || "Your organization's mission..."}
             value={orgDetails.mission}
             onChange={(e) => setOrgDetails({ ...orgDetails, mission: e.target.value })}
             rows={2}
@@ -905,7 +907,7 @@ export default function NGOOnboardingPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="teamSize">Team Size</Label>
+          <Label htmlFor="teamSize">{dict.ngo?.common?.teamSize || "Team Size"}</Label>
           <RadioGroup
             value={orgDetails.teamSize}
             onValueChange={(value: string) => setOrgDetails({ ...orgDetails, teamSize: value })}
@@ -935,8 +937,8 @@ export default function NGOOnboardingPage() {
   const renderStep2 = () => (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">Your Cause Areas</h2>
-        <p className="text-muted-foreground">Select up to 3 causes your organization focuses on</p>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{dict.ngo?.onboarding?.causeAreas || "Your Cause Areas"}</h2>
+        <p className="text-muted-foreground">{dict.ngo?.onboarding?.selectCauses || "Select up to 3 causes your organization focuses on"}</p>
       </div>
 
       <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -967,16 +969,16 @@ export default function NGOOnboardingPage() {
           📍 Coordinates: {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
         </p>
       )}
-      <p className="text-sm text-muted-foreground">Selected: {selectedCauses.length}/3</p>
+      <p className="text-sm text-muted-foreground">{(dict.ngo?.onboarding?.selectedCount || "Selected: {n}/3").replace("{n}", String(selectedCauses.length))}</p>
     </div>
   )
 
   const renderStep3 = () => (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">Skills You're Looking For</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{dict.ngo?.onboarding?.skillsLookingFor || "Skills You're Looking For"}</h2>
         <p className="text-muted-foreground">
-          Select the skills that would help your organization most
+          {dict.ngo?.onboarding?.selectSkillsDesc || "Select the skills that would help your organization most"}
         </p>
       </div>
 
@@ -1006,7 +1008,7 @@ export default function NGOOnboardingPage() {
               {skillCategories.find((c) => c.id === activeCategory)?.name}
             </CardTitle>
             <CardDescription>
-              Select the skills you need help with and set priority
+              {dict.ngo?.onboarding?.setSkillPriority || "Select the skills you need help with and set priority"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1042,7 +1044,7 @@ export default function NGOOnboardingPage() {
                               handleSkillPriorityChange(activeCategory, subskill.id, "must-have")
                             }}
                           >
-                            Must Have
+                            {dict.ngo?.common?.mustHave || "Must Have"}
                           </Badge>
                           <Badge
                             variant={skill?.priority === "nice-to-have" ? "default" : "outline"}
@@ -1052,7 +1054,7 @@ export default function NGOOnboardingPage() {
                               handleSkillPriorityChange(activeCategory, subskill.id, "nice-to-have")
                             }}
                           >
-                            Nice to Have
+                            {dict.ngo?.common?.niceToHave || "Nice to Have"}
                           </Badge>
                         </div>
                       )}
@@ -1067,7 +1069,7 @@ export default function NGOOnboardingPage() {
       {requiredSkills.length > 0 && (
         <div className="p-4 rounded-lg bg-muted/50">
           <p className="text-sm text-muted-foreground mb-2">
-            Selected skills ({requiredSkills.length}):
+            {(dict.ngo?.onboarding?.selectedSkills || "Selected skills ({n}):").replace("{n}", String(requiredSkills.length))}
           </p>
           <div className="flex flex-wrap gap-2">
             {requiredSkills.map((skill) => {
@@ -1094,9 +1096,9 @@ export default function NGOOnboardingPage() {
         <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="h-8 w-8 text-secondary" />
         </div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">Welcome to JustBeCause, {orgDetails.orgName || "there"}!</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{(dict.ngo?.onboarding?.welcomeTitle || "Welcome to JustBeCause, {name}!").replace("{name}", orgDetails.orgName || "there")}</h2>
         <p className="text-muted-foreground">
-          Your organization profile is ready. Review and complete setup.
+          {dict.ngo?.onboarding?.profileReady || "Your organization profile is ready. Review and complete setup."}
         </p>
       </div>
 
@@ -1108,7 +1110,7 @@ export default function NGOOnboardingPage() {
                 <Building2 className="h-8 w-8 text-secondary" />
               </div>
               <div>
-                <h3 className="font-semibold text-lg">{orgDetails.orgName || "Your Organization"}</h3>
+                <h3 className="font-semibold text-lg">{orgDetails.orgName || (dict.ngo?.onboarding?.yourOrganization || "Your Organization")}</h3>
                 <p className="text-sm text-muted-foreground">
                   {orgDetails.city}, {orgDetails.country}
                 </p>
@@ -1116,14 +1118,14 @@ export default function NGOOnboardingPage() {
             </div>
             <Separator />
             <div>
-              <h3 className="font-medium text-sm text-muted-foreground">About</h3>
+              <h3 className="font-medium text-sm text-muted-foreground">{dict.ngo?.onboarding?.about || "About"}</h3>
               <p className="text-foreground">
-                {orgDetails.description?.slice(0, 150) || "No description provided"}...
+                {orgDetails.description?.slice(0, 150) || (dict.ngo?.postProject?.noDescription || "No description provided")}...
               </p>
             </div>
             <Separator />
             <div>
-              <h3 className="font-medium text-sm text-muted-foreground">Focus Areas</h3>
+              <h3 className="font-medium text-sm text-muted-foreground">{dict.ngo?.profile?.focusAreas || "Focus Areas"}</h3>
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedCauses.map((causeId) => {
                   const cause = causes.find((c) => c.id === causeId)
@@ -1138,7 +1140,7 @@ export default function NGOOnboardingPage() {
             <Separator />
             <div>
               <h3 className="font-medium text-sm text-muted-foreground">
-                Skills Needed ({requiredSkills.length})
+                {(dict.ngo?.onboarding?.skillsNeededCount || "Skills Needed ({n})").replace("{n}", String(requiredSkills.length))}
               </h3>
               <div className="flex flex-wrap gap-2 mt-2">
                 {requiredSkills.slice(0, 6).map((skill) => {
@@ -1154,19 +1156,19 @@ export default function NGOOnboardingPage() {
                   )
                 })}
                 {requiredSkills.length > 6 && (
-                  <Badge variant="outline">+{requiredSkills.length - 6} more</Badge>
+                  <Badge variant="outline">{(dict.ngo?.common?.plusMore || "+{n} more").replace("{n}", String(requiredSkills.length - 6))}</Badge>
                 )}
               </div>
             </div>
             <Separator />
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <h3 className="font-medium text-sm text-muted-foreground">Team Size</h3>
-                <p className="text-foreground">{orgDetails.teamSize || "Not specified"}</p>
+                <h3 className="font-medium text-sm text-muted-foreground">{dict.ngo?.common?.teamSize || "Team Size"}</h3>
+                <p className="text-foreground">{orgDetails.teamSize || (dict.ngo?.common?.notSpecified || "Not specified")}</p>
               </div>
               <div>
-                <h3 className="font-medium text-sm text-muted-foreground">Founded</h3>
-                <p className="text-foreground">{orgDetails.yearFounded || "Not specified"}</p>
+                <h3 className="font-medium text-sm text-muted-foreground">{dict.ngo?.onboarding?.founded || "Founded"}</h3>
+                <p className="text-foreground">{orgDetails.yearFounded || (dict.ngo?.common?.notSpecified || "Not specified")}</p>
               </div>
             </div>
           </div>
@@ -1177,9 +1179,9 @@ export default function NGOOnboardingPage() {
         <CardContent className="pt-6">
           <div className="text-center">
             <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <h3 className="font-medium">Upload Verification Documents (Optional)</h3>
+            <h3 className="font-medium">{dict.ngo?.onboarding?.uploadVerification || "Upload Verification Documents (Optional)"}</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Add your registration certificate to get verified badge
+              {dict.ngo?.onboarding?.uploadVerificationDesc || "Add your registration certificate to get verified badge"}
             </p>
             
             {/* Hidden file input */}
@@ -1202,12 +1204,12 @@ export default function NGOOnboardingPage() {
               {uploadingDoc ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Uploading...
+                  {dict.ngo?.common?.saving || "Uploading..."}
                 </>
               ) : (
                 <>
                   <FileText className="h-4 w-4 mr-2" />
-                  Upload Document
+                  {dict.ngo?.onboarding?.uploadDocument || "Upload Document"}
                 </>
               )}
             </Button>
@@ -1257,8 +1259,8 @@ export default function NGOOnboardingPage() {
             <Building2 className="h-5 w-5 text-secondary-foreground" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-foreground">Complete Your Organization Profile</h1>
-            <p className="text-sm text-muted-foreground">Step {step} of {totalSteps}</p>
+            <h1 className="text-xl font-bold text-foreground">{dict.ngo?.onboarding?.title || "Complete Your Organization Profile"}</h1>
+            <p className="text-sm text-muted-foreground">{(dict.ngo?.onboarding?.stepOf || "Step {step} of {total}").replace("{step}", String(step)).replace("{total}", String(totalSteps))}</p>
           </div>
         </div>
 
@@ -1290,7 +1292,7 @@ export default function NGOOnboardingPage() {
             disabled={step === 1}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            {dict.ngo?.common?.back || "Back"}
           </Button>
 
           {step < totalSteps ? (
@@ -1300,15 +1302,15 @@ export default function NGOOnboardingPage() {
                 // Validate step 1: phone must be verified
                 if (step === 1) {
                   if (phoneVerificationStep !== "verified") {
-                    setError("Please verify your phone number to continue")
+                    setError(dict.ngo?.onboarding?.verifyPhoneError || "Please verify your phone number to continue")
                     return
                   }
                   if (!orgDetails.orgName) {
-                    setError("Please enter your organization name")
+                    setError(dict.ngo?.onboarding?.orgNameError || "Please enter your organization name")
                     return
                   }
                   if (!orgDetails.registrationNumber) {
-                    setError("Please enter your organization registration number")
+                    setError(dict.ngo?.onboarding?.regNumberError || "Please enter your organization registration number")
                     return
                   }
                 }
@@ -1317,7 +1319,7 @@ export default function NGOOnboardingPage() {
               }}
               disabled={step === 1 && phoneVerificationStep !== "verified"}
             >
-              Continue
+              {dict.ngo?.common?.continue || "Continue"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
@@ -1325,12 +1327,12 @@ export default function NGOOnboardingPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Completing...
+                  {dict.ngo?.onboarding?.completing || "Completing..."}
                 </>
               ) : (
                 <>
                   <CheckCircle className="mr-2 h-4 w-4" />
-                  Complete Setup
+                  {dict.ngo?.onboarding?.completeSetup || "Complete Setup"}
                 </>
               )}
             </Button>

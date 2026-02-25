@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useDictionary } from "@/components/dictionary-provider"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, XCircle, Star, Loader2, MessageSquare } from "lucide-react"
 import { updateApplicationStatus } from "@/lib/actions"
@@ -13,6 +14,7 @@ interface ApplicationActionsProps {
 
 export function ApplicationActions({ applicationId, currentStatus }: ApplicationActionsProps) {
   const router = useRouter()
+  const dict = useDictionary() as any
   const [isLoading, setIsLoading] = useState<string | null>(null)
 
   const handleStatusUpdate = async (newStatus: "shortlisted" | "accepted" | "rejected") => {
@@ -23,11 +25,11 @@ export function ApplicationActions({ applicationId, currentStatus }: Application
         router.refresh()
       } else {
         console.error("Failed to update status:", result.error)
-        alert(result.error || "Failed to update application status")
+        alert(result.error || (dict.ngo?.applications?.updateError || "Failed to update application status"))
       }
     } catch (error) {
       console.error("Error updating status:", error)
-      alert("An error occurred while updating the application")
+      alert(dict.ngo?.applications?.updateErrorGeneric || "An error occurred while updating the application")
     } finally {
       setIsLoading(null)
     }
@@ -48,7 +50,7 @@ export function ApplicationActions({ applicationId, currentStatus }: Application
           ) : (
             <Star className="h-4 w-4 mr-1" />
           )}
-          Shortlist
+          {dict.ngo?.applications?.shortlist || "Shortlist"}
         </Button>
         <Button 
           size="sm" 
@@ -62,7 +64,7 @@ export function ApplicationActions({ applicationId, currentStatus }: Application
           ) : (
             <CheckCircle className="h-4 w-4 mr-1" />
           )}
-          Accept
+          {dict.ngo?.applications?.accept || "Accept"}
         </Button>
         <Button 
           size="sm" 
@@ -76,7 +78,7 @@ export function ApplicationActions({ applicationId, currentStatus }: Application
           ) : (
             <XCircle className="h-4 w-4 mr-1" />
           )}
-          Reject
+          {dict.ngo?.applications?.reject || "Reject"}
         </Button>
       </>
     )
@@ -97,7 +99,7 @@ export function ApplicationActions({ applicationId, currentStatus }: Application
           ) : (
             <CheckCircle className="h-4 w-4 mr-1" />
           )}
-          Accept
+          {dict.ngo?.applications?.accept || "Accept"}
         </Button>
         <Button 
           size="sm" 
@@ -111,7 +113,7 @@ export function ApplicationActions({ applicationId, currentStatus }: Application
           ) : (
             <XCircle className="h-4 w-4 mr-1" />
           )}
-          Reject
+          {dict.ngo?.applications?.reject || "Reject"}
         </Button>
       </>
     )
@@ -121,7 +123,7 @@ export function ApplicationActions({ applicationId, currentStatus }: Application
     return (
       <Button size="sm" variant="outline" className="bg-transparent">
         <MessageSquare className="h-4 w-4 mr-1" />
-        Message
+        {dict.ngo?.common?.message || "Message"}
       </Button>
     )
   }

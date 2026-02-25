@@ -13,8 +13,13 @@ import { Clock, CheckCircle2, FolderKanban, TrendingUp, Star, ArrowRight, Edit, 
 import { AIMatchExplanation } from "@/components/ai/match-explanation"
 import Link from "next/link"
 import { resolveSkillName } from "@/lib/skills-data"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import type { Locale } from "@/lib/i18n-config"
 
-export default async function VolunteerDashboard() {
+export default async function VolunteerDashboard({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
+  const dict = await getDictionary(lang as Locale) as any
+
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -68,9 +73,9 @@ export default async function VolunteerDashboard() {
           {/* Welcome Section */}
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              Welcome back, {session.user.name?.split(" ")[0] || "Impact Agent"}!
+              Welcome back, {session.user.name?.split(" ")[0] || (dict.volunteer?.dashboard?.fallbackName || "Impact Agent")}!
             </h1>
-            <p className="text-muted-foreground">Here's what's happening with your impact journey.</p>
+            <p className="text-muted-foreground">{dict.volunteer?.dashboard?.subtitle || "Here's what's happening with your impact journey."}</p>
           </div>
 
           {/* Stats Cards */}
@@ -83,7 +88,7 @@ export default async function VolunteerDashboard() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-foreground">{applications.length}</p>
-                    <p className="text-sm text-muted-foreground">Applications</p>
+                    <p className="text-sm text-muted-foreground">{dict.volunteer?.dashboard?.statsApplications || "Applications"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -97,7 +102,7 @@ export default async function VolunteerDashboard() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-foreground">{acceptedApplications.length}</p>
-                    <p className="text-sm text-muted-foreground">Active Opportunities</p>
+                    <p className="text-sm text-muted-foreground">{dict.volunteer?.dashboard?.statsActiveOpportunities || "Active Opportunities"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -111,7 +116,7 @@ export default async function VolunteerDashboard() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-foreground">{completedProjects}</p>
-                    <p className="text-sm text-muted-foreground">Completed</p>
+                    <p className="text-sm text-muted-foreground">{dict.volunteer?.dashboard?.statsCompleted || "Completed"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -125,7 +130,7 @@ export default async function VolunteerDashboard() {
                   </div>
                   <div>
                     <p className="text-2xl font-bold text-foreground">{hoursContributed}</p>
-                    <p className="text-sm text-muted-foreground">Hours Given</p>
+                    <p className="text-sm text-muted-foreground">{dict.volunteer?.dashboard?.statsHoursGiven || "Hours Given"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -138,9 +143,9 @@ export default async function VolunteerDashboard() {
               <Card>
                 <CardHeader>
                   <div className="flex items-center justify-between">
-                    <CardTitle>Recommended Opportunities</CardTitle>
+                    <CardTitle>{dict.volunteer?.dashboard?.recommendedOpportunities || "Recommended Opportunities"}</CardTitle>
                     <Button asChild variant="outline" size="sm">
-                      <Link href="/volunteer/opportunities">View All</Link>
+                      <Link href="/volunteer/opportunities">{dict.volunteer?.common?.viewAll || "View All"}</Link>
                     </Button>
                   </div>
                 </CardHeader>
@@ -148,12 +153,12 @@ export default async function VolunteerDashboard() {
                   {matchedOpportunities.length === 0 ? (
                     <div className="text-center py-8">
                       <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">No opportunities matched yet</p>
+                      <p className="text-muted-foreground">{dict.volunteer?.dashboard?.noMatchesYet || "No opportunities matched yet"}</p>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Complete your profile to get personalized recommendations
+                        {dict.volunteer?.dashboard?.completeProfilePrompt || "Complete your profile to get personalized recommendations"}
                       </p>
                       <Button variant="link" asChild>
-                        <Link href="/volunteer/profile">Complete Profile</Link>
+                        <Link href="/volunteer/profile">{dict.volunteer?.common?.completeProfile || "Complete Profile"}</Link>
                       </Button>
                     </div>
                   ) : (
@@ -182,7 +187,7 @@ export default async function VolunteerDashboard() {
                                     : "bg-orange-100 text-orange-700"
                                 }
                               >
-                                {Math.round(match.score)}% match
+                                {Math.round(match.score)}{dict.volunteer?.common?.percentMatch || "% match"}
                               </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
@@ -217,7 +222,7 @@ export default async function VolunteerDashboard() {
               <Card>
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">My Profile</CardTitle>
+                    <CardTitle className="text-lg">{dict.volunteer?.dashboard?.myProfile || "My Profile"}</CardTitle>
                     <Button asChild variant="ghost" size="sm">
                       <Link href="/volunteer/profile">
                         <Edit className="h-4 w-4" />
@@ -241,18 +246,18 @@ export default async function VolunteerDashboard() {
                       )}
                     </div>
                     <h3 className="font-semibold text-foreground">{session.user.name}</h3>
-                    <p className="text-sm text-muted-foreground">{profile?.location || "Location not set"}</p>
+                    <p className="text-sm text-muted-foreground">{profile?.location || (dict.volunteer?.common?.locationNotSet || "Location not set")}</p>
                     <div className="flex items-center gap-1 mt-2">
                       <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                      <span className="font-medium">{profile?.rating || "New"}</span>
-                      <span className="text-muted-foreground">({completedProjects} tasks)</span>
+                      <span className="font-medium">{profile?.rating || (dict.volunteer?.common?.newRating || "New")}</span>
+                      <span className="text-muted-foreground">({completedProjects} {dict.volunteer?.dashboard?.tasks || "tasks"})</span>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <div>
                       <div className="flex items-center justify-between text-sm mb-2">
-                        <span className="text-muted-foreground">Profile Completion</span>
+                        <span className="text-muted-foreground">{dict.volunteer?.common?.profileCompletion || "Profile Completion"}</span>
                         <span className="font-medium">{profileCompletion}%</span>
                       </div>
                       <Progress value={profileCompletion} className="h-2" />
@@ -261,7 +266,7 @@ export default async function VolunteerDashboard() {
 
                   {profile?.skills && profile.skills.length > 0 && (
                     <div className="mt-6">
-                      <p className="text-sm font-medium text-foreground mb-3">Skills</p>
+                      <p className="text-sm font-medium text-foreground mb-3">{dict.volunteer?.common?.skills || "Skills"}</p>
                       <div className="flex flex-wrap gap-2">
                         {profile.skills.slice(0, 5).map((skill, i) => (
                           <Badge key={i} variant="secondary" className="bg-accent text-accent-foreground">
@@ -280,7 +285,7 @@ export default async function VolunteerDashboard() {
               {/* Impact Summary */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Your Impact</CardTitle>
+                  <CardTitle className="text-lg">{dict.volunteer?.dashboard?.yourImpact || "Your Impact"}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
@@ -288,7 +293,7 @@ export default async function VolunteerDashboard() {
                       <p className="text-2xl font-bold text-foreground">
                         ${(hoursContributed * 500).toLocaleString()}
                       </p>
-                      <p className="text-sm text-muted-foreground">Estimated value contributed</p>
+                      <p className="text-sm text-muted-foreground">{dict.volunteer?.dashboard?.estimatedValueContributed || "Estimated value contributed"}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -300,12 +305,12 @@ export default async function VolunteerDashboard() {
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg flex items-center gap-2">
                       <CreditCard className="h-5 w-5" />
-                      Subscription
+                      {dict.volunteer?.dashboard?.subscription || "Subscription"}
                     </CardTitle>
                     {subscriptionStatus?.plan === "pro" && (
                       <Badge className="bg-gradient-to-r from-primary to-secondary text-white">
                         <Zap className="h-3 w-3 mr-1" />
-                        PRO
+                        {dict.volunteer?.common?.pro || "PRO"}
                       </Badge>
                     )}
                   </div>
@@ -315,7 +320,7 @@ export default async function VolunteerDashboard() {
                     <>
                       <div className="p-4 rounded-lg bg-muted/50">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm text-muted-foreground">Applications this month</span>
+                          <span className="text-sm text-muted-foreground">{dict.volunteer?.dashboard?.applicationsThisMonth || "Applications this month"}</span>
                           <span className="font-medium">
                             {subscriptionStatus.applicationsUsed} / 3
                           </span>
@@ -327,15 +332,15 @@ export default async function VolunteerDashboard() {
                       </div>
                       <div className="p-3 bg-primary/5 rounded-lg border border-primary/20">
                         <p className="text-sm font-medium text-foreground mb-1">
-                          Upgrade to Pro for unlimited applications
+                          {dict.volunteer?.dashboard?.upgradeProTitle || "Upgrade to Pro for unlimited applications"}
                         </p>
                         <p className="text-xs text-muted-foreground mb-3">
-                          Apply to as many opportunities as you want with Pro
+                          {dict.volunteer?.dashboard?.upgradeProDesc || "Apply to as many opportunities as you want with Pro"}
                         </p>
                         <Button asChild size="sm" className="w-full">
                           <Link href="/checkout?plan=volunteer-pro">
                             <Zap className="h-4 w-4 mr-2" />
-                            Upgrade to Pro
+                            {dict.volunteer?.common?.upgradeToPro || "Upgrade to Pro"}
                           </Link>
                         </Button>
                       </div>
@@ -344,14 +349,14 @@ export default async function VolunteerDashboard() {
                     <div className="p-4 rounded-lg bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20">
                       <div className="flex items-center gap-2 mb-2">
                         <Zap className="h-5 w-5 text-primary" />
-                        <span className="font-medium text-foreground">Pro Plan Active</span>
+                        <span className="font-medium text-foreground">{dict.volunteer?.dashboard?.proPlanActive || "Pro Plan Active"}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Unlimited applications available
+                        {dict.volunteer?.dashboard?.unlimitedApplications || "Unlimited applications available"}
                       </p>
                       {subscriptionStatus?.expiryDate && (
                         <p className="text-xs text-muted-foreground mt-2">
-                          Renews: {new Date(subscriptionStatus.expiryDate).toLocaleDateString()}
+                          {dict.volunteer?.dashboard?.renews || "Renews:"} {new Date(subscriptionStatus.expiryDate).toLocaleDateString()}
                         </p>
                       )}
                     </div>

@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import type { Locale } from "@/lib/i18n-config"
 import { getMyNotifications } from "@/lib/actions"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,7 +15,10 @@ import {
 import Link from "next/link"
 import { Settings, Bell } from "lucide-react"
 
-export default async function VolunteerNotificationsPage() {
+export default async function VolunteerNotificationsPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
+  const dict = await getDictionary(lang as Locale) as any
+
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -53,11 +58,11 @@ export default async function VolunteerNotificationsPage() {
               <Bell className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Notifications</h1>
+              <h1 className="text-2xl font-bold text-foreground">{dict.volunteer?.notifications?.title || "Notifications"}</h1>
               <p className="text-sm text-muted-foreground">
                 {unreadNotifications.length > 0 
-                  ? `${unreadNotifications.length} unread notification${unreadNotifications.length > 1 ? 's' : ''}`
-                  : 'You\'re all caught up!'}
+                  ? `${unreadNotifications.length} ${unreadNotifications.length > 1 ? (dict.volunteer?.notifications?.unreadPlural || "unread notifications") : (dict.volunteer?.notifications?.unreadSingular || "unread notification")}`
+                  : dict.volunteer?.notifications?.allCaughtUp || "You're all caught up!"}
               </p>
             </div>
           </div>
@@ -66,7 +71,7 @@ export default async function VolunteerNotificationsPage() {
             <Button variant="outline" size="sm" asChild>
               <Link href="/volunteer/settings">
                 <Settings className="h-4 w-4 mr-2" />
-                Settings
+                {dict.volunteer?.common?.settings || "Settings"}
               </Link>
             </Button>
           </div>
@@ -76,7 +81,7 @@ export default async function VolunteerNotificationsPage() {
         <Tabs defaultValue="all" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
             <TabsTrigger value="all" className="relative">
-              All
+              {dict.volunteer?.common?.all || "All"}
               {notifications.length > 0 && (
                 <Badge variant="secondary" className="ml-2 h-5 px-1.5">
                   {notifications.length}
@@ -84,14 +89,14 @@ export default async function VolunteerNotificationsPage() {
               )}
             </TabsTrigger>
             <TabsTrigger value="unread" className="relative">
-              Unread
+              {dict.volunteer?.notifications?.unread || "Unread"}
               {unreadNotifications.length > 0 && (
                 <Badge className="ml-2 h-5 px-1.5 bg-primary text-primary-foreground">
                   {unreadNotifications.length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="read">Read</TabsTrigger>
+            <TabsTrigger value="read">{dict.volunteer?.notifications?.read || "Read"}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-6">

@@ -47,6 +47,7 @@ import {
   Briefcase,
 } from "lucide-react"
 import LocaleLink from "@/components/locale-link"
+import { useDictionary } from "@/components/dictionary-provider"
 
 interface PrivacySettings {
   showProfile: boolean
@@ -59,6 +60,7 @@ interface PrivacySettings {
 export default function NGOSettingsPage() {
   const router = useRouter()
   const locale = useLocale()
+  const dict = useDictionary()
   const { data: session, isPending } = authClient.useSession()
   const [profile, setProfile] = useState<any>(null)
   const [transactions, setTransactions] = useState<any[]>([])
@@ -140,7 +142,7 @@ export default function NGOSettingsPage() {
         }
       } catch (err) {
         console.error("Failed to load data:", err)
-        setError("Failed to load profile data")
+        setError(dict.ngo?.settings?.loadError || "Failed to load profile data")
       } finally {
         setIsLoading(false)
       }
@@ -194,10 +196,10 @@ export default function NGOSettingsPage() {
         setSaveSuccess(true)
         setTimeout(() => setSaveSuccess(false), 3000)
       } else {
-        setError(result.error || "Failed to save")
+        setError(result.error || (dict.ngo?.settings?.failedToSave || "Failed to save"))
       }
     } catch (err) {
-      setError("An unexpected error occurred")
+      setError(dict.ngo?.common?.unexpectedError || "An unexpected error occurred")
     } finally {
       setIsSaving(false)
     }
@@ -218,10 +220,10 @@ export default function NGOSettingsPage() {
         setSaveSuccess(true)
         setTimeout(() => setSaveSuccess(false), 3000)
       } else {
-        setError(result.error || "Failed to save")
+        setError(result.error || (dict.ngo?.settings?.failedToSave || "Failed to save"))
       }
     } catch (err) {
-      setError("An unexpected error occurred")
+      setError(dict.ngo?.common?.unexpectedError || "An unexpected error occurred")
     } finally {
       setIsSaving(false)
     }
@@ -229,11 +231,11 @@ export default function NGOSettingsPage() {
 
   const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
-      setPasswordError("Passwords do not match")
+      setPasswordError(dict.ngo?.settings?.passwordsNoMatch || "Passwords do not match")
       return
     }
     if (newPassword.length < 8) {
-      setPasswordError("Password must be at least 8 characters")
+      setPasswordError(dict.ngo?.settings?.passwordMinLength || "Password must be at least 8 characters")
       return
     }
 
@@ -250,10 +252,10 @@ export default function NGOSettingsPage() {
         setConfirmPassword("")
         setTimeout(() => setPasswordSuccess(false), 3000)
       } else {
-        setPasswordError(result.error || "Failed to change password")
+        setPasswordError(result.error || (dict.ngo?.settings?.failedToSave || "Failed to change password"))
       }
     } catch (err) {
-      setPasswordError("An unexpected error occurred")
+      setPasswordError(dict.ngo?.common?.unexpectedError || "An unexpected error occurred")
     } finally {
       setIsChangingPassword(false)
     }
@@ -318,10 +320,10 @@ export default function NGOSettingsPage() {
         await authClient.signOut()
         router.push(localePath("/", locale))
       } else {
-        setError(result.error || "Failed to delete account")
+        setError(result.error || (dict.ngo?.settings?.failedToSave || "Failed to delete account"))
       }
     } catch (err) {
-      setError("An unexpected error occurred")
+      setError(dict.ngo?.common?.unexpectedError || "An unexpected error occurred")
     } finally {
       setIsDeleting(false)
     }
@@ -334,9 +336,9 @@ export default function NGOSettingsPage() {
   return (
     <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">Settings</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">{dict.ngo?.settings?.title || "Settings"}</h1>
             <p className="text-muted-foreground">
-              Manage your organization account and preferences
+              {dict.ngo?.settings?.subtitle || "Manage your organization account and preferences"}
             </p>
           </div>
 
@@ -350,18 +352,18 @@ export default function NGOSettingsPage() {
           {saveSuccess && (
             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 text-green-600">
               <CheckCircle className="h-4 w-4" />
-              Changes saved successfully!
+              {dict.ngo?.settings?.changesSaved || "Changes saved successfully!"}
             </div>
           )}
 
           <Tabs defaultValue="organization" className="space-y-6">
             <div className="overflow-x-auto -mx-2 px-2">
               <TabsList className="inline-flex w-auto min-w-full sm:w-full sm:max-w-3xl sm:grid sm:grid-cols-5 h-auto gap-1">
-                <TabsTrigger value="organization" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Organization</TabsTrigger>
-                <TabsTrigger value="skills" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Skills & Causes</TabsTrigger>
-                <TabsTrigger value="billing" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Billing</TabsTrigger>
-                <TabsTrigger value="security" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Security</TabsTrigger>
-                <TabsTrigger value="privacy" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Privacy</TabsTrigger>
+                <TabsTrigger value="organization" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">{dict.ngo?.settings?.organization || "Organization"}</TabsTrigger>
+                <TabsTrigger value="skills" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">{dict.ngo?.settings?.skillsCauses || "Skills & Causes"}</TabsTrigger>
+                <TabsTrigger value="billing" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">{dict.ngo?.settings?.billing || "Billing"}</TabsTrigger>
+                <TabsTrigger value="security" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">{dict.ngo?.settings?.security || "Security"}</TabsTrigger>
+                <TabsTrigger value="privacy" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">{dict.ngo?.settings?.privacy || "Privacy"}</TabsTrigger>
               </TabsList>
             </div>
 
@@ -372,13 +374,13 @@ export default function NGOSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Building2 className="h-5 w-5" />
-                      Organization Information
+                      {dict.ngo?.settings?.orgInfo || "Organization Information"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="org-name">Organization Name</Label>
+                        <Label htmlFor="org-name">{dict.ngo?.common?.organizationName || "Organization Name"}</Label>
                         <Input
                           id="org-name"
                           value={orgName}
@@ -387,7 +389,7 @@ export default function NGOSettingsPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="reg-number">Registration Number</Label>
+                        <Label htmlFor="reg-number">{dict.ngo?.common?.registrationNumber || "Registration Number"}</Label>
                         <Input
                           id="reg-number"
                           value={registrationNumber}
@@ -397,7 +399,7 @@ export default function NGOSettingsPage() {
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="website">Website</Label>
+                      <Label htmlFor="website">{dict.ngo?.common?.website || "Website"}</Label>
                       <Input
                         id="website"
                         type="url"
@@ -408,13 +410,13 @@ export default function NGOSettingsPage() {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="description">Description</Label>
+                      <Label htmlFor="description">{dict.ngo?.common?.description || "Description"}</Label>
                       <Textarea
                         id="description"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         className="mt-1.5 min-h-[100px]"
-                        placeholder="Describe your organization's mission and work"
+                        placeholder={dict.ngo?.settings?.descriptionPlaceholder || "Describe your organization's mission and work"}
                       />
                     </div>
                   </CardContent>
@@ -424,13 +426,13 @@ export default function NGOSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Mail className="h-5 w-5" />
-                      Contact Information
+                      {dict.ngo?.common?.contactInformation || "Contact Information"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="contact-email">Contact Email</Label>
+                        <Label htmlFor="contact-email">{dict.ngo?.common?.contactEmail || "Contact Email"}</Label>
                         <Input
                           id="contact-email"
                           type="email"
@@ -440,7 +442,7 @@ export default function NGOSettingsPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="contact-phone">Contact Phone</Label>
+                        <Label htmlFor="contact-phone">{dict.ngo?.settings?.contactPhone || "Contact Phone"}</Label>
                         <Input
                           id="contact-phone"
                           type="tel"
@@ -451,13 +453,13 @@ export default function NGOSettingsPage() {
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="address">Address</Label>
+                      <Label htmlFor="address">{dict.ngo?.common?.address || "Address"}</Label>
                       <Input
                         id="address"
                         value={address}
                         onChange={(e) => setAddress(e.target.value)}
                         className="mt-1.5"
-                        placeholder="Full organization address"
+                        placeholder={dict.ngo?.settings?.addressPlaceholder || "Full organization address"}
                       />
                     </div>
                   </CardContent>
@@ -469,7 +471,7 @@ export default function NGOSettingsPage() {
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
-                  Save Organization Info
+                  {dict.ngo?.settings?.saveOrganizationInfo || "Save Organization Info"}
                 </Button>
               </div>
             </TabsContent>
@@ -481,10 +483,10 @@ export default function NGOSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Briefcase className="h-5 w-5" />
-                      Skills You Need
+                      {dict.ngo?.settings?.skillsYouNeed || "Skills You Need"}
                     </CardTitle>
                     <CardDescription>
-                      Select skills your organization typically needs from impact agents
+                      {dict.ngo?.settings?.selectSkillsDesc || "Select skills your organization typically needs from impact agents"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -516,9 +518,9 @@ export default function NGOSettingsPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Causes You Focus On</CardTitle>
+                    <CardTitle>{dict.ngo?.settings?.causesYouFocusOn || "Causes You Focus On"}</CardTitle>
                     <CardDescription>
-                      Select causes to get matched with relevant impact agents
+                      {dict.ngo?.settings?.selectCausesDesc || "Select causes to get matched with relevant impact agents"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -547,7 +549,7 @@ export default function NGOSettingsPage() {
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
-                  Save Skills & Causes
+                  {dict.ngo?.settings?.saveSkillsCauses || "Save Skills & Causes"}
                 </Button>
               </div>
             </TabsContent>
@@ -559,15 +561,15 @@ export default function NGOSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <History className="h-5 w-5" />
-                      Transaction History
+                      {dict.ngo?.settings?.transactionHistory || "Transaction History"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {transactions.length === 0 ? (
                       <div className="text-center py-8 text-muted-foreground">
-                        <p>No transactions yet</p>
+                        <p>{dict.ngo?.settings?.noTransactions || "No transactions yet"}</p>
                         <p className="text-sm mt-1">
-                          Your payment history will appear here
+                          {dict.ngo?.settings?.paymentHistoryAppears || "Your payment history will appear here"}
                         </p>
                       </div>
                     ) : (
@@ -607,10 +609,10 @@ export default function NGOSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Lock className="h-5 w-5" />
-                      Change Password
+                      {dict.ngo?.settings?.changePassword || "Change Password"}
                     </CardTitle>
                     <CardDescription>
-                      Update your password to keep your account secure
+                      {dict.ngo?.settings?.changePasswordDesc || "Update your password to keep your account secure"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -623,11 +625,11 @@ export default function NGOSettingsPage() {
                     {passwordSuccess && (
                       <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm flex items-center gap-2">
                         <CheckCircle className="h-4 w-4" />
-                        Password changed successfully!
+                        {dict.ngo?.settings?.passwordChanged || "Password changed successfully!"}
                       </div>
                     )}
                     <div>
-                      <Label htmlFor="current-password">Current Password</Label>
+                      <Label htmlFor="current-password">{dict.ngo?.settings?.currentPassword || "Current Password"}</Label>
                       <Input
                         id="current-password"
                         type="password"
@@ -638,7 +640,7 @@ export default function NGOSettingsPage() {
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="new-password">New Password</Label>
+                        <Label htmlFor="new-password">{dict.ngo?.settings?.newPassword || "New Password"}</Label>
                         <Input
                           id="new-password"
                           type="password"
@@ -648,7 +650,7 @@ export default function NGOSettingsPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="confirm-password">Confirm New Password</Label>
+                        <Label htmlFor="confirm-password">{dict.ngo?.settings?.confirmPassword || "Confirm New Password"}</Label>
                         <Input
                           id="confirm-password"
                           type="password"
@@ -668,7 +670,7 @@ export default function NGOSettingsPage() {
                       ) : (
                         <Lock className="h-4 w-4" />
                       )}
-                      Update Password
+                      {dict.ngo?.settings?.updatePassword || "Update Password"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -682,10 +684,10 @@ export default function NGOSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <BellRing className="h-5 w-5" />
-                      Browser Notifications
+                      {dict.ngo?.settings?.browserNotifications || "Browser Notifications"}
                     </CardTitle>
                     <CardDescription>
-                      Get instant notifications in your browser when something important happens
+                      {dict.ngo?.settings?.browserNotificationsDesc || "Get instant notifications in your browser when something important happens"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -697,15 +699,15 @@ export default function NGOSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Globe className="h-5 w-5" />
-                      Profile Visibility
+                      {dict.ngo?.settings?.profileVisibility || "Profile Visibility"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium">Public Profile</p>
+                        <p className="font-medium">{dict.ngo?.settings?.publicProfile || "Public Profile"}</p>
                         <p className="text-sm text-muted-foreground">
-                          Allow impact agents to see your organization profile
+                          {dict.ngo?.settings?.publicProfileDesc || "Allow impact agents to see your organization profile"}
                         </p>
                       </div>
                       <Switch
@@ -717,9 +719,9 @@ export default function NGOSettingsPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium">Show in Directory</p>
+                        <p className="font-medium">{dict.ngo?.settings?.showInDirectory || "Show in Directory"}</p>
                         <p className="text-sm text-muted-foreground">
-                          List your organization in the NGO directory
+                          {dict.ngo?.settings?.showInDirectoryDesc || "List your organization in the NGO directory"}
                         </p>
                       </div>
                       <Switch
@@ -731,9 +733,9 @@ export default function NGOSettingsPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium">Email Notifications</p>
+                        <p className="font-medium">{dict.ngo?.settings?.emailNotifications || "Email Notifications"}</p>
                         <p className="text-sm text-muted-foreground">
-                          Receive email notifications for applications and messages
+                          {dict.ngo?.settings?.emailNotificationsDesc || "Receive email notifications for applications and messages"}
                         </p>
                       </div>
                       <Switch
@@ -745,7 +747,7 @@ export default function NGOSettingsPage() {
                     </div>
                     <Button onClick={handleSavePrivacy} disabled={savingPrivacy}>
                       {savingPrivacy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                      Save Privacy Settings
+                      {dict.ngo?.settings?.savePrivacySettings || "Save Privacy Settings"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -754,15 +756,15 @@ export default function NGOSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Download className="h-5 w-5" />
-                      Data & Privacy
+                      {dict.ngo?.settings?.dataPrivacy || "Data & Privacy"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between p-4 border rounded-lg">
                       <div>
-                        <p className="font-medium">Download Your Data</p>
+                        <p className="font-medium">{dict.ngo?.settings?.downloadData || "Download Your Data"}</p>
                         <p className="text-sm text-muted-foreground">
-                          Get a copy of your organization data
+                          {dict.ngo?.settings?.downloadDataDesc || "Get a copy of your organization data"}
                         </p>
                       </div>
                       <Button 
@@ -771,7 +773,7 @@ export default function NGOSettingsPage() {
                         disabled={downloadingData}
                       >
                         {downloadingData && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                        {downloadingData ? "Preparing..." : "Download Data"}
+                        {downloadingData ? (dict.ngo?.settings?.preparing || "Preparing...") : (dict.ngo?.settings?.downloadDataBtn || "Download Data")}
                       </Button>
                     </div>
                   </CardContent>
@@ -781,20 +783,20 @@ export default function NGOSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-red-600">
                       <Trash2 className="h-5 w-5" />
-                      Danger Zone
+                      {dict.ngo?.settings?.dangerZone || "Danger Zone"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {!showDeleteConfirm ? (
                       <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
                         <div>
-                          <p className="font-medium text-red-600">Delete Organization</p>
+                          <p className="font-medium text-red-600">{dict.ngo?.settings?.deleteOrganization || "Delete Organization"}</p>
                           <p className="text-sm text-muted-foreground">
-                            Permanently delete your organization account
+                            {dict.ngo?.settings?.deleteOrgDesc || "Permanently delete your organization account"}
                           </p>
                         </div>
                         <Button variant="destructive" onClick={() => setShowDeleteConfirm(true)}>
-                          Delete Account
+                          {dict.ngo?.settings?.deleteAccount || "Delete Account"}
                         </Button>
                       </div>
                     ) : (
@@ -803,18 +805,16 @@ export default function NGOSettingsPage() {
                           <AlertCircle className="h-5 w-5 text-red-600 mt-0.5" />
                           <div>
                             <p className="font-medium text-red-600">
-                              Are you absolutely sure?
+                              {dict.ngo?.settings?.deleteConfirmTitle || "Are you absolutely sure?"}
                             </p>
                             <p className="text-sm text-muted-foreground mt-1">
-                              This action cannot be undone. This will permanently delete your
-                              organization account, all opportunities, applications, and remove
-                              all associated data.
+                              {dict.ngo?.settings?.deleteConfirmDesc || "This action cannot be undone. This will permanently delete your organization account, all opportunities, applications, and remove all associated data."}
                             </p>
                           </div>
                         </div>
                         <div>
                           <Label htmlFor="delete-confirm" className="text-sm">
-                            Type <span className="font-mono font-bold">DELETE</span> to confirm
+                            {dict.ngo?.settings?.typeDeleteConfirm || <>Type <span className="font-mono font-bold">DELETE</span> to confirm</>}
                           </Label>
                           <Input
                             id="delete-confirm"
@@ -832,7 +832,7 @@ export default function NGOSettingsPage() {
                               setDeleteConfirmation("")
                             }}
                           >
-                            Cancel
+                            {dict.ngo?.common?.cancel || "Cancel"}
                           </Button>
                           <Button
                             variant="destructive"
@@ -844,7 +844,7 @@ export default function NGOSettingsPage() {
                             ) : (
                               <Trash2 className="h-4 w-4 mr-2" />
                             )}
-                            Delete Organization
+                            {dict.ngo?.settings?.deleteOrganization || "Delete Organization"}
                           </Button>
                         </div>
                       </div>

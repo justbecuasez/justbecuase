@@ -32,6 +32,7 @@ import {
   Users,
 } from "lucide-react"
 import { UnifiedSearchBar } from "@/components/unified-search-bar"
+import { useDictionary } from "@/components/dictionary-provider"
 
 interface Project {
   _id?: { toString: () => string }
@@ -70,6 +71,23 @@ const WORK_MODES = [
 ]
 
 export function OpportunitiesBrowser() {
+  const dict = useDictionary()
+  const opp = dict.volunteer?.opportunities
+  const common = dict.volunteer?.common
+
+  const timeCommitmentLabels: Record<string, string> = {
+    "1-5 hours/week": common?.time1to5 || "1-5 hours/week",
+    "5-10 hours/week": common?.time5to10 || "5-10 hours/week",
+    "10-20 hours/week": common?.time10to20 || "10-20 hours/week",
+    "20+ hours/week": common?.time20plus || "20+ hours/week",
+  }
+
+  const workModeLabels: Record<string, string> = {
+    remote: common?.remote || "Remote",
+    onsite: common?.onsite || "On-site",
+    hybrid: common?.hybrid || "Hybrid",
+  }
+
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
@@ -287,7 +305,7 @@ export function OpportunitiesBrowser() {
           <UnifiedSearchBar
             defaultType="opportunity"
             variant="default"
-            placeholder="Search by title, skills, cause, or organization..."
+            placeholder={opp?.searchPlaceholder || "Search by title, skills, cause, or organization..."}
             value={searchQuery}
             onSearchChange={setSearchQuery}
             navigateOnSelect={false}
@@ -297,13 +315,13 @@ export function OpportunitiesBrowser() {
         <div className="flex items-center gap-2">
           <Select value={sortBy} onValueChange={setSortBy}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Sort by" />
+              <SelectValue placeholder={opp?.sortBy || "Sort by"} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="newest">Newest First</SelectItem>
-              <SelectItem value="relevant">Most Relevant</SelectItem>
-              <SelectItem value="closing">Closing Soon</SelectItem>
-              <SelectItem value="popular">Most Popular</SelectItem>
+              <SelectItem value="newest">{opp?.sortNewest || "Newest First"}</SelectItem>
+              <SelectItem value="relevant">{opp?.sortRelevant || "Most Relevant"}</SelectItem>
+              <SelectItem value="closing">{opp?.sortClosing || "Closing Soon"}</SelectItem>
+              <SelectItem value="popular">{opp?.sortPopular || "Most Popular"}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -316,7 +334,7 @@ export function OpportunitiesBrowser() {
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 bg-transparent">
               <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5" />
-              Skills
+              {common?.skills || "Skills"}
               {selectedSkills.length > 0 && (
                 <Badge className="ml-1.5 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground">
                   {selectedSkills.length}
@@ -350,7 +368,7 @@ export function OpportunitiesBrowser() {
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 bg-transparent">
-              Time
+              {opp?.filterTime || "Time"}
               {selectedTimeCommitment.length > 0 && (
                 <Badge className="ml-1.5 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground">
                   {selectedTimeCommitment.length}
@@ -372,7 +390,7 @@ export function OpportunitiesBrowser() {
                     htmlFor={`opp-time-${time}`}
                     className="text-sm font-normal cursor-pointer"
                   >
-                    {time}
+                    {timeCommitmentLabels[time] || time}
                   </Label>
                 </div>
               ))}
@@ -384,7 +402,7 @@ export function OpportunitiesBrowser() {
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="outline" size="sm" className="h-8 bg-transparent">
-              Work Mode
+              {common?.workMode || "Work Mode"}
               {selectedWorkMode && (
                 <Badge className="ml-1.5 h-4 w-4 p-0 flex items-center justify-center text-[10px] bg-primary text-primary-foreground">
                   1
@@ -402,7 +420,7 @@ export function OpportunitiesBrowser() {
                   onCheckedChange={() => setSelectedWorkMode("")}
                 />
                 <Label htmlFor="opp-mode-all" className="text-sm font-normal cursor-pointer">
-                  Any
+                  {common?.any || "Any"}
                 </Label>
               </div>
               {WORK_MODES.map((mode) => (
@@ -418,7 +436,7 @@ export function OpportunitiesBrowser() {
                     htmlFor={`opp-mode-${mode.value}`}
                     className="text-sm font-normal cursor-pointer"
                   >
-                    {mode.label}
+                    {workModeLabels[mode.value] || mode.label}
                   </Label>
                 </div>
               ))}
@@ -435,7 +453,7 @@ export function OpportunitiesBrowser() {
             onClick={clearFilters}
           >
             <X className="h-3.5 w-3.5 mr-1" />
-            Clear all
+            {common?.clearAll || "Clear all"}
           </Button>
         )}
       </div>
@@ -453,7 +471,7 @@ export function OpportunitiesBrowser() {
           ))}
           {selectedTimeCommitment.map((time) => (
             <Badge key={time} variant="secondary" className="flex items-center gap-1 text-xs">
-              {time}
+              {timeCommitmentLabels[time] || time}
               <button onClick={() => toggleTimeCommitment(time)}>
                 <X className="h-3 w-3" />
               </button>
@@ -461,7 +479,7 @@ export function OpportunitiesBrowser() {
           ))}
           {selectedWorkMode && (
             <Badge variant="secondary" className="flex items-center gap-1 text-xs">
-              {WORK_MODES.find((m) => m.value === selectedWorkMode)?.label || selectedWorkMode}
+              {workModeLabels[selectedWorkMode] || selectedWorkMode}
               <button onClick={() => setSelectedWorkMode("")}>
                 <X className="h-3 w-3" />
               </button>
@@ -473,9 +491,9 @@ export function OpportunitiesBrowser() {
       {/* Results Count */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">
-          Showing{" "}
-          <span className="font-medium text-foreground">{filteredProjects.length}</span> of{" "}
-          {projects.length} opportunities
+          {opp?.showingOf || "Showing"}{" "}
+          <span className="font-medium text-foreground">{filteredProjects.length}</span> {opp?.of || "of"}{" "}
+          {projects.length} {opp?.opportunitiesLabel || "opportunities"}
           {isUnifiedSearching && <Loader2 className="inline h-3.5 w-3.5 animate-spin ml-2" />}
         </p>
       </div>
@@ -489,15 +507,15 @@ export function OpportunitiesBrowser() {
         </div>
       ) : filteredProjects.length === 0 ? (
         <div className="text-center py-12 bg-muted/30 rounded-lg">
-          <p className="text-muted-foreground">No opportunities found</p>
+          <p className="text-muted-foreground">{opp?.noResults || "No opportunities found"}</p>
           <p className="text-sm text-muted-foreground mt-1">
             {hasActiveFilters || searchQuery
-              ? "Try adjusting your filters or search terms"
-              : "Check back later for new opportunities"}
+              ? (opp?.noResultsFilterHint || "Try adjusting your filters or search terms")
+              : (opp?.noResultsHint || "Check back later for new opportunities")}
           </p>
           {(hasActiveFilters || searchQuery) && (
             <Button variant="outline" className="mt-4" onClick={clearFilters}>
-              Clear Filters
+              {opp?.clearFilters || "Clear Filters"}
             </Button>
           )}
         </div>
@@ -524,7 +542,7 @@ export function OpportunitiesBrowser() {
                   <div className="space-y-2 text-sm text-muted-foreground mb-4">
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4" />
-                      {project.workMode === "remote" ? "Remote" : project.location || "On-site"}
+                      {project.workMode === "remote" ? (common?.remote || "Remote") : project.location || (common?.onsite || "On-site")}
                     </div>
                     <div className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
@@ -533,12 +551,12 @@ export function OpportunitiesBrowser() {
                     {project.deadline && (
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        Deadline: {new Date(project.deadline).toLocaleDateString()}
+                        {common?.deadline || "Deadline:"} {new Date(project.deadline).toLocaleDateString()}
                       </div>
                     )}
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4" />
-                      {project.applicantsCount || 0} applicants
+                      {project.applicantsCount || 0} {common?.applicants || "applicants"}
                     </div>
                   </div>
 
@@ -558,7 +576,7 @@ export function OpportunitiesBrowser() {
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="flex-1" asChild>
                       <LocaleLink href={`/projects/${projectId}`}>
-                        View Details
+                        {common?.viewDetails || "View Details"}
                       </LocaleLink>
                     </Button>
                     <div className="flex-1">

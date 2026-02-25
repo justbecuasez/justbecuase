@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import type { Locale } from "@/lib/i18n-config"
 import { getNGOProfile, getMyProjectsAsNGO } from "@/lib/actions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +23,10 @@ import {
   CheckCircle,
 } from "lucide-react"
 
-export default async function NGOProjectsPage() {
+export default async function NGOProjectsPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
+  const dict = await getDictionary(lang as Locale) as any
+
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -57,15 +62,15 @@ export default async function NGOProjectsPage() {
     <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-foreground mb-2">My Requirements</h1>
+              <h1 className="text-2xl font-bold text-foreground mb-2">{dict.ngo?.projects?.title || "My Requirements"}</h1>
               <p className="text-muted-foreground">
-                Manage your impact agent opportunities
+                {dict.ngo?.projects?.subtitle || "Manage your impact agent opportunities"}
               </p>
             </div>
             <Button asChild>
               <Link href="/ngo/post-project">
                 <PlusCircle className="h-4 w-4 mr-2" />
-                Post New Requirement
+                {dict.ngo?.projects?.postNewRequirement || "Post New Requirement"}
               </Link>
             </Button>
           </div>
@@ -75,19 +80,19 @@ export default async function NGOProjectsPage() {
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-3xl font-bold text-foreground">{activeProjects.length}</p>
-                <p className="text-sm text-muted-foreground">Active</p>
+                <p className="text-sm text-muted-foreground">{dict.ngo?.common?.active || "Active"}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-3xl font-bold text-foreground">{closedProjects.length}</p>
-                <p className="text-sm text-muted-foreground">Closed</p>
+                <p className="text-sm text-muted-foreground">{dict.ngo?.common?.closed || "Closed"}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 text-center">
                 <p className="text-3xl font-bold text-foreground">{completedProjects.length}</p>
-                <p className="text-sm text-muted-foreground">Completed</p>
+                <p className="text-sm text-muted-foreground">{dict.ngo?.common?.completed || "Completed"}</p>
               </CardContent>
             </Card>
           </div>
@@ -95,49 +100,49 @@ export default async function NGOProjectsPage() {
           <Tabs defaultValue="active">
             <TabsList className="mb-6">
               <TabsTrigger value="active">
-                Active
+                {dict.ngo?.common?.active || "Active"}
                 <Badge variant="secondary" className="ml-2">{activeProjects.length}</Badge>
               </TabsTrigger>
               <TabsTrigger value="closed">
-                Closed
+                {dict.ngo?.common?.closed || "Closed"}
                 <Badge variant="secondary" className="ml-2">{closedProjects.length}</Badge>
               </TabsTrigger>
               <TabsTrigger value="completed">
-                Completed
+                {dict.ngo?.common?.completed || "Completed"}
                 <Badge variant="secondary" className="ml-2">{completedProjects.length}</Badge>
               </TabsTrigger>
-              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="all">{dict.ngo?.common?.all || "All"}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="active">
-              <ProjectsList projects={activeProjects} />
+              <ProjectsList projects={activeProjects} dict={dict} />
             </TabsContent>
 
             <TabsContent value="closed">
-              <ProjectsList projects={closedProjects} />
+              <ProjectsList projects={closedProjects} dict={dict} />
             </TabsContent>
 
             <TabsContent value="completed">
-              <ProjectsList projects={completedProjects} />
+              <ProjectsList projects={completedProjects} dict={dict} />
             </TabsContent>
 
             <TabsContent value="all">
-              <ProjectsList projects={projects} />
+              <ProjectsList projects={projects} dict={dict} />
             </TabsContent>
           </Tabs>
     </main>
   )
 }
 
-function ProjectsList({ projects }: { projects: any[] }) {
+function ProjectsList({ projects, dict }: { projects: any[]; dict: any }) {
   if (projects.length === 0) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
           <FolderKanban className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <p className="text-muted-foreground">No opportunities found</p>
+          <p className="text-muted-foreground">{dict.ngo?.projects?.noOpportunities || "No opportunities found"}</p>
           <Button variant="link" asChild>
-            <Link href="/ngo/post-project">Create your first opportunity</Link>
+            <Link href="/ngo/post-project">{dict.ngo?.dashboard?.createFirstOpportunity || "Create your first opportunity"}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -147,13 +152,13 @@ function ProjectsList({ projects }: { projects: any[] }) {
   return (
     <div className="space-y-4">
       {projects.map((project) => (
-        <ProjectCard key={project._id?.toString()} project={project} />
+        <ProjectCard key={project._id?.toString()} project={project} dict={dict} />
       ))}
     </div>
   )
 }
 
-function ProjectCard({ project }: { project: any }) {
+function ProjectCard({ project, dict }: { project: any; dict: any }) {
   const statusColors: Record<string, string> = {
     open: "bg-green-100 text-green-700",
     closed: "bg-gray-100 text-gray-700",
@@ -205,7 +210,7 @@ function ProjectCard({ project }: { project: any }) {
           {project.deadline && (
             <div className="flex items-center gap-1">
               <Calendar className="h-4 w-4" />
-              Due: {new Date(project.deadline).toLocaleDateString()}
+              {dict.ngo?.projects?.due || "Due: "}{new Date(project.deadline).toLocaleDateString()}
             </div>
           )}
         </div>
@@ -227,18 +232,18 @@ function ProjectCard({ project }: { project: any }) {
           <div className="flex gap-4 text-sm">
             <span className="flex items-center gap-1 text-muted-foreground">
               <Users className="h-4 w-4" />
-              {project.applicantsCount || 0} applicants
+              {project.applicantsCount || 0} {dict.ngo?.common?.applicants || "applicants"}
             </span>
             {project.acceptedVolunteers?.length > 0 && (
               <span className="flex items-center gap-1 text-green-600">
                 <CheckCircle className="h-4 w-4" />
-                {project.acceptedVolunteers.length} accepted
+                {project.acceptedVolunteers.length} {dict.ngo?.common?.accepted || "accepted"}
               </span>
             )}
           </div>
           <Button variant="outline" size="sm" asChild>
             <Link href={`/ngo/applications?project=${project._id?.toString()}`}>
-              View Applications
+              {dict.ngo?.common?.viewApplications || "View Applications"}
             </Link>
           </Button>
         </div>

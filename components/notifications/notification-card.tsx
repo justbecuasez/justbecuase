@@ -34,6 +34,7 @@ import {
 import { cn } from "@/lib/utils"
 import { markNotificationRead, deleteNotification } from "@/lib/actions"
 import { toast } from "sonner"
+import { useDictionary } from "@/components/dictionary-provider"
 import type { NotificationType, Notification } from "@/lib/types"
 
 interface NotificationAction {
@@ -54,7 +55,7 @@ interface NotificationCardProps {
 }
 
 // Format relative time
-function formatRelativeTime(date: Date | string): string {
+function formatRelativeTime(date: Date | string, dict?: any): string {
   const now = new Date()
   const then = new Date(date)
   const diffMs = now.getTime() - then.getTime()
@@ -65,12 +66,12 @@ function formatRelativeTime(date: Date | string): string {
   const diffWeek = Math.floor(diffDay / 7)
   const diffMonth = Math.floor(diffDay / 30)
 
-  if (diffSec < 60) return "just now"
-  if (diffMin < 60) return `${diffMin}m ago`
-  if (diffHour < 24) return `${diffHour}h ago`
-  if (diffDay < 7) return `${diffDay}d ago`
-  if (diffWeek < 4) return `${diffWeek}w ago`
-  if (diffMonth < 12) return `${diffMonth}mo ago`
+  if (diffSec < 60) return dict?.volunteer?.notifications?.justNow || "just now"
+  if (diffMin < 60) return (dict?.volunteer?.notifications?.minutesAgo || "{n}m ago").replace("{n}", String(diffMin))
+  if (diffHour < 24) return (dict?.volunteer?.notifications?.hoursAgo || "{n}h ago").replace("{n}", String(diffHour))
+  if (diffDay < 7) return (dict?.volunteer?.notifications?.daysAgo || "{n}d ago").replace("{n}", String(diffDay))
+  if (diffWeek < 4) return (dict?.volunteer?.notifications?.weeksAgo || "{n}w ago").replace("{n}", String(diffWeek))
+  if (diffMonth < 12) return (dict?.volunteer?.notifications?.monthsAgo || "{n}mo ago").replace("{n}", String(diffMonth))
   return then.toLocaleDateString()
 }
 
@@ -231,60 +232,60 @@ function getNotificationConfig(type: NotificationType) {
 }
 
 // Get contextual actions based on notification type
-function getNotificationActions(notification: NotificationData): NotificationAction[] {
+function getNotificationActions(notification: NotificationData, dict?: any): NotificationAction[] {
   const actions: NotificationAction[] = []
   const { type, link } = notification
   const primaryLink = link
 
   switch (type) {
     case "new_application":
-      actions.push({ label: "Review Application", href: primaryLink || `/ngo/applications` })
+      actions.push({ label: dict?.volunteer?.notifications?.actionReviewApp || "Review Application", href: primaryLink || `/ngo/applications` })
       break
     case "application_accepted":
-      actions.push({ label: "View Project", href: primaryLink || `/volunteer/applications` })
+      actions.push({ label: dict?.volunteer?.notifications?.actionViewProject || "View Project", href: primaryLink || `/volunteer/applications` })
       break
     case "application_rejected":
-      actions.push({ label: "Browse Opportunities", href: "/volunteer/opportunities", variant: "outline" })
+      actions.push({ label: dict?.volunteer?.common?.browseOpportunities || "Browse Opportunities", href: "/volunteer/opportunities", variant: "outline" })
       break
     case "new_message":
-      actions.push({ label: "Open Chat", href: primaryLink || "/messages" })
+      actions.push({ label: dict?.volunteer?.notifications?.actionOpenChat || "Open Chat", href: primaryLink || "/messages" })
       break
     case "profile_viewed":
     case "profile_unlocked":
       if (primaryLink) {
-        actions.push({ label: "View Profile", href: primaryLink })
+        actions.push({ label: dict?.volunteer?.notifications?.actionViewProfile || "View Profile", href: primaryLink })
       }
       break
     case "subscription_activated":
-      actions.push({ label: "View Benefits", href: "/pricing" })
+      actions.push({ label: dict?.volunteer?.notifications?.actionViewBenefits || "View Benefits", href: "/pricing" })
       break
     case "project_match":
     case "followed_ngo_project":
       if (primaryLink) {
-        actions.push({ label: "View Opportunity", href: primaryLink })
+        actions.push({ label: dict?.volunteer?.notifications?.actionViewOpportunity || "View Opportunity", href: primaryLink })
       }
-      actions.push({ label: "Browse All", href: "/volunteer/opportunities", variant: "outline" })
+      actions.push({ label: dict?.volunteer?.notifications?.actionBrowseAll || "Browse All", href: "/volunteer/opportunities", variant: "outline" })
       break
     case "new_follower":
       if (primaryLink) {
-        actions.push({ label: "View Profile", href: primaryLink })
+        actions.push({ label: dict?.volunteer?.notifications?.actionViewProfile || "View Profile", href: primaryLink })
       }
       break
     case "new_review":
     case "new_endorsement":
-      actions.push({ label: "View", href: primaryLink || "/volunteer/profile" })
+      actions.push({ label: dict?.volunteer?.notifications?.actionView || "View", href: primaryLink || "/volunteer/profile" })
       break
     case "badge_earned":
     case "milestone":
-      actions.push({ label: "View Achievement", href: primaryLink || "/volunteer/impact" })
+      actions.push({ label: dict?.volunteer?.notifications?.actionViewAchievement || "View Achievement", href: primaryLink || "/volunteer/impact" })
       break
     case "application_limit_warning":
     case "application_limit_reached":
-      actions.push({ label: "Upgrade", href: "/pricing" })
+      actions.push({ label: dict?.volunteer?.notifications?.actionUpgrade || "Upgrade", href: "/pricing" })
       break
     default:
       if (primaryLink) {
-        actions.push({ label: "View Details", href: primaryLink })
+        actions.push({ label: dict?.volunteer?.common?.viewDetails || "View Details", href: primaryLink })
       }
   }
 
@@ -298,8 +299,9 @@ export function NotificationCard({
   showActions = true 
 }: NotificationCardProps) {
   const [isLoading, setIsLoading] = useState(false)
+  const dict = useDictionary()
   const config = getNotificationConfig(notification.type)
-  const actions = getNotificationActions(notification)
+  const actions = getNotificationActions(notification, dict)
   const notificationId = notification._id?.toString() || ""
   const primaryLink = notification.link
 
@@ -309,9 +311,9 @@ export function NotificationCard({
     try {
       await markNotificationRead(notificationId)
       onMarkRead?.()
-      toast.success("Marked as read")
+      toast.success(dict.volunteer?.notifications?.markedAsRead || "Marked as read")
     } catch (error) {
-      toast.error("Failed to mark as read")
+      toast.error(dict.volunteer?.notifications?.failedMarkRead || "Failed to mark as read")
     } finally {
       setIsLoading(false)
     }
@@ -322,9 +324,9 @@ export function NotificationCard({
     try {
       await deleteNotification(notificationId)
       onDelete?.()
-      toast.success("Notification deleted")
+      toast.success(dict.volunteer?.notifications?.deleted || "Notification deleted")
     } catch (error) {
-      toast.error("Failed to delete notification")
+      toast.error(dict.volunteer?.notifications?.failedDelete || "Failed to delete notification")
     } finally {
       setIsLoading(false)
     }
@@ -367,7 +369,7 @@ export function NotificationCard({
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
-                  {formatRelativeTime(notification.createdAt)}
+                  {formatRelativeTime(notification.createdAt, dict)}
                 </span>
                 {!notification.isRead && (
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
@@ -435,7 +437,7 @@ export function NotificationCard({
                 {!notification.isRead && (
                   <DropdownMenuItem onClick={handleMarkAsRead} disabled={isLoading}>
                     <Check className="h-4 w-4 mr-2" />
-                    Mark as read
+                    {dict.volunteer?.notifications?.markAsRead || "Mark as read"}
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem 
@@ -444,7 +446,7 @@ export function NotificationCard({
                   className="text-destructive focus:text-destructive"
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
+                  {dict.volunteer?.common?.delete || "Delete"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -468,15 +470,16 @@ export function NotificationCard({
 
 // Empty state component
 export function NotificationsEmpty() {
+  const dict = useDictionary()
   return (
     <Card>
       <CardContent className="py-16 text-center">
         <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
           <Bell className="h-8 w-8 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-1">All caught up!</h3>
+        <h3 className="text-lg font-semibold text-foreground mb-1">{dict.volunteer?.notifications?.allCaughtUp || "All caught up!"}</h3>
         <p className="text-sm text-muted-foreground max-w-sm mx-auto">
-          You don't have any notifications right now. We'll let you know when something important happens.
+          {dict.volunteer?.notifications?.emptyDesc || "You don't have any notifications right now. We'll let you know when something important happens."}
         </p>
       </CardContent>
     </Card>

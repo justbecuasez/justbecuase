@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import { Locale } from "@/lib/i18n-config"
 import { getSavedProjects, getVolunteerProfile } from "@/lib/actions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -23,7 +25,9 @@ function getSkillName(categoryId: string, subskillId: string): string {
   return subskill?.name || subskillId
 }
 
-export default async function SavedProjectsPage() {
+export default async function SavedProjectsPage({ params }: { params: Promise<{ lang: Locale }> }) {
+  const { lang } = await params
+  const dict = await getDictionary(lang)
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -54,9 +58,9 @@ export default async function SavedProjectsPage() {
   return (
     <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">Saved Opportunities</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">{dict.volunteer?.savedProjects?.title || "Saved Opportunities"}</h1>
             <p className="text-muted-foreground">
-              Opportunities you&apos;ve bookmarked for later
+              {dict.volunteer?.savedProjects?.subtitle || "Opportunities you've bookmarked for later"}
             </p>
           </div>
 
@@ -64,13 +68,13 @@ export default async function SavedProjectsPage() {
             <Card>
               <CardContent className="py-12 text-center">
                 <Bookmark className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="font-semibold text-foreground mb-2">No saved opportunities yet</h3>
+                <h3 className="font-semibold text-foreground mb-2">{dict.volunteer?.savedProjects?.noSavedTitle || "No saved opportunities yet"}</h3>
                 <p className="text-muted-foreground mb-4">
-                  When you find opportunities you&apos;re interested in, save them here to review later.
+                  {dict.volunteer?.savedProjects?.noSavedDesc || "When you find opportunities you're interested in, save them here to review later."}
                 </p>
                 <Button asChild>
                   <Link href="/volunteer/opportunities">
-                    Browse Opportunities
+                    {dict.volunteer?.common?.browseOpportunities || "Browse Opportunities"}
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Link>
                 </Button>
@@ -92,7 +96,7 @@ export default async function SavedProjectsPage() {
                         <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
                           <span className="flex items-center gap-1">
                             <Building2 className="h-4 w-4" />
-                            Organization
+                            {dict.volunteer?.common?.organization || "Organization"}
                           </span>
                           {project.location && (
                             <span className="flex items-center gap-1">
@@ -129,7 +133,7 @@ export default async function SavedProjectsPage() {
                       ))}
                       {(project.skillsRequired?.length || 0) > 4 && (
                         <Badge variant="secondary" className="text-xs">
-                          +{project.skillsRequired.length - 4} more
+                          +{project.skillsRequired.length - 4} {dict.volunteer?.common?.more || "more"}
                         </Badge>
                       )}
                     </div>
@@ -137,7 +141,7 @@ export default async function SavedProjectsPage() {
                     <div className="flex items-center gap-3">
                       <Button asChild>
                         <Link href={`/projects/${project._id?.toString()}`}>
-                          View Details
+                          {dict.volunteer?.common?.viewDetails || "View Details"}
                           <ArrowRight className="h-4 w-4 ml-2" />
                         </Link>
                       </Button>

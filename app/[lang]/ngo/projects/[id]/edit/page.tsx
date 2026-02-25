@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/lib/auth-context"
+import { useDictionary } from "@/components/dictionary-provider"
 import { getNGOProfile, getProjectById, updateProject } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
 import type { NGOProfile, Project } from "@/lib/types"
@@ -34,6 +35,7 @@ export default function EditProjectPage({ params }: Props) {
   const router = useRouter()
   const locale = useLocale()
   const { user, isLoading: authLoading } = useAuth()
+  const dict = useDictionary() as any
   const [ngoProfile, setNgoProfile] = useState<NGOProfile | null>(null)
   const [project, setProject] = useState<Project | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -104,7 +106,7 @@ export default function EditProjectPage({ params }: Props) {
           })
         }
       } catch (err) {
-        setError("Failed to load opportunity")
+        setError(dict.ngo?.projects?.edit?.loadError || "Failed to load opportunity")
       } finally {
         setIsLoading(false)
       }
@@ -163,10 +165,10 @@ export default function EditProjectPage({ params }: Props) {
           router.push(localePath("/ngo/projects", locale))
         }, 1500)
       } else {
-        setError(result.error || "Failed to update opportunity")
+        setError(result.error || (dict.ngo?.projects?.edit?.updateError || "Failed to update opportunity"))
       }
     } catch (err) {
-      setError("An unexpected error occurred")
+      setError(dict.ngo?.common?.unexpectedError || "An unexpected error occurred")
     } finally {
       setIsSaving(false)
     }
@@ -181,12 +183,12 @@ export default function EditProjectPage({ params }: Props) {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Opportunity Not Found</h2>
+          <h2 className="text-xl font-semibold mb-2">{dict.ngo?.projects?.edit?.notFound || "Opportunity Not Found"}</h2>
           <p className="text-muted-foreground mb-4">
-            The opportunity you&apos;re looking for doesn&apos;t exist or you don&apos;t have permission to edit it.
+            {dict.ngo?.projects?.edit?.notFoundDesc || "The opportunity you're looking for doesn't exist or you don't have permission to edit it."}
           </p>
           <Button asChild>
-            <LocaleLink href="/ngo/projects">Go to Opportunities</LocaleLink>
+            <LocaleLink href="/ngo/projects">{dict.ngo?.projects?.edit?.goToOpportunities || "Go to Opportunities"}</LocaleLink>
           </Button>
         </div>
       </div>
@@ -202,44 +204,44 @@ export default function EditProjectPage({ params }: Props) {
             className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-4"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Opportunities
+            {dict.ngo?.projects?.edit?.backToOpportunities || "Back to Opportunities"}
           </LocaleLink>
-          <h1 className="text-3xl font-bold text-foreground">Edit Opportunity</h1>
-          <p className="text-muted-foreground">Update your opportunity details</p>
+          <h1 className="text-3xl font-bold text-foreground">{dict.ngo?.projects?.edit?.title || "Edit Opportunity"}</h1>
+          <p className="text-muted-foreground">{dict.ngo?.projects?.edit?.subtitle || "Update your opportunity details"}</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Opportunity Details</CardTitle>
-            <CardDescription>Make changes to your opportunity and save when done</CardDescription>
+            <CardTitle>{dict.ngo?.postProject?.opportunityDetails || "Opportunity Details"}</CardTitle>
+            <CardDescription>{dict.ngo?.projects?.edit?.makeChanges || "Make changes to your opportunity and save when done"}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Status */}
               <div className="space-y-2">
-                <Label htmlFor="status">Opportunity Status</Label>
+                <Label htmlFor="status">{dict.ngo?.projects?.edit?.status || "Opportunity Status"}</Label>
                 <Select
                   value={formData.status}
                   onValueChange={(value: any) => setFormData({ ...formData, status: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={dict.ngo?.projects?.edit?.selectStatus || "Select status"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="open">Open</SelectItem>
-                    <SelectItem value="paused">Paused</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="closed">Closed</SelectItem>
-                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                    <SelectItem value="draft">{dict.ngo?.common?.draft || "Draft"}</SelectItem>
+                    <SelectItem value="active">{dict.ngo?.common?.active || "Active"}</SelectItem>
+                    <SelectItem value="open">{dict.ngo?.common?.open || "Open"}</SelectItem>
+                    <SelectItem value="paused">{dict.ngo?.common?.paused || "Paused"}</SelectItem>
+                    <SelectItem value="completed">{dict.ngo?.common?.completed || "Completed"}</SelectItem>
+                    <SelectItem value="closed">{dict.ngo?.common?.closed || "Closed"}</SelectItem>
+                    <SelectItem value="cancelled">{dict.ngo?.common?.cancelled || "Cancelled"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {/* Title */}
               <div className="space-y-2">
-                <Label htmlFor="title">Opportunity Title</Label>
+                <Label htmlFor="title">{dict.ngo?.common?.opportunityTitle || "Opportunity Title"}</Label>
                 <Input
                   id="title"
                   placeholder="e.g., Social Media Strategy for Environmental Campaign"
@@ -251,7 +253,7 @@ export default function EditProjectPage({ params }: Props) {
 
               {/* Description */}
               <div className="space-y-2">
-                <Label htmlFor="description">Opportunity Description</Label>
+                <Label htmlFor="description">{dict.ngo?.common?.opportunityDescription || "Opportunity Description"}</Label>
                 <Textarea
                   id="description"
                   placeholder="Describe what you need help with, the background, and any specific requirements..."
@@ -264,7 +266,7 @@ export default function EditProjectPage({ params }: Props) {
 
               {/* Skills */}
               <div className="space-y-2">
-                <Label>Skills Required</Label>
+                <Label>{dict.ngo?.common?.skillsRequired || "Skills Required"}</Label>
                 <div className="space-y-4">
                   {skillCategories.map((category) => (
                     <div key={category.id}>
@@ -292,7 +294,7 @@ export default function EditProjectPage({ params }: Props) {
 
               {/* Experience Level */}
               <div className="space-y-2">
-                <Label htmlFor="experienceLevel">Experience Level Required</Label>
+                <Label htmlFor="experienceLevel">{dict.ngo?.projects?.edit?.experienceLevel || "Experience Level Required"}</Label>
                 <Select
                   value={formData.experienceLevel}
                   onValueChange={(value: "beginner" | "intermediate" | "expert") =>
@@ -300,12 +302,12 @@ export default function EditProjectPage({ params }: Props) {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select experience level" />
+                    <SelectValue placeholder={dict.ngo?.projects?.edit?.selectExperience || "Select experience level"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="beginner">Beginner</SelectItem>
-                    <SelectItem value="intermediate">Intermediate</SelectItem>
-                    <SelectItem value="expert">Expert</SelectItem>
+                    <SelectItem value="beginner">{dict.ngo?.common?.beginner || "Beginner"}</SelectItem>
+                    <SelectItem value="intermediate">{dict.ngo?.common?.intermediate || "Intermediate"}</SelectItem>
+                    <SelectItem value="expert">{dict.ngo?.common?.expert || "Expert"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -313,7 +315,7 @@ export default function EditProjectPage({ params }: Props) {
               {/* Time & Duration */}
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="time">Time Commitment</Label>
+                  <Label htmlFor="time">{dict.ngo?.common?.timeCommitment || "Time Commitment"}</Label>
                   <Select
                     value={formData.timeCommitment}
                     onValueChange={(value) => setFormData({ ...formData, timeCommitment: value })}
@@ -322,32 +324,32 @@ export default function EditProjectPage({ params }: Props) {
                       <SelectValue placeholder="Select estimated hours" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1-2 hours">1-2 hours (Consultation)</SelectItem>
-                      <SelectItem value="5-10 hours">5-10 hours</SelectItem>
-                      <SelectItem value="10-15 hours">10-15 hours</SelectItem>
-                      <SelectItem value="15-25 hours">15-25 hours</SelectItem>
-                      <SelectItem value="25-40 hours">25-40 hours</SelectItem>
-                      <SelectItem value="40+ hours">40+ hours</SelectItem>
+                      <SelectItem value="1-2 hours">{dict.ngo?.common?.hours1to2 || "1-2 hours (Consultation)"}</SelectItem>
+                      <SelectItem value="5-10 hours">{dict.ngo?.common?.hours5to10 || "5-10 hours"}</SelectItem>
+                      <SelectItem value="10-15 hours">{dict.ngo?.common?.hours10to15 || "10-15 hours"}</SelectItem>
+                      <SelectItem value="15-25 hours">{dict.ngo?.common?.hours15to25 || "15-25 hours"}</SelectItem>
+                      <SelectItem value="25-40 hours">{dict.ngo?.common?.hours25to40 || "25-40 hours"}</SelectItem>
+                      <SelectItem value="40+ hours">{dict.ngo?.common?.hours40plus || "40+ hours"}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="duration">Duration</Label>
+                  <Label htmlFor="duration">{dict.ngo?.common?.duration || "Duration"}</Label>
                   <Select
                     value={formData.duration}
                     onValueChange={(value) => setFormData({ ...formData, duration: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select duration" />
+                      <SelectValue placeholder={dict.ngo?.projects?.edit?.selectDuration || "Select duration"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1 week">1 week</SelectItem>
-                      <SelectItem value="2-4 weeks">2-4 weeks</SelectItem>
-                      <SelectItem value="1-2 months">1-2 months</SelectItem>
-                      <SelectItem value="3-6 months">3-6 months</SelectItem>
-                      <SelectItem value="6+ months">6+ months</SelectItem>
-                      <SelectItem value="Ongoing">Ongoing</SelectItem>
+                      <SelectItem value="1 week">{dict.ngo?.common?.duration1week || "1 week"}</SelectItem>
+                      <SelectItem value="2-4 weeks">{dict.ngo?.common?.duration2to4weeks || "2-4 weeks"}</SelectItem>
+                      <SelectItem value="1-2 months">{dict.ngo?.common?.duration1to2months || "1-2 months"}</SelectItem>
+                      <SelectItem value="3-6 months">{dict.ngo?.common?.duration3to6months || "3-6 months"}</SelectItem>
+                      <SelectItem value="6+ months">{dict.ngo?.common?.duration6plusMonths || "6+ months"}</SelectItem>
+                      <SelectItem value="Ongoing">{dict.ngo?.common?.durationOngoing || "Ongoing"}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -355,7 +357,7 @@ export default function EditProjectPage({ params }: Props) {
 
               {/* Deadline */}
               <div className="space-y-2">
-                <Label htmlFor="deadline">Application Deadline</Label>
+                <Label htmlFor="deadline">{dict.ngo?.common?.applicationDeadline || "Application Deadline"}</Label>
                 <Input
                   id="deadline"
                   type="date"
@@ -366,7 +368,7 @@ export default function EditProjectPage({ params }: Props) {
 
               {/* Work Mode */}
               <div className="space-y-2">
-                <Label htmlFor="workMode">Work Mode</Label>
+                <Label htmlFor="workMode">{dict.ngo?.common?.workMode || "Work Mode"}</Label>
                 <Select
                   value={formData.workMode}
                   onValueChange={(value: "remote" | "onsite" | "hybrid") => 
@@ -377,19 +379,19 @@ export default function EditProjectPage({ params }: Props) {
                     <SelectValue placeholder="Select work mode" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="remote">Remote</SelectItem>
-                    <SelectItem value="onsite">On-site</SelectItem>
-                    <SelectItem value="hybrid">Hybrid</SelectItem>
+                    <SelectItem value="remote">{dict.ngo?.common?.remote || "Remote"}</SelectItem>
+                    <SelectItem value="onsite">{dict.ngo?.common?.onsite || "On-site"}</SelectItem>
+                    <SelectItem value="hybrid">{dict.ngo?.common?.hybrid || "Hybrid"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {formData.workMode !== "remote" && (
                 <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
+                  <Label htmlFor="location">{dict.ngo?.common?.location || "Location"}</Label>
                   <Input
                     id="location"
-                    placeholder="e.g., Mumbai, India"
+                    placeholder={dict.ngo?.common?.locationPlaceholder || "e.g., Mumbai, India"}
                     value={formData.location}
                     onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   />
@@ -398,7 +400,7 @@ export default function EditProjectPage({ params }: Props) {
 
               {/* Opportunity Type */}
               <div className="space-y-2">
-                <Label htmlFor="projectType">Opportunity Type</Label>
+                <Label htmlFor="projectType">{dict.ngo?.projects?.edit?.opportunityType || "Opportunity Type"}</Label>
                 <Select
                   value={formData.projectType}
                   onValueChange={(value: "short-term" | "long-term" | "consultation" | "ongoing") =>
@@ -406,13 +408,13 @@ export default function EditProjectPage({ params }: Props) {
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select opportunity type" />
+                    <SelectValue placeholder={dict.ngo?.projects?.edit?.selectType || "Select opportunity type"} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="short-term">Short-term</SelectItem>
-                    <SelectItem value="long-term">Long-term</SelectItem>
-                    <SelectItem value="consultation">Consultation</SelectItem>
-                    <SelectItem value="ongoing">Ongoing</SelectItem>
+                    <SelectItem value="short-term">{dict.ngo?.common?.shortTerm || "Short-term"}</SelectItem>
+                    <SelectItem value="long-term">{dict.ngo?.common?.longTerm || "Long-term"}</SelectItem>
+                    <SelectItem value="consultation">{dict.ngo?.common?.consultation || "Consultation"}</SelectItem>
+                    <SelectItem value="ongoing">{dict.ngo?.common?.ongoing || "Ongoing"}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -428,7 +430,7 @@ export default function EditProjectPage({ params }: Props) {
               {success && (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-green-600 flex items-center gap-2">
                   <CheckCircle className="h-4 w-4" />
-                  Opportunity updated successfully! Redirecting...
+                  {dict.ngo?.projects?.edit?.updateSuccess || "Opportunity updated successfully! Redirecting..."}
                 </div>
               )}
 
@@ -442,24 +444,24 @@ export default function EditProjectPage({ params }: Props) {
                 >
                   <LocaleLink href={`/ngo/projects/${id}/delete`}>
                     <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Opportunity
+                    {dict.ngo?.projects?.edit?.deleteOpportunity || "Delete Opportunity"}
                   </LocaleLink>
                 </Button>
                 
                 <div className="flex gap-4">
                   <Button type="button" variant="outline" asChild>
-                    <LocaleLink href="/ngo/projects">Cancel</LocaleLink>
+                    <LocaleLink href="/ngo/projects">{dict.ngo?.common?.cancel || "Cancel"}</LocaleLink>
                   </Button>
                   <Button type="submit" disabled={isSaving}>
                     {isSaving ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
+                        {dict.ngo?.common?.saving || "Saving..."}
                       </>
                     ) : (
                       <>
                         <Save className="mr-2 h-4 w-4" />
-                        Save Changes
+                        {dict.ngo?.common?.saveChanges || "Save Changes"}
                       </>
                     )}
                   </Button>

@@ -16,6 +16,7 @@ import { getVolunteerProfile, updateVolunteerProfile, changePassword, deleteAcco
 import { skillCategories, causes as causesList } from "@/lib/skills-data"
 import type { VolunteerSkill, ExperienceLevel } from "@/lib/types"
 import { toast } from "sonner"
+import { useDictionary } from "@/components/dictionary-provider"
 import { NotificationPermissionButton } from "@/components/notifications/notification-listener"
 import { AISkillSuggestions } from "@/components/ai/skill-suggestions"
 import { getCurrencySymbol } from "@/lib/currency"
@@ -56,6 +57,7 @@ interface PrivacySettings {
 export default function VolunteerSettingsPage() {
   const router = useRouter()
   const locale = useLocale()
+  const dict = useDictionary()
   const { data: session, isPending } = authClient.useSession()
   const [profile, setProfile] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -309,9 +311,9 @@ export default function VolunteerSettingsPage() {
   return (
     <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">Settings</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">{dict.volunteer?.settings?.title || "Settings"}</h1>
             <p className="text-muted-foreground">
-              Manage your account, skills, and preferences
+              {dict.volunteer?.settings?.subtitle || "Manage your account, skills, and preferences"}
             </p>
           </div>
 
@@ -332,11 +334,11 @@ export default function VolunteerSettingsPage() {
           <Tabs defaultValue="skills" className="space-y-6">
             <div className="overflow-x-auto -mx-2 px-2">
               <TabsList className="inline-flex w-auto min-w-full sm:w-full sm:max-w-xl sm:grid sm:grid-cols-5 h-auto gap-1">
-                <TabsTrigger value="skills" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Skills</TabsTrigger>
-                <TabsTrigger value="account" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Account</TabsTrigger>
-                <TabsTrigger value="notifications" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Alerts</TabsTrigger>
-                <TabsTrigger value="privacy" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Privacy</TabsTrigger>
-                <TabsTrigger value="billing" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">Billing</TabsTrigger>
+                <TabsTrigger value="skills" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">{dict.volunteer?.settings?.tabSkills || "Skills"}</TabsTrigger>
+                <TabsTrigger value="account" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">{dict.volunteer?.settings?.tabAccount || "Account"}</TabsTrigger>
+                <TabsTrigger value="notifications" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">{dict.volunteer?.settings?.tabAlerts || "Alerts"}</TabsTrigger>
+                <TabsTrigger value="privacy" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">{dict.volunteer?.settings?.tabPrivacy || "Privacy"}</TabsTrigger>
+                <TabsTrigger value="billing" className="whitespace-nowrap text-xs sm:text-sm px-3 py-2">{dict.volunteer?.settings?.tabBilling || "Billing"}</TabsTrigger>
               </TabsList>
             </div>
 
@@ -347,10 +349,10 @@ export default function VolunteerSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Sparkles className="h-5 w-5" />
-                      Your Skills
+                      {dict.volunteer?.settings?.yourSkills || "Your Skills"}
                     </CardTitle>
                     <CardDescription>
-                      Add or remove skills that NGOs can match you with
+                      {dict.volunteer?.settings?.skillsDesc || "Add or remove skills that NGOs can match you with"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
@@ -358,7 +360,7 @@ export default function VolunteerSettingsPage() {
                     <div className="space-y-3">
                       {skills.length === 0 ? (
                         <p className="text-muted-foreground py-4 text-center">
-                          No skills added yet. Add skills to get matched with projects.
+                          {dict.volunteer?.settings?.noSkills || "No skills added yet. Add skills to get matched with projects."}
                         </p>
                       ) : (
                         <div className="flex flex-wrap gap-2">
@@ -390,7 +392,7 @@ export default function VolunteerSettingsPage() {
                       <div className="p-4 border rounded-lg space-y-4">
                         <div className="grid sm:grid-cols-3 gap-4">
                           <div>
-                            <Label>Category</Label>
+                            <Label>{dict.volunteer?.settings?.category || "Category"}</Label>
                             <Select
                               value={newSkill.categoryId}
                               onValueChange={(value) =>
@@ -398,7 +400,7 @@ export default function VolunteerSettingsPage() {
                               }
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Select category" />
+                                <SelectValue placeholder={dict.volunteer?.settings?.selectCategory || "Select category"} />
                               </SelectTrigger>
                               <SelectContent>
                                 {skillCategories.map((cat) => (
@@ -410,7 +412,7 @@ export default function VolunteerSettingsPage() {
                             </Select>
                           </div>
                           <div>
-                            <Label>Skill</Label>
+                            <Label>{dict.volunteer?.settings?.skill || "Skill"}</Label>
                             <Select
                               value={newSkill.subskillId}
                               onValueChange={(value) =>
@@ -419,7 +421,7 @@ export default function VolunteerSettingsPage() {
                               disabled={!newSkill.categoryId}
                             >
                               <SelectTrigger>
-                                <SelectValue placeholder="Select skill" />
+                                <SelectValue placeholder={dict.volunteer?.settings?.selectSkill || "Select skill"} />
                               </SelectTrigger>
                               <SelectContent>
                                 {selectedCategory?.subskills.map((sub) => (
@@ -431,7 +433,7 @@ export default function VolunteerSettingsPage() {
                             </Select>
                           </div>
                           <div>
-                            <Label>Level</Label>
+                            <Label>{dict.volunteer?.settings?.level || "Level"}</Label>
                             <Select
                               value={newSkill.level}
                               onValueChange={(value: ExperienceLevel) =>
@@ -442,23 +444,23 @@ export default function VolunteerSettingsPage() {
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="beginner">Beginner</SelectItem>
-                                <SelectItem value="intermediate">Intermediate</SelectItem>
-                                <SelectItem value="expert">Expert</SelectItem>
+                                <SelectItem value="beginner">{dict.volunteer?.common?.beginner || "Beginner"}</SelectItem>
+                                <SelectItem value="intermediate">{dict.volunteer?.common?.intermediate || "Intermediate"}</SelectItem>
+                                <SelectItem value="expert">{dict.volunteer?.common?.expert || "Expert"}</SelectItem>
                               </SelectContent>
                             </Select>
                           </div>
                         </div>
                         <div className="flex gap-2">
                           <Button onClick={addSkill} size="sm">
-                            Add Skill
+                            {dict.volunteer?.settings?.addSkill || "Add Skill"}
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => setAddingSkill(false)}
                           >
-                            Cancel
+                            {dict.volunteer?.common?.cancel || "Cancel"}
                           </Button>
                         </div>
                       </div>
@@ -469,7 +471,7 @@ export default function VolunteerSettingsPage() {
                         className="gap-2"
                       >
                         <Plus className="h-4 w-4" />
-                        Add Skill
+                        {dict.volunteer?.settings?.addSkill || "Add Skill"}
                       </Button>
                     )}
                   </CardContent>
@@ -512,9 +514,9 @@ export default function VolunteerSettingsPage() {
 
                 <Card>
                   <CardHeader>
-                    <CardTitle>Causes You Care About</CardTitle>
+                    <CardTitle>{dict.volunteer?.settings?.causesTitle || "Causes You Care About"}</CardTitle>
                     <CardDescription>
-                      Select causes to get matched with relevant projects
+                      {dict.volunteer?.settings?.causesDesc || "Select causes to get matched with relevant projects"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -543,7 +545,7 @@ export default function VolunteerSettingsPage() {
                   ) : (
                     <Save className="h-4 w-4" />
                   )}
-                  Save Skills & Causes
+                  {dict.volunteer?.settings?.saveSkillsCauses || "Save Skills & Causes"}
                 </Button>
               </div>
             </TabsContent>
@@ -555,24 +557,24 @@ export default function VolunteerSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <User className="h-5 w-5" />
-                      Account Information
+                      {dict.volunteer?.settings?.accountInfo || "Account Information"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <Label>Full Name</Label>
+                        <Label>{dict.volunteer?.common?.fullName || "Full Name"}</Label>
                         <Input
                           value={profile?.name || session.user.name || ""}
                           disabled
                           className="mt-1.5 bg-muted"
                         />
                         <p className="text-xs text-muted-foreground mt-1">
-                          Edit in your profile settings
+                          {dict.volunteer?.settings?.editInProfile || "Edit in your profile settings"}
                         </p>
                       </div>
                       <div>
-                        <Label>Email</Label>
+                        <Label>{dict.volunteer?.common?.email || "Email"}</Label>
                         <Input
                           value={session.user.email || ""}
                           disabled
@@ -587,12 +589,12 @@ export default function VolunteerSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Lock className="h-5 w-5" />
-                      Change Password
+                      {dict.volunteer?.settings?.changePassword || "Change Password"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label htmlFor="current-password">Current Password</Label>
+                      <Label htmlFor="current-password">{dict.volunteer?.settings?.currentPassword || "Current Password"}</Label>
                       <Input
                         id="current-password"
                         type="password"
@@ -605,7 +607,7 @@ export default function VolunteerSettingsPage() {
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="new-password">New Password</Label>
+                        <Label htmlFor="new-password">{dict.volunteer?.settings?.newPassword || "New Password"}</Label>
                         <Input
                           id="new-password"
                           type="password"
@@ -617,7 +619,7 @@ export default function VolunteerSettingsPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="confirm-password">Confirm Password</Label>
+                        <Label htmlFor="confirm-password">{dict.volunteer?.settings?.confirmPassword || "Confirm Password"}</Label>
                         <Input
                           id="confirm-password"
                           type="password"
@@ -633,7 +635,7 @@ export default function VolunteerSettingsPage() {
                       {changingPassword ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       ) : null}
-                      Update Password
+                      {dict.volunteer?.settings?.updatePassword || "Update Password"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -642,7 +644,7 @@ export default function VolunteerSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Globe className="h-5 w-5" />
-                      Connected Accounts
+                      {dict.volunteer?.settings?.connectedAccounts || "Connected Accounts"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -652,13 +654,13 @@ export default function VolunteerSettingsPage() {
                           <span className="text-white font-bold">G</span>
                         </div>
                         <div>
-                          <p className="font-medium">Google</p>
+                          <p className="font-medium">{dict.volunteer?.settings?.google || "Google"}</p>
                           <p className="text-sm text-muted-foreground">
                             {session.user.email}
                           </p>
                         </div>
                       </div>
-                      <Badge variant="secondary">Connected</Badge>
+                      <Badge variant="secondary">{dict.volunteer?.settings?.connected || "Connected"}</Badge>
                     </div>
                   </CardContent>
                 </Card>
@@ -672,10 +674,10 @@ export default function VolunteerSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <BellRing className="h-5 w-5" />
-                      Browser Notifications
+                      {dict.volunteer?.settings?.browserNotifications || "Browser Notifications"}
                     </CardTitle>
                     <CardDescription>
-                      Get instant notifications in your browser when something important happens
+                      {dict.volunteer?.settings?.browserNotificationsDesc || "Get instant notifications in your browser when something important happens"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -687,18 +689,18 @@ export default function VolunteerSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Bell className="h-5 w-5" />
-                      Notification Preferences
+                      {dict.volunteer?.settings?.notificationPreferences || "Notification Preferences"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     <div>
-                      <h4 className="font-medium mb-4">Email Notifications</h4>
+                      <h4 className="font-medium mb-4">{dict.volunteer?.settings?.emailNotifications || "Email Notifications"}</h4>
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium">Application Updates</p>
+                            <p className="font-medium">{dict.volunteer?.settings?.applicationUpdates || "Application Updates"}</p>
                             <p className="text-sm text-muted-foreground">
-                              Get notified when NGOs respond to your applications
+                              {dict.volunteer?.settings?.applicationUpdatesDesc || "Get notified when NGOs respond to your applications"}
                             </p>
                           </div>
                           <Switch
@@ -710,9 +712,9 @@ export default function VolunteerSettingsPage() {
                         </div>
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium">New Messages</p>
+                            <p className="font-medium">{dict.volunteer?.settings?.newMessages || "New Messages"}</p>
                             <p className="text-sm text-muted-foreground">
-                              Receive emails for new messages from NGOs
+                              {dict.volunteer?.settings?.newMessagesDesc || "Receive emails for new messages from NGOs"}
                             </p>
                           </div>
                           <Switch
@@ -724,9 +726,9 @@ export default function VolunteerSettingsPage() {
                         </div>
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium">Opportunity Recommendations</p>
+                            <p className="font-medium">{dict.volunteer?.settings?.opportunityRecommendations || "Opportunity Recommendations"}</p>
                             <p className="text-sm text-muted-foreground">
-                              Weekly digest of opportunities matching your skills
+                              {dict.volunteer?.settings?.opportunityRecommendationsDesc || "Weekly digest of opportunities matching your skills"}
                             </p>
                           </div>
                           <Switch
@@ -740,7 +742,7 @@ export default function VolunteerSettingsPage() {
                     </div>
                     <Button onClick={handleSavePrivacy} disabled={savingPrivacy}>
                       {savingPrivacy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                      Save Preferences
+                      {dict.volunteer?.settings?.savePreferences || "Save Preferences"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -754,15 +756,15 @@ export default function VolunteerSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Eye className="h-5 w-5" />
-                      Profile Visibility
+                      {dict.volunteer?.settings?.profileVisibility || "Profile Visibility"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium">Profile Status</p>
+                        <p className="font-medium">{dict.volunteer?.settings?.profileStatus || "Profile Status"}</p>
                         <p className="text-sm text-muted-foreground">
-                          Make your profile visible to NGOs
+                          {dict.volunteer?.settings?.profileStatusDesc || "Make your profile visible to NGOs"}
                         </p>
                       </div>
                       <Switch
@@ -774,9 +776,9 @@ export default function VolunteerSettingsPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium">Show in Search Results</p>
+                        <p className="font-medium">{dict.volunteer?.settings?.showInSearch || "Show in Search Results"}</p>
                         <p className="text-sm text-muted-foreground">
-                          Allow your profile to appear in impact agent searches
+                          {dict.volunteer?.settings?.showInSearchDesc || "Allow your profile to appear in impact agent searches"}
                         </p>
                       </div>
                       <Switch
@@ -788,7 +790,7 @@ export default function VolunteerSettingsPage() {
                     </div>
                     <Button onClick={handleSavePrivacy} disabled={savingPrivacy}>
                       {savingPrivacy && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                      Save Privacy Settings
+                      {dict.volunteer?.settings?.savePrivacySettings || "Save Privacy Settings"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -797,15 +799,15 @@ export default function VolunteerSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Download className="h-5 w-5" />
-                      Data & Privacy
+                      {dict.volunteer?.settings?.dataPrivacy || "Data & Privacy"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between p-4 border rounded-lg">
                       <div>
-                        <p className="font-medium">Download Your Data</p>
+                        <p className="font-medium">{dict.volunteer?.settings?.downloadYourData || "Download Your Data"}</p>
                         <p className="text-sm text-muted-foreground">
-                          Get a copy of your profile and activity data
+                          {dict.volunteer?.settings?.downloadDataDesc || "Get a copy of your profile and activity data"}
                         </p>
                       </div>
                       <Button 
@@ -814,7 +816,7 @@ export default function VolunteerSettingsPage() {
                         disabled={downloadingData}
                       >
                         {downloadingData && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
-                        {downloadingData ? "Preparing..." : "Download Data"}
+                        {downloadingData ? (dict.volunteer?.settings?.preparing || "Preparing...") : (dict.volunteer?.settings?.downloadData || "Download Data")}
                       </Button>
                     </div>
                   </CardContent>
@@ -824,37 +826,37 @@ export default function VolunteerSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-red-600">
                       <Trash2 className="h-5 w-5" />
-                      Danger Zone
+                      {dict.volunteer?.settings?.dangerZone || "Danger Zone"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {!showDeleteConfirm ? (
                       <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50 dark:bg-red-950">
                         <div>
-                          <p className="font-medium text-red-600">Delete Account</p>
+                          <p className="font-medium text-red-600">{dict.volunteer?.settings?.deleteAccount || "Delete Account"}</p>
                           <p className="text-sm text-muted-foreground">
-                            Permanently delete your account and all associated data
+                            {dict.volunteer?.settings?.deleteAccountDesc || "Permanently delete your account and all associated data"}
                           </p>
                         </div>
                         <Button
                           variant="destructive"
                           onClick={() => setShowDeleteConfirm(true)}
                         >
-                          Delete Account
+                          {dict.volunteer?.settings?.deleteAccount || "Delete Account"}
                         </Button>
                       </div>
                     ) : (
                       <div className="p-4 border border-red-200 rounded-lg bg-red-50 dark:bg-red-950 space-y-4">
                         <p className="text-red-600 font-medium">
-                          Are you sure? This action cannot be undone.
+                          {dict.volunteer?.settings?.deleteConfirmWarning || "Are you sure? This action cannot be undone."}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          Type <strong>DELETE</strong> to confirm:
+                          {dict.volunteer?.settings?.deleteConfirmPrompt || <>Type <strong>DELETE</strong> to confirm:</>}
                         </p>
                         <Input
                           value={deleteConfirmText}
                           onChange={(e) => setDeleteConfirmText(e.target.value)}
-                          placeholder="Type DELETE"
+                          placeholder={dict.volunteer?.settings?.typeDeletePlaceholder || "Type DELETE"}
                           className="max-w-xs"
                         />
                         <div className="flex gap-2">
@@ -866,7 +868,7 @@ export default function VolunteerSettingsPage() {
                             {deleting ? (
                               <Loader2 className="h-4 w-4 animate-spin mr-2" />
                             ) : null}
-                            Confirm Delete
+                            {dict.volunteer?.settings?.confirmDelete || "Confirm Delete"}
                           </Button>
                           <Button
                             variant="outline"
@@ -875,7 +877,7 @@ export default function VolunteerSettingsPage() {
                               setDeleteConfirmText("")
                             }}
                           >
-                            Cancel
+                            {dict.volunteer?.common?.cancel || "Cancel"}
                           </Button>
                         </div>
                       </div>
@@ -893,21 +895,21 @@ export default function VolunteerSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <CreditCard className="h-5 w-5" />
-                      Your Pricing & Impact Agent Type
+                      {dict.volunteer?.settings?.pricingTitle || "Your Pricing & Impact Agent Type"}
                     </CardTitle>
                     <CardDescription>
-                      Set your impact agent type and rates for NGOs
+                      {dict.volunteer?.settings?.pricingDesc || "Set your impact agent type and rates for NGOs"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Volunteer Type Selection */}
                     <div className="space-y-3">
-                      <Label className="text-base font-medium">Impact Agent Type</Label>
+                      <Label className="text-base font-medium">{dict.volunteer?.common?.impactAgentType || "Impact Agent Type"}</Label>
                       <div className="grid sm:grid-cols-3 gap-3">
                         {[
-                          { value: "free", label: "Pro-Bono Only", desc: "Contribute for free", icon: "❤️" },
-                          { value: "paid", label: "Paid Only", desc: "Charge for your time", icon: "💰" },
-                          { value: "both", label: "Open to Both", desc: "Flexible based on opportunity", icon: "💡" },
+                          { value: "free", label: dict.volunteer?.common?.proBonoOnly || "Pro-Bono Only", desc: dict.volunteer?.common?.proBonoDesc || "Contribute for free", icon: "❤️" },
+                          { value: "paid", label: dict.volunteer?.common?.paidOnly || "Paid Only", desc: dict.volunteer?.common?.paidDesc || "Charge for your time", icon: "💰" },
+                          { value: "both", label: dict.volunteer?.common?.openToBoth || "Open to Both", desc: dict.volunteer?.common?.openToBothDesc || "Flexible based on opportunity", icon: "💡" },
                         ].map((type) => (
                           <div
                             key={type.value}
@@ -941,13 +943,13 @@ export default function VolunteerSettingsPage() {
                       <div className="space-y-4 p-4 border rounded-lg bg-green-50 dark:bg-green-950/20">
                         <h3 className="font-medium text-foreground flex items-center gap-2">
                           <Clock className="h-4 w-4 text-green-600" />
-                          Free Hours Contribution
+                          {dict.volunteer?.common?.freeHoursContribution || "Free Hours Contribution"}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          How many free hours per month would you like to offer NGOs? After these hours, your paid rate applies.
+                          {dict.volunteer?.settings?.freeHoursDesc || "How many free hours per month would you like to offer NGOs?"}
                         </p>
                         <div className="space-y-2">
-                          <Label htmlFor="freeHoursPerMonth">Free Hours per Month</Label>
+                          <Label htmlFor="freeHoursPerMonth">{dict.volunteer?.common?.freeHoursPerMonth || "Free Hours per Month"}</Label>
                           <div className="flex items-center gap-4">
                             <Input
                               id="freeHoursPerMonth"
@@ -964,7 +966,7 @@ export default function VolunteerSettingsPage() {
                                 })
                               }
                             />
-                            <span className="text-sm text-muted-foreground">hours/month</span>
+                            <span className="text-sm text-muted-foreground">{dict.volunteer?.common?.hoursPerMonth || "hours/month"}</span>
                           </div>
                         </div>
                       </div>
@@ -975,12 +977,12 @@ export default function VolunteerSettingsPage() {
                       <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
                         <h3 className="font-medium text-foreground flex items-center gap-2">
                           <CreditCard className="h-4 w-4 text-green-600" />
-                          Your Rates
+                          {dict.volunteer?.settings?.yourRates || "Your Rates"}
                         </h3>
                         
                         <div className="grid sm:grid-cols-3 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor="currency">Currency</Label>
+                            <Label htmlFor="currency">{dict.volunteer?.common?.currency || "Currency"}</Label>
                             <select
                               id="currency"
                               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -997,11 +999,11 @@ export default function VolunteerSettingsPage() {
                               <option value="AED">د.إ AED</option>
                               <option value="MYR">RM MYR</option>
                             </select>
-                            <p className="text-xs text-muted-foreground">Select your currency</p>
+                            <p className="text-xs text-muted-foreground">{dict.volunteer?.common?.selectCurrency || "Select your currency"}</p>
                           </div>
                           
                           <div className="space-y-2">
-                            <Label htmlFor="hourlyRate">Hourly Rate</Label>
+                            <Label htmlFor="hourlyRate">{dict.volunteer?.common?.hourlyRate || "Hourly Rate"}</Label>
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                                 {getCurrencySymbol(profile?.currency || "USD")}
@@ -1020,11 +1022,11 @@ export default function VolunteerSettingsPage() {
                                 }
                               />
                             </div>
-                            <p className="text-xs text-muted-foreground">Your standard hourly rate</p>
+                            <p className="text-xs text-muted-foreground">{dict.volunteer?.common?.hourlyRateDesc || "Your standard hourly rate"}</p>
                           </div>
                           
                           <div className="space-y-2">
-                            <Label htmlFor="discountedRate">Discounted Rate for NGOs</Label>
+                            <Label htmlFor="discountedRate">{dict.volunteer?.common?.discountedRate || "Discounted Rate for NGOs"}</Label>
                             <div className="relative">
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                                 {getCurrencySymbol(profile?.currency || "USD")}
@@ -1043,7 +1045,7 @@ export default function VolunteerSettingsPage() {
                                 }
                               />
                             </div>
-                            <p className="text-xs text-muted-foreground">Special discounted rate for non-profits (Low Bono)</p>
+                            <p className="text-xs text-muted-foreground">{dict.volunteer?.common?.discountedRateDesc || "Special discounted rate for non-profits (Low Bono)"}</p>
                           </div>
                         </div>
                         
@@ -1051,7 +1053,7 @@ export default function VolunteerSettingsPage() {
                           <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/20 p-2 rounded">
                             <CheckCircle className="h-4 w-4" />
                             <span>
-                              NGOs save {Math.round(((profile.hourlyRate - profile.discountedRate) / profile.hourlyRate) * 100)}% with your discounted rate!
+                              {(dict.volunteer?.common?.ngoSavingsMessage || "NGOs save {percent}% with your discounted rate!").replace("{percent}", String(Math.round(((profile.hourlyRate - profile.discountedRate) / profile.hourlyRate) * 100)))}
                             </span>
                           </div>
                         )}
@@ -1085,12 +1087,12 @@ export default function VolunteerSettingsPage() {
                       {isSaving ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Saving...
+                          {dict.volunteer?.common?.saving || "Saving..."}
                         </>
                       ) : (
                         <>
                           <Save className="mr-2 h-4 w-4" />
-                          Save Pricing
+                          {dict.volunteer?.settings?.savePricing || "Save Pricing"}
                         </>
                       )}
                     </Button>
@@ -1102,7 +1104,7 @@ export default function VolunteerSettingsPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Sparkles className="h-5 w-5" />
-                      Subscription Plan
+                      {dict.volunteer?.settings?.subscriptionPlan || "Subscription Plan"}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -1110,7 +1112,7 @@ export default function VolunteerSettingsPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="font-medium text-lg">
-                            {profile?.subscriptionPlan === "pro" ? "Pro Plan" : "Free Plan"}
+                            {profile?.subscriptionPlan === "pro" ? (dict.volunteer?.settings?.proPlan || "Pro Plan") : (dict.volunteer?.settings?.freePlan || "Free Plan")}
                           </p>
                           <Badge
                             variant={profile?.subscriptionPlan === "pro" ? "default" : "secondary"}
@@ -1120,14 +1122,14 @@ export default function VolunteerSettingsPage() {
                         </div>
                         <p className="text-sm text-muted-foreground mt-1">
                           {profile?.subscriptionPlan === "pro"
-                            ? "Unlimited applications per month"
-                            : `${3 - (profile?.monthlyApplicationsUsed || 0)} applications remaining this month`
+                            ? (dict.volunteer?.settings?.unlimitedApps || "Unlimited applications per month")
+                            : `${3 - (profile?.monthlyApplicationsUsed || 0)} ${dict.volunteer?.settings?.appsRemaining || "applications remaining this month"}`
                           }
                         </p>
                       </div>
                       {profile?.subscriptionPlan !== "pro" && (
                         <Button variant="outline" onClick={() => router.push(localePath("/checkout?plan=volunteer-pro", locale))}>
-                          Upgrade to Pro
+                          {dict.volunteer?.common?.upgradeToPro || "Upgrade to Pro"}
                         </Button>
                       )}
                     </div>

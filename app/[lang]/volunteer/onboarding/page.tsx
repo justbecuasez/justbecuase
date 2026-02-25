@@ -36,6 +36,7 @@ import { skillCategories, experienceLevels, causes, workModes } from "@/lib/skil
 import { saveVolunteerOnboarding, completeOnboarding } from "@/lib/actions"
 import { authClient } from "@/lib/auth-client"
 import { OnboardingPageSkeleton } from "@/components/ui/page-skeletons"
+import { useDictionary } from "@/components/dictionary-provider"
 
 type SelectedSkill = {
   categoryId: string
@@ -46,6 +47,7 @@ type SelectedSkill = {
 export default function VolunteerOnboardingPage() {
   const router = useRouter()
   const locale = useLocale()
+  const dict = useDictionary()
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [isCheckingAuth, setIsCheckingAuth] = useState(true)
@@ -122,11 +124,11 @@ export default function VolunteerOnboardingPage() {
   // Geolocation function using react-geolocated
   const getExactLocation = async () => {
     if (!isGeolocationAvailable) {
-      setError("Geolocation is not supported by your browser");
+      setError(dict.volunteer?.onboarding?.geoNotSupported || "Geolocation is not supported by your browser");
       return;
     }
     if (!isGeolocationEnabled) {
-      setError("Geolocation is disabled. Please enable location services.");
+      setError(dict.volunteer?.onboarding?.geoDisabled || "Geolocation is disabled. Please enable location services.");
       return;
     }
     setError(""); // Clear any previous errors
@@ -142,13 +144,13 @@ export default function VolunteerOnboardingPage() {
     
     if (!isGeolocationAvailable) {
       console.log('[Location Debug] Geolocation not supported by browser');
-      setError("Geolocation is not supported by your browser");
+      setError(dict.volunteer?.onboarding?.geoNotSupported || "Geolocation is not supported by your browser");
       setIsGettingLocation(false);
       return;
     }
     if (!isGeolocationEnabled) {
       console.log('[Location Debug] Geolocation is disabled');
-      setError("Geolocation is disabled. Please enable location services.");
+      setError(dict.volunteer?.onboarding?.geoDisabled || "Geolocation is disabled. Please enable location services.");
       setIsGettingLocation(false);
       return;
     }
@@ -499,14 +501,14 @@ export default function VolunteerOnboardingPage() {
   const renderStep1 = () => (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">Tell us about yourself</h2>
-        <p className="text-muted-foreground">Help NGOs understand who you are</p>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{dict.volunteer?.onboarding?.step1Title || "Tell us about yourself"}</h2>
+        <p className="text-muted-foreground">{dict.volunteer?.onboarding?.step1Subtitle || "Help NGOs understand who you are"}</p>
       </div>
 
       <div className="grid gap-4">
         {/* Phone Number with Verification */}
         <div className="space-y-3">
-          <Label htmlFor="phone">Phone Number <span className="text-destructive">*</span></Label>
+          <Label htmlFor="phone">{dict.volunteer?.common?.phoneNumber || "Phone Number"} <span className="text-destructive">*</span></Label>
           
           {phoneVerificationStep === "input" && (
             <div className="flex gap-2">
@@ -529,7 +531,7 @@ export default function VolunteerOnboardingPage() {
                 {phoneOtpLoading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "Verify"
+                  dict.volunteer?.onboarding?.verify || "Verify"
                 )}
               </Button>
             </div>
@@ -539,8 +541,8 @@ export default function VolunteerOnboardingPage() {
             <div className="p-4 rounded-lg border bg-muted/50 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium">Enter verification code</p>
-                  <p className="text-xs text-muted-foreground">Sent to {profile.phone}</p>
+                  <p className="text-sm font-medium">{dict.volunteer?.onboarding?.enterVerificationCode || "Enter verification code"}</p>
+                  <p className="text-xs text-muted-foreground">{dict.volunteer?.onboarding?.sentTo || "Sent to"} {profile.phone}</p>
                 </div>
                 <Button
                   type="button"
@@ -590,20 +592,20 @@ export default function VolunteerOnboardingPage() {
                   {phoneOtpLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Verifying...
+                      {dict.volunteer?.onboarding?.verifying || "Verifying..."}
                     </>
                   ) : (
                     <>
                       <ShieldCheck className="mr-2 h-4 w-4" />
-                      Verify Phone
+                      {dict.volunteer?.onboarding?.verifyPhone || "Verify Phone"}
                     </>
                   )}
                 </Button>
                 
                 <p className="text-xs text-center text-muted-foreground">
-                  Didn't receive code?{" "}
+                  {dict.volunteer?.onboarding?.didntReceiveCode || "Didn't receive code?"}{" "}
                   {phoneResendCooldown > 0 ? (
-                    <span>Resend in {phoneResendCooldown}s</span>
+                    <span>{(dict.volunteer?.onboarding?.resendIn || "Resend in {n}s").replace("{n}", String(phoneResendCooldown))}</span>
                   ) : (
                     <button
                       type="button"
@@ -611,7 +613,7 @@ export default function VolunteerOnboardingPage() {
                       onClick={sendPhoneOtp}
                       disabled={phoneOtpLoading}
                     >
-                      Resend
+                      {dict.volunteer?.onboarding?.resend || "Resend"}
                     </button>
                   )}
                 </p>
@@ -624,7 +626,7 @@ export default function VolunteerOnboardingPage() {
               <CheckCircle className="h-5 w-5 text-green-600" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-green-700 dark:text-green-400">{profile.phone}</p>
-                <p className="text-xs text-green-600 dark:text-green-500">Phone verified</p>
+                <p className="text-xs text-green-600 dark:text-green-500">{dict.volunteer?.onboarding?.phoneVerified || "Phone verified"}</p>
               </div>
               <Button
                 type="button"
@@ -643,7 +645,7 @@ export default function VolunteerOnboardingPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="location">Location</Label>
+          <Label htmlFor="location">{dict.volunteer?.common?.location || "Location"}</Label>
           <div className="flex gap-2">
             <div className="relative flex-1">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -667,20 +669,20 @@ export default function VolunteerOnboardingPage() {
               ) : (
                 <>
                   <LocateFixed className="h-4 w-4 mr-2" />
-                  Use my location
+                  {dict.volunteer?.onboarding?.useMyLocation || "Use my location"}
                 </>
               )}
             </Button>
           </div>
           {coordinates && (
             <p className="text-xs text-muted-foreground">
-              📍 Coordinates: {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
+              📍 {dict.volunteer?.onboarding?.coordinates || "Coordinates:"} {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
             </p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="bio">Tell us about yourself</Label>
+          <Label htmlFor="bio">{dict.volunteer?.onboarding?.bioLabel || "Tell us about yourself"}</Label>
           <Textarea
             id="bio"
             placeholder="Share your background, interests, and what drives you to make an impact..."
@@ -692,7 +694,7 @@ export default function VolunteerOnboardingPage() {
 
         <div className="grid md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="linkedin">LinkedIn URL (optional)</Label>
+            <Label htmlFor="linkedin">{dict.volunteer?.onboarding?.linkedinOptional || "LinkedIn URL (optional)"}</Label>
             <Input
               id="linkedin"
               placeholder="https://linkedin.com/in/yourprofile"
@@ -701,7 +703,7 @@ export default function VolunteerOnboardingPage() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="portfolio">Portfolio URL (optional)</Label>
+            <Label htmlFor="portfolio">{dict.volunteer?.onboarding?.portfolioOptional || "Portfolio URL (optional)"}</Label>
             <Input
               id="portfolio"
               placeholder="https://yourportfolio.com"
@@ -717,9 +719,9 @@ export default function VolunteerOnboardingPage() {
   const renderStep2 = () => (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">What are your skills?</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{dict.volunteer?.onboarding?.step2Title || "What are your skills?"}</h2>
         <p className="text-muted-foreground">
-          Select the skills you can offer to NGOs. You can add up to 10 skills.
+          {dict.volunteer?.onboarding?.step2Subtitle || "Select the skills you can offer to NGOs. You can add up to 10 skills."}
         </p>
       </div>
 
@@ -749,7 +751,7 @@ export default function VolunteerOnboardingPage() {
               {skillCategories.find((c) => c.id === activeCategory)?.name}
             </CardTitle>
             <CardDescription>
-              Select the specific skills you have in this category
+              {dict.volunteer?.onboarding?.selectSkillsInCategory || "Select the specific skills you have in this category"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -805,7 +807,7 @@ export default function VolunteerOnboardingPage() {
       {selectedSkills.length > 0 && (
         <div className="p-4 rounded-lg bg-muted/50">
           <p className="text-sm text-muted-foreground mb-2">
-            Selected skills ({selectedSkills.length}/10):
+            {(dict.volunteer?.onboarding?.selectedSkillsCount || "Selected skills ({count}/10):").replace("{count}", String(selectedSkills.length))}
           </p>
           <div className="flex flex-wrap gap-2">
             {selectedSkills.map((skill) => {
@@ -827,8 +829,8 @@ export default function VolunteerOnboardingPage() {
   const renderStep3 = () => (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">What causes do you care about?</h2>
-        <p className="text-muted-foreground">Select up to 5 causes you're passionate about</p>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{dict.volunteer?.onboarding?.step3Title || "What causes do you care about?"}</h2>
+        <p className="text-muted-foreground">{dict.volunteer?.onboarding?.step3Subtitle || "Select up to 5 causes you're passionate about"}</p>
       </div>
 
       <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -856,7 +858,7 @@ export default function VolunteerOnboardingPage() {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Selected: {selectedCauses.length}/5
+        {(dict.volunteer?.onboarding?.selectedCausesCount || "Selected: {count}/5").replace("{count}", String(selectedCauses.length))}
       </p>
     </div>
   )
@@ -864,15 +866,15 @@ export default function VolunteerOnboardingPage() {
   const renderStep4 = () => (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">Your work preferences</h2>
-        <p className="text-muted-foreground">Help us match you with the right opportunities</p>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{dict.volunteer?.onboarding?.step4Title || "Your work preferences"}</h2>
+        <p className="text-muted-foreground">{dict.volunteer?.onboarding?.step4Subtitle || "Help us match you with the right opportunities"}</p>
       </div>
 
       <div className="space-y-6">
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
             <DollarSign className="h-4 w-4" />
-            Impact Agent Type
+            {dict.volunteer?.common?.impactAgentType || "Impact Agent Type"}
           </Label>
           <RadioGroup
             value={workPreferences.volunteerType}
@@ -891,9 +893,9 @@ export default function VolunteerOnboardingPage() {
             >
               <RadioGroupItem value="free" id="free" className="sr-only" />
               <Heart className="h-6 w-6 mb-2 text-primary" />
-              <span className="font-medium">Pro-Bono Only</span>
+              <span className="font-medium">{dict.volunteer?.common?.proBonoOnly || "Pro-Bono Only"}</span>
               <span className="text-xs text-muted-foreground text-center mt-1">
-                Contribute for free
+                {dict.volunteer?.common?.proBonoDesc || "Contribute for free"}
               </span>
             </Label>
             <Label
@@ -906,9 +908,9 @@ export default function VolunteerOnboardingPage() {
             >
               <RadioGroupItem value="paid" id="paid" className="sr-only" />
               <DollarSign className="h-6 w-6 mb-2 text-green-600" />
-              <span className="font-medium">Paid Only</span>
+              <span className="font-medium">{dict.volunteer?.common?.paidOnly || "Paid Only"}</span>
               <span className="text-xs text-muted-foreground text-center mt-1">
-                Charge for your time
+                {dict.volunteer?.common?.paidDesc || "Charge for your time"}
               </span>
             </Label>
             <Label
@@ -921,9 +923,9 @@ export default function VolunteerOnboardingPage() {
             >
               <RadioGroupItem value="both" id="both" className="sr-only" />
               <Lightbulb className="h-6 w-6 mb-2 text-amber-500" />
-              <span className="font-medium">Open to Both</span>
+              <span className="font-medium">{dict.volunteer?.common?.openToBoth || "Open to Both"}</span>
               <span className="text-xs text-muted-foreground text-center mt-1">
-                Flexible based on project
+                {dict.volunteer?.common?.openToBothDesc || "Flexible based on project"}
               </span>
             </Label>
           </RadioGroup>
@@ -936,13 +938,13 @@ export default function VolunteerOnboardingPage() {
             <div className="space-y-4 p-4 border rounded-lg bg-green-50 dark:bg-green-950/20">
               <div className="flex items-center gap-2 mb-2">
                 <Clock className="h-5 w-5 text-green-600" />
-                <h3 className="font-medium text-foreground">Free Hours Contribution</h3>
+                <h3 className="font-medium text-foreground">{dict.volunteer?.common?.freeHoursContribution || "Free Hours Contribution"}</h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                Would you like to offer some free hours per month for NGOs? After these hours, your paid rate applies.
+                {dict.volunteer?.onboarding?.freeHoursDesc || "Would you like to offer some free hours per month for NGOs? After these hours, your paid rate applies."}
               </p>
               <div className="space-y-2">
-                <Label htmlFor="freeHoursPerMonth">Free Hours per Month</Label>
+                <Label htmlFor="freeHoursPerMonth">{dict.volunteer?.common?.freeHoursPerMonth || "Free Hours per Month"}</Label>
                 <div className="flex items-center gap-4">
                   <Input
                     id="freeHoursPerMonth"
@@ -959,10 +961,10 @@ export default function VolunteerOnboardingPage() {
                       })
                     }
                   />
-                  <span className="text-sm text-muted-foreground">hours/month</span>
+                  <span className="text-sm text-muted-foreground">{dict.volunteer?.common?.hoursPerMonth || "hours/month"}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Example: If you set 5 free hours, NGOs can use your services for 5 hours at no charge, then your hourly rate applies.
+                  {dict.volunteer?.onboarding?.freeHoursExample || "Example: If you set 5 free hours, NGOs can use your services for 5 hours at no charge, then your hourly rate applies."}
                 </p>
               </div>
             </div>
@@ -976,12 +978,12 @@ export default function VolunteerOnboardingPage() {
             <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
               <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="h-5 w-5 text-green-600" />
-                <h3 className="font-medium text-foreground">Your Pricing</h3>
+                <h3 className="font-medium text-foreground">{dict.volunteer?.onboarding?.yourPricing || "Your Pricing"}</h3>
               </div>
               
               <div className="grid sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
+                  <Label htmlFor="currency">{dict.volunteer?.common?.currency || "Currency"}</Label>
                   <select
                     id="currency"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -998,11 +1000,11 @@ export default function VolunteerOnboardingPage() {
                     <option value="AED">د.إ AED</option>
                     <option value="MYR">RM MYR</option>
                   </select>
-                  <p className="text-xs text-muted-foreground">Select your currency</p>
+                  <p className="text-xs text-muted-foreground">{dict.volunteer?.common?.selectCurrency || "Select your currency"}</p>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="hourlyRate">Hourly Rate</Label>
+                  <Label htmlFor="hourlyRate">{dict.volunteer?.common?.hourlyRate || "Hourly Rate"}</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                       {getCurrencySymbol(workPreferences.currency || "USD")}
@@ -1021,11 +1023,11 @@ export default function VolunteerOnboardingPage() {
                       }
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">Your standard hourly rate</p>
+                  <p className="text-xs text-muted-foreground">{dict.volunteer?.common?.hourlyRateDesc || "Your standard hourly rate"}</p>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="discountedRate">Discounted Rate for NGOs</Label>
+                  <Label htmlFor="discountedRate">{dict.volunteer?.common?.discountedRate || "Discounted Rate for NGOs"}</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                       {getCurrencySymbol(workPreferences.currency || "USD")}
@@ -1044,7 +1046,7 @@ export default function VolunteerOnboardingPage() {
                       }
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">Special discounted rate for non-profits (Low Bono)</p>
+                  <p className="text-xs text-muted-foreground">{dict.volunteer?.common?.discountedRateDesc || "Special discounted rate for non-profits (Low Bono)"}</p>
                 </div>
               </div>
               
@@ -1052,7 +1054,7 @@ export default function VolunteerOnboardingPage() {
                 <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/20 p-2 rounded">
                   <CheckCircle className="h-4 w-4" />
                   <span>
-                    NGOs save {Math.round(((workPreferences.hourlyRate - workPreferences.discountedRate) / workPreferences.hourlyRate) * 100)}% with your discounted rate!
+                    {(dict.volunteer?.common?.ngoSavingsMessage || "NGOs save {percent}% with your discounted rate!").replace("{percent}", String(Math.round(((workPreferences.hourlyRate - workPreferences.discountedRate) / workPreferences.hourlyRate) * 100)))}
                   </span>
                 </div>
               )}
@@ -1065,7 +1067,7 @@ export default function VolunteerOnboardingPage() {
         <div className="space-y-3">
           <Label className="text-base font-medium flex items-center gap-2">
             <MapPin className="h-4 w-4" />
-            Work Mode
+            {dict.volunteer?.common?.workMode || "Work Mode"}
           </Label>
           <RadioGroup
             value={workPreferences.workMode}
@@ -1098,7 +1100,7 @@ export default function VolunteerOnboardingPage() {
           <div className="space-y-3">
             <Label className="text-base font-medium flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Hours per Week
+              {dict.volunteer?.onboarding?.hoursPerWeek || "Hours per Week"}
             </Label>
             <RadioGroup
               value={workPreferences.hoursPerWeek}
@@ -1107,18 +1109,23 @@ export default function VolunteerOnboardingPage() {
               }
               className="space-y-2"
             >
-              {["1-5", "5-10", "10-20", "20+"].map((hours) => (
+              {[
+                { value: "1-5", label: dict.volunteer?.common?.time1to5 || "1-5 hours/week" },
+                { value: "5-10", label: dict.volunteer?.common?.time5to10 || "5-10 hours/week" },
+                { value: "10-20", label: dict.volunteer?.common?.time10to20 || "10-20 hours/week" },
+                { value: "20+", label: dict.volunteer?.common?.time20plus || "20+ hours/week" },
+              ].map((option) => (
                 <Label
-                  key={hours}
-                  htmlFor={`hours-${hours}`}
+                  key={option.value}
+                  htmlFor={`hours-${option.value}`}
                   className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all ${
-                    workPreferences.hoursPerWeek === hours
+                    workPreferences.hoursPerWeek === option.value
                       ? "border-primary bg-primary/5"
                       : "border-border hover:border-primary/50"
                   }`}
                 >
-                  <RadioGroupItem value={hours} id={`hours-${hours}`} className="mr-3" />
-                  {hours} hours/week
+                  <RadioGroupItem value={option.value} id={`hours-${option.value}`} className="mr-3" />
+                  {option.label}
                 </Label>
               ))}
             </RadioGroup>
@@ -1127,7 +1134,7 @@ export default function VolunteerOnboardingPage() {
           <div className="space-y-3">
             <Label className="text-base font-medium flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
-              Availability
+              {dict.volunteer?.onboarding?.availability || "Availability"}
             </Label>
             <RadioGroup
               value={workPreferences.availability}
@@ -1137,10 +1144,10 @@ export default function VolunteerOnboardingPage() {
               className="space-y-2"
             >
               {[
-                { id: "weekdays", label: "Weekdays (9am-5pm)" },
-                { id: "evenings", label: "Evenings (after 6pm)" },
-                { id: "weekends", label: "Weekends" },
-                { id: "flexible", label: "Flexible" },
+                { id: "weekdays", label: dict.volunteer?.onboarding?.availWeekdays || "Weekdays (9am-5pm)" },
+                { id: "evenings", label: dict.volunteer?.onboarding?.availEvenings || "Evenings (after 6pm)" },
+                { id: "weekends", label: dict.volunteer?.onboarding?.availWeekends || "Weekends" },
+                { id: "flexible", label: dict.volunteer?.onboarding?.availFlexible || "Flexible" },
               ].map((option) => (
                 <Label
                   key={option.id}
@@ -1168,21 +1175,21 @@ export default function VolunteerOnboardingPage() {
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
           <CheckCircle className="h-8 w-8 text-primary" />
         </div>
-        <h2 className="text-xl font-semibold text-foreground mb-2">You're all set, {session?.user?.name || "there"}!</h2>
-        <p className="text-muted-foreground">Your profile is ready. Review your details and start exploring opportunities.</p>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{(dict.volunteer?.onboarding?.step5Title || "You're all set, {name}!").replace("{name}", session?.user?.name || "there")}</h2>
+        <p className="text-muted-foreground">{dict.volunteer?.onboarding?.step5Subtitle || "Your profile is ready. Review your details and start exploring opportunities."}</p>
       </div>
 
       <Card>
         <CardContent className="pt-6">
           <div className="space-y-4">
             <div>
-              <h3 className="font-medium text-sm text-muted-foreground">Profile</h3>
-              <p className="text-foreground">{profile.location || "Location not set"}</p>
-              <p className="text-sm text-muted-foreground">{profile.bio?.slice(0, 100) || "No bio"}...</p>
+              <h3 className="font-medium text-sm text-muted-foreground">{dict.volunteer?.onboarding?.reviewProfile || "Profile"}</h3>
+              <p className="text-foreground">{profile.location || (dict.volunteer?.common?.locationNotSet || "Location not set")}</p>
+              <p className="text-sm text-muted-foreground">{profile.bio?.slice(0, 100) || (dict.volunteer?.onboarding?.noBio || "No bio")}...</p>
             </div>
             <Separator />
             <div>
-              <h3 className="font-medium text-sm text-muted-foreground">Skills ({selectedSkills.length})</h3>
+              <h3 className="font-medium text-sm text-muted-foreground">{(dict.volunteer?.onboarding?.reviewSkills || "Skills ({count})").replace("{count}", String(selectedSkills.length))}</h3>
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedSkills.slice(0, 5).map((skill) => {
                   const category = skillCategories.find((c) => c.id === skill.categoryId)
@@ -1200,7 +1207,7 @@ export default function VolunteerOnboardingPage() {
             </div>
             <Separator />
             <div>
-              <h3 className="font-medium text-sm text-muted-foreground">Causes</h3>
+              <h3 className="font-medium text-sm text-muted-foreground">{dict.volunteer?.onboarding?.reviewCauses || "Causes"}</h3>
               <div className="flex flex-wrap gap-2 mt-2">
                 {selectedCauses.map((causeId) => {
                   const cause = causes.find((c) => c.id === causeId)
@@ -1215,35 +1222,35 @@ export default function VolunteerOnboardingPage() {
             <Separator />
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <h3 className="font-medium text-sm text-muted-foreground">Work Type</h3>
+                <h3 className="font-medium text-sm text-muted-foreground">{dict.volunteer?.onboarding?.reviewWorkType || "Work Type"}</h3>
                 <p className="text-foreground capitalize">{workPreferences.volunteerType}</p>
               </div>
               <div>
-                <h3 className="font-medium text-sm text-muted-foreground">Work Mode</h3>
+                <h3 className="font-medium text-sm text-muted-foreground">{dict.volunteer?.common?.workMode || "Work Mode"}</h3>
                 <p className="text-foreground capitalize">{workPreferences.workMode}</p>
               </div>
               <div>
-                <h3 className="font-medium text-sm text-muted-foreground">Hours/Week</h3>
+                <h3 className="font-medium text-sm text-muted-foreground">{dict.volunteer?.onboarding?.reviewHoursWeek || "Hours/Week"}</h3>
                 <p className="text-foreground">{workPreferences.hoursPerWeek}</p>
               </div>
               <div>
-                <h3 className="font-medium text-sm text-muted-foreground">Availability</h3>
+                <h3 className="font-medium text-sm text-muted-foreground">{dict.volunteer?.onboarding?.availability || "Availability"}</h3>
                 <p className="text-foreground capitalize">{workPreferences.availability}</p>
               </div>
               {workPreferences.volunteerType === "both" && (
                 <div>
-                  <h3 className="font-medium text-sm text-muted-foreground">Free Hours/Month</h3>
-                  <p className="text-foreground text-green-600">{workPreferences.freeHoursPerMonth || 0} hours</p>
+                  <h3 className="font-medium text-sm text-muted-foreground">{dict.volunteer?.onboarding?.reviewFreeHours || "Free Hours/Month"}</h3>
+                  <p className="text-foreground text-green-600">{workPreferences.freeHoursPerMonth || 0} {dict.volunteer?.common?.hours || "hours"}</p>
                 </div>
               )}
               {(workPreferences.volunteerType === "paid" || workPreferences.volunteerType === "both") && (
                 <>
                   <div>
-                    <h3 className="font-medium text-sm text-muted-foreground">Hourly Rate</h3>
+                    <h3 className="font-medium text-sm text-muted-foreground">{dict.volunteer?.common?.hourlyRate || "Hourly Rate"}</h3>
                     <p className="text-foreground">{getCurrencySymbol(workPreferences.currency || "USD")}{workPreferences.hourlyRate || 0}/hr</p>
                   </div>
                   <div>
-                    <h3 className="font-medium text-sm text-muted-foreground">Discounted Rate</h3>
+                    <h3 className="font-medium text-sm text-muted-foreground">{dict.volunteer?.common?.discountedRate || "Discounted Rate"}</h3>
                     <p className="text-foreground text-green-600">{getCurrencySymbol(workPreferences.currency || "USD")}{workPreferences.discountedRate || 0}/hr</p>
                   </div>
                 </>
@@ -1267,8 +1274,8 @@ export default function VolunteerOnboardingPage() {
         <div className="flex items-center gap-3 mb-8">
           <Image src="/logo-main.png" alt="JBC Logo" width={200} height={98} className="h-14 w-auto" />
           <div>
-            <h1 className="text-xl font-bold text-foreground">Complete Your Profile</h1>
-            <p className="text-sm text-muted-foreground">Step {step} of {totalSteps}</p>
+            <h1 className="text-xl font-bold text-foreground">{dict.volunteer?.onboarding?.headerTitle || "Complete Your Profile"}</h1>
+            <p className="text-sm text-muted-foreground">{(dict.volunteer?.onboarding?.stepOfTotal || "Step {current} of {total}").replace("{current}", String(step)).replace("{total}", String(totalSteps))}</p>
           </div>
         </div>
 
@@ -1301,7 +1308,7 @@ export default function VolunteerOnboardingPage() {
             disabled={step === 1}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back
+            {dict.volunteer?.common?.back || "Back"}
           </Button>
 
           {step < totalSteps ? (
@@ -1310,11 +1317,11 @@ export default function VolunteerOnboardingPage() {
                 // Validate step 1: phone must be verified
                 if (step === 1) {
                   if (phoneVerificationStep !== "verified") {
-                    setError("Please verify your phone number to continue")
+                    setError(dict.volunteer?.onboarding?.verifyPhoneError || "Please verify your phone number to continue")
                     return
                   }
                   if (!profile.location) {
-                    setError("Please enter your location")
+                    setError(dict.volunteer?.onboarding?.locationRequired || "Please enter your location")
                     return
                   }
                 }
@@ -1323,7 +1330,7 @@ export default function VolunteerOnboardingPage() {
               }}
               disabled={step === 1 && phoneVerificationStep !== "verified"}
             >
-              Continue
+              {dict.volunteer?.common?.continue || "Continue"}
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           ) : (
@@ -1331,12 +1338,12 @@ export default function VolunteerOnboardingPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Completing...
+                  {dict.volunteer?.onboarding?.completing || "Completing..."}
                 </>
               ) : (
                 <>
                   <CheckCircle className="mr-2 h-4 w-4" />
-                  Complete Setup
+                  {dict.volunteer?.onboarding?.completeSetup || "Complete Setup"}
                 </>
               )}
             </Button>

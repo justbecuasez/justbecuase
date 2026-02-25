@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { useDictionary } from "@/components/dictionary-provider";
 
 interface ChatViewProps {
   userType: "ngo" | "volunteer";
@@ -37,6 +38,7 @@ interface ChatViewProps {
 export function ChatView({ userType, activeChannelId }: ChatViewProps) {
   const { user } = useAuth();
   const { chatClient, isReady, initError, retry } = useStream();
+  const dict = useDictionary();
   const [showChannelList, setShowChannelList] = useState(true);
 
   if (initError) {
@@ -46,15 +48,15 @@ export function ChatView({ userType, activeChannelId }: ChatViewProps) {
           <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
             <WifiOff className="h-8 w-8 text-destructive" />
           </div>
-          <h3 className="text-lg font-semibold text-foreground">Connection Failed</h3>
+          <h3 className="text-lg font-semibold text-foreground">{dict.volunteer?.messages?.connectionFailed || "Connection Failed"}</h3>
           <p className="text-sm text-muted-foreground">
-            Unable to connect to messaging. Please check your connection.
+            {dict.volunteer?.messages?.connectionFailedDesc || "Unable to connect to messaging. Please check your connection."}
           </p>
           <button
             onClick={retry}
             className="px-6 py-2.5 text-sm font-medium rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-sm"
           >
-            Reconnect
+            {dict.volunteer?.messages?.reconnect || "Reconnect"}
           </button>
         </div>
       </div>
@@ -66,7 +68,7 @@ export function ChatView({ userType, activeChannelId }: ChatViewProps) {
       <div className="flex items-center justify-center h-full min-h-[60vh]">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Connecting...</p>
+          <p className="text-sm text-muted-foreground">{dict.volunteer?.messages?.connecting || "Connecting..."}</p>
         </div>
       </div>
     );
@@ -148,11 +150,10 @@ export function ChatView({ userType, activeChannelId }: ChatViewProps) {
                 <MessageSquare className="h-12 w-12 text-primary/40" />
               </div>
               <h3 className="text-xl font-semibold text-foreground">
-                JustBeCause Messenger
+                {dict.volunteer?.messages?.messengerTitle || "JustBeCause Messenger"}
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                Select a conversation to start messaging.
-                Your messages are private and secure.
+                {dict.volunteer?.messages?.emptyState || "Select a conversation to start messaging. Your messages are private and secure."}
               </p>
             </div>
           </div>
@@ -169,12 +170,13 @@ export function ChatView({ userType, activeChannelId }: ChatViewProps) {
 function CustomChannelPreview(props: any) {
   const { channel, setActiveChannel, activeChannel, onSelect } = props;
   const { client } = useChatContext();
+  const dict = useDictionary();
 
   const otherMembers = Object.values(channel.state.members).filter(
     (m: any) => m.user_id !== client.userID
   );
   const otherUser = (otherMembers[0] as any)?.user;
-  const displayName = otherUser?.name || channel.data?.name || "Unknown";
+  const displayName = otherUser?.name || channel.data?.name || (dict.volunteer?.messages?.unknownUser || "Unknown");
   const avatar = otherUser?.image;
   const isOnline = otherUser?.online === true;
   const isActive = activeChannel?.cid === channel.cid;
@@ -182,7 +184,7 @@ function CustomChannelPreview(props: any) {
   const lastMsg = channel.state.messages?.[channel.state.messages.length - 1];
   const lastMsgText = lastMsg?.text || "";
   const lastMsgTime = lastMsg?.created_at
-    ? formatTime(new Date(lastMsg.created_at))
+    ? formatTime(new Date(lastMsg.created_at), dict.volunteer?.messages?.yesterday || "Yesterday")
     : "";
   const unreadCount = channel.countUnread();
 
@@ -220,7 +222,7 @@ function CustomChannelPreview(props: any) {
           <span className="jb-channel-preview__message">
             {lastMsgText.length > 50
               ? lastMsgText.substring(0, 50) + "…"
-              : lastMsgText || "No messages yet"}
+              : lastMsgText || (dict.volunteer?.messages?.noMessagesYet || "No messages yet")}
           </span>
           {unreadCount > 0 && (
             <span className="jb-unread-badge">
@@ -245,6 +247,7 @@ function CustomChannelHeader({
   onBack: () => void;
 }) {
   const { channel, client } = useChatContext();
+  const dict = useDictionary();
 
   if (!channel) return null;
 
@@ -252,7 +255,7 @@ function CustomChannelHeader({
     (m: any) => m.user_id !== client.userID
   );
   const otherUser = (otherMembers[0] as any)?.user;
-  const displayName = otherUser?.name || "Unknown";
+  const displayName = otherUser?.name || (dict.volunteer?.messages?.unknownUser || "Unknown");
   const avatar = otherUser?.image;
   const isOnline = otherUser?.online === true;
   const lastActive = otherUser?.last_active
@@ -301,6 +304,7 @@ function HeaderStatus({
   channel: any;
 }) {
   const { client } = useChatContext();
+  const dict = useDictionary();
   const [typingNames, setTypingNames] = useState<string[]>([]);
 
   useEffect(() => {
@@ -331,20 +335,20 @@ function HeaderStatus({
     return (
       <p className="jb-header__status jb-header__status--typing">
         <span className="jb-typing-dots"><span /><span /><span /></span>
-        typing…
+        {dict.volunteer?.messages?.typing || "typing…"}
       </p>
     );
   }
 
   if (isOnline) {
-    return <p className="jb-header__status jb-header__status--online">online</p>;
+    return <p className="jb-header__status jb-header__status--online">{dict.volunteer?.messages?.online || "online"}</p>;
   }
 
   if (lastActive) {
-    return <p className="jb-header__status">last seen {lastActive}</p>;
+    return <p className="jb-header__status">{dict.volunteer?.messages?.lastSeen || "last seen"} {lastActive}</p>;
   }
 
-  return <p className="jb-header__status">offline</p>;
+  return <p className="jb-header__status">{dict.volunteer?.messages?.offline || "offline"}</p>;
 }
 
 /* ═══════════════════════════════════════════
@@ -352,6 +356,7 @@ function HeaderStatus({
    ═══════════════════════════════════════════ */
 function CustomTypingIndicator() {
   const { client } = useChatContext();
+  const dict = useDictionary();
   const { typing } = useTypingContext();
 
   const typingUsers = Object.values(typing || {}).filter(
@@ -365,7 +370,7 @@ function CustomTypingIndicator() {
   return (
     <div className="jb-typing-bar">
       <span className="jb-typing-dots"><span /><span /><span /></span>
-      <span>{names.join(", ")} {names.length === 1 ? "is" : "are"} typing…</span>
+      <span>{names.join(", ")} {names.length === 1 ? (dict.volunteer?.messages?.isTyping || "is typing…") : (dict.volunteer?.messages?.areTyping || "are typing…")}</span>
     </div>
   );
 }
@@ -373,13 +378,13 @@ function CustomTypingIndicator() {
 /* ═══════════════════════════════════════════
    Helpers
    ═══════════════════════════════════════════ */
-function formatTime(date: Date): string {
+function formatTime(date: Date, yesterdayLabel: string = "Yesterday"): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / 86400000);
 
   if (diffDays === 0) return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  if (diffDays === 1) return "Yesterday";
+  if (diffDays === 1) return yesterdayLabel;
   if (diffDays < 7) return date.toLocaleDateString([], { weekday: "short" });
   return date.toLocaleDateString([], { month: "short", day: "numeric" });
 }

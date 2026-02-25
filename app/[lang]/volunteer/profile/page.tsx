@@ -22,10 +22,12 @@ import { uploadToCloudinary, validateImageFile, uploadDocumentToCloudinary, vali
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AIBioGenerator } from "@/components/ai/bio-generator"
 import { VolunteerProfileSkeleton } from "@/components/ui/page-skeletons"
+import { useDictionary } from "@/components/dictionary-provider"
 
 export default function VolunteerProfileEditPage() {
   const router = useRouter()
   const locale = useLocale()
+  const dict = useDictionary()
   const { data: session, isPending } = authClient.useSession()
   const [profile, setProfile] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -301,11 +303,11 @@ export default function VolunteerProfileEditPage() {
           <div className="max-w-4xl mx-auto">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h1 className="text-2xl font-bold text-foreground mb-2">Edit Profile</h1>
-                <p className="text-muted-foreground">Update your information to help NGOs find you</p>
+                <h1 className="text-2xl font-bold text-foreground mb-2">{dict.volunteer?.profile?.title || "Edit Profile"}</h1>
+                <p className="text-muted-foreground">{dict.volunteer?.profile?.subtitle || "Update your information to help NGOs find you"}</p>
               </div>
               <Button asChild variant="outline" className="bg-transparent">
-                <LocaleLink href={`/volunteers/${session.user.id}`}>View Public Profile</LocaleLink>
+                <LocaleLink href={`/volunteers/${session.user.id}`}>{dict.volunteer?.profile?.viewPublicProfile || "View Public Profile"}</LocaleLink>
               </Button>
             </div>
 
@@ -320,12 +322,12 @@ export default function VolunteerProfileEditPage() {
             <Card className="mb-8">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-foreground">Profile Completion</span>
+                  <span className="text-sm font-medium text-foreground">{dict.volunteer?.common?.profileCompletion || "Profile Completion"}</span>
                   <span className="text-sm font-medium text-primary">{profileCompletion}%</span>
                 </div>
                 <Progress value={profileCompletion} className="h-2 mb-4" />
                 <p className="text-sm text-muted-foreground">
-                  Complete your profile to increase your chances of being matched with projects.
+                  {dict.volunteer?.profile?.completionHint || "Complete your profile to increase your chances of being matched with projects."}
                 </p>
               </CardContent>
             </Card>
@@ -333,16 +335,16 @@ export default function VolunteerProfileEditPage() {
             <form onSubmit={handleSubmit}>
               <Tabs defaultValue="basic" className="w-full">
                 <TabsList className="mb-6">
-                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                  <TabsTrigger value="skills">Skills & Experience</TabsTrigger>
-                  <TabsTrigger value="preferences">Preferences</TabsTrigger>
+                  <TabsTrigger value="basic">{dict.volunteer?.profile?.tabBasicInfo || "Basic Info"}</TabsTrigger>
+                  <TabsTrigger value="skills">{dict.volunteer?.profile?.tabSkills || "Skills & Experience"}</TabsTrigger>
+                  <TabsTrigger value="preferences">{dict.volunteer?.profile?.tabPreferences || "Preferences"}</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="basic">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Basic Information</CardTitle>
-                      <CardDescription>Your personal details and bio</CardDescription>
+                      <CardTitle>{dict.volunteer?.profile?.basicInfoTitle || "Basic Information"}</CardTitle>
+                      <CardDescription>{dict.volunteer?.profile?.basicInfoDesc || "Your personal details and bio"}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       {/* Avatar */}
@@ -373,14 +375,14 @@ export default function VolunteerProfileEditPage() {
                           />
                         </div>
                         <div>
-                          <p className="font-medium text-foreground">Profile Photo</p>
-                          <p className="text-sm text-muted-foreground">JPG or PNG. Max 5MB.</p>
+                          <p className="font-medium text-foreground">{dict.volunteer?.profile?.profilePhoto || "Profile Photo"}</p>
+                          <p className="text-sm text-muted-foreground">{dict.volunteer?.profile?.photoHint || "JPG or PNG. Max 5MB."}</p>
                         </div>
                       </div>
 
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="name">Full Name</Label>
+                          <Label htmlFor="name">{dict.volunteer?.common?.fullName || "Full Name"}</Label>
                           <Input
                             id="name"
                             value={formData.name}
@@ -388,7 +390,7 @@ export default function VolunteerProfileEditPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="phone">Phone Number</Label>
+                          <Label htmlFor="phone">{dict.volunteer?.common?.phoneNumber || "Phone Number"}</Label>
                           <Input
                             id="phone"
                             value={formData.phone}
@@ -399,7 +401,7 @@ export default function VolunteerProfileEditPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="location">Location</Label>
+                        <Label htmlFor="location">{dict.volunteer?.common?.location || "Location"}</Label>
                         <div className="flex gap-2">
                           <div className="relative flex-1">
                             <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -423,18 +425,18 @@ export default function VolunteerProfileEditPage() {
                             ) : (
                               <>
                                 <LocateFixed className="h-4 w-4 mr-2" />
-                                Update Location
+                                {dict.volunteer?.profile?.updateLocation || "Update Location"}
                               </>
                             )}
                           </Button>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Your location helps match you with nearby opportunities
+                          {dict.volunteer?.profile?.locationHint || "Your location helps match you with nearby opportunities"}
                         </p>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="headline">Professional Headline</Label>
+                        <Label htmlFor="headline">{dict.volunteer?.profile?.headline || "Professional Headline"}</Label>
                         <Input
                           id="headline"
                           value={formData.headline}
@@ -443,12 +445,12 @@ export default function VolunteerProfileEditPage() {
                           maxLength={120}
                         />
                         <p className="text-xs text-muted-foreground">
-                          A short tagline that appears in search results. Include your top skill and experience.
+                          {dict.volunteer?.profile?.headlineHint || "A short tagline that appears in search results. Include your top skill and experience."}
                         </p>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="bio">Bio</Label>
+                        <Label htmlFor="bio">{dict.volunteer?.common?.bio || "Bio"}</Label>
                         <Textarea
                           id="bio"
                           value={formData.bio}
@@ -467,13 +469,13 @@ export default function VolunteerProfileEditPage() {
                           onGenerated={(bio) => setFormData({ ...formData, bio })}
                         />
                         <p className="text-xs text-muted-foreground">
-                          <strong>Tip:</strong> Mention your years of experience, specialties, and preferred project types — NGOs search for these details!
+                          <strong>Tip:</strong> {dict.volunteer?.profile?.bioTip || "Mention your years of experience, specialties, and preferred project types — NGOs search for these details!"}
                         </p>
                       </div>
 
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="linkedin">LinkedIn URL</Label>
+                          <Label htmlFor="linkedin">{dict.volunteer?.common?.linkedinUrl || "LinkedIn URL"}</Label>
                           <Input
                             id="linkedin"
                             type="url"
@@ -483,7 +485,7 @@ export default function VolunteerProfileEditPage() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label htmlFor="portfolio">Portfolio URL</Label>
+                          <Label htmlFor="portfolio">{dict.volunteer?.common?.portfolioUrl || "Portfolio URL"}</Label>
                           <Input
                             id="portfolio"
                             type="url"
@@ -496,9 +498,9 @@ export default function VolunteerProfileEditPage() {
 
                       {/* Resume Upload Section */}
                       <div className="space-y-3 pt-4 border-t">
-                        <Label>Resume / CV</Label>
+                        <Label>{dict.volunteer?.profile?.resumeCv || "Resume / CV"}</Label>
                         <p className="text-sm text-muted-foreground">
-                          Upload your resume to help NGOs understand your experience (PDF, DOC, DOCX - max 10MB)
+                          {dict.volunteer?.profile?.resumeHint || "Upload your resume to help NGOs understand your experience (PDF, DOC, DOCX - max 10MB)"}
                         </p>
                         
                         {profile?.resumeUrl ? (
@@ -512,9 +514,9 @@ export default function VolunteerProfileEditPage() {
                                   rel="noopener noreferrer"
                                   className="text-sm font-medium hover:underline text-primary"
                                 >
-                                  View Resume
+                                  {dict.volunteer?.profile?.viewResume || "View Resume"}
                                 </a>
-                                <p className="text-xs text-muted-foreground">Click to download or view</p>
+                                <p className="text-xs text-muted-foreground">{dict.volunteer?.profile?.resumeClickHint || "Click to download or view"}</p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -537,7 +539,7 @@ export default function VolunteerProfileEditPage() {
                                     {uploadingResume ? (
                                       <Loader2 className="h-4 w-4 animate-spin" />
                                     ) : (
-                                      "Replace"
+                                      (dict.volunteer?.common?.replace || "Replace")
                                     )}
                                   </span>
                                 </Button>
@@ -567,13 +569,13 @@ export default function VolunteerProfileEditPage() {
                               {uploadingResume ? (
                                 <>
                                   <Loader2 className="h-8 w-8 mx-auto mb-2 text-primary animate-spin" />
-                                  <p className="text-sm text-muted-foreground">Uploading...</p>
+                                  <p className="text-sm text-muted-foreground">{dict.volunteer?.common?.uploading || "Uploading..."}</p>
                                 </>
                               ) : (
                                 <>
                                   <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                                  <p className="text-sm font-medium text-foreground">Upload Resume</p>
-                                  <p className="text-xs text-muted-foreground mt-1">PDF, DOC, or DOCX up to 10MB</p>
+                                  <p className="text-sm font-medium text-foreground">{dict.volunteer?.profile?.uploadResume || "Upload Resume"}</p>
+                                  <p className="text-xs text-muted-foreground mt-1">{dict.volunteer?.profile?.resumeFileTypes || "PDF, DOC, or DOCX up to 10MB"}</p>
                                 </>
                               )}
                             </label>
@@ -587,12 +589,12 @@ export default function VolunteerProfileEditPage() {
                 <TabsContent value="skills">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Skills & Expertise</CardTitle>
-                      <CardDescription>Your skills were set during onboarding.</CardDescription>
+                      <CardTitle>{dict.volunteer?.profile?.skillsTitle || "Skills & Expertise"}</CardTitle>
+                      <CardDescription>{dict.volunteer?.profile?.skillsDesc || "Your skills were set during onboarding."}</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-4">
-                        <Label>Your Current Skills</Label>
+                        <Label>{dict.volunteer?.profile?.currentSkills || "Your Current Skills"}</Label>
                         <div className="flex flex-wrap gap-2">
                           {profile?.skills?.length > 0 ? (
                             profile.skills.map((skill: any, index: number) => {
@@ -605,11 +607,11 @@ export default function VolunteerProfileEditPage() {
                               )
                             })
                           ) : (
-                            <p className="text-muted-foreground">No skills added yet. Complete onboarding to add skills.</p>
+                            <p className="text-muted-foreground">{dict.volunteer?.profile?.noSkills || "No skills added yet. Complete onboarding to add skills."}</p>
                           )}
                         </div>
                         <Button variant="outline" asChild className="mt-4">
-                          <LocaleLink href="/volunteer/settings">Manage Skills in Settings</LocaleLink>
+                          <LocaleLink href="/volunteer/settings">{dict.volunteer?.profile?.manageSkillsLink || "Manage Skills in Settings"}</LocaleLink>
                         </Button>
                       </div>
                     </CardContent>
@@ -619,12 +621,12 @@ export default function VolunteerProfileEditPage() {
                 <TabsContent value="preferences">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Impact Preferences</CardTitle>
-                      <CardDescription>Set your availability and preferences</CardDescription>
+                      <CardTitle>{dict.volunteer?.profile?.preferencesTitle || "Impact Preferences"}</CardTitle>
+                      <CardDescription>{dict.volunteer?.profile?.preferencesDesc || "Set your availability and preferences"}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                       <div className="space-y-2">
-                        <Label htmlFor="availability">Weekly Availability</Label>
+                        <Label htmlFor="availability">{dict.volunteer?.profile?.weeklyAvailability || "Weekly Availability"}</Label>
                         <Select
                           value={formData.hoursPerWeek}
                           onValueChange={(value) => setFormData({ ...formData, hoursPerWeek: value })}
@@ -633,16 +635,16 @@ export default function VolunteerProfileEditPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="1-5">1-5 hours per week</SelectItem>
-                            <SelectItem value="5-10">5-10 hours per week</SelectItem>
-                            <SelectItem value="10-20">10-20 hours per week</SelectItem>
-                            <SelectItem value="20+">20+ hours per week</SelectItem>
+                            <SelectItem value="1-5">{dict.volunteer?.common?.hours1to5 || "1-5 hours per week"}</SelectItem>
+                            <SelectItem value="5-10">{dict.volunteer?.common?.hours5to10 || "5-10 hours per week"}</SelectItem>
+                            <SelectItem value="10-20">{dict.volunteer?.common?.hours10to20 || "10-20 hours per week"}</SelectItem>
+                            <SelectItem value="20+">{dict.volunteer?.common?.hours20plus || "20+ hours per week"}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Your Causes</Label>
+                        <Label>{dict.volunteer?.profile?.yourCauses || "Your Causes"}</Label>
                         <div className="flex flex-wrap gap-2">
                           {profile?.causes?.length > 0 ? (
                             profile.causes.map((cause: string) => (
@@ -651,24 +653,24 @@ export default function VolunteerProfileEditPage() {
                               </Badge>
                             ))
                           ) : (
-                            <p className="text-muted-foreground">No causes selected.</p>
+                            <p className="text-muted-foreground">{dict.volunteer?.profile?.noCauses || "No causes selected."}</p>
                           )}
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Work Mode</Label>
+                        <Label>{dict.volunteer?.common?.workMode || "Work Mode"}</Label>
                         <Badge variant="secondary" className="capitalize">
-                          {profile?.workMode || "Not set"}
+                          {profile?.workMode || (dict.volunteer?.common?.notSet || "Not set")}
                         </Badge>
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Impact Agent Type</Label>
+                        <Label>{dict.volunteer?.common?.impactAgentType || "Impact Agent Type"}</Label>
                         <Badge variant="secondary" className="capitalize">
-                          {profile?.volunteerType === "free" ? "Pro-Bono Only" : 
-                           profile?.volunteerType === "paid" ? "Paid Only" : 
-                           profile?.volunteerType === "both" ? "Open to Both" : "Not set"}
+                          {profile?.volunteerType === "free" ? (dict.volunteer?.common?.proBonoOnly || "Pro-Bono Only") : 
+                           profile?.volunteerType === "paid" ? (dict.volunteer?.common?.paidOnly || "Paid Only") : 
+                           profile?.volunteerType === "both" ? (dict.volunteer?.common?.openToBoth || "Open to Both") : (dict.volunteer?.common?.notSet || "Not set")}
                         </Badge>
                       </div>
                     </CardContent>
@@ -682,17 +684,17 @@ export default function VolunteerProfileEditPage() {
                   {isSaving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
+                      {dict.volunteer?.common?.saving || "Saving..."}
                     </>
                   ) : isSaved ? (
                     <>
                       <CheckCircle className="mr-2 h-4 w-4" />
-                      Saved!
+                      {dict.volunteer?.common?.saved || "Saved!"}
                     </>
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      Save Changes
+                      {dict.volunteer?.common?.saveChanges || "Save Changes"}
                     </>
                   )}
                 </Button>

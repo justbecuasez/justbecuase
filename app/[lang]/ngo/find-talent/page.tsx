@@ -1,10 +1,15 @@
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import type { Locale } from "@/lib/i18n-config"
 import { getNGOProfile, browseVolunteers, getNGOSubscriptionStatus } from "@/lib/actions"
 import { FindTalentClient } from "@/components/volunteers/find-talent-client"
 
-export default async function NGOFindTalentPage() {
+export default async function NGOFindTalentPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
+  const dict = await getDictionary(lang as Locale) as any
+
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -54,9 +59,9 @@ export default async function NGOFindTalentPage() {
   return (
     <main className="flex-1 p-4 sm:p-6 lg:p-8">
           <div className="mb-6 sm:mb-8">
-            <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Find Talent</h1>
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">{dict.ngo?.findTalent?.title || "Find Talent"}</h1>
             <p className="text-sm sm:text-base text-muted-foreground">
-              Browse skilled impact agents to help with your opportunities
+              {dict.ngo?.findTalent?.subtitle || "Browse skilled impact agents to help with your opportunities"}
             </p>
           </div>
 

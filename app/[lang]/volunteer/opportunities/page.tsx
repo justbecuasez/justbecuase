@@ -2,6 +2,8 @@ import { Suspense } from "react"
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { auth } from "@/lib/auth"
+import { getDictionary } from "@/app/[lang]/dictionaries"
+import { Locale } from "@/lib/i18n-config"
 import { getVolunteerProfile, getMatchedOpportunitiesForVolunteer, hasAppliedToProject } from "@/lib/actions"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -18,7 +20,9 @@ import {
   Sparkles,
 } from "lucide-react"
 
-export default async function VolunteerOpportunitiesPage() {
+export default async function VolunteerOpportunitiesPage({ params }: { params: Promise<{ lang: string }> }) {
+  const { lang } = await params
+  const dict = await getDictionary(lang as Locale)
   const session = await auth.api.getSession({
     headers: await headers(),
   })
@@ -46,9 +50,9 @@ export default async function VolunteerOpportunitiesPage() {
   return (
     <main className="flex-1 p-6 lg:p-8">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">Browse Opportunities</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">{dict.volunteer?.opportunities?.title || "Browse Opportunities"}</h1>
             <p className="text-muted-foreground">
-              Find impact agent opportunities that match your skills
+              {dict.volunteer?.opportunities?.subtitle || "Find impact agent opportunities that match your skills"}
             </p>
           </div>
 
@@ -56,23 +60,23 @@ export default async function VolunteerOpportunitiesPage() {
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="h-5 w-5 text-primary" />
-              <h2 className="text-lg font-semibold text-foreground">Recommended for You</h2>
+              <h2 className="text-lg font-semibold text-foreground">{dict.volunteer?.opportunities?.recommendedForYou || "Recommended for You"}</h2>
             </div>
             <Suspense fallback={<OpportunitiesSkeleton />}>
-              <RecommendedOpportunities />
+              <RecommendedOpportunities dict={dict} />
             </Suspense>
           </div>
 
           {/* All Opportunities — client component with search + filters */}
           <div>
-            <h2 className="text-lg font-semibold text-foreground mb-4">All Opportunities</h2>
+            <h2 className="text-lg font-semibold text-foreground mb-4">{dict.volunteer?.opportunities?.allOpportunities || "All Opportunities"}</h2>
             <OpportunitiesBrowser />
           </div>
     </main>
   )
 }
 
-async function RecommendedOpportunities() {
+async function RecommendedOpportunities({ dict }: { dict: any }) {
   const matches = await getMatchedOpportunitiesForVolunteer()
 
   if (matches.length === 0) {
@@ -80,10 +84,10 @@ async function RecommendedOpportunities() {
       <Card>
         <CardContent className="py-8 text-center">
           <p className="text-muted-foreground">
-            Complete your profile to get personalized recommendations
+            {dict.volunteer?.dashboard?.completeProfilePrompt || "Complete your profile to get personalized recommendations"}
           </p>
           <Button variant="link" asChild>
-            <Link href="/volunteer/profile">Complete Profile</Link>
+            <Link href="/volunteer/profile">{dict.volunteer?.common?.completeProfile || "Complete Profile"}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -97,6 +101,7 @@ async function RecommendedOpportunities() {
           key={match.projectId}
           project={match.project}
           matchScore={match.score}
+          dict={dict}
         />
       )))}
     </div>
@@ -106,9 +111,11 @@ async function RecommendedOpportunities() {
 async function OpportunityCard({
   project,
   matchScore,
+  dict,
 }: {
   project: any
   matchScore?: number
+  dict: any
 }) {
   const projectId = project._id?.toString() || ""
   const hasApplied = await hasAppliedToProject(projectId)
@@ -132,7 +139,7 @@ async function OpportunityCard({
                   : "bg-orange-100 text-orange-700"
               }
             >
-              {Math.round(matchScore)}% match
+              {Math.round(matchScore)}{dict.volunteer?.common?.percentMatch || "% match"}
             </Badge>
           )}
         </div>
@@ -157,12 +164,12 @@ async function OpportunityCard({
           {project.deadline && (
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              Deadline: {new Date(project.deadline).toLocaleDateString()}
+              {dict.volunteer?.common?.deadline || "Deadline:"} {new Date(project.deadline).toLocaleDateString()}
             </div>
           )}
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            {project.applicantsCount} applicants
+            {project.applicantsCount} {dict.volunteer?.common?.applicants || "applicants"}
           </div>
         </div>
 
@@ -182,7 +189,7 @@ async function OpportunityCard({
         <div className="flex gap-2">
           <Button variant="outline" size="sm" className="flex-1" asChild>
             <Link href={`/projects/${projectId}`}>
-              View Details
+              {dict.volunteer?.common?.viewDetails || "View Details"}
             </Link>
           </Button>
           <div className="flex-1">

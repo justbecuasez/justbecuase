@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Camera, Save, Loader2, Building2, Globe, Users, ExternalLink, FileText, Upload, X, CheckCircle } from "lucide-react"
 import { useAuth } from "@/lib/auth-context"
+import { useDictionary } from "@/components/dictionary-provider"
 import { getNGOProfile, updateNGOProfile } from "@/lib/actions"
 import { skillCategories } from "@/lib/skills-data"
 import { uploadToCloudinary, validateImageFile, uploadDocumentToCloudinary, validateDocumentFile } from "@/lib/upload"
@@ -50,6 +51,7 @@ export default function NGOProfilePage() {
   const router = useRouter()
   const locale = useLocale()
   const { user, isLoading: authLoading } = useAuth()
+  const dict = useDictionary()
   const [profile, setProfile] = useState<NGOProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -352,9 +354,9 @@ export default function NGOProfilePage() {
   return (
     <main className="flex-1 p-6 lg:p-8 max-w-5xl">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-foreground mb-2">Organization Profile</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">{dict.ngo?.profile?.title}</h1>
             <p className="text-muted-foreground">
-              Manage your organization&apos;s public profile and details
+              {dict.ngo?.profile?.subtitle}
             </p>
           </div>
 
@@ -363,9 +365,9 @@ export default function NGOProfilePage() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="font-semibold text-foreground">Profile Completion</h3>
+                  <h3 className="font-semibold text-foreground">{dict.ngo?.profile?.profileCompletion}</h3>
                   <p className="text-sm text-muted-foreground">
-                    Complete your profile to attract more impact agents
+                    {dict.ngo?.profile?.completeToAttract}
                   </p>
                 </div>
                 <span className="text-2xl font-bold text-primary">{completion}%</span>
@@ -384,20 +386,20 @@ export default function NGOProfilePage() {
 
           <Tabs defaultValue="basic" className="space-y-6">
             <TabsList>
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="details">Organization Details</TabsTrigger>
-              <TabsTrigger value="causes">Causes & Focus</TabsTrigger>
-              <TabsTrigger value="skills">Skills Needed</TabsTrigger>
-              <TabsTrigger value="social">Social Links</TabsTrigger>
+              <TabsTrigger value="basic">{dict.ngo?.profile?.basicInfo}</TabsTrigger>
+              <TabsTrigger value="details">{dict.ngo?.profile?.organizationDetails}</TabsTrigger>
+              <TabsTrigger value="causes">{dict.ngo?.profile?.causesFocus}</TabsTrigger>
+              <TabsTrigger value="skills">{dict.ngo?.profile?.skillsNeeded}</TabsTrigger>
+              <TabsTrigger value="social">{dict.ngo?.profile?.socialLinks}</TabsTrigger>
             </TabsList>
 
             {/* Basic Info Tab */}
             <TabsContent value="basic" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Organization Logo</CardTitle>
+                  <CardTitle>{dict.ngo?.profile?.organizationLogo}</CardTitle>
                   <CardDescription>
-                    Upload your organization&apos;s logo (max 2MB)
+                    {dict.ngo?.profile?.uploadLogo}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -427,12 +429,12 @@ export default function NGOProfilePage() {
                     </div>
                     <div>
                       <p className="text-sm text-muted-foreground">
-                        Click the camera icon to upload your logo
+                        {dict.ngo?.profile?.clickCamera}
                       </p>
                       {uploadingLogo && (
                         <p className="text-sm text-primary flex items-center gap-2 mt-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          Uploading...
+                          {dict.ngo?.common?.uploading}
                         </p>
                       )}
                     </div>
@@ -444,16 +446,16 @@ export default function NGOProfilePage() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
-                    Verification Documents
+                    {dict.ngo?.profile?.verificationDocs}
                     {profile?.isVerified && (
                       <Badge className="bg-green-500/10 text-green-600 border-green-200">
                         <CheckCircle className="h-3 w-3 mr-1" />
-                        Verified
+                        {dict.ngo?.common?.verified}
                       </Badge>
                     )}
                   </CardTitle>
                   <CardDescription>
-                    Upload your registration certificate or other verification documents to get the verified badge
+                    {dict.ngo?.profile?.uploadVerificationDesc}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -472,13 +474,13 @@ export default function NGOProfilePage() {
                       {uploadingDoc ? (
                         <>
                           <Loader2 className="h-8 w-8 mx-auto mb-2 text-primary animate-spin" />
-                          <p className="text-sm text-muted-foreground">Uploading...</p>
+                          <p className="text-sm text-muted-foreground">{dict.ngo?.common?.uploading}</p>
                         </>
                       ) : (
                         <>
                           <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                          <p className="text-sm font-medium text-foreground">Upload Documents</p>
-                          <p className="text-xs text-muted-foreground mt-1">PDF, DOC, or images up to 10MB</p>
+                          <p className="text-sm font-medium text-foreground">{dict.ngo?.profile?.uploadDocuments}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{dict.ngo?.common?.fileTypes}</p>
                         </>
                       )}
                     </label>
@@ -519,7 +521,7 @@ export default function NGOProfilePage() {
                   
                   {!profile?.isVerified && verificationDocs.length > 0 && (
                     <p className="text-xs text-muted-foreground text-center">
-                      Documents submitted. Our team will review and verify your organization.
+                      {dict.ngo?.profile?.docsSubmittedReview}
                     </p>
                   )}
                 </CardContent>
@@ -527,48 +529,48 @@ export default function NGOProfilePage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Basic Information</CardTitle>
+                  <CardTitle>{dict.ngo?.profile?.basicInformation}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="orgName">Organization Name *</Label>
+                      <Label htmlFor="orgName">{dict.ngo?.profile?.orgNameLabel}</Label>
                       <Input
                         id="orgName"
                         value={formData.orgName}
                         onChange={(e) => setFormData({ ...formData, orgName: e.target.value })}
-                        placeholder="Your organization name"
+                        placeholder={dict.ngo?.profile?.orgNamePlaceholder}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="registrationNumber">Registration Number</Label>
+                      <Label htmlFor="registrationNumber">{dict.ngo?.common?.registrationNumber}</Label>
                       <Input
                         id="registrationNumber"
                         value={formData.registrationNumber}
                         onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
-                        placeholder="e.g., 80G/12A number"
+                        placeholder={dict.ngo?.profile?.regNumberPlaceholder}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">About Organization *</Label>
+                    <Label htmlFor="description">{dict.ngo?.profile?.aboutOrg}</Label>
                     <Textarea
                       id="description"
                       value={formData.description}
                       onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Tell impact agents about your organization, what you do, and your impact..."
+                      placeholder={dict.ngo?.profile?.aboutPlaceholder}
                       rows={4}
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="mission">Mission Statement</Label>
+                    <Label htmlFor="mission">{dict.ngo?.common?.missionStatement}</Label>
                     <Textarea
                       id="mission"
                       value={formData.mission}
                       onChange={(e) => setFormData({ ...formData, mission: e.target.value })}
-                      placeholder="Your organization's mission..."
+                      placeholder={dict.ngo?.profile?.missionPlaceholder}
                       rows={2}
                     />
                   </div>
@@ -580,21 +582,21 @@ export default function NGOProfilePage() {
             <TabsContent value="details" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Contact Information</CardTitle>
+                  <CardTitle>{dict.ngo?.common?.contactInformation}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="contactPersonName">Contact Person</Label>
+                      <Label htmlFor="contactPersonName">{dict.ngo?.profile?.contactPerson}</Label>
                       <Input
                         id="contactPersonName"
                         value={formData.contactPersonName}
                         onChange={(e) => setFormData({ ...formData, contactPersonName: e.target.value })}
-                        placeholder="Primary contact name"
+                        placeholder={dict.ngo?.profile?.contactPersonPlaceholder}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="contactEmail">Contact Email</Label>
+                      <Label htmlFor="contactEmail">{dict.ngo?.common?.contactEmail}</Label>
                       <Input
                         id="contactEmail"
                         type="email"
@@ -607,7 +609,7 @@ export default function NGOProfilePage() {
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone">{dict.ngo?.common?.phoneNumber}</Label>
                       <Input
                         id="phone"
                         value={formData.phone}
@@ -616,7 +618,7 @@ export default function NGOProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="website">Website</Label>
+                      <Label htmlFor="website">{dict.ngo?.common?.website}</Label>
                       <Input
                         id="website"
                         value={formData.website}
@@ -630,44 +632,44 @@ export default function NGOProfilePage() {
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Location & Details</CardTitle>
+                  <CardTitle>{dict.ngo?.profile?.locationDetails}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="address">{dict.ngo?.common?.address}</Label>
                     <Textarea
                       id="address"
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      placeholder="Street address"
+                      placeholder={dict.ngo?.profile?.addressPlaceholder}
                       rows={2}
                     />
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="city">City</Label>
+                      <Label htmlFor="city">{dict.ngo?.common?.city}</Label>
                       <Input
                         id="city"
                         value={formData.city}
                         onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        placeholder="City"
+                        placeholder={dict.ngo?.common?.city}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="country">Country</Label>
+                      <Label htmlFor="country">{dict.ngo?.common?.country}</Label>
                       <Input
                         id="country"
                         value={formData.country}
                         onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                        placeholder="Country"
+                        placeholder={dict.ngo?.common?.country}
                       />
                     </div>
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="yearFounded">Year Founded</Label>
+                      <Label htmlFor="yearFounded">{dict.ngo?.common?.yearFounded}</Label>
                       <Input
                         id="yearFounded"
                         value={formData.yearFounded}
@@ -676,18 +678,18 @@ export default function NGOProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="teamSize">Team Size</Label>
+                      <Label htmlFor="teamSize">{dict.ngo?.common?.teamSize}</Label>
                       <Select
                         value={formData.teamSize}
                         onValueChange={(value) => setFormData({ ...formData, teamSize: value })}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select team size" />
+                          <SelectValue placeholder={dict.ngo?.profile?.selectTeamSize} />
                         </SelectTrigger>
                         <SelectContent>
                           {teamSizes.map((size) => (
                             <SelectItem key={size} value={size}>
-                              {size} people
+                              {size} {dict.ngo?.profile?.people}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -702,9 +704,9 @@ export default function NGOProfilePage() {
             <TabsContent value="causes" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Focus Areas</CardTitle>
+                  <CardTitle>{dict.ngo?.profile?.focusAreas}</CardTitle>
                   <CardDescription>
-                    Select the causes your organization focuses on
+                    {dict.ngo?.profile?.selectCauses}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -721,7 +723,7 @@ export default function NGOProfilePage() {
                     ))}
                   </div>
                   <p className="text-sm text-muted-foreground mt-4">
-                    Selected: {selectedCauses.length} cause{selectedCauses.length !== 1 ? "s" : ""}
+                    {(dict.ngo?.profile?.selectedCauses || "Selected: {n} cause(s)").replace("{n}", String(selectedCauses.length))}
                   </p>
                 </CardContent>
               </Card>
@@ -731,14 +733,14 @@ export default function NGOProfilePage() {
             <TabsContent value="skills" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Skills You Typically Need</CardTitle>
+                  <CardTitle>{dict.ngo?.profile?.skillsTypicallyNeed}</CardTitle>
                   <CardDescription>
-                    These skills were set during onboarding and help match you with impact agents
+                    {dict.ngo?.profile?.skillsSetDuringOnboarding}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <Label>Your Required Skills</Label>
+                    <Label>{dict.ngo?.profile?.yourRequiredSkills}</Label>
                     <div className="flex flex-wrap gap-2">
                       {profile?.typicalSkillsNeeded && profile.typicalSkillsNeeded.length > 0 ? (
                         profile.typicalSkillsNeeded.map((skill: any, index: number) => {
@@ -752,16 +754,16 @@ export default function NGOProfilePage() {
                                 : "bg-secondary text-secondary-foreground"}
                             >
                               {subskill?.name || skill.subskillId}
-                              {skill.priority === "must-have" && " (Must-have)"}
+                              {skill.priority === "must-have" && ` (${dict.ngo?.common?.mustHave})`}
                             </Badge>
                           )
                         })
                       ) : (
-                        <p className="text-muted-foreground">No skills specified yet. Complete onboarding to add skills.</p>
+                        <p className="text-muted-foreground">{dict.ngo?.profile?.noSkillsSpecified}</p>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground mt-4">
-                      To update your required skills, please go to Settings.
+                      {dict.ngo?.profile?.updateSkillsInSettings}
                     </p>
                   </div>
                 </CardContent>
@@ -772,15 +774,15 @@ export default function NGOProfilePage() {
             <TabsContent value="social" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Social Media Links</CardTitle>
+                  <CardTitle>{dict.ngo?.profile?.socialMediaLinks}</CardTitle>
                   <CardDescription>
-                    Add your organization&apos;s social media profiles
+                    {dict.ngo?.profile?.addSocialProfiles}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="facebook">Facebook</Label>
+                      <Label htmlFor="facebook">{dict.ngo?.common?.facebook}</Label>
                       <Input
                         id="facebook"
                         value={formData.socialLinks.facebook}
@@ -792,7 +794,7 @@ export default function NGOProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="twitter">Twitter / X</Label>
+                      <Label htmlFor="twitter">{dict.ngo?.common?.twitterX}</Label>
                       <Input
                         id="twitter"
                         value={formData.socialLinks.twitter}
@@ -807,7 +809,7 @@ export default function NGOProfilePage() {
 
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="instagram">Instagram</Label>
+                      <Label htmlFor="instagram">{dict.ngo?.common?.instagram}</Label>
                       <Input
                         id="instagram"
                         value={formData.socialLinks.instagram}
@@ -819,7 +821,7 @@ export default function NGOProfilePage() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="linkedin">LinkedIn</Label>
+                      <Label htmlFor="linkedin">{dict.ngo?.common?.linkedin}</Label>
                       <Input
                         id="linkedin"
                         value={formData.socialLinks.linkedin}
@@ -842,12 +844,12 @@ export default function NGOProfilePage() {
               {isSaving ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
+                  {dict.ngo?.common?.saving}
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Save Profile
+                  {dict.ngo?.profile?.saveProfile}
                 </>
               )}
             </Button>
