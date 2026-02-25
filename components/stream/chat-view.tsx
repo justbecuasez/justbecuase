@@ -29,6 +29,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useDictionary } from "@/components/dictionary-provider";
+import { useLocale } from "@/hooks/use-locale";
 
 interface ChatViewProps {
   userType: "ngo" | "volunteer";
@@ -171,6 +172,7 @@ function CustomChannelPreview(props: any) {
   const { channel, setActiveChannel, activeChannel, onSelect } = props;
   const { client } = useChatContext();
   const dict = useDictionary();
+  const locale = useLocale();
 
   const otherMembers = Object.values(channel.state.members).filter(
     (m: any) => m.user_id !== client.userID
@@ -184,7 +186,7 @@ function CustomChannelPreview(props: any) {
   const lastMsg = channel.state.messages?.[channel.state.messages.length - 1];
   const lastMsgText = lastMsg?.text || "";
   const lastMsgTime = lastMsg?.created_at
-    ? formatTime(new Date(lastMsg.created_at), dict.volunteer?.messages?.yesterday || "Yesterday")
+    ? formatTime(new Date(lastMsg.created_at), dict.volunteer?.messages?.yesterday || "Yesterday", locale)
     : "";
   const unreadCount = channel.countUnread();
 
@@ -248,6 +250,7 @@ function CustomChannelHeader({
 }) {
   const { channel, client } = useChatContext();
   const dict = useDictionary();
+  const locale = useLocale();
 
   if (!channel) return null;
 
@@ -259,7 +262,7 @@ function CustomChannelHeader({
   const avatar = otherUser?.image;
   const isOnline = otherUser?.online === true;
   const lastActive = otherUser?.last_active
-    ? formatLastActive(new Date(otherUser.last_active))
+    ? formatLastActive(new Date(otherUser.last_active), locale)
     : null;
 
   return (
@@ -378,18 +381,18 @@ function CustomTypingIndicator() {
 /* ═══════════════════════════════════════════
    Helpers
    ═══════════════════════════════════════════ */
-function formatTime(date: Date, yesterdayLabel: string = "Yesterday"): string {
+function formatTime(date: Date, yesterdayLabel: string = "Yesterday", locale?: string): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffDays === 0) return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  if (diffDays === 0) return date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
   if (diffDays === 1) return yesterdayLabel;
-  if (diffDays < 7) return date.toLocaleDateString([], { weekday: "short" });
-  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+  if (diffDays < 7) return date.toLocaleDateString(locale, { weekday: "short" });
+  return date.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }
 
-function formatLastActive(date: Date): string {
+function formatLastActive(date: Date, locale?: string): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);
@@ -400,5 +403,5 @@ function formatLastActive(date: Date): string {
   if (diffMin < 60) return `${diffMin}m ago`;
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays === 1) return "yesterday";
-  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+  return date.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }

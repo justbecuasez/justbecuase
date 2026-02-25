@@ -6,11 +6,13 @@ import { useEffect, useState, useRef, useMemo } from "react";
 import { useInView } from "motion/react";
 import { Box } from "@mui/material";
 import { useDictionary } from "@/components/dictionary-provider";
+import { useLocale } from "@/hooks/use-locale";
 
 const Counter = ({ value, prefix = "", suffix = "" }: { value: number; prefix?: string; suffix?: string }) => {
   const [displayValue, setDisplayValue] = useState(0);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
+  const locale = useLocale();
 
   useEffect(() => {
     if (isInView) {
@@ -30,7 +32,7 @@ const Counter = ({ value, prefix = "", suffix = "" }: { value: number; prefix?: 
     }
   }, [isInView, value]);
 
-  return <span ref={ref} className="tabular-nums font-medium">{prefix}{displayValue.toLocaleString()}{suffix}</span>;
+  return <span ref={ref} className="tabular-nums font-medium">{prefix}{displayValue.toLocaleString(locale)}{suffix}</span>;
 };
 
 export function ImpactMetrics({ impactMetrics }: { impactMetrics: any }) {

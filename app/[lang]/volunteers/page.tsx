@@ -27,7 +27,7 @@ import { skillCategories, causes } from "@/lib/skills-data"
 import { SlidersHorizontal, X, Loader2 } from "lucide-react"
 import { UnifiedSearchBar } from "@/components/unified-search-bar"
 import { BrowseGridSkeleton } from "@/components/ui/page-skeletons"
-import { useDictionary } from "@/app/[lang]/dictionaries"
+import { useDictionary } from "@/components/dictionary-provider"
 import type { VolunteerProfileView } from "@/lib/types"
 
 export default function VolunteersPage() {

@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import LocaleLink from "@/components/locale-link"
+import { useLocale } from "@/hooks/use-locale"
 
 interface Project {
   _id?: any
@@ -35,6 +36,7 @@ interface ProjectsSearchableListProps {
 }
 
 export function ProjectsSearchableList({ projects, title }: ProjectsSearchableListProps) {
+  const locale = useLocale()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "completed" | "paused" | "cancelled">("all")
   const [typeFilter, setTypeFilter] = useState<string>("all")
@@ -83,7 +85,7 @@ export function ProjectsSearchableList({ projects, title }: ProjectsSearchableLi
       project.workMode,
       project.status,
       project.applicantsCount?.toString() || "0",
-      project.createdAt ? new Date(project.createdAt instanceof Date ? project.createdAt : project.createdAt).toLocaleDateString() : ""
+      project.createdAt ? new Date(project.createdAt instanceof Date ? project.createdAt : project.createdAt).toLocaleDateString(locale) : ""
     ])
     
     const csvContent = [

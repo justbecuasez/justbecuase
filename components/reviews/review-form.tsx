@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Star, Loader2, Send } from "lucide-react"
 import { submitReview } from "@/lib/actions"
 import { toast } from "sonner"
+import { useLocale } from "@/hooks/use-locale"
 
 interface ReviewFormProps {
   revieweeId: string
@@ -47,6 +48,7 @@ function StarRating({ value, onChange, label }: { value: number; onChange: (v: n
 }
 
 export function ReviewForm({ revieweeId, revieweeName, projectId, projectTitle, onSubmitted }: ReviewFormProps) {
+  const locale = useLocale()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [ratings, setRatings] = useState({
     overall: 0,
@@ -228,7 +230,7 @@ export function ReviewsList({ reviews }: ReviewDisplayProps) {
                 <StarDisplay rating={review.overallRating} />
               </div>
               <span className="text-xs text-muted-foreground">
-                {new Date(review.createdAt).toLocaleDateString()}
+                {new Date(review.createdAt).toLocaleDateString(locale)}
               </span>
             </div>
             {review.projectTitle && (

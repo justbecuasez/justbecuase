@@ -31,6 +31,7 @@ import {
 import LocaleLink from "@/components/locale-link"
 import { cn } from "@/lib/utils"
 import { uploadDocumentToCloudinary, validateDocumentFile, SUPPORTED_ALL_TYPES } from "@/lib/upload"
+import { useLocale } from "@/hooks/use-locale"
 
 interface Message {
   _id?: string | { toString: () => string }
@@ -87,8 +88,9 @@ function MessageBubble({
   showAvatar: boolean
   otherParticipant: { name: string; avatar?: string; type: "volunteer" | "ngo" }
 }) {
+  const locale = useLocale()
   const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString([], {
+    return new Date(date).toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
     })
@@ -210,6 +212,7 @@ export function MessageThreadPro({
   backUrl,
 }: MessageThreadProps) {
   const router = useRouter()
+  const locale = useLocale()
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [newMessage, setNewMessage] = useState("")
   const [sending, setSending] = useState(false)
@@ -516,7 +519,7 @@ export function MessageThreadPro({
     } else if (d.toDateString() === yesterday.toDateString()) {
       return "Yesterday"
     } else {
-      return d.toLocaleDateString([], {
+      return d.toLocaleDateString(locale, {
         weekday: "long",
         month: "long",
         day: "numeric",

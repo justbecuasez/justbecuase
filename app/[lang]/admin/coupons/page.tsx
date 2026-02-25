@@ -28,6 +28,7 @@ import {
 import { Plus, Trash2, Tag, Copy, Loader2, Pencil } from "lucide-react"
 import { toast } from "sonner"
 import { useDictionary } from "@/components/dictionary-provider"
+import { useLocale } from "@/hooks/use-locale"
 
 interface Coupon {
   _id: string
@@ -53,6 +54,7 @@ const PLAN_OPTIONS = [
 
 export default function AdminCouponsPage() {
   const dict = useDictionary();
+  const locale = useLocale();
   const [coupons, setCoupons] = useState<Coupon[]>([])
   const [loading, setLoading] = useState(true)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -487,7 +489,7 @@ export default function AdminCouponsPage() {
                         </TableCell>
                         <TableCell>
                           <span className={expired ? "text-destructive" : ""}>
-                            {new Date(coupon.validUntil).toLocaleDateString()}
+                            {new Date(coupon.validUntil).toLocaleDateString(locale)}
                           </span>
                         </TableCell>
                         <TableCell>

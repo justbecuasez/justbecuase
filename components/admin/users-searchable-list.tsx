@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { UserActions } from "@/components/admin/user-actions"
+import { useLocale } from "@/hooks/use-locale"
 
 interface User {
   id: string
@@ -42,6 +43,7 @@ export function UsersSearchableList({
   viewLinkPrefix = "/admin/users"
 }: UsersSearchableListProps) {
   const [searchQuery, setSearchQuery] = useState("")
+  const locale = useLocale()
   const [roleFilter, setRoleFilter] = useState<"all" | "volunteer" | "ngo">("all")
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "verified" | "banned">("all")
 
@@ -80,7 +82,7 @@ export function UsersSearchableList({
       user.role,
       user.isActive !== false ? "Active" : (user.isBanned ? "Banned" : "Inactive"),
       user.isVerified ? "Yes" : "No",
-      new Date(user.createdAt).toLocaleDateString()
+      new Date(user.createdAt).toLocaleDateString(locale)
     ])
     
     const csvContent = [
@@ -212,7 +214,7 @@ export function UsersSearchableList({
                       </td>
                       <td className="py-3 px-4">
                         <p className="text-sm text-muted-foreground">
-                          {new Date(user.createdAt).toLocaleDateString()}
+                          {new Date(user.createdAt).toLocaleDateString(locale)}
                         </p>
                       </td>
                       <td className="py-3 px-4">

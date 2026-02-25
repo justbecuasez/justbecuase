@@ -11,7 +11,7 @@ import { useSubscriptionStore, usePlatformSettingsStore } from "@/lib/store"
 import { formatPrice, getCurrencySymbol } from "@/lib/currency"
 import type { SupportedCurrency } from "@/lib/types"
 import { toast } from "sonner"
-import { useDictionary } from "@/app/[lang]/dictionaries"
+import { useDictionary } from "@/components/dictionary-provider"
 import {
   Loader2, Tag, X, Sparkles, Zap, CheckCircle2, Shield, CreditCard, ArrowLeft, AlertTriangle,
 } from "lucide-react"

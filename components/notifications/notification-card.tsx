@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils"
 import { markNotificationRead, deleteNotification } from "@/lib/actions"
 import { toast } from "sonner"
 import { useDictionary } from "@/components/dictionary-provider"
+import { useLocale } from "@/hooks/use-locale"
 import type { NotificationType, Notification } from "@/lib/types"
 
 interface NotificationAction {
@@ -55,7 +56,7 @@ interface NotificationCardProps {
 }
 
 // Format relative time
-function formatRelativeTime(date: Date | string, dict?: any): string {
+function formatRelativeTime(date: Date | string, dict?: any, locale?: string): string {
   const now = new Date()
   const then = new Date(date)
   const diffMs = now.getTime() - then.getTime()
@@ -72,7 +73,7 @@ function formatRelativeTime(date: Date | string, dict?: any): string {
   if (diffDay < 7) return (dict?.volunteer?.notifications?.daysAgo || "{n}d ago").replace("{n}", String(diffDay))
   if (diffWeek < 4) return (dict?.volunteer?.notifications?.weeksAgo || "{n}w ago").replace("{n}", String(diffWeek))
   if (diffMonth < 12) return (dict?.volunteer?.notifications?.monthsAgo || "{n}mo ago").replace("{n}", String(diffMonth))
-  return then.toLocaleDateString()
+  return then.toLocaleDateString(locale)
 }
 
 // Default config for fallback
@@ -300,6 +301,7 @@ export function NotificationCard({
 }: NotificationCardProps) {
   const [isLoading, setIsLoading] = useState(false)
   const dict = useDictionary()
+  const locale = useLocale()
   const config = getNotificationConfig(notification.type)
   const actions = getNotificationActions(notification, dict)
   const notificationId = notification._id?.toString() || ""
@@ -369,7 +371,7 @@ export function NotificationCard({
               </div>
               <div className="flex items-center gap-1.5 flex-shrink-0">
                 <span className="text-xs text-muted-foreground whitespace-nowrap">
-                  {formatRelativeTime(notification.createdAt, dict)}
+                  {formatRelativeTime(notification.createdAt, dict, locale)}
                 </span>
                 {!notification.isRead && (
                   <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { UserActions } from "@/components/admin/user-actions"
 import { resolveSkillName } from "@/lib/skills-data"
+import { useLocale } from "@/hooks/use-locale"
 
 interface Volunteer {
   userId: string
@@ -38,6 +39,7 @@ interface VolunteersSearchableListProps {
 }
 
 export function VolunteersSearchableList({ volunteers, title }: VolunteersSearchableListProps) {
+  const locale = useLocale()
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | "verified" | "pending" | "banned">("all")
   const [typeFilter, setTypeFilter] = useState<string>("all")
@@ -87,7 +89,7 @@ export function VolunteersSearchableList({ volunteers, title }: VolunteersSearch
       volunteer.volunteerType || "free",
       volunteer.isVerified ? "Yes" : "No",
       volunteer.isActive !== false ? "Active" : "Inactive",
-      volunteer.createdAt ? new Date(volunteer.createdAt).toLocaleDateString() : ""
+      volunteer.createdAt ? new Date(volunteer.createdAt).toLocaleDateString(locale) : ""
     ])
     
     const csvContent = [

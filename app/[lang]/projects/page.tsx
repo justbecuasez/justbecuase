@@ -15,7 +15,7 @@ import { skillCategories, resolveSkillName } from "@/lib/skills-data"
 import { SlidersHorizontal, Grid3X3, List, X, Loader2 } from "lucide-react"
 import { UnifiedSearchBar } from "@/components/unified-search-bar"
 import { BrowseGridSkeleton } from "@/components/ui/page-skeletons"
-import { useDictionary } from "@/app/[lang]/dictionaries"
+import { useDictionary } from "@/components/dictionary-provider"
 
 interface Project {
   _id?: { toString: () => string }

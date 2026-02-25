@@ -19,6 +19,7 @@ import {
   Briefcase,
 } from "lucide-react"
 import LocaleLink from "@/components/locale-link"
+import { useLocale } from "@/hooks/use-locale"
 
 interface Message {
   _id?: { toString: () => string }
@@ -53,6 +54,7 @@ export function MessageThread({
   backUrl,
 }: MessageThreadProps) {
   const router = useRouter()
+  const locale = useLocale()
   const [newMessage, setNewMessage] = useState("")
   const [sending, setSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -88,7 +90,7 @@ export function MessageThread({
   }
 
   const formatTime = (date: Date) => {
-    return new Date(date).toLocaleTimeString([], {
+    return new Date(date).toLocaleTimeString(locale, {
       hour: "2-digit",
       minute: "2-digit",
     })
@@ -105,7 +107,7 @@ export function MessageThread({
     } else if (d.toDateString() === yesterday.toDateString()) {
       return "Yesterday"
     } else {
-      return d.toLocaleDateString([], {
+      return d.toLocaleDateString(locale, {
         weekday: "short",
         month: "short",
         day: "numeric",

@@ -7,9 +7,11 @@ import { browseProjects } from "@/lib/actions"
 import { ArrowRight } from "lucide-react"
 import { resolveSkillName } from "@/lib/skills-data"
 import { useDictionary } from "@/components/dictionary-provider"
+import { useLocale } from "@/hooks/use-locale"
 
 export function FeaturedProjects() {
   const dict = useDictionary()
+  const locale = useLocale()
   const home = dict.home || {}
   const [featuredProjects, setFeaturedProjects] = useState<Awaited<ReturnType<typeof browseProjects>>>([]);
 
@@ -87,7 +89,7 @@ export function FeaturedProjects() {
                       location: project.workMode === "remote" ? (dict.search?.remote || "Remote") : project.location || (dict.search?.onsite || "On-site"),
                       timeCommitment: project.timeCommitment,
                       applicants: project.applicantsCount || 0,
-                      postedAt: project.createdAt ? new Date(project.createdAt).toLocaleDateString() : (dict.common?.recently || "Recently"),
+                      postedAt: project.createdAt ? new Date(project.createdAt).toLocaleDateString(locale) : (dict.common?.recently || "Recently"),
                       projectType: project.projectType,
                       ngo: { name: (project as any).ngoName || (dict.common?.verifiedPartner || "Verified Partner"), verified: true }
                     }} />

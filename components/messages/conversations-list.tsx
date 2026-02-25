@@ -20,6 +20,7 @@ import {
   Star,
   Archive,
 } from "lucide-react"
+import { useLocale } from "@/hooks/use-locale"
 
 interface Conversation {
   _id?: { toString: () => string } | string
@@ -41,7 +42,7 @@ interface ConversationsListProps {
   baseUrl: string
 }
 
-function formatRelativeTime(date: Date | string): string {
+function formatRelativeTime(date: Date | string, locale?: string): string {
   const now = new Date()
   const messageDate = new Date(date)
   const diffMs = now.getTime() - messageDate.getTime()
@@ -55,7 +56,7 @@ function formatRelativeTime(date: Date | string): string {
   if (diffDays === 1) return "Yesterday"
   if (diffDays < 7) return `${diffDays}d ago`
   
-  return messageDate.toLocaleDateString([], {
+  return messageDate.toLocaleDateString(locale, {
     month: "short",
     day: "numeric",
   })
@@ -75,6 +76,7 @@ function ConversationItem({
   const lastMessage = conversation.lastMessage
   const unreadCount = conversation.unreadCount || 0
   const hasUnread = unreadCount > 0
+  const locale = useLocale()
 
   const name = userType === "ngo" 
     ? (conversation.volunteerName || "Impact Agent")
@@ -132,7 +134,7 @@ function ConversationItem({
                 "text-xs flex-shrink-0 ml-2",
                 hasUnread ? "text-primary font-medium" : "text-muted-foreground"
               )}>
-                {formatRelativeTime(conversation.lastMessageAt)}
+                {formatRelativeTime(conversation.lastMessageAt, locale)}
               </span>
             )}
           </div>

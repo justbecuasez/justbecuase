@@ -93,7 +93,7 @@ export function MessageNotificationBadge({
     if (diffMins < 1) return "Just now"
     if (diffMins < 60) return `${diffMins}m ago`
     if (diffHours < 24) return `${diffHours}h ago`
-    return date.toLocaleDateString()
+    return date.toLocaleDateString(locale)
   }
 
   return (

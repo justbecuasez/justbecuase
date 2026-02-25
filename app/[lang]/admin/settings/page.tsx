@@ -40,7 +40,7 @@ import {
 } from "lucide-react"
 import { getAdminSettings, updateAdminSettings } from "@/lib/actions"
 import { toast } from "sonner"
-import { useDictionary } from "@/app/[lang]/dictionaries"
+import { useDictionary } from "@/components/dictionary-provider"
 import type { AdminSettings, SupportedCurrency, PaymentGatewayType } from "@/lib/types"
 import { SettingsPageSkeleton } from "@/components/ui/page-skeletons"
 import { usePlatformSettingsStore } from "@/lib/store"
@@ -1060,7 +1060,9 @@ export default function AdminSettingsPage() {
                 <Label>{dict.admin?.settings?.volunteerPlans?.proPlanFeatures || "Pro Plan Features"}</Label>
                 <p className="text-sm text-muted-foreground">
                   {dict.admin?.settings?.volunteerPlans?.proPlanFeaturesHint || "These features are displayed on the pricing page"}
-                </p>?.map((feature, index) => (
+                </p>
+                <div className="space-y-2">
+                  {(settings.volunteerProFeatures || []).map((feature, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <Input
                         value={feature}
@@ -1207,7 +1209,9 @@ export default function AdminSettingsPage() {
                 <Label>{dict.admin?.settings?.ngoPlans?.proPlanFeatures || "Pro Plan Features"}</Label>
                 <p className="text-sm text-muted-foreground">
                   {dict.admin?.settings?.ngoPlans?.proPlanFeaturesHint || "These features are displayed on the pricing page"}
-                </p>?.map((feature, index) => (
+                </p>
+                <div className="space-y-2">
+                  {(settings.ngoProFeatures || []).map((feature, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <Input
                         value={feature}
